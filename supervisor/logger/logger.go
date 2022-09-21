@@ -4,7 +4,7 @@ import "go.uber.org/zap"
 
 var I *zap.Logger
 
-func Init() {
+func init() {
 	var err error
 	I, err = zap.NewProduction()
 	if err != nil {

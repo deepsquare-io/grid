@@ -4,6 +4,7 @@
 package tools
 
 import (
+	_ "github.com/ethereum/go-ethereum"
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway"
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2"
 	_ "google.golang.org/grpc/cmd/protoc-gen-go-grpc"

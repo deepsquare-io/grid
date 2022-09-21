@@ -1,29 +1,37 @@
 package server
 
 import (
-	"context"
+	"net"
 
-	supervisorv1alpha1 "github.com/deepsquare/supervisor/gen/go/supervisor/v1alpha1"
-	"github.com/deepsquare/supervisor/logger"
+	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
+	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/server/jobapi"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
-type RouteGuideServer struct {
-	supervisorv1alpha1.UnimplementedRouteGuideAPIServer
+func listenAndServe(addr string, opts []grpc.ServerOption) error {
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		return err
+	}
+	grpcServer := grpc.NewServer(opts...)
+	supervisorv1alpha1.RegisterJobAPIServer(grpcServer, jobapi.New())
+
+	return grpcServer.Serve(lis)
 }
 
-func New() *RouteGuideServer {
-	return &RouteGuideServer{}
+func ListenAndServe(addr string) error {
+	opts := []grpc.ServerOption{}
+	return listenAndServe(addr, opts)
 }
 
-func (s *RouteGuideServer) GetFeature(ctx context.Context, req *supervisorv1alpha1.GetFeatureRequest) (*supervisorv1alpha1.GetFeatureResponse, error) {
-	p, _ := peer.FromContext(ctx)
-	logger.I.Info(
-		"recv",
-		zap.String("body", req.String()),
-		zap.String("address", p.Addr.String()),
-	)
-
-	return &supervisorv1alpha1.GetFeatureResponse{}, nil
+func ListenAndServeTLS(addr string, keyFile string, certFile string) error {
+	creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
+	if err != nil {
+		logger.I.Fatal("failed to load certificates", zap.Error(err))
+	}
+	opts := []grpc.ServerOption{grpc.Creds(creds)}
+	return listenAndServe(addr, opts)
 }
