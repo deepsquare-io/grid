@@ -1,0 +1,49 @@
+ARG rocky_version=8.5
+ARG slurm_version=slurm-21-08-5-1
+
+FROM quay.io/rockylinux/rockylinux:${rocky_version} as builder
+
+ARG slurm_version
+
+WORKDIR /work
+
+RUN dnf install -y \
+  make \
+  gcc \
+  git \
+  libcurl-devel \
+  rpm-build \
+  rsync \
+  openssh-clients \
+  && dnf clean all
+
+RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-x86_64.sh -o /tmp/cmake-install.sh \
+  && chmod u+x /tmp/cmake-install.sh \
+  && /tmp/cmake-install.sh --skip-license --prefix=/usr/local \
+  && rm /tmp/cmake-install.sh
+
+COPY . .
+
+RUN mkdir build \
+  && cd build \
+  && mkdir -p /artifacts \
+  && cmake .. \
+  && make -j$(nproc) \
+  && make package \
+  && mv ./*.rpm /artifacts \
+  && mv _CPack_Packages/Linux/RPM/SPECS/*.spec /artifacts
+
+CMD ["rsync", "-a", "-v", "-z", "-P", "/artifacts/", "repository:/repository/"]
+
+# -----------------------------------------------------------
+FROM quay.io/rockylinux/rockylinux:${rocky_version} as tester
+# -----------------------------------------------------------
+
+ARG slurm_version
+
+COPY --from=builder /artifacts /artifacts
+
+RUN rpm -i /artifacts/*.rpm
+
+# Assert
+RUN stat /usr/lib64/slurm/jobcomp_provider.so && stat /usr/lib64/slurm/jobcomp_provider.a
