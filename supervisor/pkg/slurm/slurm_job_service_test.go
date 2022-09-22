@@ -6,8 +6,8 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
 )
 
 type JobServiceTestSuite struct {
@@ -17,6 +17,34 @@ type JobServiceTestSuite struct {
 	user      string
 	pkB64     string
 	impl      slurm.JobService
+}
+
+func (suite *JobServiceTestSuite) submitJob() *slurm.SubmitJobRequest {
+	// Arrange
+	name := utils.GenerateRandomString(6)
+	req := &slurm.SubmitJobRequest{
+		Name: name,
+		User: suite.user,
+		JobDefinition: slurm.JobDefinition{
+			TimeLimit:     5,
+			NTasks:        1,
+			GPUsPerNode:   0,
+			CPUsPerTask:   1,
+			MemoryPerNode: 512,
+			Body: `#!/bin/sh
+
+srun sleep infinity
+`,
+		},
+	}
+
+	// Act
+	_, err := suite.impl.SubmitJob(req)
+
+	// Assert
+	suite.NoError(err)
+
+	return req
 }
 
 func (suite *JobServiceTestSuite) BeforeTest(suiteName, testName string) {
@@ -31,62 +59,36 @@ func (suite *JobServiceTestSuite) BeforeTest(suiteName, testName string) {
 	)
 }
 
-func (suite *JobServiceTestSuite) TestSubmitAndCancel() {
-	req := &slurm.SubmitJobRequest{
-		Name: "test",
-		User: suite.user,
-		JobDefinition: slurm.JobDefinition{
-			TimeLimit:     5,
-			NTasks:        1,
-			GPUsPerNode:   0,
-			CPUsPerTask:   1,
-			MemoryPerNode: 1024,
-			Body: `#!/bin/sh
+func (suite *JobServiceTestSuite) TestSubmit() {
+	suite.submitJob()
+}
 
-srun hostname
-`,
-		},
-	}
-	jobID, err := suite.impl.SubmitJob(req)
+func (suite *JobServiceTestSuite) TestCancel() {
+	// Arrange
+	req := suite.submitJob()
 
-	logger.I.Info("job submitted successfully", zap.Int("JobID", jobID))
-
-	suite.NoError(err)
-
-	suite.impl.CancelJob(&slurm.CancelJobRequest{
+	// Act
+	err := suite.impl.CancelJob(&slurm.CancelJobRequest{
 		Name: req.Name,
 		User: suite.user,
 	})
+
+	// Assert
+	suite.NoError(err)
 }
 
 func (suite *JobServiceTestSuite) TestTopUp() {
 	// Arrange
-	req := &slurm.SubmitJobRequest{
-		Name: "test",
-		User: suite.user,
-		JobDefinition: slurm.JobDefinition{
-			TimeLimit:     5,
-			NTasks:        1,
-			GPUsPerNode:   0,
-			CPUsPerTask:   1,
-			MemoryPerNode: 512,
-			Body: `#!/bin/sh
-
-srun sleep infinity
-`,
-		},
-	}
-	_, err := suite.impl.SubmitJob(req)
-
-	suite.NoError(err)
+	req := suite.submitJob()
 
 	// Act
-	err = suite.impl.TopUp(&slurm.TopUpRequest{
+	err := suite.impl.TopUp(&slurm.TopUpRequest{
 		Name:           req.Name,
 		User:           suite.user,
 		AdditionalTime: 5,
 	})
 
+	// Assert
 	suite.NoError(err)
 }
 
