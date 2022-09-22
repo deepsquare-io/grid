@@ -21,12 +21,12 @@ type JobDefinition struct {
 	TimeLimit uint64
 	// NTasks indicates the number
 	NTasks int64
-	// GPUs indicates the number of requested GPU.
-	GPUs int64
+	// GPUsPerNode indicates the number of requested GPU.
+	GPUsPerNode int64
 	// CPUs indicates the number of requested CPU.
 	CPUsPerTask int64
-	// Memory indicates the number of requested MB of memory.
-	Memory int64
+	// MemoryPerNode indicates the number of requested MB of memory.
+	MemoryPerNode int64
 	// Body of the job, in a sbatch script.
 	Body string
 }
@@ -188,8 +188,8 @@ func (s *jobService) SubmitJob(req *SubmitJobRequest) (int, error) {
 		req.TimeLimit,
 		req.NTasks,
 		req.CPUsPerTask,
-		req.Memory,
-		req.GPUs,
+		req.MemoryPerNode,
+		req.GPUsPerNode,
 		eof,
 		req.Body,
 		eof,

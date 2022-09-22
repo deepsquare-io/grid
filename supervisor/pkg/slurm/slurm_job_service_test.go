@@ -36,11 +36,11 @@ func (suite *JobServiceTestSuite) TestSubmitAndCancel() {
 		Name: "test",
 		User: suite.user,
 		JobDefinition: slurm.JobDefinition{
-			TimeLimit:   5,
-			NTasks:      1,
-			GPUs:        0,
-			CPUsPerTask: 1,
-			Memory:      1024,
+			TimeLimit:     5,
+			NTasks:        1,
+			GPUsPerNode:   0,
+			CPUsPerTask:   1,
+			MemoryPerNode: 1024,
 			Body: `#!/bin/sh
 
 srun hostname
@@ -65,11 +65,11 @@ func (suite *JobServiceTestSuite) TestTopUp() {
 		Name: "test",
 		User: suite.user,
 		JobDefinition: slurm.JobDefinition{
-			TimeLimit:   5,
-			NTasks:      1,
-			GPUs:        0,
-			CPUsPerTask: 1,
-			Memory:      512,
+			TimeLimit:     5,
+			NTasks:        1,
+			GPUsPerNode:   0,
+			CPUsPerTask:   1,
+			MemoryPerNode: 512,
 			Body: `#!/bin/sh
 
 srun sleep infinity
