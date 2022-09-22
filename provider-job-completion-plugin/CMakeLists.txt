@@ -56,7 +56,7 @@ add_compile_options(
 include_directories("gen/cpp")
 
 file(GLOB_RECURSE sources src/*.cc src/*.h)
-file(GLOB_RECURSE grpc_sources gen/cpp/*.cc gen/cpp/src/*.h)
+file(GLOB_RECURSE grpc_sources gen/cpp/*.cc gen/cpp/*.h)
 
 add_custom_command(
   OUTPUT ${SLURM_SRC_DIR}/slurm/slurm_version.h
