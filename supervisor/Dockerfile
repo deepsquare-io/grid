@@ -27,6 +27,6 @@ COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 RUN chown -R app:app .
 USER app
 
-EXPOSE 9000
+EXPOSE 3000
 
 ENTRYPOINT [ "/tini", "--", "./app" ]
