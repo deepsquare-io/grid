@@ -3,8 +3,11 @@
 set -e
 
 SCRIPTPATH=$(dirname "$(realpath "$0")")
-PROTOSPATH="${SCRIPTPATH}/../../protos"
 
-cd "${PROTOSPATH}"
+cd "${SCRIPTPATH}/../../protos/supervisorapis"
+
+buf generate
+
+cd "${SCRIPTPATH}/../../protos/offchainapis"
 
 buf generate

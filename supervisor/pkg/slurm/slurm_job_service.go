@@ -43,7 +43,7 @@ type SubmitJobRequest struct {
 	Name string
 	// User is a UNIX User used for impersonation.
 	User string
-	JobDefinition
+	*JobDefinition
 }
 
 type TopUpRequest struct {

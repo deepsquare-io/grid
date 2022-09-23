@@ -25,7 +25,7 @@ func (suite *JobServiceTestSuite) submitJob() *slurm.SubmitJobRequest {
 	req := &slurm.SubmitJobRequest{
 		Name: name,
 		User: suite.user,
-		JobDefinition: slurm.JobDefinition{
+		JobDefinition: &slurm.JobDefinition{
 			TimeLimit:     5,
 			NTasks:        1,
 			GPUsPerNode:   0,

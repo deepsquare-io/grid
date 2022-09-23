@@ -3,7 +3,7 @@
 set -e
 
 SCRIPTPATH=$(dirname "$(realpath "$0")")
-PROJECTPATH="${SCRIPTPATH}/../../"
+PROJECTPATH="${SCRIPTPATH}/../"
 
 cd "${PROJECTPATH}"
 

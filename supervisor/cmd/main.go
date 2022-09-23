@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"os"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/deepsquare-io/the-grid/supervisor/server"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -14,8 +18,9 @@ func main() {
 	var tls bool
 	var keyFile string
 	var certFile string
-	var metaschedulerAddress string
-	var ethAddress string
+	var metaschedulerGRPCEndpoint string
+	var ethRPCEndpoint string
+	var ethSmartContract string
 	var sshAddress string
 
 	app := &cli.App{
@@ -51,18 +56,25 @@ func main() {
 				EnvVars:     []string{"TLS_CERT"},
 			},
 			&cli.StringFlag{
-				Name:        "metascheduler.address",
-				Value:       "127.0.0.1:443",
-				Usage:       "Metascheduler address.",
-				Destination: &metaschedulerAddress,
-				EnvVars:     []string{"METASCHEDULER_ADDRESS"},
+				Name:        "metascheduler.eth.endpoint",
+				Value:       "https://mainnet.infura.io",
+				Usage:       "Metascheduler RPC endpoint.",
+				Destination: &ethRPCEndpoint,
+				EnvVars:     []string{"METASCHEDULER_RPC_ENDPOINT"},
 			},
 			&cli.StringFlag{
-				Name:        "eth.address",
-				Value:       "https://mainnet.infura.io",
-				Usage:       "Ethereum net RPC address (can also be an IPC endpoint file).",
-				Destination: &ethAddress,
-				EnvVars:     []string{"ETH_ADDRESS"},
+				Name:        "metascheduler.grpc.endpoint",
+				Value:       "127.0.0.1:443",
+				Usage:       "Metascheduler gRPC endpoint.",
+				Destination: &metaschedulerGRPCEndpoint,
+				EnvVars:     []string{"METASCHEDULER_GRPC_ENDPOINT"},
+			},
+			&cli.StringFlag{
+				Name:        "metascheduler.eth.smart-contract",
+				Value:       "0x",
+				Usage:       "Metascheduler smart-contract address.",
+				Destination: &ethSmartContract,
+				EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
 			},
 			&cli.StringFlag{
 				Name:        "slurm.ssh.address",
@@ -104,5 +116,55 @@ func main() {
 
 	if err := app.Run(os.Args); err != nil {
 		logger.I.Fatal("app crashed", zap.Error(err))
+	}
+}
+
+func WatchQueue(e eth.DataSource, s slurm.JobService) error {
+	ctx := context.Background()
+	resp := make(chan eth.ClaimJobResponse)
+	done := make(chan error)
+	for {
+		func() {
+			ctx, cancel := context.WithTimeout(ctx, time.Duration(60*time.Second))
+			defer cancel()
+
+			go e.ClaimJob(resp, done)
+
+			select {
+			case r := <-resp:
+				// TODO: fetch sbatch here
+				body := `#!/bin/sh
+
+				srun hostname
+				srun sleep infinity
+				`
+				job := eth.JobDefinitionMapToSlurm(r.JobDefinition, r.TimeLimit, body)
+				req := &slurm.SubmitJobRequest{
+					Name:          r.JobID,
+					User:          r.User,
+					JobDefinition: job,
+				}
+				slurmJobId, err := s.SubmitJob(req)
+				if err != nil {
+					logger.I.Error("slurm submit job failed", zap.Error(err))
+				} else {
+					logger.I.Info(
+						"submitted a job successfully",
+						zap.Int("JobID", slurmJobId),
+						zap.Any("Req", req),
+					)
+				}
+			case err := <-done:
+				if err != nil {
+					logger.I.Error("claimJob failed", zap.Error(err))
+				}
+
+			case <-ctx.Done():
+				logger.I.Error("claimJob timed out", zap.Error(ctx.Err()))
+			}
+		}()
+
+		// TODO: extract variable
+		time.Sleep(time.Duration(10 * time.Second))
 	}
 }
