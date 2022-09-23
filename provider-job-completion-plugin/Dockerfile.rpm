@@ -9,31 +9,34 @@ WORKDIR /work
 
 RUN dnf install -y \
   make \
-  gcc \
+  clang \
   git \
-  libcurl-devel \
   rpm-build \
-  rsync \
-  openssh-clients \
   && dnf clean all
 
-RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-x86_64.sh -o /tmp/cmake-install.sh \
+RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-3.24.2-linux-x86_64.sh -o /tmp/cmake-install.sh \
   && chmod u+x /tmp/cmake-install.sh \
   && /tmp/cmake-install.sh --skip-license --prefix=/usr/local \
   && rm /tmp/cmake-install.sh
 
-COPY . .
+COPY CMakeLists.txt package.cmake ./
+COPY ./gen ./gen
 
-RUN mkdir build \
+RUN ls -la \
+  && mkdir build \
   && cd build \
+  && cmake .. \
+  && make -j$(nproc) grpc++
+
+COPY . ./
+
+RUN cd build \
   && mkdir -p /artifacts \
   && cmake .. \
   && make -j$(nproc) \
   && make package \
   && mv ./*.rpm /artifacts \
   && mv _CPack_Packages/Linux/RPM/SPECS/*.spec /artifacts
-
-CMD ["rsync", "-a", "-v", "-z", "-P", "/artifacts/", "repository:/repository/"]
 
 # -----------------------------------------------------------
 FROM quay.io/rockylinux/rockylinux:${rocky_version} as tester

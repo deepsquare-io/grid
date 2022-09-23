@@ -52,9 +52,6 @@ add_compile_options(
   -fno-common
   -Wno-unused-parameter)
 
-# Include generated *.pb.h files
-include_directories("gen/cpp")
-
 file(GLOB_RECURSE sources src/*.cc src/*.h)
 file(GLOB_RECURSE grpc_sources gen/cpp/*.cc gen/cpp/*.h)
 
@@ -69,23 +66,20 @@ add_custom_target(slurm_configure
                   DEPENDS ${SLURM_SRC_DIR}/slurm/slurm_version.h)
 
 add_library(jobcomp_provider SHARED ${sources} ${grpc_sources})
-add_library(jobcomp_provider_static STATIC ${sources} ${grpc_sources})
 
 add_dependencies(jobcomp_provider slurm_configure)
-add_dependencies(jobcomp_provider_static slurm_configure)
 
 set_target_properties(jobcomp_provider PROPERTIES PREFIX "")
-set_target_properties(jobcomp_provider_static
-                      PROPERTIES PREFIX "" OUTPUT_NAME jobcomp_provider)
 
-target_include_directories(jobcomp_provider PUBLIC ${SLURM_SRC_DIR})
-target_include_directories(jobcomp_provider_static PUBLIC ${SLURM_SRC_DIR})
+target_include_directories(
+  jobcomp_provider
+  PUBLIC ${SLURM_SRC_DIR}
+  PUBLIC "gen/cpp")
 
-target_link_libraries(jobcomp_provider PRIVATE Threads::Threads m grpc++)
-target_link_libraries(jobcomp_provider_static PRIVATE Threads::Threads m grpc++)
+target_link_libraries(jobcomp_provider Threads::Threads m grpc++)
 
 install(
-  TARGETS jobcomp_provider jobcomp_provider_static
+  TARGETS jobcomp_provider
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX})
 

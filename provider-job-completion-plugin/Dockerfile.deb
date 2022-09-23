@@ -10,11 +10,10 @@ RUN apt update \
   && apt install -y \
   ninja-build \
   build-essential \
-  libcurl4-openssl-dev \
   curl \
   && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-x86_64.sh -o /tmp/cmake-install.sh \
+RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-3.24.2-linux-x86_64.sh -o /tmp/cmake-install.sh \
   && chmod u+x /tmp/cmake-install.sh \
   && /tmp/cmake-install.sh --skip-license --prefix=/usr/local \
   && rm /tmp/cmake-install.sh

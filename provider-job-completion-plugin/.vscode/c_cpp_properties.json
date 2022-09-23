@@ -5,6 +5,8 @@
       "includePath": [
         "${default}",
         "${workspaceFolder}/**",
+        "${workspaceFolder}/build/_deps/grpc-src/include",
+        "${workspaceFolder}/build/_deps/grpc-src/**",
         "${workspaceFolder}/gen/cpp",
         "/usr/include/**"
       ],

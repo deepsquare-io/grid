@@ -21,11 +21,10 @@ cmake .. -G <your generator> # Ninja, or by default, Make
 
 After compiling the plugin you can add them to the PATH environment variable or move it to `$HOME/.local/bin`.
 
-My recommendation is to set the PATH environment variable:
+My recommendation is to install the plugin.
 
 ```shell
-# still in the build directory
-export PATH="$(pwd)/_deps/grpc-build:$PATH"
+cp ./build/_deps/grpc-build/grpc_*_plugin ~/.local/bin
 ```
 
 After that, you can call `buf generate` in the `protos` directory.

@@ -113,18 +113,18 @@ const char descriptor_table_protodef_supervisor_2fv1alpha1_2fsupervisor_2eproto[
   "sult\"\027\n\025SendJobResultResponse2r\n\006JobAPI\022"
   "h\n\rSendJobResult\022).supervisor.v1alpha1.S"
   "endJobResultRequest\032*.supervisor.v1alpha"
-  "1.SendJobResultResponse\"\000B\374\001\n\027com.superv"
-  "isor.v1alpha1B\017SupervisorProtoP\001Z`github"
-  ".com/deepsquare-io/the-grid/supervisor/g"
-  "en/proto/go/supervisor/v1alpha1;supervis"
-  "orv1alpha1\370\001\000\242\002\003SXX\252\002\023Supervisor.V1alpha"
-  "1\312\002\023Supervisor\\V1alpha1\342\002\037Supervisor\\V1a"
-  "lpha1\\GPBMetadata\352\002\024Supervisor::V1alpha1"
-  "b\006proto3"
+  "1.SendJobResultResponse\"\000B\201\002\n\027com.superv"
+  "isor.v1alpha1B\017SupervisorProtoP\001Zegithub"
+  ".com/deepsquare-io/the-grid/supervisorap"
+  "is/protos/gen/go/supervisor/v1alpha1;sup"
+  "ervisorv1alpha1\370\001\000\242\002\003SXX\252\002\023Supervisor.V1"
+  "alpha1\312\002\023Supervisor\\V1alpha1\342\002\037Superviso"
+  "r\\V1alpha1\\GPBMetadata\352\002\024Supervisor::V1a"
+  "lpha1b\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_supervisor_2fv1alpha1_2fsupervisor_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_supervisor_2fv1alpha1_2fsupervisor_2eproto = {
-    false, false, 648, descriptor_table_protodef_supervisor_2fv1alpha1_2fsupervisor_2eproto,
+    false, false, 653, descriptor_table_protodef_supervisor_2fv1alpha1_2fsupervisor_2eproto,
     "supervisor/v1alpha1/supervisor.proto",
     &descriptor_table_supervisor_2fv1alpha1_2fsupervisor_2eproto_once, nullptr, 0, 3,
     schemas, file_default_instances, TableStruct_supervisor_2fv1alpha1_2fsupervisor_2eproto::offsets,
