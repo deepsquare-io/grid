@@ -7,12 +7,42 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/oracle"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"go.uber.org/zap"
 )
 
-// Watch job submit a job when the metascheduler schedule a job.
-func Watch(ctx context.Context, s *eth.DataSource, j *slurm.Service) error {
+const pollingTime = time.Duration(10 * time.Second)
+
+type Watcher struct {
+	eth    *eth.DataSource
+	slurm  *slurm.Service
+	oracle *oracle.DataSource
+}
+
+func New(
+	eth *eth.DataSource,
+	slurm *slurm.Service,
+	oracle *oracle.DataSource,
+) *Watcher {
+	if eth == nil {
+		logger.I.Panic("eth is nil")
+	}
+	if slurm == nil {
+		logger.I.Panic("slurm is nil")
+	}
+	if oracle == nil {
+		logger.I.Panic("oracle is nil")
+	}
+	return &Watcher{
+		eth:    eth,
+		slurm:  slurm,
+		oracle: oracle,
+	}
+}
+
+// Watch submits a job when the metascheduler schedule a job.
+func (w *Watcher) Watch(ctx context.Context) error {
 	resp := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
 	done := make(chan error)
 	for {
@@ -21,14 +51,15 @@ func Watch(ctx context.Context, s *eth.DataSource, j *slurm.Service) error {
 			defer cancel()
 
 			go func() {
-				r, err := s.ClaimJob(ctx)
+				r, err := w.eth.ClaimJob(ctx)
 				resp <- r
 				done <- err
 			}()
 
 			select {
 			case r := <-resp:
-				// TODO: fetch sbatch here
+				// TODO: do not use mock
+				// w.oracle.FetchJobBatch(ctx, r.JobDefinition.BatchLocationHash)
 				body := `#!/bin/sh
 
 				srun hostname
@@ -40,7 +71,7 @@ func Watch(ctx context.Context, s *eth.DataSource, j *slurm.Service) error {
 					User:          r.CustomerAddr.String(),
 					JobDefinition: job,
 				}
-				slurmJobID, err := j.SubmitJob(req)
+				slurmJobID, err := w.slurm.SubmitJob(req)
 				if err != nil {
 					logger.I.Error("slurm submit job failed", zap.Error(err))
 				} else {
@@ -60,7 +91,6 @@ func Watch(ctx context.Context, s *eth.DataSource, j *slurm.Service) error {
 			}
 		}()
 
-		// TODO: extract variable
-		time.Sleep(time.Duration(10 * time.Second))
+		time.Sleep(pollingTime)
 	}
 }

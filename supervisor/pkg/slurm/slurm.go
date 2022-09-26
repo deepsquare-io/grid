@@ -67,7 +67,7 @@ func (s *Service) establish(user string) (session *ssh.Session, close func(), er
 	}
 	session, err = client.NewSession()
 	if err != nil {
-		if err := client.Close(); err != nil {
+		if err := client.Close(); err != nil && err != io.EOF {
 			logger.I.Warn("closing SSH client thrown an error", zap.Error(err))
 		}
 		return nil, nil, err

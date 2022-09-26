@@ -14,11 +14,10 @@ import (
 	"go.uber.org/zap"
 )
 
-const claimNextJobEvent = "ClaimNextJobEvent"
-
 var claimNextJobSig = []byte("ClaimNextJobEvent(address,bytes32,uint256,(uint64,uint64,uint64,uint64,uint64,string))")
 var claimNextJobSigHash = crypto.Keccak256Hash(claimNextJobSig)
 
+// DataSource handles communications with the smart contract
 type DataSource struct {
 	client          *ethclient.Client
 	metascheduler   *metascheduler.MetaScheduler
@@ -28,11 +27,11 @@ type DataSource struct {
 	fromAddress     common.Address
 }
 
-func NewDataSource(
+func New(
 	rpcEndpoint string,
+	hexPK string,
 	metaschedulerAddress string,
 	providerManagerAddress string,
-	hexPK string,
 ) *DataSource {
 	client, err := ethclient.Dial(rpcEndpoint)
 	if err != nil {
@@ -131,6 +130,9 @@ func (s *DataSource) ClaimJob(ctx context.Context) (*metascheduler.MetaScheduler
 	return nil, nil
 }
 
+// Register a cluster
+//
+// Will send a transaction to register the cluster.
 func (s *DataSource) Register(
 	ctx context.Context,
 	nodes uint64,
