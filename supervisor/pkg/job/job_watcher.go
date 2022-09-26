@@ -13,6 +13,7 @@ import (
 )
 
 const pollingTime = time.Duration(10 * time.Second)
+const claimJobMaxTimeout = time.Duration(60 * time.Second)
 
 type Watcher struct {
 	eth    *eth.DataSource
@@ -47,13 +48,16 @@ func (w *Watcher) Watch(ctx context.Context) error {
 	done := make(chan error)
 	for {
 		func() {
-			ctx, cancel := context.WithTimeout(ctx, time.Duration(60*time.Second))
+			ctx, cancel := context.WithTimeout(ctx, claimJobMaxTimeout)
 			defer cancel()
 
 			go func() {
 				r, err := w.eth.ClaimJob(ctx)
-				resp <- r
-				done <- err
+				if err != nil {
+					done <- err
+				} else {
+					resp <- r
+				}
 			}()
 
 			select {
