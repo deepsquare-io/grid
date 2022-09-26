@@ -29,6 +29,11 @@ var (
 	sbatch                       string
 	squeue                       string
 	scontrol                     string
+
+	nodes uint64
+	cpus  uint64
+	gpus  uint64
+	mem   uint64
 )
 
 // Container stores the instances for dependency injection.
@@ -61,7 +66,6 @@ func Init() *Container {
 }
 
 func main() {
-
 	app := &cli.App{
 		Name:  "supervisor",
 		Usage: "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
@@ -164,10 +168,47 @@ func main() {
 				Destination: &scancel,
 				EnvVars:     []string{"SLURM_SCANCEL_PATH"},
 			},
+			&cli.Uint64Flag{
+				Name:        "nodes",
+				Usage:       "Total number of Nodes reported by `scontrol show partitions`",
+				Destination: &nodes,
+				Required:    true,
+				EnvVars:     []string{"TOTAL_Nodes"},
+			},
+			&cli.Uint64Flag{
+				Name:        "cpus",
+				Usage:       "Total number of CPUs reported by `scontrol show partitions`",
+				Destination: &cpus,
+				Required:    true,
+				EnvVars:     []string{"TOTAL_CPUS"},
+			},
+			&cli.Uint64Flag{
+				Name:        "gpus",
+				Usage:       "Total number of GPUs reported by `scontrol show partitions`",
+				Destination: &gpus,
+				Required:    true,
+				EnvVars:     []string{"TOTAL_GPUS"},
+			},
+			&cli.Uint64Flag{
+				Name:        "mem",
+				Usage:       "Total number of Memory (MB) reported by `scontrol show partitions`",
+				Destination: &mem,
+				Required:    true,
+				EnvVars:     []string{"TOTAL_MEMORY"},
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			c := ctx.Context
 			container := Init()
+
+			container.ethDataSource.Register(
+				c,
+				nodes,
+				cpus,
+				gpus,
+				mem,
+			)
+
 			// TODO: Need two loops, the grpc and the ethereum listener
 			go job.Watch(c, container.ethDataSource, container.slurmJobService)
 

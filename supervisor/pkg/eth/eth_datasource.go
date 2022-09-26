@@ -131,6 +131,28 @@ func (s *DataSource) ClaimJob(ctx context.Context) (*metascheduler.MetaScheduler
 	return nil, nil
 }
 
-func (s *DataSource) Register() {
+func (s *DataSource) Register(
+	ctx context.Context,
+	nodes uint64,
+	cpus uint64,
+	gpus uint64,
+	mem uint64,
+) error {
+	auth, err := s.auth(ctx)
+	if err != nil {
+		return err
+	}
 
+	tx, err := s.providerManager.Register(
+		auth,
+		cpus,
+		gpus,
+		mem,
+		nodes,
+	)
+	if err != nil {
+		return err
+	}
+	_, err = bind.WaitMined(ctx, s.client, tx)
+	return err
 }
