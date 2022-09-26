@@ -1,27 +1,66 @@
 package main
 
 import (
-	"context"
 	"os"
-	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/deepsquare-io/the-grid/supervisor/server"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 )
 
+var (
+	listenAddress                string
+	tls                          bool
+	keyFile                      string
+	certFile                     string
+	metaschedulerGRPCEndpoint    string
+	ethRPCEndpoint               string
+	ethHexPK                     string
+	metaschedulerSmartContract   string
+	providerManagerSmartContract string
+	slurmSSHAddress              string
+	slurmSSHB64PK                string
+	slurmSSHAdminUser            string
+	scancel                      string
+	sbatch                       string
+	squeue                       string
+	scontrol                     string
+)
+
+// Container stores the instances for dependency injection.
+type Container struct {
+	ethDataSource   *eth.DataSource
+	slurmJobService *slurm.Service
+}
+
+func Init() *Container {
+	ethDataSource := eth.NewDataSource(
+		ethRPCEndpoint,
+		metaschedulerGRPCEndpoint,
+		providerManagerSmartContract,
+		ethHexPK,
+	)
+	slurmJobService := slurm.New(
+		slurmSSHAddress,
+		slurmSSHB64PK,
+		slurmSSHAdminUser,
+		scancel,
+		sbatch,
+		squeue,
+		scontrol,
+	)
+
+	return &Container{
+		ethDataSource:   ethDataSource,
+		slurmJobService: slurmJobService,
+	}
+}
+
 func main() {
-	var listenAddress string
-	var tls bool
-	var keyFile string
-	var certFile string
-	var metaschedulerGRPCEndpoint string
-	var ethRPCEndpoint string
-	var ethSmartContract string
-	var sshAddress string
 
 	app := &cli.App{
 		Name:  "supervisor",
@@ -56,54 +95,81 @@ func main() {
 				EnvVars:     []string{"TLS_CERT"},
 			},
 			&cli.StringFlag{
-				Name:        "metascheduler.eth.endpoint",
+				Name:        "eth.metascheduler.endpoint",
 				Value:       "https://mainnet.infura.io",
 				Usage:       "Metascheduler RPC endpoint.",
 				Destination: &ethRPCEndpoint,
 				EnvVars:     []string{"METASCHEDULER_RPC_ENDPOINT"},
 			},
 			&cli.StringFlag{
-				Name:        "metascheduler.grpc.endpoint",
+				Name:        "grpc.metascheduler.endpoint",
 				Value:       "127.0.0.1:443",
 				Usage:       "Metascheduler gRPC endpoint.",
 				Destination: &metaschedulerGRPCEndpoint,
 				EnvVars:     []string{"METASCHEDULER_GRPC_ENDPOINT"},
 			},
 			&cli.StringFlag{
-				Name:        "metascheduler.eth.smart-contract",
+				Name:        "eth.metascheduler.smart-contract",
 				Value:       "0x",
 				Usage:       "Metascheduler smart-contract address.",
-				Destination: &ethSmartContract,
+				Destination: &metaschedulerSmartContract,
 				EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
+			},
+			&cli.StringFlag{
+				Name:        "eth.provider-manager.smart-contract",
+				Value:       "0x",
+				Usage:       "Provider Manager smart-contract address.",
+				Destination: &providerManagerSmartContract,
+				EnvVars:     []string{"PROVIDER_MANAGER_SMART_CONTRACT"},
+			},
+			&cli.StringFlag{
+				Name:        "eth.private-key",
+				Usage:       "An hexadecimal private key for ethereum transactions.",
+				Required:    true,
+				Destination: &ethHexPK,
+				EnvVars:     []string{"ETH_PRIVATE_KEY"},
 			},
 			&cli.StringFlag{
 				Name:        "slurm.ssh.address",
 				Value:       "127.0.0.1:22",
 				Usage:       "Address of the Slurm login node.",
-				Destination: &sshAddress,
+				Destination: &slurmSSHAddress,
 				EnvVars:     []string{"SLURM_SSH_ADDRESS"},
 			},
 			&cli.StringFlag{
-				Name:     "slurm.ssh.private-key",
-				Usage:    "Base64-encoded SSH private key used for impersonation. The public key must be inserted in the authorized_keys file of each user.",
-				Required: true,
-				EnvVars:  []string{"SLURM_SSH_PRIVATE_KEY"},
+				Name:        "slurm.ssh.admin-user",
+				Usage:       "SLURM admin user used for calling `scontrol` commands.",
+				Required:    true,
+				Destination: &slurmSSHAdminUser,
+				EnvVars:     []string{"SLURM_SSH_ADMIN_USER"},
 			},
 			&cli.StringFlag{
-				Name:    "slurm.batch",
-				Value:   "/usr/bin/sbatch",
-				Usage:   "Server-side SLURM sbatch path.",
-				EnvVars: []string{"SLURM_SBATCH_PATH"},
+				Name:        "slurm.ssh.private-key",
+				Usage:       "Base64-encoded one line SSH private key used for impersonation. The public key must be inserted in the authorized_keys file of each user.",
+				Required:    true,
+				Destination: &slurmSSHB64PK,
+				EnvVars:     []string{"SLURM_SSH_PRIVATE_KEY"},
 			},
 			&cli.StringFlag{
-				Name:    "slurm.cancel",
-				Value:   "/usr/bin/scancel",
-				Usage:   "Server-side SLURM scancel path.",
-				EnvVars: []string{"SLURM_SCANCEL_PATH"},
+				Name:        "slurm.batch",
+				Value:       "/usr/bin/sbatch",
+				Usage:       "Server-side SLURM sbatch path.",
+				Destination: &sbatch,
+				EnvVars:     []string{"SLURM_SBATCH_PATH"},
+			},
+			&cli.StringFlag{
+				Name:        "slurm.cancel",
+				Value:       "/usr/bin/scancel",
+				Usage:       "Server-side SLURM scancel path.",
+				Destination: &scancel,
+				EnvVars:     []string{"SLURM_SCANCEL_PATH"},
 			},
 		},
 		Action: func(ctx *cli.Context) error {
+			c := ctx.Context
+			container := Init()
 			// TODO: Need two loops, the grpc and the ethereum listener
+			go job.Watch(c, container.ethDataSource, container.slurmJobService)
 
 			// gRPC server
 			if tls {
@@ -116,55 +182,5 @@ func main() {
 
 	if err := app.Run(os.Args); err != nil {
 		logger.I.Fatal("app crashed", zap.Error(err))
-	}
-}
-
-func WatchQueue(e eth.DataSource, s slurm.JobService) error {
-	ctx := context.Background()
-	resp := make(chan eth.ClaimJobResponse)
-	done := make(chan error)
-	for {
-		func() {
-			ctx, cancel := context.WithTimeout(ctx, time.Duration(60*time.Second))
-			defer cancel()
-
-			go e.ClaimJob(resp, done)
-
-			select {
-			case r := <-resp:
-				// TODO: fetch sbatch here
-				body := `#!/bin/sh
-
-				srun hostname
-				srun sleep infinity
-				`
-				job := eth.JobDefinitionMapToSlurm(r.JobDefinition, r.TimeLimit, body)
-				req := &slurm.SubmitJobRequest{
-					Name:          r.JobID,
-					User:          r.User,
-					JobDefinition: job,
-				}
-				slurmJobId, err := s.SubmitJob(req)
-				if err != nil {
-					logger.I.Error("slurm submit job failed", zap.Error(err))
-				} else {
-					logger.I.Info(
-						"submitted a job successfully",
-						zap.Int("JobID", slurmJobId),
-						zap.Any("Req", req),
-					)
-				}
-			case err := <-done:
-				if err != nil {
-					logger.I.Error("claimJob failed", zap.Error(err))
-				}
-
-			case <-ctx.Done():
-				logger.I.Error("claimJob timed out", zap.Error(ctx.Err()))
-			}
-		}()
-
-		// TODO: extract variable
-		time.Sleep(time.Duration(10 * time.Second))
 	}
 }

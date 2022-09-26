@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: offchain/v1alpha1/offchain.proto
+// source: oracle/v1alpha1/oracle.proto
 
-package offchainv1alpha1
+package oraclev1alpha1
 
 import (
 	context "context"
@@ -36,7 +36,7 @@ func NewJobAPIClient(cc grpc.ClientConnInterface) JobAPIClient {
 
 func (c *jobAPIClient) FetchJobBatch(ctx context.Context, in *FetchJobBatchRequest, opts ...grpc.CallOption) (*FetchJobBatchResponse, error) {
 	out := new(FetchJobBatchResponse)
-	err := c.cc.Invoke(ctx, "/offchain.v1alpha1.JobAPI/FetchJobBatch", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/oracle.v1alpha1.JobAPI/FetchJobBatch", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func _JobAPI_FetchJobBatch_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/offchain.v1alpha1.JobAPI/FetchJobBatch",
+		FullMethod: "/oracle.v1alpha1.JobAPI/FetchJobBatch",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(JobAPIServer).FetchJobBatch(ctx, req.(*FetchJobBatchRequest))
@@ -94,7 +94,7 @@ func _JobAPI_FetchJobBatch_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var JobAPI_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "offchain.v1alpha1.JobAPI",
+	ServiceName: "oracle.v1alpha1.JobAPI",
 	HandlerType: (*JobAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -103,5 +103,5 @@ var JobAPI_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "offchain/v1alpha1/offchain.proto",
+	Metadata: "oracle/v1alpha1/oracle.proto",
 }

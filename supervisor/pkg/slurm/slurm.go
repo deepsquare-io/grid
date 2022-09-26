@@ -14,66 +14,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type JobDefinition struct {
-	// TimeLimit is a time allocation which at the end kills the running job.
-	//
-	// TimeLimit is in minutes.
-	TimeLimit uint64
-	// NTasks indicates the number
-	NTasks uint64
-	// GPUsPerNode indicates the number of requested GPU.
-	GPUsPerNode uint64
-	// CPUs indicates the number of requested CPU.
-	CPUsPerTask uint64
-	// MemoryPerNode indicates the number of requested MB of memory.
-	MemoryPerNode uint64
-	// Body of the job, in a sbatch script.
-	Body string
-}
-
-type CancelJobRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation.
-	User string
-}
-
-type SubmitJobRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation.
-	User string
-	*JobDefinition
-}
-
-type TopUpRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation.
-	User string
-	// AdditionalTime is the number of minutes to be added
-	AdditionalTime uint64
-}
-
-type FindRunningJobByNameRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation. This user should be SLURM admin.
-	User string
-}
-
-type JobService interface {
-	// CancelJob kils a job using scancel command.
-	CancelJob(req *CancelJobRequest) error
-	// SubmitJob submits sbatch definition script to the SLURM controller using the sbatch command.
-	SubmitJob(req *SubmitJobRequest) (int, error)
-	// TopUp add additional time to a SLURM job
-	TopUp(req *TopUpRequest) error
-	// FindRunningJobByName find a running job using squeue.
-	FindRunningJobByName(req *FindRunningJobByNameRequest) (int, error)
-}
-
-type jobService struct {
+type Service struct {
 	address    string
 	authMethod ssh.AuthMethod
 	adminUser  string
@@ -91,7 +32,7 @@ func New(
 	sbatch string,
 	squeue string,
 	scontrol string,
-) *jobService {
+) *Service {
 	pk, err := base64.StdEncoding.DecodeString(pkB64)
 	if err != nil {
 		logger.I.Panic("failed to decode key", zap.Error(err))
@@ -102,7 +43,7 @@ func New(
 		logger.I.Panic("couldn't parse private key", zap.Error(err))
 	}
 
-	return &jobService{
+	return &Service{
 		address:    address,
 		authMethod: ssh.PublicKeys(signer),
 		adminUser:  adminUser,
@@ -113,7 +54,7 @@ func New(
 	}
 }
 
-func (s *jobService) establish(user string) (session *ssh.Session, close func(), err error) {
+func (s *Service) establish(user string) (session *ssh.Session, close func(), err error) {
 	config := &ssh.ClientConfig{
 		User:            user,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -142,7 +83,15 @@ func (s *jobService) establish(user string) (session *ssh.Session, close func(),
 	}, nil
 }
 
-func (s *jobService) CancelJob(req *CancelJobRequest) error {
+type CancelJobRequest struct {
+	// Name of the job
+	Name string
+	// User is a UNIX User used for impersonation.
+	User string
+}
+
+// CancelJob kils a job using scancel command.
+func (s *Service) CancelJob(req *CancelJobRequest) error {
 	sess, close, err := s.establish(req.User)
 	if err != nil {
 		return err
@@ -163,7 +112,16 @@ func (s *jobService) CancelJob(req *CancelJobRequest) error {
 	return nil
 }
 
-func (s *jobService) SubmitJob(req *SubmitJobRequest) (int, error) {
+type SubmitJobRequest struct {
+	// Name of the job
+	Name string
+	// User is a UNIX User used for impersonation.
+	User string
+	*JobDefinition
+}
+
+// SubmitJob submits sbatch definition script to the SLURM controller using the sbatch command.
+func (s *Service) SubmitJob(req *SubmitJobRequest) (int, error) {
 	sess, close, err := s.establish(req.User)
 	if err != nil {
 		return 0, err
@@ -208,7 +166,17 @@ func (s *jobService) SubmitJob(req *SubmitJobRequest) (int, error) {
 	return strconv.Atoi(strings.TrimSpace(strings.TrimRight(string(out), "\n")))
 }
 
-func (s *jobService) TopUp(req *TopUpRequest) error {
+type TopUpRequest struct {
+	// Name of the job
+	Name string
+	// User is a UNIX User used for impersonation.
+	User string
+	// AdditionalTime is the number of minutes to be added
+	AdditionalTime uint64
+}
+
+// TopUp add additional time to a SLURM job
+func (s *Service) TopUp(req *TopUpRequest) error {
 	// Fetch jobID
 	jobID, err := s.FindRunningJobByName(&FindRunningJobByNameRequest{
 		Name: req.Name,
@@ -238,14 +206,22 @@ func (s *jobService) TopUp(req *TopUpRequest) error {
 	return err
 }
 
-func (s *jobService) FindRunningJobByName(req *FindRunningJobByNameRequest) (int, error) {
+type FindRunningJobByNameRequest struct {
+	// Name of the job
+	Name string
+	// User is a UNIX User used for impersonation. This user should be SLURM admin.
+	User string
+}
+
+// FindRunningJobByName find a running job using squeue.
+func (s *Service) FindRunningJobByName(req *FindRunningJobByNameRequest) (int, error) {
 	sess, close, err := s.establish(req.User)
 	if err != nil {
 		return 0, err
 	}
 	defer close()
 
-	cmd := fmt.Sprintf("%s --name %s -O JobId:1256 --noheader", s.squeue, req.Name)
+	cmd := fmt.Sprintf("%s --name %s -O JobId:256 --noheader", s.squeue, req.Name)
 	out, err := sess.CombinedOutput(cmd)
 	if err != nil {
 		logger.I.Error(

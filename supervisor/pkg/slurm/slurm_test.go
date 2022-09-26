@@ -1,6 +1,7 @@
 package slurm_test
 
 import (
+	"math/big"
 	"os"
 	"testing"
 
@@ -10,23 +11,23 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-type JobServiceTestSuite struct {
+type ServiceTestSuite struct {
 	suite.Suite
 	address   string
 	adminUser string
 	user      string
 	pkB64     string
-	impl      slurm.JobService
+	impl      *slurm.Service
 }
 
-func (suite *JobServiceTestSuite) submitJob() *slurm.SubmitJobRequest {
+func (suite *ServiceTestSuite) submitJob() *slurm.SubmitJobRequest {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	req := &slurm.SubmitJobRequest{
 		Name: name,
 		User: suite.user,
 		JobDefinition: &slurm.JobDefinition{
-			TimeLimit:     5,
+			TimeLimit:     big.NewInt(5),
 			NTasks:        1,
 			GPUsPerNode:   0,
 			CPUsPerTask:   1,
@@ -47,7 +48,7 @@ srun sleep infinity
 	return req
 }
 
-func (suite *JobServiceTestSuite) BeforeTest(suiteName, testName string) {
+func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 	suite.impl = slurm.New(
 		suite.address,
 		suite.pkB64,
@@ -59,11 +60,11 @@ func (suite *JobServiceTestSuite) BeforeTest(suiteName, testName string) {
 	)
 }
 
-func (suite *JobServiceTestSuite) TestSubmit() {
+func (suite *ServiceTestSuite) TestSubmit() {
 	suite.submitJob()
 }
 
-func (suite *JobServiceTestSuite) TestCancel() {
+func (suite *ServiceTestSuite) TestCancel() {
 	// Arrange
 	req := suite.submitJob()
 
@@ -77,7 +78,7 @@ func (suite *JobServiceTestSuite) TestCancel() {
 	suite.NoError(err)
 }
 
-func (suite *JobServiceTestSuite) TestTopUp() {
+func (suite *ServiceTestSuite) TestTopUp() {
 	// Arrange
 	req := suite.submitJob()
 
@@ -92,7 +93,7 @@ func (suite *JobServiceTestSuite) TestTopUp() {
 	suite.NoError(err)
 }
 
-func TestJobServiceTestSuite(t *testing.T) {
+func TestServiceTestSuite(t *testing.T) {
 	address := os.Getenv("SLURM_SSH_ADDRESS")
 	user := os.Getenv("SLURM_SSH_USER")
 	adminUser := os.Getenv("SLURM_ADMIN_SSH_USER")
@@ -101,7 +102,7 @@ func TestJobServiceTestSuite(t *testing.T) {
 	if address == "" || user == "" || pkB64 == "" {
 		logger.I.Warn("mandatory variables are not set!")
 	} else {
-		suite.Run(t, &JobServiceTestSuite{
+		suite.Run(t, &ServiceTestSuite{
 			address:   address,
 			user:      user,
 			adminUser: adminUser,
