@@ -21,5 +21,5 @@ func init() {
 		zapcore.Lock(os.Stdout),
 		atom,
 	))
-	atom.SetLevel(zap.ErrorLevel)
+	atom.SetLevel(zap.DebugLevel)
 }

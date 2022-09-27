@@ -7,53 +7,65 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/oracle"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"go.uber.org/zap"
 )
 
-const pollingTime = time.Duration(10 * time.Second)
+const pollingTime = time.Duration(5 * time.Second)
 const claimJobMaxTimeout = time.Duration(60 * time.Second)
 
+type JobClaimer interface {
+	Claim(ctx context.Context) (*metascheduler.MetaSchedulerClaimNextJobEvent, error)
+}
+
+type JobScheduler interface {
+	Submit(req *slurm.SubmitJobRequest) (int, error)
+}
+
+type JobBatchFetcher interface {
+	Fetch(ctx context.Context, hash string) (string, error)
+}
+
 type Watcher struct {
-	eth    *eth.DataSource
-	slurm  *slurm.Service
-	oracle *oracle.DataSource
+	claimer      JobClaimer
+	scheduler    JobScheduler
+	batchFetcher JobBatchFetcher
 }
 
 func New(
-	eth *eth.DataSource,
-	slurm *slurm.Service,
-	oracle *oracle.DataSource,
+	claimer JobClaimer,
+	scheduler JobScheduler,
+	batchFetcher JobBatchFetcher,
 ) *Watcher {
-	if eth == nil {
-		logger.I.Panic("eth is nil")
+	if claimer == nil {
+		logger.I.Panic("claimer is nil")
 	}
-	if slurm == nil {
-		logger.I.Panic("slurm is nil")
+	if scheduler == nil {
+		logger.I.Panic("scheduler is nil")
 	}
-	if oracle == nil {
-		logger.I.Panic("oracle is nil")
+	if batchFetcher == nil {
+		logger.I.Panic("batchFetcher is nil")
 	}
 	return &Watcher{
-		eth:    eth,
-		slurm:  slurm,
-		oracle: oracle,
+		claimer:      claimer,
+		scheduler:    scheduler,
+		batchFetcher: batchFetcher,
 	}
 }
 
 // Watch submits a job when the metascheduler schedule a job.
-func (w *Watcher) Watch(ctx context.Context) error {
+func (w *Watcher) Watch(parent context.Context) error {
 	resp := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
 	done := make(chan error)
 	for {
 		func() {
-			ctx, cancel := context.WithTimeout(ctx, claimJobMaxTimeout)
+			ctx, cancel := context.WithTimeout(parent, claimJobMaxTimeout)
 			defer cancel()
 
 			go func() {
-				r, err := w.eth.ClaimJob(ctx)
+				r, err := w.claimer.Claim(ctx)
 				if err != nil {
+					logger.I.Error("claimed a job", zap.Any("event", r))
 					done <- err
 				} else {
 					resp <- r
@@ -62,36 +74,34 @@ func (w *Watcher) Watch(ctx context.Context) error {
 
 			select {
 			case r := <-resp:
-				// TODO: do not use mock
-				// w.oracle.FetchJobBatch(ctx, r.JobDefinition.BatchLocationHash)
-				body := `#!/bin/sh
-
-				srun hostname
-				srun sleep infinity
-				`
+				body, err := w.batchFetcher.Fetch(ctx, r.JobDefinition.BatchLocationHash)
+				if err != nil {
+					logger.I.Error("slurm fetch job body failed", zap.Error(err))
+					return
+				}
 				job := eth.JobDefinitionMapToSlurm(r.JobDefinition, r.MaxDurationMinute, body)
 				req := &slurm.SubmitJobRequest{
 					Name:          string(r.JobId[:]),
 					User:          r.CustomerAddr.String(),
-					JobDefinition: job,
+					JobDefinition: &job,
 				}
-				slurmJobID, err := w.slurm.SubmitJob(req)
+				slurmJobID, err := w.scheduler.Submit(req)
 				if err != nil {
 					logger.I.Error("slurm submit job failed", zap.Error(err))
-				} else {
-					logger.I.Info(
-						"submitted a job successfully",
-						zap.Int("JobID", slurmJobID),
-						zap.Any("Req", req),
-					)
+					return
 				}
+				logger.I.Info(
+					"submitted a job successfully",
+					zap.Int("JobID", slurmJobID),
+					zap.Any("Req", req),
+				)
 			case err := <-done:
 				if err != nil {
 					logger.I.Error("claimJob failed", zap.Error(err))
 				}
 
 			case <-ctx.Done():
-				logger.I.Error("claimJob timed out", zap.Error(ctx.Err()))
+				logger.I.Warn("claimJob context closed", zap.Error(ctx.Err()))
 			}
 		}()
 

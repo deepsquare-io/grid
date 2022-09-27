@@ -17,7 +17,7 @@ import (
 var claimNextJobSig = []byte("ClaimNextJobEvent(address,bytes32,uint256,(uint64,uint64,uint64,uint64,uint64,string))")
 var claimNextJobSigHash = crypto.Keccak256Hash(claimNextJobSig)
 
-// DataSource handles communications with the smart contract
+// DataSource handles communications with the smart contract.
 type DataSource struct {
 	client          *ethclient.Client
 	metascheduler   *metascheduler.MetaScheduler
@@ -96,11 +96,11 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 	return auth, nil
 }
 
-// ClaimJob a job.
+// Claim a job.
 //
 // If the queue is not empty, it will claim the job and send it to the SLURM cluster.
 // Else, it will return an error.
-func (s *DataSource) ClaimJob(ctx context.Context) (*metascheduler.MetaSchedulerClaimNextJobEvent, error) {
+func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerClaimNextJobEvent, error) {
 	auth, err := s.auth(ctx)
 	if err != nil {
 		return nil, err

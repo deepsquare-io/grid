@@ -120,8 +120,8 @@ type SubmitJobRequest struct {
 	*JobDefinition
 }
 
-// SubmitJob submits sbatch definition script to the SLURM controller using the sbatch command.
-func (s *Service) SubmitJob(req *SubmitJobRequest) (int, error) {
+// Submit a sbatch definition script to the SLURM controller using the sbatch command.
+func (s *Service) Submit(req *SubmitJobRequest) (int, error) {
 	sess, close, err := s.establish(req.User)
 	if err != nil {
 		return 0, err

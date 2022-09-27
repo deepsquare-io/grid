@@ -7,8 +7,8 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 )
 
-func JobDefinitionMapToSlurm(j metascheduler.JobDefinition, t *big.Int, body string) *slurm.JobDefinition {
-	return &slurm.JobDefinition{
+func JobDefinitionMapToSlurm(j metascheduler.JobDefinition, t *big.Int, body string) slurm.JobDefinition {
+	return slurm.JobDefinition{
 		NTasks:        j.Ntasks,
 		GPUsPerNode:   j.GpuPerNode,
 		CPUsPerTask:   j.CpuPerTask,

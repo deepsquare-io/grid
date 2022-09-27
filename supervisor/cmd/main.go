@@ -75,7 +75,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.endpoint",
-		Value:       "https://mainnet.infura.io",
+		Value:       "https://testnet.deepsquare.run/ext/bc/23q7DGje3AFbLKCgXFWcW6eo9zsB166mfknGHt5dySefGtJboZ/rpc",
 		Usage:       "Metascheduler RPC endpoint.",
 		Destination: &ethEndpoint,
 		EnvVars:     []string{"METASCHEDULER_ENDPOINT"},
@@ -248,15 +248,21 @@ var app = &cli.App{
 
 		// Register the cluster with the declared resources
 		// TODO: automatically fetch the resources limit
-		container.eth.Register(
+		if err := container.eth.Register(
 			c,
 			nodes,
 			cpus,
 			gpus,
 			mem,
-		)
+		); err != nil {
+			return err
+		}
 
-		go container.jobWatcher.Watch(c)
+		go func() {
+			if err := container.jobWatcher.Watch(c); err != nil {
+				logger.I.Fatal("app crashed", zap.Error(err))
+			}
+		}()
 
 		// gRPC server
 		if tls {

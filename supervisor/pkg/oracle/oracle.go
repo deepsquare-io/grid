@@ -41,7 +41,8 @@ func New(
 	}
 }
 
-func (o *DataSource) FetchJobBatch(ctx context.Context, hash string) (string, error) {
+// Fetch a sbatch script based on the hash.
+func (o *DataSource) Fetch(ctx context.Context, hash string) (string, error) {
 	conn, err := grpc.Dial(o.endpoint, o.opts...)
 	if err != nil {
 		return "", err

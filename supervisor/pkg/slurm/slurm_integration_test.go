@@ -1,3 +1,5 @@
+//go:build integration
+
 package slurm_test
 
 import (
@@ -40,7 +42,7 @@ srun sleep infinity
 	}
 
 	// Act
-	_, err := suite.impl.SubmitJob(req)
+	_, err := suite.impl.Submit(req)
 
 	// Assert
 	suite.NoError(err)
