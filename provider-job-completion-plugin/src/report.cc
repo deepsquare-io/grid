@@ -1,6 +1,8 @@
 #include "report.h"
 
+extern "C" {
 #include "src/common/slurm_jobcomp.h"
+}
 
 void free_report_members(report_t *report) {
   if (report->job_name) xfree(report->job_name);

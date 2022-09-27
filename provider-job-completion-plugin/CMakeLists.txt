@@ -42,7 +42,6 @@ add_compile_options(
   -m64
   -Wall
   -Wextra
-  -Wshadow
   -Wformat=2
   -Wpointer-arith
   -Winit-self

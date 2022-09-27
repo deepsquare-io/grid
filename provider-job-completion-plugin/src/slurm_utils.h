@@ -2,7 +2,10 @@
 #define SLURM_UTIL_H
 
 #include "report.h"
-#include "src/slurmctld/slurmctld.h"
+
+extern "C" {
+#include "src/common/slurm_jobcomp.h"
+}
 
 /**
  * @brief Parse the job info and put in the report struct.

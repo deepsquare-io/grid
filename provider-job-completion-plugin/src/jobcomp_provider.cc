@@ -3,12 +3,15 @@
 
 #include "job_api.h"
 #include "report.h"
-#include "slurm_utils.h"
+extern "C" {
 #include "src/common/slurm_jobcomp.h"
+}
+#include "slurm_utils.h"
 #include "supervisor/v1alpha1/supervisor.grpc.pb.h"
 
 using supervisor::v1alpha1::SendJobResultRequest;
 
+extern "C" {
 /*
  * These variables are required by the generic plugin interface.  If they
  * are not found in the plugin, the plugin loader will ignore it.
@@ -34,9 +37,9 @@ using supervisor::v1alpha1::SendJobResultRequest;
  * plugin_version - an unsigned 32-bit integer containing the Slurm version
  * (major.minor.micro combined into a single number).
  */
-const char plugin_name[] = "Job completion plugin for providers";
-const char plugin_type[] = "jobcomp/provider";
-const uint32_t plugin_version = SLURM_VERSION_NUMBER;
+extern const char plugin_name[] = "Job completion plugin for providers";
+extern const char plugin_type[] = "jobcomp/provider";
+extern const uint32_t plugin_version = SLURM_VERSION_NUMBER;
 
 /* File descriptor used for logging */
 static char *report_url = NULL;
@@ -159,4 +162,5 @@ extern List jobcomp_p_get_jobs(void *job_cond) {
 extern int jobcomp_p_archive(void *arch_cond) {
   debug("%s: %s function is not implemented", plugin_type, __func__);
   return SLURM_SUCCESS;
+}
 }

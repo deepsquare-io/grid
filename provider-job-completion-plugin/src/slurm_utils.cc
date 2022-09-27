@@ -2,8 +2,10 @@
 
 #include <cmath>
 
+extern "C" {
 #include "src/common/gres.h"
 #include "src/common/xstring.h"
+}
 
 void parse_slurm_job_info(job_record_t* job, report_t* report) {
   report->job_id = job->job_id;
