@@ -164,12 +164,26 @@ var flags = []cli.Flag{
 		Destination: &scancel,
 		EnvVars:     []string{"SLURM_SCANCEL_PATH"},
 	},
+	&cli.StringFlag{
+		Name:        "slurm.squeue",
+		Value:       "/usr/bin/ssqueue",
+		Usage:       "Server-side SLURM squeue path.",
+		Destination: &squeue,
+		EnvVars:     []string{"SLURM_SQUEUE_PATH"},
+	},
+	&cli.StringFlag{
+		Name:        "slurm.control",
+		Value:       "/usr/bin/scontrol",
+		Usage:       "Server-side SLURM scontrol path.",
+		Destination: &scontrol,
+		EnvVars:     []string{"SLURM_SCONTROL_PATH"},
+	},
 	&cli.Uint64Flag{
 		Name:        "res.nodes",
 		Usage:       "Total number of Nodes reported by `scontrol show partitions`",
 		Destination: &nodes,
 		Required:    true,
-		EnvVars:     []string{"TOTAL_Nodes"},
+		EnvVars:     []string{"TOTAL_NODES"},
 	},
 	&cli.Uint64Flag{
 		Name:        "res.cpus",
