@@ -36,7 +36,6 @@ func New(
 
 // SendJobResult to the ethereum network
 func (s *jobAPIServer) SendJobResult(ctx context.Context, req *supervisorv1alpha1.SendJobResultRequest) (*supervisorv1alpha1.SendJobResultResponse, error) {
-	logger.I.Info("Received job result", zap.Any("job_result", req))
 	res := req.GetJobResult()
 	jobName, err := hex.DecodeString(res.JobName)
 	if err != nil {
@@ -45,5 +44,6 @@ func (s *jobAPIServer) SendJobResult(ctx context.Context, req *supervisorv1alpha
 	var jobNameFixedLength [32]byte
 	copy(jobNameFixedLength[:], jobName)
 	s.finisher.FinishJob(ctx, jobNameFixedLength, new(big.Int).SetUint64(res.JobDuration))
+	logger.I.Info("Received job result", zap.Any("job_result", req))
 	return &supervisorv1alpha1.SendJobResultResponse{}, nil
 }

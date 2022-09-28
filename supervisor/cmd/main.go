@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"os"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
@@ -20,14 +22,13 @@ var (
 	keyFile  string
 	certFile string
 
-	oracleEndpoint               string
-	oracleTLS                    bool
-	oracleCAFile                 string
-	oracleServerHostOverride     string
-	ethEndpoint                  string
-	ethHexPK                     string
-	metaschedulerSmartContract   string
-	providerManagerSmartContract string
+	oracleEndpoint             string
+	oracleTLS                  bool
+	oracleCAFile               string
+	oracleServerHostOverride   string
+	ethEndpoint                string
+	ethHexPK                   string
+	metaschedulerSmartContract string
 
 	slurmSSHAddress   string
 	slurmSSHB64PK     string
@@ -114,13 +115,6 @@ var flags = []cli.Flag{
 		Usage:       "Metascheduler smart-contract address.",
 		Destination: &metaschedulerSmartContract,
 		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
-	},
-	&cli.StringFlag{
-		Name:        "provider-manager.smart-contract",
-		Value:       "0x",
-		Usage:       "Provider Manager smart-contract address.",
-		Destination: &providerManagerSmartContract,
-		EnvVars:     []string{"PROVIDER_MANAGER_SMART_CONTRACT"},
 	},
 	&cli.StringFlag{
 		Name:        "eth.private-key",
@@ -228,7 +222,6 @@ func Init() *Container {
 		ethEndpoint,
 		ethHexPK,
 		metaschedulerSmartContract,
-		providerManagerSmartContract,
 	)
 	slurmJobService := slurm.New(
 		slurmSSHAddress,
@@ -268,6 +261,15 @@ var app = &cli.App{
 		c := ctx.Context
 		container := Init()
 
+		go func(ctx context.Context) error {
+			for {
+				if err := container.eth.Ping(ctx); err != nil {
+					logger.I.Error("ping failed", zap.Error(err))
+				}
+				time.Sleep(time.Duration(30 * time.Second))
+			}
+		}(c)
+
 		// Register the cluster with the declared resources
 		// TODO: automatically fetch the resources limit
 		if err := container.eth.Register(
@@ -280,11 +282,13 @@ var app = &cli.App{
 			return err
 		}
 
-		go func() {
+		go func(c context.Context) {
 			if err := container.jobWatcher.Watch(c); err != nil {
 				logger.I.Fatal("app crashed", zap.Error(err))
 			}
-		}()
+		}(c)
+
+		logger.I.Info("listening", zap.String("address", listenAddress))
 
 		// gRPC server
 		return container.server.ListenAndServe(listenAddress)

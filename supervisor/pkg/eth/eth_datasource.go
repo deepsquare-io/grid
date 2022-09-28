@@ -19,19 +19,17 @@ var claimNextJobSigHash = crypto.Keccak256Hash(claimNextJobSig)
 
 // DataSource handles communications with the smart contract.
 type DataSource struct {
-	client          *ethclient.Client
-	metascheduler   *metascheduler.MetaScheduler
-	providerManager *metascheduler.ProviderManager
-	pk              *ecdsa.PrivateKey
-	pub             *ecdsa.PublicKey
-	fromAddress     common.Address
+	client        *ethclient.Client
+	metascheduler *metascheduler.MetaScheduler
+	pk            *ecdsa.PrivateKey
+	pub           *ecdsa.PublicKey
+	fromAddress   common.Address
 }
 
 func New(
 	rpcEndpoint string,
 	hexPK string,
 	metaschedulerAddress string,
-	providerManagerAddress string,
 ) *DataSource {
 	client, err := ethclient.Dial(rpcEndpoint)
 	if err != nil {
@@ -41,10 +39,6 @@ func New(
 	ms, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerAddress), client)
 	if err != nil {
 		logger.I.Fatal("metascheduler dial failed", zap.Error(err))
-	}
-	pm, err := metascheduler.NewProviderManager(common.HexToAddress(providerManagerAddress), client)
-	if err != nil {
-		logger.I.Fatal("providerManager dial failed", zap.Error(err))
 	}
 	pk, err := crypto.HexToECDSA(hexPK)
 	if err != nil {
@@ -59,12 +53,11 @@ func New(
 	fromAddress := crypto.PubkeyToAddress(*pubECDSA)
 
 	return &DataSource{
-		client:          client,
-		metascheduler:   ms,
-		providerManager: pm,
-		pk:              pk,
-		pub:             pubECDSA,
-		fromAddress:     fromAddress,
+		client:        client,
+		metascheduler: ms,
+		pk:            pk,
+		pub:           pubECDSA,
+		fromAddress:   fromAddress,
 	}
 }
 
@@ -141,27 +134,30 @@ func (s *DataSource) Register(
 	gpus uint64,
 	mem uint64,
 ) error {
-	auth, err := s.auth(ctx)
-	if err != nil {
-		return err
-	}
+	// TODO: implements
+	// auth, err := s.auth(ctx)
+	// if err != nil {
+	// 	return err
+	// }
 
-	tx, err := s.providerManager.Register(
-		auth,
-		cpus,
-		gpus,
-		mem,
-		nodes,
-	)
-	if err != nil {
-		return err
-	}
-	logger.I.Info("called register", zap.String("tx", tx.Hash().String()))
-	_, err = bind.WaitMined(ctx, s.client, tx)
-	logger.I.Info("register mined", zap.String("tx", tx.Hash().String()))
-	return err
+	// tx, err := s.metascheduler.Register(
+	// 	auth,
+	// 	cpus,
+	// 	gpus,
+	// 	mem,
+	// 	nodes,
+	// )
+	// if err != nil {
+	// 	return err
+	// }
+	// logger.I.Info("called register", zap.String("tx", tx.Hash().String()))
+	// _, err = bind.WaitMined(ctx, s.client, tx)
+	// logger.I.Info("register mined", zap.String("tx", tx.Hash().String()))
+	// return err
+	return nil
 }
 
+// FinishJob sends the invoice to the metascheduler
 func (s *DataSource) FinishJob(
 	ctx context.Context,
 	jobID [32]byte,
@@ -180,5 +176,15 @@ func (s *DataSource) FinishJob(
 		return err
 	}
 	logger.I.Info("called finish job", zap.String("tx", tx.Hash().String()))
+	return err
+}
+
+// Ping is a healthcheck
+func (s *DataSource) Ping(ctx context.Context) error {
+	pong, err := s.metascheduler.Ping(nil)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("called ping", zap.String("result", pong))
 	return err
 }

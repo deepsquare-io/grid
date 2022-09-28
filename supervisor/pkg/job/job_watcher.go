@@ -59,19 +59,19 @@ func (w *Watcher) Watch(parent context.Context) error {
 	resp := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
 	done := make(chan error)
 	for {
-		func() {
+		func(parent context.Context) {
 			ctx, cancel := context.WithTimeout(parent, claimJobMaxTimeout)
 			defer cancel()
 
-			go func() {
+			go func(ctx context.Context) {
 				r, err := w.claimer.Claim(ctx)
 				if err != nil {
-					logger.I.Error("claimed a job", zap.Any("event", r))
 					done <- err
 				} else {
+					logger.I.Error("claimed a job", zap.Any("event", r))
 					resp <- r
 				}
-			}()
+			}(ctx)
 
 			select {
 			case r := <-resp:
@@ -104,7 +104,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 			case <-ctx.Done():
 				logger.I.Warn("claimJob context closed", zap.Error(ctx.Err()))
 			}
-		}()
+		}(parent)
 
 		time.Sleep(pollingTime)
 	}
