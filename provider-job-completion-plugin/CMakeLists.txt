@@ -24,15 +24,19 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 option(USE_SYSTEM_GRPC "Use system installed gRPC" OFF)
 if(USE_SYSTEM_GRPC)
-  find_package(gRPC CONFIG REQUIRED)
+  find_package(grpc CONFIG REQUIRED)
 else()
   include(FetchContent)
   FetchContent_Declare(
-    gRPC
+    grpc
     GIT_REPOSITORY https://github.com/grpc/grpc
     GIT_TAG v1.49.1)
   set(FETCHCONTENT_QUIET OFF)
-  FetchContent_MakeAvailable(gRPC)
+  FetchContent_GetProperties(grpc)
+  if(NOT grpc_POPULATED)
+    FetchContent_Populate(grpc)
+    add_subdirectory(${grpc_SOURCE_DIR} ${grpc_BINARY_DIR} EXCLUDE_FROM_ALL)
+  endif()
 endif()
 
 find_package(Threads REQUIRED)
