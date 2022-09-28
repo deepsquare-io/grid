@@ -8,8 +8,6 @@ CONTRACTSPATH="${SCRIPTPATH}/../../smart-contracts"
 
 cd "${CONTRACTSPATH}"
 
-pnpm exec hardhat compile
-
 mkdir -p "${PROJECTPATH}/gen/go/contracts/metascheduler"
 solc ./contracts/Metascheduler.sol \
   --base-path . \
