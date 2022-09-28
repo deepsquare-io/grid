@@ -11,27 +11,37 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func listenAndServe(addr string, opts []grpc.ServerOption) error {
+type Server struct {
+	grpc *grpc.Server
+}
+
+func New(
+	tls bool,
+	keyFile string,
+	certFile string,
+	jobFinisher jobapi.JobFinisher,
+) *Server {
+	var opts []grpc.ServerOption
+	if tls {
+		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
+		if err != nil {
+			logger.I.Fatal("failed to load certificates", zap.Error(err))
+		}
+		opts = []grpc.ServerOption{grpc.Creds(creds)}
+	}
+	grpcServer := grpc.NewServer(opts...)
+	supervisorv1alpha1.RegisterJobAPIServer(grpcServer, jobapi.New(jobFinisher))
+
+	return &Server{
+		grpc: grpcServer,
+	}
+}
+
+func (s *Server) ListenAndServe(addr string) error {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
-	grpcServer := grpc.NewServer(opts...)
-	supervisorv1alpha1.RegisterJobAPIServer(grpcServer, jobapi.New())
 
-	return grpcServer.Serve(lis)
-}
-
-func ListenAndServe(addr string) error {
-	opts := []grpc.ServerOption{}
-	return listenAndServe(addr, opts)
-}
-
-func ListenAndServeTLS(addr string, keyFile string, certFile string) error {
-	creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
-	if err != nil {
-		logger.I.Fatal("failed to load certificates", zap.Error(err))
-	}
-	opts := []grpc.ServerOption{grpc.Creds(creds)}
-	return listenAndServe(addr, opts)
+	return s.grpc.Serve(lis)
 }

@@ -75,7 +75,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.endpoint",
-		Value:       "https://testnet.deepsquare.run/ext/bc/23q7DGje3AFbLKCgXFWcW6eo9zsB166mfknGHt5dySefGtJboZ/rpc",
+		Value:       "https://testnet.deepsquare.run/rpc",
 		Usage:       "Metascheduler RPC endpoint.",
 		Destination: &ethEndpoint,
 		EnvVars:     []string{"METASCHEDULER_ENDPOINT"},
@@ -210,6 +210,7 @@ var flags = []cli.Flag{
 
 // Container stores the instances for dependency injection.
 type Container struct {
+	server     *server.Server
 	oracle     *oracle.DataSource
 	eth        *eth.DataSource
 	slurm      *slurm.Service
@@ -243,12 +244,19 @@ func Init() *Container {
 		slurmJobService,
 		oracleDataSource,
 	)
+	server := server.New(
+		tls,
+		keyFile,
+		certFile,
+		ethDataSource,
+	)
 
 	return &Container{
 		oracle:     oracleDataSource,
 		eth:        ethDataSource,
 		slurm:      slurmJobService,
 		jobWatcher: watcher,
+		server:     server,
 	}
 }
 
@@ -279,11 +287,7 @@ var app = &cli.App{
 		}()
 
 		// gRPC server
-		if tls {
-			return server.ListenAndServeTLS(listenAddress, keyFile, certFile)
-		} else {
-			return server.ListenAndServe(listenAddress)
-		}
+		return container.server.ListenAndServe(listenAddress)
 	},
 }
 

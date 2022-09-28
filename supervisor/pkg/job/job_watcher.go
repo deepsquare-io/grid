@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+	"encoding/hex"
 	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
@@ -81,7 +82,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 				}
 				job := eth.JobDefinitionMapToSlurm(r.JobDefinition, r.MaxDurationMinute, body)
 				req := &slurm.SubmitJobRequest{
-					Name:          string(r.JobId[:]),
+					Name:          hex.EncodeToString(r.JobId[:]),
 					User:          r.CustomerAddr.String(),
 					JobDefinition: &job,
 				}

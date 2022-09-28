@@ -110,6 +110,7 @@ func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerCla
 	if err != nil {
 		return nil, err
 	}
+	logger.I.Info("called claimnextjob", zap.String("tx", tx.Hash().String()))
 	receipt, err := bind.WaitMined(ctx, s.client, tx)
 	if err != nil {
 		return nil, err
@@ -155,6 +156,29 @@ func (s *DataSource) Register(
 	if err != nil {
 		return err
 	}
+	logger.I.Info("called register", zap.String("tx", tx.Hash().String()))
 	_, err = bind.WaitMined(ctx, s.client, tx)
+	logger.I.Info("register mined", zap.String("tx", tx.Hash().String()))
+	return err
+}
+
+func (s *DataSource) FinishJob(
+	ctx context.Context,
+	jobID [32]byte,
+	jobDuration *big.Int,
+) error {
+	auth, err := s.auth(ctx)
+	if err != nil {
+		return err
+	}
+	tx, err := s.metascheduler.FinishJob(
+		auth,
+		jobID,
+		jobDuration,
+	)
+	if err != nil {
+		return err
+	}
+	logger.I.Info("called finish job", zap.String("tx", tx.Hash().String()))
 	return err
 }
