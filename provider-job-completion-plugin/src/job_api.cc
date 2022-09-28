@@ -1,5 +1,9 @@
 #include "job_api.h"
 
+extern "C" {
+#include "src/common/slurm_jobcomp.h"
+}
+
 using supervisor::v1alpha1::SendJobResultRequest;
 using supervisor::v1alpha1::SendJobResultResponse;
 
@@ -19,5 +23,10 @@ bool JobAPIClient::_SendJobResult(const SendJobResultRequest& req) {
 
   SendJobResultResponse rep;
   grpc::Status status = stub_->SendJobResult(&context, req, &rep);
-  return status.ok();
+  bool rc = status.ok();
+  if (!rc) {
+    error("%s: error %d: %s", plugin_type, (int)status.error_code(),
+          status.error_message().c_str());
+  }
+  return rc;
 }

@@ -128,7 +128,7 @@ extern int jobcomp_p_log_record(job_record_t *job_ptr) {
 
   auto req = MakeSendJobResultRequestFromReport(report);
   if (!job_api.SendJobResult(req)) {
-    return error("%s: publish failed", plugin_type);
+    error("%s: publish failed", plugin_type);
   }
 
   free_report_members(&report);
