@@ -7,7 +7,7 @@ extern "C" {
 #include "src/common/slurm_jobcomp.h"
 }
 #include "slurm_utils.h"
-#include "supervisor/v1alpha1/supervisor.grpc.pb.h"
+#include "supervisor/v1alpha1/job.grpc.pb.h"
 
 using supervisor::v1alpha1::SendJobResultRequest;
 

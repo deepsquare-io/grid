@@ -242,6 +242,7 @@ func Init() *Container {
 		keyFile,
 		certFile,
 		ethDataSource,
+		slurmSSHB64PK,
 	)
 
 	return &Container{

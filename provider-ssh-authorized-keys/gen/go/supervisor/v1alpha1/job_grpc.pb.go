@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: supervisor/v1alpha1/supervisor.proto
+// source: supervisor/v1alpha1/job.proto
 
 package supervisorv1alpha1
 
@@ -137,5 +137,5 @@ var JobAPI_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "supervisor/v1alpha1/supervisor.proto",
+	Metadata: "supervisor/v1alpha1/job.proto",
 }

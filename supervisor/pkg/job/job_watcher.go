@@ -106,11 +106,11 @@ func (w *Watcher) Watch(parent context.Context) error {
 				)
 			case err := <-done:
 				if err != nil {
-					logger.I.Error("claimJob failed", zap.Error(err))
+					logger.I.Error("watcher failed", zap.Error(err))
 				}
 
 			case <-ctx.Done():
-				logger.I.Warn("claimJob context closed", zap.Error(ctx.Err()))
+				logger.I.Warn("watcher context closed", zap.Error(ctx.Err()))
 			}
 		}(parent)
 

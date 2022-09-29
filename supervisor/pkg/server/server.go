@@ -6,7 +6,8 @@ import (
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
-	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/sshapi"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -22,6 +23,7 @@ func New(
 	keyFile string,
 	certFile string,
 	jobHandler jobapi.JobHandler,
+	pkB64 string,
 ) *Server {
 	opts := []grpc.ServerOption{
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
@@ -43,6 +45,10 @@ func New(
 	supervisorv1alpha1.RegisterJobAPIServer(
 		grpcServer,
 		jobapi.New(jobHandler),
+	)
+	supervisorv1alpha1.RegisterSshAPIServer(
+		grpcServer,
+		sshapi.New(pkB64),
 	)
 
 	return &Server{

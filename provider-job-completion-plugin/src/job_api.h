@@ -4,7 +4,7 @@
 #include <grpcpp/channel.h>
 
 #include "report.h"
-#include "supervisor/v1alpha1/supervisor.grpc.pb.h"
+#include "supervisor/v1alpha1/job.grpc.pb.h"
 
 using supervisor::v1alpha1::JobAPI;
 using supervisor::v1alpha1::SendJobFailedRequest;

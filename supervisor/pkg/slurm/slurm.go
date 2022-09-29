@@ -86,6 +86,60 @@ func (s *Service) establish(user string) (session *ssh.Session, close func(), er
 	}, nil
 }
 
+// execWithTimeout executes a command on the remote host with a timeout
+func (s *Service) execWithTimeout(ctx context.Context, user string, cmd string) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, execTimeout)
+	defer cancel()
+	stdChan := make(chan struct {
+		string
+		error
+	})
+
+	go func() {
+		sess, close, err := s.establish(user)
+		if err != nil {
+			stdChan <- struct {
+				string
+				error
+			}{
+				"",
+				err,
+			}
+			return
+		}
+		defer close()
+
+		out, err := sess.CombinedOutput(cmd)
+		stdChan <- struct {
+			string
+			error
+		}{
+			string(out),
+			err,
+		}
+	}()
+
+	select {
+	case std := <-stdChan:
+		if std.error != nil {
+			logger.I.Error(
+				"command failed",
+				zap.Error(std.error),
+				zap.Any("cmd", cmd),
+				zap.String("output", std.string),
+			)
+			return std.string, std.error
+		}
+		return std.string, std.error
+	case <-ctx.Done():
+		logger.I.Error("command timed out",
+			zap.Error(ctx.Err()),
+			zap.Any("cmd", cmd),
+		)
+		return "", ctx.Err()
+	}
+}
+
 type CancelJobRequest struct {
 	// Name of the job
 	Name string
@@ -95,24 +149,9 @@ type CancelJobRequest struct {
 
 // CancelJob kils a job using scancel command.
 func (s *Service) CancelJob(ctx context.Context, req *CancelJobRequest) error {
-	sess, close, err := s.establish(req.User)
-	if err != nil {
-		return err
-	}
-	defer close()
-
 	cmd := fmt.Sprintf("%s --name=%s --me", s.scancel, req.Name)
-	out, err := sess.CombinedOutput(cmd)
-	if err != nil {
-		logger.I.Error(
-			"scancel failed",
-			zap.Error(err),
-			zap.Any("params", req),
-			zap.String("output", string(out)),
-		)
-	}
-
-	return nil
+	_, err := s.execWithTimeout(ctx, req.User, cmd)
+	return err
 }
 
 type SubmitJobRequest struct {
@@ -204,55 +243,4 @@ func (s *Service) FindRunningJobByName(ctx context.Context, req *FindRunningJobB
 	}
 
 	return strconv.Atoi(strings.TrimSpace(strings.TrimRight(out, "\n")))
-}
-
-// execWithTimeout executes a command on the remote host with a timeout
-func (s *Service) execWithTimeout(ctx context.Context, user string, cmd string) (string, error) {
-	ctx, cancel := context.WithTimeout(ctx, execTimeout)
-	defer cancel()
-	stdChan := make(chan struct {
-		string
-		error
-	})
-
-	go func() {
-		sess, close, err := s.establish(user)
-		if err != nil {
-			stdChan <- struct {
-				string
-				error
-			}{
-				"",
-				err,
-			}
-			return
-		}
-		defer close()
-
-		out, err := sess.CombinedOutput(cmd)
-		stdChan <- struct {
-			string
-			error
-		}{
-			string(out),
-			err,
-		}
-	}()
-
-	select {
-	case std := <-stdChan:
-		if std.error != nil {
-			logger.I.Error(
-				"command failed",
-				zap.Error(std.error),
-				zap.Any("cmd", cmd),
-				zap.String("output", std.string),
-			)
-			return std.string, std.error
-		}
-		return std.string, std.error
-	case <-ctx.Done():
-		logger.I.Error("squeue timed out", zap.Error(ctx.Err()))
-		return "", ctx.Err()
-	}
 }
