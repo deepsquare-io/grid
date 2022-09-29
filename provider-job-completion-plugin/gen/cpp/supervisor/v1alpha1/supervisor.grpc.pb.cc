@@ -24,6 +24,7 @@ namespace v1alpha1 {
 
 static const char* JobAPI_method_names[] = {
   "/supervisor.v1alpha1.JobAPI/SendJobResult",
+  "/supervisor.v1alpha1.JobAPI/SendJobFailed",
 };
 
 std::unique_ptr< JobAPI::Stub> JobAPI::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -34,6 +35,7 @@ std::unique_ptr< JobAPI::Stub> JobAPI::NewStub(const std::shared_ptr< ::grpc::Ch
 
 JobAPI::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
   : channel_(channel), rpcmethod_SendJobResult_(JobAPI_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SendJobFailed_(JobAPI_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status JobAPI::Stub::SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::supervisor::v1alpha1::SendJobResultResponse* response) {
@@ -59,6 +61,29 @@ void JobAPI::Stub::async::SendJobResult(::grpc::ClientContext* context, const ::
   return result;
 }
 
+::grpc::Status JobAPI::Stub::SendJobFailed(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailedRequest& request, ::supervisor::v1alpha1::SendJobFailedResponse* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::supervisor::v1alpha1::SendJobFailedRequest, ::supervisor::v1alpha1::SendJobFailedResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SendJobFailed_, context, request, response);
+}
+
+void JobAPI::Stub::async::SendJobFailed(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailedRequest* request, ::supervisor::v1alpha1::SendJobFailedResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::supervisor::v1alpha1::SendJobFailedRequest, ::supervisor::v1alpha1::SendJobFailedResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendJobFailed_, context, request, response, std::move(f));
+}
+
+void JobAPI::Stub::async::SendJobFailed(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailedRequest* request, ::supervisor::v1alpha1::SendJobFailedResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendJobFailed_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailedResponse>* JobAPI::Stub::PrepareAsyncSendJobFailedRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailedRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::supervisor::v1alpha1::SendJobFailedResponse, ::supervisor::v1alpha1::SendJobFailedRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SendJobFailed_, context, request);
+}
+
+::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailedResponse>* JobAPI::Stub::AsyncSendJobFailedRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailedRequest& request, ::grpc::CompletionQueue* cq) {
+  auto* result =
+    this->PrepareAsyncSendJobFailedRaw(context, request, cq);
+  result->StartCall();
+  return result;
+}
+
 JobAPI::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       JobAPI_method_names[0],
@@ -70,12 +95,29 @@ JobAPI::Service::Service() {
              ::supervisor::v1alpha1::SendJobResultResponse* resp) {
                return service->SendJobResult(ctx, req, resp);
              }, this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      JobAPI_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< JobAPI::Service, ::supervisor::v1alpha1::SendJobFailedRequest, ::supervisor::v1alpha1::SendJobFailedResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+          [](JobAPI::Service* service,
+             ::grpc::ServerContext* ctx,
+             const ::supervisor::v1alpha1::SendJobFailedRequest* req,
+             ::supervisor::v1alpha1::SendJobFailedResponse* resp) {
+               return service->SendJobFailed(ctx, req, resp);
+             }, this)));
 }
 
 JobAPI::Service::~Service() {
 }
 
 ::grpc::Status JobAPI::Service::SendJobResult(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status JobAPI::Service::SendJobFailed(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SendJobFailedRequest* request, ::supervisor::v1alpha1::SendJobFailedResponse* response) {
   (void) context;
   (void) request;
   (void) response;

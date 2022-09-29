@@ -47,9 +47,12 @@ struct TableStruct_supervisor_2fv1alpha1_2fsupervisor_2eproto {
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_supervisor_2fv1alpha1_2fsupervisor_2eproto;
 namespace supervisor {
 namespace v1alpha1 {
-class JobResult;
-struct JobResultDefaultTypeInternal;
-extern JobResultDefaultTypeInternal _JobResult_default_instance_;
+class SendJobFailedRequest;
+struct SendJobFailedRequestDefaultTypeInternal;
+extern SendJobFailedRequestDefaultTypeInternal _SendJobFailedRequest_default_instance_;
+class SendJobFailedResponse;
+struct SendJobFailedResponseDefaultTypeInternal;
+extern SendJobFailedResponseDefaultTypeInternal _SendJobFailedResponse_default_instance_;
 class SendJobResultRequest;
 struct SendJobResultRequestDefaultTypeInternal;
 extern SendJobResultRequestDefaultTypeInternal _SendJobResultRequest_default_instance_;
@@ -59,7 +62,8 @@ extern SendJobResultResponseDefaultTypeInternal _SendJobResultResponse_default_i
 }  // namespace v1alpha1
 }  // namespace supervisor
 PROTOBUF_NAMESPACE_OPEN
-template<> ::supervisor::v1alpha1::JobResult* Arena::CreateMaybeMessage<::supervisor::v1alpha1::JobResult>(Arena*);
+template<> ::supervisor::v1alpha1::SendJobFailedRequest* Arena::CreateMaybeMessage<::supervisor::v1alpha1::SendJobFailedRequest>(Arena*);
+template<> ::supervisor::v1alpha1::SendJobFailedResponse* Arena::CreateMaybeMessage<::supervisor::v1alpha1::SendJobFailedResponse>(Arena*);
 template<> ::supervisor::v1alpha1::SendJobResultRequest* Arena::CreateMaybeMessage<::supervisor::v1alpha1::SendJobResultRequest>(Arena*);
 template<> ::supervisor::v1alpha1::SendJobResultResponse* Arena::CreateMaybeMessage<::supervisor::v1alpha1::SendJobResultResponse>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
@@ -67,181 +71,6 @@ namespace supervisor {
 namespace v1alpha1 {
 
 // ===================================================================
-
-class JobResult final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:supervisor.v1alpha1.JobResult) */ {
- public:
-  inline JobResult() : JobResult(nullptr) {}
-  ~JobResult() override;
-  explicit PROTOBUF_CONSTEXPR JobResult(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
-
-  JobResult(const JobResult& from);
-  JobResult(JobResult&& from) noexcept
-    : JobResult() {
-    *this = ::std::move(from);
-  }
-
-  inline JobResult& operator=(const JobResult& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline JobResult& operator=(JobResult&& from) noexcept {
-    if (this == &from) return *this;
-    if (GetOwningArena() == from.GetOwningArena()
-  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-        && GetOwningArena() != nullptr
-  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
-    ) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const JobResult& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const JobResult* internal_default_instance() {
-    return reinterpret_cast<const JobResult*>(
-               &_JobResult_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    0;
-
-  friend void swap(JobResult& a, JobResult& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(JobResult* other) {
-    if (other == this) return;
-  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() != nullptr &&
-        GetOwningArena() == other->GetOwningArena()) {
-   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() == other->GetOwningArena()) {
-  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(JobResult* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  JobResult* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<JobResult>(arena);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
-  void CopyFrom(const JobResult& from);
-  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
-  void MergeFrom( const JobResult& from) {
-    JobResult::MergeImpl(*this, from);
-  }
-  private:
-  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
-  public:
-  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
-  uint8_t* _InternalSerialize(
-      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
-
-  private:
-  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
-  void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(JobResult* other);
-
-  private:
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "supervisor.v1alpha1.JobResult";
-  }
-  protected:
-  explicit JobResult(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                       bool is_message_owned = false);
-  public:
-
-  static const ClassData _class_data_;
-  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  enum : int {
-    kJobNameFieldNumber = 1,
-    kJobIdFieldNumber = 2,
-    kJobDurationFieldNumber = 3,
-  };
-  // string job_name = 1 [json_name = "jobName"];
-  void clear_job_name();
-  const std::string& job_name() const;
-  template <typename ArgT0 = const std::string&, typename... ArgT>
-  void set_job_name(ArgT0&& arg0, ArgT... args);
-  std::string* mutable_job_name();
-  PROTOBUF_NODISCARD std::string* release_job_name();
-  void set_allocated_job_name(std::string* job_name);
-  private:
-  const std::string& _internal_job_name() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_job_name(const std::string& value);
-  std::string* _internal_mutable_job_name();
-  public:
-
-  // uint64 job_id = 2 [json_name = "jobId"];
-  void clear_job_id();
-  uint64_t job_id() const;
-  void set_job_id(uint64_t value);
-  private:
-  uint64_t _internal_job_id() const;
-  void _internal_set_job_id(uint64_t value);
-  public:
-
-  // uint64 job_duration = 3 [json_name = "jobDuration"];
-  void clear_job_duration();
-  uint64_t job_duration() const;
-  void set_job_duration(uint64_t value);
-  private:
-  uint64_t _internal_job_duration() const;
-  void _internal_set_job_duration(uint64_t value);
-  public:
-
-  // @@protoc_insertion_point(class_scope:supervisor.v1alpha1.JobResult)
- private:
-  class _Internal;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  struct Impl_ {
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr job_name_;
-    uint64_t job_id_;
-    uint64_t job_duration_;
-    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_supervisor_2fv1alpha1_2fsupervisor_2eproto;
-};
-// -------------------------------------------------------------------
 
 class SendJobResultRequest final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:supervisor.v1alpha1.SendJobResultRequest) */ {
@@ -291,7 +120,7 @@ class SendJobResultRequest final :
                &_SendJobResultRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    1;
+    0;
 
   friend void swap(SendJobResultRequest& a, SendJobResultRequest& b) {
     a.Swap(&b);
@@ -364,25 +193,41 @@ class SendJobResultRequest final :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kJobResultFieldNumber = 1,
+    kJobNameFieldNumber = 1,
+    kJobIdFieldNumber = 2,
+    kJobDurationFieldNumber = 3,
   };
-  // .supervisor.v1alpha1.JobResult job_result = 1 [json_name = "jobResult"];
-  bool has_job_result() const;
+  // string job_name = 1 [json_name = "jobName"];
+  void clear_job_name();
+  const std::string& job_name() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_job_name(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_job_name();
+  PROTOBUF_NODISCARD std::string* release_job_name();
+  void set_allocated_job_name(std::string* job_name);
   private:
-  bool _internal_has_job_result() const;
+  const std::string& _internal_job_name() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_job_name(const std::string& value);
+  std::string* _internal_mutable_job_name();
   public:
-  void clear_job_result();
-  const ::supervisor::v1alpha1::JobResult& job_result() const;
-  PROTOBUF_NODISCARD ::supervisor::v1alpha1::JobResult* release_job_result();
-  ::supervisor::v1alpha1::JobResult* mutable_job_result();
-  void set_allocated_job_result(::supervisor::v1alpha1::JobResult* job_result);
+
+  // uint64 job_id = 2 [json_name = "jobId"];
+  void clear_job_id();
+  uint64_t job_id() const;
+  void set_job_id(uint64_t value);
   private:
-  const ::supervisor::v1alpha1::JobResult& _internal_job_result() const;
-  ::supervisor::v1alpha1::JobResult* _internal_mutable_job_result();
+  uint64_t _internal_job_id() const;
+  void _internal_set_job_id(uint64_t value);
   public:
-  void unsafe_arena_set_allocated_job_result(
-      ::supervisor::v1alpha1::JobResult* job_result);
-  ::supervisor::v1alpha1::JobResult* unsafe_arena_release_job_result();
+
+  // uint64 job_duration = 3 [json_name = "jobDuration"];
+  void clear_job_duration();
+  uint64_t job_duration() const;
+  void set_job_duration(uint64_t value);
+  private:
+  uint64_t _internal_job_duration() const;
+  void _internal_set_job_duration(uint64_t value);
+  public:
 
   // @@protoc_insertion_point(class_scope:supervisor.v1alpha1.SendJobResultRequest)
  private:
@@ -392,7 +237,9 @@ class SendJobResultRequest final :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   struct Impl_ {
-    ::supervisor::v1alpha1::JobResult* job_result_;
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr job_name_;
+    uint64_t job_id_;
+    uint64_t job_duration_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -447,7 +294,7 @@ class SendJobResultResponse final :
                &_SendJobResultResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    2;
+    1;
 
   friend void swap(SendJobResultResponse& a, SendJobResultResponse& b) {
     a.Swap(&b);
@@ -516,6 +363,288 @@ class SendJobResultResponse final :
   };
   friend struct ::TableStruct_supervisor_2fv1alpha1_2fsupervisor_2eproto;
 };
+// -------------------------------------------------------------------
+
+class SendJobFailedRequest final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:supervisor.v1alpha1.SendJobFailedRequest) */ {
+ public:
+  inline SendJobFailedRequest() : SendJobFailedRequest(nullptr) {}
+  ~SendJobFailedRequest() override;
+  explicit PROTOBUF_CONSTEXPR SendJobFailedRequest(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SendJobFailedRequest(const SendJobFailedRequest& from);
+  SendJobFailedRequest(SendJobFailedRequest&& from) noexcept
+    : SendJobFailedRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline SendJobFailedRequest& operator=(const SendJobFailedRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SendJobFailedRequest& operator=(SendJobFailedRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const SendJobFailedRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SendJobFailedRequest* internal_default_instance() {
+    return reinterpret_cast<const SendJobFailedRequest*>(
+               &_SendJobFailedRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  friend void swap(SendJobFailedRequest& a, SendJobFailedRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SendJobFailedRequest* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SendJobFailedRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SendJobFailedRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SendJobFailedRequest>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const SendJobFailedRequest& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const SendJobFailedRequest& from) {
+    SendJobFailedRequest::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SendJobFailedRequest* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "supervisor.v1alpha1.SendJobFailedRequest";
+  }
+  protected:
+  explicit SendJobFailedRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kJobNameFieldNumber = 1,
+    kJobIdFieldNumber = 2,
+  };
+  // string job_name = 1 [json_name = "jobName"];
+  void clear_job_name();
+  const std::string& job_name() const;
+  template <typename ArgT0 = const std::string&, typename... ArgT>
+  void set_job_name(ArgT0&& arg0, ArgT... args);
+  std::string* mutable_job_name();
+  PROTOBUF_NODISCARD std::string* release_job_name();
+  void set_allocated_job_name(std::string* job_name);
+  private:
+  const std::string& _internal_job_name() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_job_name(const std::string& value);
+  std::string* _internal_mutable_job_name();
+  public:
+
+  // uint64 job_id = 2 [json_name = "jobId"];
+  void clear_job_id();
+  uint64_t job_id() const;
+  void set_job_id(uint64_t value);
+  private:
+  uint64_t _internal_job_id() const;
+  void _internal_set_job_id(uint64_t value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:supervisor.v1alpha1.SendJobFailedRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr job_name_;
+    uint64_t job_id_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_supervisor_2fv1alpha1_2fsupervisor_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SendJobFailedResponse final :
+    public ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase /* @@protoc_insertion_point(class_definition:supervisor.v1alpha1.SendJobFailedResponse) */ {
+ public:
+  inline SendJobFailedResponse() : SendJobFailedResponse(nullptr) {}
+  explicit PROTOBUF_CONSTEXPR SendJobFailedResponse(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  SendJobFailedResponse(const SendJobFailedResponse& from);
+  SendJobFailedResponse(SendJobFailedResponse&& from) noexcept
+    : SendJobFailedResponse() {
+    *this = ::std::move(from);
+  }
+
+  inline SendJobFailedResponse& operator=(const SendJobFailedResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SendJobFailedResponse& operator=(SendJobFailedResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const SendJobFailedResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const SendJobFailedResponse* internal_default_instance() {
+    return reinterpret_cast<const SendJobFailedResponse*>(
+               &_SendJobFailedResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    3;
+
+  friend void swap(SendJobFailedResponse& a, SendJobFailedResponse& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SendJobFailedResponse* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SendJobFailedResponse* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  SendJobFailedResponse* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<SendJobFailedResponse>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyFrom;
+  inline void CopyFrom(const SendJobFailedResponse& from) {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::CopyImpl(*this, from);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeFrom;
+  void MergeFrom(const SendJobFailedResponse& from) {
+    ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase::MergeImpl(*this, from);
+  }
+  public:
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "supervisor.v1alpha1.SendJobFailedResponse";
+  }
+  protected:
+  explicit SendJobFailedResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:supervisor.v1alpha1.SendJobFailedResponse)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+  };
+  friend struct ::TableStruct_supervisor_2fv1alpha1_2fsupervisor_2eproto;
+};
 // ===================================================================
 
 
@@ -525,44 +654,44 @@ class SendJobResultResponse final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// JobResult
+// SendJobResultRequest
 
 // string job_name = 1 [json_name = "jobName"];
-inline void JobResult::clear_job_name() {
+inline void SendJobResultRequest::clear_job_name() {
   _impl_.job_name_.ClearToEmpty();
 }
-inline const std::string& JobResult::job_name() const {
-  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.JobResult.job_name)
+inline const std::string& SendJobResultRequest::job_name() const {
+  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.SendJobResultRequest.job_name)
   return _internal_job_name();
 }
 template <typename ArgT0, typename... ArgT>
 inline PROTOBUF_ALWAYS_INLINE
-void JobResult::set_job_name(ArgT0&& arg0, ArgT... args) {
+void SendJobResultRequest::set_job_name(ArgT0&& arg0, ArgT... args) {
  
  _impl_.job_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
-  // @@protoc_insertion_point(field_set:supervisor.v1alpha1.JobResult.job_name)
+  // @@protoc_insertion_point(field_set:supervisor.v1alpha1.SendJobResultRequest.job_name)
 }
-inline std::string* JobResult::mutable_job_name() {
+inline std::string* SendJobResultRequest::mutable_job_name() {
   std::string* _s = _internal_mutable_job_name();
-  // @@protoc_insertion_point(field_mutable:supervisor.v1alpha1.JobResult.job_name)
+  // @@protoc_insertion_point(field_mutable:supervisor.v1alpha1.SendJobResultRequest.job_name)
   return _s;
 }
-inline const std::string& JobResult::_internal_job_name() const {
+inline const std::string& SendJobResultRequest::_internal_job_name() const {
   return _impl_.job_name_.Get();
 }
-inline void JobResult::_internal_set_job_name(const std::string& value) {
+inline void SendJobResultRequest::_internal_set_job_name(const std::string& value) {
   
   _impl_.job_name_.Set(value, GetArenaForAllocation());
 }
-inline std::string* JobResult::_internal_mutable_job_name() {
+inline std::string* SendJobResultRequest::_internal_mutable_job_name() {
   
   return _impl_.job_name_.Mutable(GetArenaForAllocation());
 }
-inline std::string* JobResult::release_job_name() {
-  // @@protoc_insertion_point(field_release:supervisor.v1alpha1.JobResult.job_name)
+inline std::string* SendJobResultRequest::release_job_name() {
+  // @@protoc_insertion_point(field_release:supervisor.v1alpha1.SendJobResultRequest.job_name)
   return _impl_.job_name_.Release();
 }
-inline void JobResult::set_allocated_job_name(std::string* job_name) {
+inline void SendJobResultRequest::set_allocated_job_name(std::string* job_name) {
   if (job_name != nullptr) {
     
   } else {
@@ -574,150 +703,136 @@ inline void JobResult::set_allocated_job_name(std::string* job_name) {
     _impl_.job_name_.Set("", GetArenaForAllocation());
   }
 #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
-  // @@protoc_insertion_point(field_set_allocated:supervisor.v1alpha1.JobResult.job_name)
+  // @@protoc_insertion_point(field_set_allocated:supervisor.v1alpha1.SendJobResultRequest.job_name)
 }
 
 // uint64 job_id = 2 [json_name = "jobId"];
-inline void JobResult::clear_job_id() {
+inline void SendJobResultRequest::clear_job_id() {
   _impl_.job_id_ = uint64_t{0u};
 }
-inline uint64_t JobResult::_internal_job_id() const {
+inline uint64_t SendJobResultRequest::_internal_job_id() const {
   return _impl_.job_id_;
 }
-inline uint64_t JobResult::job_id() const {
-  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.JobResult.job_id)
+inline uint64_t SendJobResultRequest::job_id() const {
+  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.SendJobResultRequest.job_id)
   return _internal_job_id();
 }
-inline void JobResult::_internal_set_job_id(uint64_t value) {
+inline void SendJobResultRequest::_internal_set_job_id(uint64_t value) {
   
   _impl_.job_id_ = value;
 }
-inline void JobResult::set_job_id(uint64_t value) {
+inline void SendJobResultRequest::set_job_id(uint64_t value) {
   _internal_set_job_id(value);
-  // @@protoc_insertion_point(field_set:supervisor.v1alpha1.JobResult.job_id)
+  // @@protoc_insertion_point(field_set:supervisor.v1alpha1.SendJobResultRequest.job_id)
 }
 
 // uint64 job_duration = 3 [json_name = "jobDuration"];
-inline void JobResult::clear_job_duration() {
+inline void SendJobResultRequest::clear_job_duration() {
   _impl_.job_duration_ = uint64_t{0u};
 }
-inline uint64_t JobResult::_internal_job_duration() const {
+inline uint64_t SendJobResultRequest::_internal_job_duration() const {
   return _impl_.job_duration_;
 }
-inline uint64_t JobResult::job_duration() const {
-  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.JobResult.job_duration)
+inline uint64_t SendJobResultRequest::job_duration() const {
+  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.SendJobResultRequest.job_duration)
   return _internal_job_duration();
 }
-inline void JobResult::_internal_set_job_duration(uint64_t value) {
+inline void SendJobResultRequest::_internal_set_job_duration(uint64_t value) {
   
   _impl_.job_duration_ = value;
 }
-inline void JobResult::set_job_duration(uint64_t value) {
+inline void SendJobResultRequest::set_job_duration(uint64_t value) {
   _internal_set_job_duration(value);
-  // @@protoc_insertion_point(field_set:supervisor.v1alpha1.JobResult.job_duration)
-}
-
-// -------------------------------------------------------------------
-
-// SendJobResultRequest
-
-// .supervisor.v1alpha1.JobResult job_result = 1 [json_name = "jobResult"];
-inline bool SendJobResultRequest::_internal_has_job_result() const {
-  return this != internal_default_instance() && _impl_.job_result_ != nullptr;
-}
-inline bool SendJobResultRequest::has_job_result() const {
-  return _internal_has_job_result();
-}
-inline void SendJobResultRequest::clear_job_result() {
-  if (GetArenaForAllocation() == nullptr && _impl_.job_result_ != nullptr) {
-    delete _impl_.job_result_;
-  }
-  _impl_.job_result_ = nullptr;
-}
-inline const ::supervisor::v1alpha1::JobResult& SendJobResultRequest::_internal_job_result() const {
-  const ::supervisor::v1alpha1::JobResult* p = _impl_.job_result_;
-  return p != nullptr ? *p : reinterpret_cast<const ::supervisor::v1alpha1::JobResult&>(
-      ::supervisor::v1alpha1::_JobResult_default_instance_);
-}
-inline const ::supervisor::v1alpha1::JobResult& SendJobResultRequest::job_result() const {
-  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.SendJobResultRequest.job_result)
-  return _internal_job_result();
-}
-inline void SendJobResultRequest::unsafe_arena_set_allocated_job_result(
-    ::supervisor::v1alpha1::JobResult* job_result) {
-  if (GetArenaForAllocation() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(_impl_.job_result_);
-  }
-  _impl_.job_result_ = job_result;
-  if (job_result) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:supervisor.v1alpha1.SendJobResultRequest.job_result)
-}
-inline ::supervisor::v1alpha1::JobResult* SendJobResultRequest::release_job_result() {
-  
-  ::supervisor::v1alpha1::JobResult* temp = _impl_.job_result_;
-  _impl_.job_result_ = nullptr;
-#ifdef PROTOBUF_FORCE_COPY_IN_RELEASE
-  auto* old =  reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(temp);
-  temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  if (GetArenaForAllocation() == nullptr) { delete old; }
-#else  // PROTOBUF_FORCE_COPY_IN_RELEASE
-  if (GetArenaForAllocation() != nullptr) {
-    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  }
-#endif  // !PROTOBUF_FORCE_COPY_IN_RELEASE
-  return temp;
-}
-inline ::supervisor::v1alpha1::JobResult* SendJobResultRequest::unsafe_arena_release_job_result() {
-  // @@protoc_insertion_point(field_release:supervisor.v1alpha1.SendJobResultRequest.job_result)
-  
-  ::supervisor::v1alpha1::JobResult* temp = _impl_.job_result_;
-  _impl_.job_result_ = nullptr;
-  return temp;
-}
-inline ::supervisor::v1alpha1::JobResult* SendJobResultRequest::_internal_mutable_job_result() {
-  
-  if (_impl_.job_result_ == nullptr) {
-    auto* p = CreateMaybeMessage<::supervisor::v1alpha1::JobResult>(GetArenaForAllocation());
-    _impl_.job_result_ = p;
-  }
-  return _impl_.job_result_;
-}
-inline ::supervisor::v1alpha1::JobResult* SendJobResultRequest::mutable_job_result() {
-  ::supervisor::v1alpha1::JobResult* _msg = _internal_mutable_job_result();
-  // @@protoc_insertion_point(field_mutable:supervisor.v1alpha1.SendJobResultRequest.job_result)
-  return _msg;
-}
-inline void SendJobResultRequest::set_allocated_job_result(::supervisor::v1alpha1::JobResult* job_result) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  if (message_arena == nullptr) {
-    delete _impl_.job_result_;
-  }
-  if (job_result) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-        ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(job_result);
-    if (message_arena != submessage_arena) {
-      job_result = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, job_result, submessage_arena);
-    }
-    
-  } else {
-    
-  }
-  _impl_.job_result_ = job_result;
-  // @@protoc_insertion_point(field_set_allocated:supervisor.v1alpha1.SendJobResultRequest.job_result)
+  // @@protoc_insertion_point(field_set:supervisor.v1alpha1.SendJobResultRequest.job_duration)
 }
 
 // -------------------------------------------------------------------
 
 // SendJobResultResponse
 
+// -------------------------------------------------------------------
+
+// SendJobFailedRequest
+
+// string job_name = 1 [json_name = "jobName"];
+inline void SendJobFailedRequest::clear_job_name() {
+  _impl_.job_name_.ClearToEmpty();
+}
+inline const std::string& SendJobFailedRequest::job_name() const {
+  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.SendJobFailedRequest.job_name)
+  return _internal_job_name();
+}
+template <typename ArgT0, typename... ArgT>
+inline PROTOBUF_ALWAYS_INLINE
+void SendJobFailedRequest::set_job_name(ArgT0&& arg0, ArgT... args) {
+ 
+ _impl_.job_name_.Set(static_cast<ArgT0 &&>(arg0), args..., GetArenaForAllocation());
+  // @@protoc_insertion_point(field_set:supervisor.v1alpha1.SendJobFailedRequest.job_name)
+}
+inline std::string* SendJobFailedRequest::mutable_job_name() {
+  std::string* _s = _internal_mutable_job_name();
+  // @@protoc_insertion_point(field_mutable:supervisor.v1alpha1.SendJobFailedRequest.job_name)
+  return _s;
+}
+inline const std::string& SendJobFailedRequest::_internal_job_name() const {
+  return _impl_.job_name_.Get();
+}
+inline void SendJobFailedRequest::_internal_set_job_name(const std::string& value) {
+  
+  _impl_.job_name_.Set(value, GetArenaForAllocation());
+}
+inline std::string* SendJobFailedRequest::_internal_mutable_job_name() {
+  
+  return _impl_.job_name_.Mutable(GetArenaForAllocation());
+}
+inline std::string* SendJobFailedRequest::release_job_name() {
+  // @@protoc_insertion_point(field_release:supervisor.v1alpha1.SendJobFailedRequest.job_name)
+  return _impl_.job_name_.Release();
+}
+inline void SendJobFailedRequest::set_allocated_job_name(std::string* job_name) {
+  if (job_name != nullptr) {
+    
+  } else {
+    
+  }
+  _impl_.job_name_.SetAllocated(job_name, GetArenaForAllocation());
+#ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  if (_impl_.job_name_.IsDefault()) {
+    _impl_.job_name_.Set("", GetArenaForAllocation());
+  }
+#endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+  // @@protoc_insertion_point(field_set_allocated:supervisor.v1alpha1.SendJobFailedRequest.job_name)
+}
+
+// uint64 job_id = 2 [json_name = "jobId"];
+inline void SendJobFailedRequest::clear_job_id() {
+  _impl_.job_id_ = uint64_t{0u};
+}
+inline uint64_t SendJobFailedRequest::_internal_job_id() const {
+  return _impl_.job_id_;
+}
+inline uint64_t SendJobFailedRequest::job_id() const {
+  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.SendJobFailedRequest.job_id)
+  return _internal_job_id();
+}
+inline void SendJobFailedRequest::_internal_set_job_id(uint64_t value) {
+  
+  _impl_.job_id_ = value;
+}
+inline void SendJobFailedRequest::set_job_id(uint64_t value) {
+  _internal_set_job_id(value);
+  // @@protoc_insertion_point(field_set:supervisor.v1alpha1.SendJobFailedRequest.job_id)
+}
+
+// -------------------------------------------------------------------
+
+// SendJobFailedResponse
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

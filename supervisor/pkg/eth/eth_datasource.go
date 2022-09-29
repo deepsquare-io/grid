@@ -103,7 +103,7 @@ func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerCla
 	if err != nil {
 		return nil, err
 	}
-	logger.I.Info("called claimnextjob", zap.String("tx", tx.Hash().String()))
+	logger.I.Debug("called claimnextjob", zap.String("tx", tx.Hash().String()))
 	receipt, err := bind.WaitMined(ctx, s.client, tx)
 	if err != nil {
 		return nil, err
@@ -175,7 +175,27 @@ func (s *DataSource) FinishJob(
 	if err != nil {
 		return err
 	}
-	logger.I.Info("called finish job", zap.String("tx", tx.Hash().String()))
+	logger.I.Debug("called finish job", zap.String("tx", tx.Hash().String()))
+	return err
+}
+
+// FailedJob reports the FAILED state to the metascheduler.
+func (s *DataSource) FailedJob(
+	ctx context.Context,
+	jobID [32]byte,
+) error {
+	auth, err := s.auth(ctx)
+	if err != nil {
+		return err
+	}
+	tx, err := s.metascheduler.TriggerFailedJob(
+		auth,
+		jobID,
+	)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("called failed job", zap.String("tx", tx.Hash().String()))
 	return err
 }
 

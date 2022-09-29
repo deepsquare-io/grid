@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type JobAPIClient interface {
 	SendJobResult(ctx context.Context, in *SendJobResultRequest, opts ...grpc.CallOption) (*SendJobResultResponse, error)
+	SendJobFailed(ctx context.Context, in *SendJobFailedRequest, opts ...grpc.CallOption) (*SendJobFailedResponse, error)
 }
 
 type jobAPIClient struct {
@@ -42,11 +43,21 @@ func (c *jobAPIClient) SendJobResult(ctx context.Context, in *SendJobResultReque
 	return out, nil
 }
 
+func (c *jobAPIClient) SendJobFailed(ctx context.Context, in *SendJobFailedRequest, opts ...grpc.CallOption) (*SendJobFailedResponse, error) {
+	out := new(SendJobFailedResponse)
+	err := c.cc.Invoke(ctx, "/supervisor.v1alpha1.JobAPI/SendJobFailed", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // JobAPIServer is the server API for JobAPI service.
 // All implementations must embed UnimplementedJobAPIServer
 // for forward compatibility
 type JobAPIServer interface {
 	SendJobResult(context.Context, *SendJobResultRequest) (*SendJobResultResponse, error)
+	SendJobFailed(context.Context, *SendJobFailedRequest) (*SendJobFailedResponse, error)
 	mustEmbedUnimplementedJobAPIServer()
 }
 
@@ -56,6 +67,9 @@ type UnimplementedJobAPIServer struct {
 
 func (UnimplementedJobAPIServer) SendJobResult(context.Context, *SendJobResultRequest) (*SendJobResultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendJobResult not implemented")
+}
+func (UnimplementedJobAPIServer) SendJobFailed(context.Context, *SendJobFailedRequest) (*SendJobFailedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendJobFailed not implemented")
 }
 func (UnimplementedJobAPIServer) mustEmbedUnimplementedJobAPIServer() {}
 
@@ -88,6 +102,24 @@ func _JobAPI_SendJobResult_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JobAPI_SendJobFailed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendJobFailedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobAPIServer).SendJobFailed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/supervisor.v1alpha1.JobAPI/SendJobFailed",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobAPIServer).SendJobFailed(ctx, req.(*SendJobFailedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // JobAPI_ServiceDesc is the grpc.ServiceDesc for JobAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +130,10 @@ var JobAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendJobResult",
 			Handler:    _JobAPI_SendJobResult_Handler,
+		},
+		{
+			MethodName: "SendJobFailed",
+			Handler:    _JobAPI_SendJobFailed_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

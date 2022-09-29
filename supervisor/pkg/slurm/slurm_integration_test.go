@@ -3,6 +3,7 @@
 package slurm_test
 
 import (
+	"context"
 	"math/big"
 	"os"
 	"testing"
@@ -24,6 +25,7 @@ type ServiceTestSuite struct {
 
 func (suite *ServiceTestSuite) submitJob() *slurm.SubmitJobRequest {
 	// Arrange
+	ctx := context.Background()
 	name := utils.GenerateRandomString(6)
 	req := &slurm.SubmitJobRequest{
 		Name: name,
@@ -42,7 +44,7 @@ srun sleep infinity
 	}
 
 	// Act
-	_, err := suite.impl.Submit(req)
+	_, err := suite.impl.Submit(ctx, req)
 
 	// Assert
 	suite.NoError(err)
@@ -68,10 +70,11 @@ func (suite *ServiceTestSuite) TestSubmit() {
 
 func (suite *ServiceTestSuite) TestCancel() {
 	// Arrange
+	ctx := context.Background()
 	req := suite.submitJob()
 
 	// Act
-	err := suite.impl.CancelJob(&slurm.CancelJobRequest{
+	err := suite.impl.CancelJob(ctx, &slurm.CancelJobRequest{
 		Name: req.Name,
 		User: suite.user,
 	})
@@ -82,10 +85,11 @@ func (suite *ServiceTestSuite) TestCancel() {
 
 func (suite *ServiceTestSuite) TestTopUp() {
 	// Arrange
+	ctx := context.Background()
 	req := suite.submitJob()
 
 	// Act
-	err := suite.impl.TopUp(&slurm.TopUpRequest{
+	err := suite.impl.TopUp(ctx, &slurm.TopUpRequest{
 		Name:           req.Name,
 		User:           suite.user,
 		AdditionalTime: 5,

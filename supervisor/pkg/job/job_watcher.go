@@ -20,7 +20,8 @@ type JobClaimer interface {
 }
 
 type JobScheduler interface {
-	Submit(req *slurm.SubmitJobRequest) (int, error)
+	HealthCheck(ctx context.Context) error
+	Submit(ctx context.Context, req *slurm.SubmitJobRequest) (int, error)
 }
 
 type JobBatchFetcher interface {
@@ -64,11 +65,18 @@ func (w *Watcher) Watch(parent context.Context) error {
 			defer cancel()
 
 			go func(ctx context.Context) {
+				// Slurm healthcheck first
+				err := w.scheduler.HealthCheck(ctx)
+				if err != nil {
+					done <- err
+					return
+				}
+
 				r, err := w.claimer.Claim(ctx)
 				if err != nil {
 					done <- err
 				} else {
-					logger.I.Error("claimed a job", zap.Any("event", r))
+					logger.I.Info("claimed a job", zap.Any("event", r))
 					resp <- r
 				}
 			}(ctx)
@@ -86,7 +94,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 					User:          r.CustomerAddr.String(),
 					JobDefinition: &job,
 				}
-				slurmJobID, err := w.scheduler.Submit(req)
+				slurmJobID, err := w.scheduler.Submit(ctx, req)
 				if err != nil {
 					logger.I.Error("slurm submit job failed", zap.Error(err))
 					return

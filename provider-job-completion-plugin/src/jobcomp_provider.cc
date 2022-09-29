@@ -126,9 +126,16 @@ extern int jobcomp_p_log_record(job_record_t *job_ptr) {
   JobAPIClient job_api(
       grpc::CreateChannel(report_url, grpc::InsecureChannelCredentials()));
 
-  auto req = MakeSendJobResultRequestFromReport(report);
-  if (!job_api.SendJobResult(req)) {
-    error("%s: publish failed", plugin_type);
+  if (IS_JOB_FAILED(job_ptr) || IS_JOB_TIMEOUT(job_ptr)) {
+    auto req = MakeSendJobFailedRequestFromReport(report);
+    if (!job_api.SendJobFailed(req)) {
+      error("%s: SendJobFailed failed", plugin_type);
+    }
+  } else {
+    auto req = MakeSendJobResultRequestFromReport(report);
+    if (!job_api.SendJobResult(req)) {
+      error("%s: SendJobResult failed", plugin_type);
+    }
   }
 
   free_report_members(&report);

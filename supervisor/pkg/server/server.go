@@ -6,6 +6,8 @@ import (
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -19,18 +21,29 @@ func New(
 	tls bool,
 	keyFile string,
 	certFile string,
-	jobFinisher jobapi.JobFinisher,
+	jobHandler jobapi.JobHandler,
 ) *Server {
-	var opts []grpc.ServerOption
+	opts := []grpc.ServerOption{
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_zap.StreamServerInterceptor(logger.I),
+		)),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_zap.UnaryServerInterceptor(logger.I),
+		)),
+	}
 	if tls {
 		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 		if err != nil {
 			logger.I.Fatal("failed to load certificates", zap.Error(err))
 		}
-		opts = []grpc.ServerOption{grpc.Creds(creds)}
+		opts = append(opts, grpc.Creds(creds))
 	}
+
 	grpcServer := grpc.NewServer(opts...)
-	supervisorv1alpha1.RegisterJobAPIServer(grpcServer, jobapi.New(jobFinisher))
+	supervisorv1alpha1.RegisterJobAPIServer(
+		grpcServer,
+		jobapi.New(jobHandler),
+	)
 
 	return &Server{
 		grpc: grpcServer,

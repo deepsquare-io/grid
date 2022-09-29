@@ -15,5 +15,6 @@ unit:
 integration:
 	go test -v -race -covermode=atomic -tags=integration -timeout=30s ./...
 
+.PHONY: mocks
 mocks:
 	mockery --all --keeptree
