@@ -1,0 +1,29 @@
+ARG ubuntu_version=latest
+
+FROM ubuntu:${ubuntu_version}
+
+WORKDIR /work
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update \
+  && apt install -y \
+  ninja-build \
+  build-essential \
+  curl \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-3.24.2-linux-x86_64.sh -o /tmp/cmake-install.sh \
+  && chmod u+x /tmp/cmake-install.sh \
+  && /tmp/cmake-install.sh --skip-license --prefix=/usr/local \
+  && rm /tmp/cmake-install.sh
+
+COPY . .
+
+RUN mkdir build \
+  && cd build \
+  && mkdir -p /artifacts \
+  && cmake .. -G "Ninja" -DCMAKE_INSTALL_PREFIX=/usr/local/lib/slurm \
+  && ninja -j$(nproc) \
+  && ninja package \
+  && mv ./*.deb /artifacts

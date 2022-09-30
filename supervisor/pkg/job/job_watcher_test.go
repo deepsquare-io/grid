@@ -33,7 +33,7 @@ srun hostname
 
 type WatcherTestSuite struct {
 	suite.Suite
-	claimer      *mocks.JobClaimer
+	claimer      *mocks.JobMetaQueue
 	scheduler    *mocks.JobScheduler
 	batchFetcher *mocks.JobBatchFetcher
 	impl         *job.Watcher

@@ -1,0 +1,3 @@
+# This file is used to lock the version and allow auto update through CI.
+
+slurm=slurm-22-05-3-1

@@ -15,7 +15,7 @@ import (
 const pollingTime = time.Duration(5 * time.Second)
 const claimJobMaxTimeout = time.Duration(60 * time.Second)
 
-type JobClaimer interface {
+type JobMetaQueue interface {
 	Claim(ctx context.Context) (*metascheduler.MetaSchedulerClaimNextJobEvent, error)
 }
 
@@ -29,13 +29,13 @@ type JobBatchFetcher interface {
 }
 
 type Watcher struct {
-	claimer      JobClaimer
+	claimer      JobMetaQueue
 	scheduler    JobScheduler
 	batchFetcher JobBatchFetcher
 }
 
 func New(
-	claimer JobClaimer,
+	claimer JobMetaQueue,
 	scheduler JobScheduler,
 	batchFetcher JobBatchFetcher,
 ) *Watcher {

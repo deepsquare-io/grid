@@ -1,6 +1,6 @@
-# A SLURM Job Completion plugin
+# A SLURM SPANK plugin
 
-The plugin send the actual job duration and allocated resources.
+The plugin send the start event.
 
 ## Regenerate the gRPC Buf
 
@@ -60,14 +60,13 @@ cmake .. -G <your generator> # Ninja, or by default, Make
 <your generator> install
 ```
 
-The .so file is installed in the `/usr/lib64/slurm` directory. To load the plugin, add these parameters in the slurm.conf:
+The .so file is installed in the `/usr/lib64/slurm` directory. To load the plugin, add these parameters in the `/etc/slurm/plugstack.conf` (or inside a new file `/etc/slurm/plugstack.conf.d/provider.conf`):
 
 ```conf
-JobCompType=jobcomp/provider
-JobCompLoc=supervisor:3000
+required /usr/lib64/slurm/spank_provider.so endpoint=supervisor:3000
 ```
 
-Change the `JobCompLoc` to the right endpoint.
+Change the `endpoint` to the right endpoint.
 
 ## Packaging (RPM/DEB)
 

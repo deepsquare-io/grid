@@ -108,8 +108,10 @@ func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerCla
 	if err != nil {
 		return nil, err
 	}
+	logger.I.Debug("claimnextjob has been mined", zap.String("tx", tx.Hash().String()))
 
 	for _, log := range receipt.Logs {
+		logger.I.Debug("claimnextjob found event", zap.Any("event", log))
 		switch log.Topics[0].Hex() {
 		case claimNextJobSigHash.Hex():
 			// TODO: maybe filter by cluster
@@ -157,6 +159,32 @@ func (s *DataSource) Register(
 	return nil
 }
 
+// StartJob reports the RUNNING state to the metascheduler.
+func (s *DataSource) StartJob(
+	ctx context.Context,
+	jobID [32]byte,
+) error {
+	auth, err := s.auth(ctx)
+	if err != nil {
+		return err
+	}
+	tx, err := s.metascheduler.StartJob(
+		auth,
+		jobID,
+	)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("called startjob", zap.String("tx", tx.Hash().String()))
+	// We need to wait to make sure the job is accepted by the metascheduler and avoid race conditions
+	_, err = bind.WaitMined(ctx, s.client, tx)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("startjob has been mined", zap.String("tx", tx.Hash().String()))
+	return err
+}
+
 // FinishJob sends the invoice to the metascheduler
 func (s *DataSource) FinishJob(
 	ctx context.Context,
@@ -179,8 +207,8 @@ func (s *DataSource) FinishJob(
 	return err
 }
 
-// FailedJob reports the FAILED state to the metascheduler.
-func (s *DataSource) FailedJob(
+// FailJob reports the FAILED state to the metascheduler.
+func (s *DataSource) FailJob(
 	ctx context.Context,
 	jobID [32]byte,
 ) error {

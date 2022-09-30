@@ -14,21 +14,21 @@ type JobAPIServer struct {
 	mock.Mock
 }
 
-// SendJobFailed provides a mock function with given fields: _a0, _a1
-func (_m *JobAPIServer) SendJobFailed(_a0 context.Context, _a1 *supervisorv1alpha1.SendJobFailedRequest) (*supervisorv1alpha1.SendJobFailedResponse, error) {
+// SendJobFail provides a mock function with given fields: _a0, _a1
+func (_m *JobAPIServer) SendJobFail(_a0 context.Context, _a1 *supervisorv1alpha1.SendJobFailRequest) (*supervisorv1alpha1.SendJobFailResponse, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 *supervisorv1alpha1.SendJobFailedResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SendJobFailedRequest) *supervisorv1alpha1.SendJobFailedResponse); ok {
+	var r0 *supervisorv1alpha1.SendJobFailResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SendJobFailRequest) *supervisorv1alpha1.SendJobFailResponse); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*supervisorv1alpha1.SendJobFailedResponse)
+			r0 = ret.Get(0).(*supervisorv1alpha1.SendJobFailResponse)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobFailedRequest) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobFailRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -52,6 +52,29 @@ func (_m *JobAPIServer) SendJobResult(_a0 context.Context, _a1 *supervisorv1alph
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobResultRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SendJobStart provides a mock function with given fields: _a0, _a1
+func (_m *JobAPIServer) SendJobStart(_a0 context.Context, _a1 *supervisorv1alpha1.SendJobStartRequest) (*supervisorv1alpha1.SendJobStartResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 *supervisorv1alpha1.SendJobStartResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SendJobStartRequest) *supervisorv1alpha1.SendJobStartResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*supervisorv1alpha1.SendJobStartResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobStartRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

@@ -4,7 +4,7 @@
 #include "report.h"
 
 extern "C" {
-#include "src/common/slurm_jobcomp.h"
+#include <slurm/slurm.h>
 }
 
 /**
@@ -12,8 +12,7 @@ extern "C" {
  *
  * @param job (input) The slurm job info.
  * @param report (output) The report.
- * @return int Error code.
  */
-void parse_slurm_job_info(const job_record_t& job, report_t& report);
+void parse_slurm_job_info(const slurm_job_info_t& job, report_t& report);
 
 #endif  // SLURM_UTIL_H

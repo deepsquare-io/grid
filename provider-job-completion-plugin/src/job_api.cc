@@ -4,8 +4,8 @@ extern "C" {
 #include "src/common/slurm_jobcomp.h"
 }
 
-using supervisor::v1alpha1::SendJobFailedRequest;
-using supervisor::v1alpha1::SendJobFailedResponse;
+using supervisor::v1alpha1::SendJobFailRequest;
+using supervisor::v1alpha1::SendJobFailResponse;
 using supervisor::v1alpha1::SendJobResultRequest;
 using supervisor::v1alpha1::SendJobResultResponse;
 
@@ -19,9 +19,8 @@ SendJobResultRequest MakeSendJobResultRequestFromReport(
   return req;
 }
 
-SendJobFailedRequest MakeSendJobFailedRequestFromReport(
-    const report_t& report) {
-  SendJobFailedRequest req;
+SendJobFailRequest MakeSendJobFailRequestFromReport(const report_t& report) {
+  SendJobFailRequest req;
   req.set_job_name(report.job_name);
   req.set_job_id(report.job_id);
 
@@ -41,11 +40,11 @@ bool JobAPIClient::SendJobResult(const SendJobResultRequest& req) {
   return rc;
 }
 
-bool JobAPIClient::SendJobFailed(const SendJobFailedRequest& req) {
+bool JobAPIClient::SendJobFail(const SendJobFailRequest& req) {
   grpc::ClientContext context;
 
-  SendJobFailedResponse rep;
-  grpc::Status status = stub_->SendJobFailed(&context, req, &rep);
+  SendJobFailResponse rep;
+  grpc::Status status = stub_->SendJobFail(&context, req, &rep);
   bool rc = status.ok();
   if (!rc) {
     error("%s: error %d: %s", plugin_type, (int)status.error_code(),

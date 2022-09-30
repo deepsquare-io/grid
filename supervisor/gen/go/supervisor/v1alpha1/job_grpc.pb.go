@@ -22,8 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type JobAPIClient interface {
+	SendJobStart(ctx context.Context, in *SendJobStartRequest, opts ...grpc.CallOption) (*SendJobStartResponse, error)
 	SendJobResult(ctx context.Context, in *SendJobResultRequest, opts ...grpc.CallOption) (*SendJobResultResponse, error)
-	SendJobFailed(ctx context.Context, in *SendJobFailedRequest, opts ...grpc.CallOption) (*SendJobFailedResponse, error)
+	SendJobFail(ctx context.Context, in *SendJobFailRequest, opts ...grpc.CallOption) (*SendJobFailResponse, error)
 }
 
 type jobAPIClient struct {
@@ -32,6 +33,15 @@ type jobAPIClient struct {
 
 func NewJobAPIClient(cc grpc.ClientConnInterface) JobAPIClient {
 	return &jobAPIClient{cc}
+}
+
+func (c *jobAPIClient) SendJobStart(ctx context.Context, in *SendJobStartRequest, opts ...grpc.CallOption) (*SendJobStartResponse, error) {
+	out := new(SendJobStartResponse)
+	err := c.cc.Invoke(ctx, "/supervisor.v1alpha1.JobAPI/SendJobStart", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *jobAPIClient) SendJobResult(ctx context.Context, in *SendJobResultRequest, opts ...grpc.CallOption) (*SendJobResultResponse, error) {
@@ -43,9 +53,9 @@ func (c *jobAPIClient) SendJobResult(ctx context.Context, in *SendJobResultReque
 	return out, nil
 }
 
-func (c *jobAPIClient) SendJobFailed(ctx context.Context, in *SendJobFailedRequest, opts ...grpc.CallOption) (*SendJobFailedResponse, error) {
-	out := new(SendJobFailedResponse)
-	err := c.cc.Invoke(ctx, "/supervisor.v1alpha1.JobAPI/SendJobFailed", in, out, opts...)
+func (c *jobAPIClient) SendJobFail(ctx context.Context, in *SendJobFailRequest, opts ...grpc.CallOption) (*SendJobFailResponse, error) {
+	out := new(SendJobFailResponse)
+	err := c.cc.Invoke(ctx, "/supervisor.v1alpha1.JobAPI/SendJobFail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +66,9 @@ func (c *jobAPIClient) SendJobFailed(ctx context.Context, in *SendJobFailedReque
 // All implementations must embed UnimplementedJobAPIServer
 // for forward compatibility
 type JobAPIServer interface {
+	SendJobStart(context.Context, *SendJobStartRequest) (*SendJobStartResponse, error)
 	SendJobResult(context.Context, *SendJobResultRequest) (*SendJobResultResponse, error)
-	SendJobFailed(context.Context, *SendJobFailedRequest) (*SendJobFailedResponse, error)
+	SendJobFail(context.Context, *SendJobFailRequest) (*SendJobFailResponse, error)
 	mustEmbedUnimplementedJobAPIServer()
 }
 
@@ -65,11 +76,14 @@ type JobAPIServer interface {
 type UnimplementedJobAPIServer struct {
 }
 
+func (UnimplementedJobAPIServer) SendJobStart(context.Context, *SendJobStartRequest) (*SendJobStartResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendJobStart not implemented")
+}
 func (UnimplementedJobAPIServer) SendJobResult(context.Context, *SendJobResultRequest) (*SendJobResultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendJobResult not implemented")
 }
-func (UnimplementedJobAPIServer) SendJobFailed(context.Context, *SendJobFailedRequest) (*SendJobFailedResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendJobFailed not implemented")
+func (UnimplementedJobAPIServer) SendJobFail(context.Context, *SendJobFailRequest) (*SendJobFailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendJobFail not implemented")
 }
 func (UnimplementedJobAPIServer) mustEmbedUnimplementedJobAPIServer() {}
 
@@ -82,6 +96,24 @@ type UnsafeJobAPIServer interface {
 
 func RegisterJobAPIServer(s grpc.ServiceRegistrar, srv JobAPIServer) {
 	s.RegisterService(&JobAPI_ServiceDesc, srv)
+}
+
+func _JobAPI_SendJobStart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendJobStartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobAPIServer).SendJobStart(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/supervisor.v1alpha1.JobAPI/SendJobStart",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobAPIServer).SendJobStart(ctx, req.(*SendJobStartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _JobAPI_SendJobResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -102,20 +134,20 @@ func _JobAPI_SendJobResult_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _JobAPI_SendJobFailed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendJobFailedRequest)
+func _JobAPI_SendJobFail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendJobFailRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(JobAPIServer).SendJobFailed(ctx, in)
+		return srv.(JobAPIServer).SendJobFail(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/supervisor.v1alpha1.JobAPI/SendJobFailed",
+		FullMethod: "/supervisor.v1alpha1.JobAPI/SendJobFail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JobAPIServer).SendJobFailed(ctx, req.(*SendJobFailedRequest))
+		return srv.(JobAPIServer).SendJobFail(ctx, req.(*SendJobFailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -128,12 +160,16 @@ var JobAPI_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*JobAPIServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "SendJobStart",
+			Handler:    _JobAPI_SendJobStart_Handler,
+		},
+		{
 			MethodName: "SendJobResult",
 			Handler:    _JobAPI_SendJobResult_Handler,
 		},
 		{
-			MethodName: "SendJobFailed",
-			Handler:    _JobAPI_SendJobFailed_Handler,
+			MethodName: "SendJobFail",
+			Handler:    _JobAPI_SendJobFail_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

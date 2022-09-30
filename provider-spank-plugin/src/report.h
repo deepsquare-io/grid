@@ -5,13 +5,17 @@
 #include <ctime>
 #include <string>
 
+extern "C" {
+#include <slurm/slurm.h>
+}
+
 typedef struct report {
   /** @brief A Slurm Job ID. */
   uint32_t job_id;
   /** @brief The name of the job. */
   std::string job_name;
   /** @brief A Slurm Job state. */
-  uint32_t job_state;
+  enum job_states job_state;
   /** @brief The job start timestamp. */
   time_t start_time;
   /** @brief The job end timestamp. */

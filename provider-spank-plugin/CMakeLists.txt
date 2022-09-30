@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.24.0)
 
 project(
-  jobcomp-provider
+  spank-provider
   VERSION 1.0.0
-  DESCRIPTION "Job completion plugin for providers"
+  DESCRIPTION "SPANK plugin for providers"
   LANGUAGES CXX)
 
 set(CMAKE_C_STANDARD 17)
@@ -62,22 +62,22 @@ add_compile_options(
   -fno-common
   -Wno-unused-parameter)
 
-file(GLOB_RECURSE sources src/*.cc src/*.h)
+file(GLOB_RECURSE sources src/*.cc src/*.c src/*.h)
 file(GLOB_RECURSE grpc_sources gen/cpp/*.cc gen/cpp/*.h)
 
-add_library(jobcomp_provider SHARED ${sources} ${grpc_sources})
+add_library(spank_provider SHARED ${sources} ${grpc_sources})
 
-set_target_properties(jobcomp_provider PROPERTIES PREFIX "")
+set_target_properties(spank_provider PROPERTIES PREFIX "")
 
 target_include_directories(
-  jobcomp_provider
+  spank_provider
   PUBLIC ${slurm_SOURCE_DIR}
   PUBLIC "gen/cpp")
 
-target_link_libraries(jobcomp_provider Threads::Threads m grpc++)
+target_link_libraries(spank_provider Threads::Threads m grpc++)
 
 install(
-  TARGETS jobcomp_provider
+  TARGETS spank_provider
   LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX})
 

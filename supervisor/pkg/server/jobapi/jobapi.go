@@ -16,7 +16,11 @@ type JobHandler interface {
 		jobID [32]byte,
 		jobDuration *big.Int,
 	) error
-	FailedJob(
+	FailJob(
+		ctx context.Context,
+		jobID [32]byte,
+	) error
+	StartJob(
 		ctx context.Context,
 		jobID [32]byte,
 	) error
@@ -54,18 +58,34 @@ func (s *jobAPIServer) SendJobResult(ctx context.Context, req *supervisorv1alpha
 	return &supervisorv1alpha1.SendJobResultResponse{}, nil
 }
 
-// SendJobFailed to the ethereum network
-func (s *jobAPIServer) SendJobFailed(ctx context.Context, req *supervisorv1alpha1.SendJobFailedRequest) (*supervisorv1alpha1.SendJobFailedResponse, error) {
-	logger.I.Info("grpc received job failed", zap.Any("job_failed", req))
+// SendJobFail to the ethereum network
+func (s *jobAPIServer) SendJobFail(ctx context.Context, req *supervisorv1alpha1.SendJobFailRequest) (*supervisorv1alpha1.SendJobFailResponse, error) {
+	logger.I.Info("grpc received job fail", zap.Any("job_fail", req))
 	jobName, err := hex.DecodeString(req.JobName)
 	if err != nil {
 		return nil, err
 	}
 	var jobNameFixedLength [32]byte
 	copy(jobNameFixedLength[:], jobName)
-	err = s.jobHandler.FailedJob(ctx, jobNameFixedLength)
+	err = s.jobHandler.FailJob(ctx, jobNameFixedLength)
 	if err != nil {
 		return nil, err
 	}
-	return &supervisorv1alpha1.SendJobFailedResponse{}, nil
+	return &supervisorv1alpha1.SendJobFailResponse{}, nil
+}
+
+// SendJobStart to the ethereum network
+func (s *jobAPIServer) SendJobStart(ctx context.Context, req *supervisorv1alpha1.SendJobStartRequest) (*supervisorv1alpha1.SendJobStartResponse, error) {
+	logger.I.Info("grpc received job start", zap.Any("job_start", req))
+	jobName, err := hex.DecodeString(req.JobName)
+	if err != nil {
+		return nil, err
+	}
+	var jobNameFixedLength [32]byte
+	copy(jobNameFixedLength[:], jobName)
+	err = s.jobHandler.FailJob(ctx, jobNameFixedLength)
+	if err != nil {
+		return nil, err
+	}
+	return &supervisorv1alpha1.SendJobStartResponse{}, nil
 }

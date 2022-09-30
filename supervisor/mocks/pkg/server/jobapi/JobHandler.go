@@ -14,8 +14,8 @@ type JobHandler struct {
 	mock.Mock
 }
 
-// FailedJob provides a mock function with given fields: ctx, jobID
-func (_m *JobHandler) FailedJob(ctx context.Context, jobID [32]byte) error {
+// FailJob provides a mock function with given fields: ctx, jobID
+func (_m *JobHandler) FailJob(ctx context.Context, jobID [32]byte) error {
 	ret := _m.Called(ctx, jobID)
 
 	var r0 error
@@ -35,6 +35,20 @@ func (_m *JobHandler) FinishJob(ctx context.Context, jobID [32]byte, jobDuration
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, [32]byte, *big.Int) error); ok {
 		r0 = rf(ctx, jobID, jobDuration)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StartJob provides a mock function with given fields: ctx, jobID
+func (_m *JobHandler) StartJob(ctx context.Context, jobID [32]byte) error {
+	ret := _m.Called(ctx, jobID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, [32]byte) error); ok {
+		r0 = rf(ctx, jobID)
 	} else {
 		r0 = ret.Error(0)
 	}

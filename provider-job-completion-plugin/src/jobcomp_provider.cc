@@ -121,14 +121,14 @@ extern int jobcomp_p_log_record(job_record_t *job_ptr) {
 
   // Parsing the job_ptr
   report_t report;
-  parse_slurm_job_info(job_ptr, &report);
+  parse_slurm_job_info(*job_ptr, report);
 
   JobAPIClient job_api(
       grpc::CreateChannel(report_url, grpc::InsecureChannelCredentials()));
 
   if (IS_JOB_FAILED(job_ptr) || IS_JOB_TIMEOUT(job_ptr)) {
-    auto req = MakeSendJobFailedRequestFromReport(report);
-    if (!job_api.SendJobFailed(req)) {
+    auto req = MakeSendJobFailRequestFromReport(report);
+    if (!job_api.SendJobFail(req)) {
       error("%s: SendJobFailed failed", plugin_type);
     }
   } else {
@@ -137,8 +137,6 @@ extern int jobcomp_p_log_record(job_record_t *job_ptr) {
       error("%s: SendJobResult failed", plugin_type);
     }
   }
-
-  free_report_members(&report);
 
   debug("%s: end %s %u", plugin_type, __func__, job_ptr->job_id);
   return rc;
