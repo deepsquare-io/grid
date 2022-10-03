@@ -1,9 +1,6 @@
 ARG rocky_version=8.5
-ARG slurm_version=slurm-21-08-5-1
 
 FROM quay.io/rockylinux/rockylinux:${rocky_version} as builder
-
-ARG slurm_version
 
 WORKDIR /work
 
@@ -37,16 +34,3 @@ RUN cd build \
   && make package \
   && mv ./*.rpm /artifacts \
   && mv _CPack_Packages/Linux/RPM/SPECS/*.spec /artifacts
-
-# -----------------------------------------------------------
-FROM quay.io/rockylinux/rockylinux:${rocky_version} as tester
-# -----------------------------------------------------------
-
-ARG slurm_version
-
-COPY --from=builder /artifacts /artifacts
-
-RUN rpm -i /artifacts/*.rpm
-
-# Assert
-RUN stat /usr/lib64/slurm/jobcomp_provider.so && stat /usr/lib64/slurm/jobcomp_provider.a

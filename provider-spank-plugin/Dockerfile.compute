@@ -1,6 +1,4 @@
-ARG rocky_version=8.5
-
-FROM quay.io/rockylinux/rockylinux:${rocky_version}
+FROM quay.io/rockylinux/rockylinux:9.0 as builder
 
 ARG slurm_version
 
@@ -36,3 +34,11 @@ RUN cd build \
   && make package \
   && mv ./*.rpm /artifacts \
   && mv _CPack_Packages/Linux/RPM/SPECS/*.spec /artifacts
+
+# -----------------------------------------------------------
+FROM ghcr.io/squarefactory/slurm:22.05.3-1-2-compute-rocky9.0
+# -----------------------------------------------------------
+
+COPY --from=builder /artifacts /artifacts
+
+RUN rpm -i /artifacts/*.rpm
