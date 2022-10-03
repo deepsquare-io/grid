@@ -62,6 +62,10 @@ add_compile_options(
   -fno-common
   -Wno-unused-parameter)
 
+if(CMAKE_C_COMPILER_ID STREQUAL Clang)
+  add_compile_options(-Wno-error=reserved-user-defined-literal)
+endif()
+
 file(GLOB_RECURSE sources src/*.cc src/*.h)
 file(GLOB_RECURSE grpc_sources gen/cpp/*.cc gen/cpp/*.h)
 

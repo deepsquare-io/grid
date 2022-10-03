@@ -3,15 +3,15 @@
 
 #include "job_api.h"
 #include "report.h"
-extern "C" {
-#include "src/common/slurm_jobcomp.h"
-}
 #include "slurm_utils.h"
 #include "supervisor/v1alpha1/job.grpc.pb.h"
 
 using supervisor::v1alpha1::SendJobResultRequest;
 
 extern "C" {
+
+#include "src/common/slurm_jobcomp.h"
+
 /*
  * These variables are required by the generic plugin interface.  If they
  * are not found in the plugin, the plugin loader will ignore it.
