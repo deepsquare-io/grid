@@ -4,7 +4,7 @@ project(
   jobcomp-provider
   VERSION 1.0.0
   DESCRIPTION "Job completion plugin for providers"
-  LANGUAGES CXX)
+  LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 17)
