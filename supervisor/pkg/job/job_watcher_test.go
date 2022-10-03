@@ -53,12 +53,13 @@ func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
 func (suite *WatcherTestSuite) TestWatchWithClaim() {
 	// Arrange
 	suite.metaQueue.On("Claim", mock.Anything).Return(fixtureEvent, nil)
+	suite.scheduler.On("HealthCheck", mock.Anything).Return(nil)
 	suite.batchFetcher.On(
 		"Fetch",
 		mock.Anything,
 		fixtureEvent.JobDefinition.BatchLocationHash,
 	).Return(fixtureBody, nil)
-	suite.scheduler.On("Submit", mock.Anything).Return(int(fixtureSlurmJobID), nil)
+	suite.scheduler.On("Submit", mock.Anything, mock.Anything).Return(int(fixtureSlurmJobID), nil)
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

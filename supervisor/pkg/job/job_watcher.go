@@ -29,7 +29,7 @@ type JobBatchFetcher interface {
 }
 
 type Watcher struct {
-	claimer      JobMetaQueue
+	metaQueue    JobMetaQueue
 	scheduler    JobScheduler
 	batchFetcher JobBatchFetcher
 }
@@ -49,7 +49,7 @@ func New(
 		logger.I.Panic("batchFetcher is nil")
 	}
 	return &Watcher{
-		claimer:      claimer,
+		metaQueue:    claimer,
 		scheduler:    scheduler,
 		batchFetcher: batchFetcher,
 	}
@@ -72,7 +72,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 					return
 				}
 
-				r, err := w.claimer.Claim(ctx)
+				r, err := w.metaQueue.Claim(ctx)
 				if err != nil {
 					done <- err
 				} else {
