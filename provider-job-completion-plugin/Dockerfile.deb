@@ -11,6 +11,7 @@ RUN apt update \
   ninja-build \
   build-essential \
   curl \
+  git \
   && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-3.24.2-linux-x86_64.sh -o /tmp/cmake-install.sh \
