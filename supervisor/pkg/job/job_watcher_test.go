@@ -33,18 +33,18 @@ srun hostname
 
 type WatcherTestSuite struct {
 	suite.Suite
-	claimer      *mocks.JobMetaQueue
+	metaQueue    *mocks.JobMetaQueue
 	scheduler    *mocks.JobScheduler
 	batchFetcher *mocks.JobBatchFetcher
 	impl         *job.Watcher
 }
 
 func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
-	suite.claimer = mocks.NewJobClaimer(suite.T())
+	suite.metaQueue = mocks.NewJobMetaQueue(suite.T())
 	suite.scheduler = mocks.NewJobScheduler(suite.T())
 	suite.batchFetcher = mocks.NewJobBatchFetcher(suite.T())
 	suite.impl = job.New(
-		suite.claimer,
+		suite.metaQueue,
 		suite.scheduler,
 		suite.batchFetcher,
 	)
@@ -52,7 +52,7 @@ func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
 
 func (suite *WatcherTestSuite) TestWatchWithClaim() {
 	// Arrange
-	suite.claimer.On("Claim", mock.Anything).Return(fixtureEvent, nil)
+	suite.metaQueue.On("Claim", mock.Anything).Return(fixtureEvent, nil)
 	suite.batchFetcher.On(
 		"Fetch",
 		mock.Anything,
