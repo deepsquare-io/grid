@@ -262,7 +262,7 @@ var app = &cli.App{
 		c := ctx.Context
 		container := Init()
 
-		go func(ctx context.Context) error {
+		go func(ctx context.Context) {
 			for {
 				if err := container.eth.Ping(ctx); err != nil {
 					logger.I.Error("ping failed", zap.Error(err))
