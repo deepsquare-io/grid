@@ -3,8 +3,10 @@ package server
 import (
 	"net"
 
+	healthv1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/grpc/health/v1"
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/health"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/sshapi"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -49,6 +51,10 @@ func New(
 	supervisorv1alpha1.RegisterSshAPIServer(
 		grpcServer,
 		sshapi.New(pkB64),
+	)
+	healthv1.RegisterHealthServer(
+		grpcServer,
+		health.New(),
 	)
 
 	return &Server{

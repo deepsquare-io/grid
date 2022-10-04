@@ -24,6 +24,10 @@ WORKDIR /app
 COPY --from=builder /build/app .
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
+ADD https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.4.13/grpc_health_probe-linux-amd64 /bin/grpc_health_probe
+
+RUN chmod +x /bin/grpc_health_probe
+
 RUN chown -R app:app .
 USER app
 
