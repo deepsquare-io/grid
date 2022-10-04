@@ -17,6 +17,7 @@ const claimJobMaxTimeout = time.Duration(60 * time.Second)
 
 type JobMetaQueue interface {
 	Claim(ctx context.Context) (*metascheduler.MetaSchedulerClaimNextJobEvent, error)
+	RefuseJob(ctx context.Context, jobID [32]byte) error
 }
 
 type JobScheduler interface {
@@ -74,6 +75,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 
 				r, err := w.metaQueue.Claim(ctx)
 				if err != nil {
+					logger.I.Info("failed to claim a job", zap.Error(err))
 					done <- err
 				} else {
 					logger.I.Info("claimed a job", zap.Any("event", r))
@@ -86,6 +88,9 @@ func (w *Watcher) Watch(parent context.Context) error {
 				body, err := w.batchFetcher.Fetch(ctx, r.JobDefinition.BatchLocationHash)
 				if err != nil {
 					logger.I.Error("slurm fetch job body failed", zap.Error(err))
+					if err := w.metaQueue.RefuseJob(ctx, r.JobId); err != nil {
+						logger.I.Error("failed to refuse a job", zap.Error(err))
+					}
 					return
 				}
 				job := eth.JobDefinitionMapToSlurm(r.JobDefinition, r.MaxDurationMinute, body)
@@ -97,6 +102,9 @@ func (w *Watcher) Watch(parent context.Context) error {
 				slurmJobID, err := w.scheduler.Submit(ctx, req)
 				if err != nil {
 					logger.I.Error("slurm submit job failed", zap.Error(err))
+					if err := w.metaQueue.RefuseJob(ctx, r.JobId); err != nil {
+						logger.I.Error("failed to refuse a job", zap.Error(err))
+					}
 					return
 				}
 				logger.I.Info(

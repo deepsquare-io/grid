@@ -175,13 +175,13 @@ func (s *DataSource) StartJob(
 	if err != nil {
 		return err
 	}
-	logger.I.Debug("called startjob", zap.String("tx", tx.Hash().String()))
+	logger.I.Debug("called start job", zap.String("tx", tx.Hash().String()))
 	// We need to wait to make sure the job is accepted by the metascheduler and avoid race conditions
 	_, err = bind.WaitMined(ctx, s.client, tx)
 	if err != nil {
 		return err
 	}
-	logger.I.Debug("startjob has been mined", zap.String("tx", tx.Hash().String()))
+	logger.I.Debug("start job has been mined", zap.String("tx", tx.Hash().String()))
 	return err
 }
 
@@ -227,12 +227,28 @@ func (s *DataSource) FailJob(
 	return err
 }
 
-// Ping is a healthcheck
-func (s *DataSource) Ping(ctx context.Context) error {
-	pong, err := s.metascheduler.Ping(nil)
+// RefuseJob rejects a job from the metascheduler.
+func (s *DataSource) RefuseJob(
+	ctx context.Context,
+	jobID [32]byte,
+) error {
+	logger.I.Warn("calling refuse job", zap.String("jobID", string(jobID[:])))
+	auth, err := s.auth(ctx)
 	if err != nil {
 		return err
 	}
-	logger.I.Debug("called ping", zap.String("result", pong))
+	tx, err := s.metascheduler.RefuseJob(
+		auth,
+		jobID,
+	)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("called refuse job", zap.String("tx", tx.Hash().String()))
+	_, err = bind.WaitMined(ctx, s.client, tx)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("refuse job has been mined", zap.String("tx", tx.Hash().String()))
 	return err
 }

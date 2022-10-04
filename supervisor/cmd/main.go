@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
@@ -261,15 +260,6 @@ var app = &cli.App{
 	Action: func(ctx *cli.Context) error {
 		c := ctx.Context
 		container := Init()
-
-		go func(ctx context.Context) {
-			for {
-				if err := container.eth.Ping(ctx); err != nil {
-					logger.I.Error("ping failed", zap.Error(err))
-				}
-				time.Sleep(time.Duration(30 * time.Second))
-			}
-		}(c)
 
 		// Register the cluster with the declared resources
 		// TODO: automatically fetch the resources limit

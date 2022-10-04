@@ -38,6 +38,20 @@ func (_m *JobMetaQueue) Claim(ctx context.Context) (*metascheduler.MetaScheduler
 	return r0, r1
 }
 
+// RefuseJob provides a mock function with given fields: ctx, jobID
+func (_m *JobMetaQueue) RefuseJob(ctx context.Context, jobID [32]byte) error {
+	ret := _m.Called(ctx, jobID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, [32]byte) error); ok {
+		r0 = rf(ctx, jobID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewJobMetaQueue interface {
 	mock.TestingT
 	Cleanup(func())
