@@ -89,7 +89,7 @@ var flags = []cli.Flag{
 	},
 	&cli.BoolFlag{
 		Name:        "customer.tls",
-		Value:       true,
+		Value:       false,
 		Usage:       "Enable tls configuration for the customer.",
 		Destination: &customerTLS,
 		EnvVars:     []string{"CUSTOMER_TLS_ENABLE"},
