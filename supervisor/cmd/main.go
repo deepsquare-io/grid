@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/customer"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/oracle"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/urfave/cli/v2"
@@ -21,10 +21,10 @@ var (
 	keyFile  string
 	certFile string
 
-	oracleEndpoint             string
-	oracleTLS                  bool
-	oracleCAFile               string
-	oracleServerHostOverride   string
+	customerEndpoint           string
+	customerTLS                bool
+	customerCAFile             string
+	customerServerHostOverride string
 	ethEndpoint                string
 	ethHexPK                   string
 	metaschedulerSmartContract string
@@ -81,32 +81,32 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"METASCHEDULER_ENDPOINT"},
 	},
 	&cli.StringFlag{
-		Name:        "oracle.endpoint",
+		Name:        "customer.endpoint",
 		Value:       "127.0.0.1:443",
 		Usage:       "Oracle gRPC endpoint.",
-		Destination: &oracleEndpoint,
-		EnvVars:     []string{"ORACLE_ENDPOINT"},
+		Destination: &customerEndpoint,
+		EnvVars:     []string{"CUSTOMER_ENDPOINT"},
 	},
 	&cli.BoolFlag{
-		Name:        "oracle.tls",
+		Name:        "customer.tls",
 		Value:       true,
-		Usage:       "Enable tls configuration for the oracle.",
-		Destination: &oracleTLS,
-		EnvVars:     []string{"ORACLE_TLS_ENABLE"},
+		Usage:       "Enable tls configuration for the customer.",
+		Destination: &customerTLS,
+		EnvVars:     []string{"CUSTOMER_TLS_ENABLE"},
 	},
 	&cli.StringFlag{
-		Name:        "oracle.tls.ca",
+		Name:        "customer.tls.ca",
 		Value:       "",
 		Usage:       "Path to CA certificate.",
-		Destination: &oracleCAFile,
-		EnvVars:     []string{"ORACLE_CA"},
+		Destination: &customerCAFile,
+		EnvVars:     []string{"CUSTOMER_CA"},
 	},
 	&cli.StringFlag{
-		Name:        "oracle.tls.server-host-override",
-		Value:       "oracle.deepsquare.io",
+		Name:        "customer.tls.server-host-override",
+		Value:       "customer.deepsquare.io",
 		Usage:       "The server name used to verify the hostname returned by the TLS handshake.",
-		Destination: &oracleServerHostOverride,
-		EnvVars:     []string{"ORACLE_SERVER_HOST_OVERRIDE"},
+		Destination: &customerServerHostOverride,
+		EnvVars:     []string{"CUSTOMER_SERVER_HOST_OVERRIDE"},
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
@@ -204,18 +204,18 @@ var flags = []cli.Flag{
 // Container stores the instances for dependency injection.
 type Container struct {
 	server     *server.Server
-	oracle     *oracle.DataSource
+	customer   *customer.DataSource
 	eth        *eth.DataSource
 	slurm      *slurm.Service
 	jobWatcher *job.Watcher
 }
 
 func Init() *Container {
-	oracleDataSource := oracle.New(
-		oracleEndpoint,
-		oracleTLS,
-		oracleCAFile,
-		oracleServerHostOverride,
+	customerDataSource := customer.New(
+		customerEndpoint,
+		customerTLS,
+		customerCAFile,
+		customerServerHostOverride,
 	)
 	ethDataSource := eth.New(
 		ethEndpoint,
@@ -234,7 +234,7 @@ func Init() *Container {
 	watcher := job.New(
 		ethDataSource,
 		slurmJobService,
-		oracleDataSource,
+		customerDataSource,
 	)
 	server := server.New(
 		tls,
@@ -245,7 +245,7 @@ func Init() *Container {
 	)
 
 	return &Container{
-		oracle:     oracleDataSource,
+		customer:   customerDataSource,
 		eth:        ethDataSource,
 		slurm:      slurmJobService,
 		jobWatcher: watcher,
