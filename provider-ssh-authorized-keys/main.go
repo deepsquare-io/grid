@@ -15,10 +15,12 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
-	insecure           bool
+	enableTLS          bool
+	enableInsecure     bool
 	caFile             string
 	serverHostOverride string
 	supervisorEndpoint string
@@ -34,15 +36,22 @@ var flags = []cli.Flag{
 	},
 	&cli.BoolFlag{
 		Name:        "supervisor.tls",
-		Value:       false,
-		Destination: &insecure,
-		Usage:       "Enable TLS for GRPC. Disabling it will enable insecure mode.",
+		Value:       true,
+		Destination: &enableTLS,
+		Usage:       "Enable TLS for GRPC.",
 		EnvVars:     []string{"SUPERVISOR_TLS_ENABLE"},
+	},
+	&cli.BoolFlag{
+		Name:        "supervisor.tls.insecure",
+		Value:       false,
+		Destination: &enableInsecure,
+		Usage:       "Skip TLS verification. By enabling it, supervisor.tls.ca and supervisor.tls.server-host-override are ignored.",
+		EnvVars:     []string{"SUPERVISOR_TLS_INSECURE"},
 	},
 	&cli.StringFlag{
 		Name:        "supervisor.tls.ca",
 		Value:       "",
-		Usage:       "Path to CA certificate.",
+		Usage:       "Path to CA certificate for TLS verification.",
 		Destination: &caFile,
 		EnvVars:     []string{"SUPERVISOR_CA"},
 	},
@@ -79,17 +88,21 @@ func Fetch(ctx context.Context) (string, error) {
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(retryOpts...)),
 	}
 
-	if insecure {
-		creds, err := credentials.NewClientTLSFromFile(caFile, serverHostOverride)
-		if err != nil {
-			logger.I.Fatal("Failed to create TLS credentials", zap.Error(err))
+	if enableTLS {
+		if !enableInsecure {
+			creds, err := credentials.NewClientTLSFromFile(caFile, serverHostOverride)
+			if err != nil {
+				logger.I.Fatal("Failed to create TLS credentials", zap.Error(err))
+			}
+			opts = append(opts, grpc.WithTransportCredentials(creds))
+		} else {
+			tlsConfig := &tls.Config{
+				InsecureSkipVerify: true,
+			}
+			opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 		}
-		opts = append(opts, grpc.WithTransportCredentials(creds))
 	} else {
-		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true,
-		}
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 	conn, err := grpc.Dial(supervisorEndpoint, opts...)
 	if err != nil {

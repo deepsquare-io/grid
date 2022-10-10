@@ -23,6 +23,7 @@ var (
 
 	customerEndpoint           string
 	customerTLS                bool
+	customerTLSInsecure        bool
 	customerCAFile             string
 	customerServerHostOverride string
 	ethEndpoint                string
@@ -89,15 +90,22 @@ var flags = []cli.Flag{
 	},
 	&cli.BoolFlag{
 		Name:        "customer.tls",
-		Value:       false,
-		Usage:       "Enable tls configuration for the customer.",
+		Value:       true,
+		Usage:       "Enable TLS for the Customer API.",
 		Destination: &customerTLS,
 		EnvVars:     []string{"CUSTOMER_TLS_ENABLE"},
+	},
+	&cli.BoolFlag{
+		Name:        "customer.tls.insecure",
+		Value:       false,
+		Usage:       "Skip TLS verification. By enabling it, customer.tls.ca and customer.tls.server-host-override are ignored.",
+		Destination: &customerTLSInsecure,
+		EnvVars:     []string{"CUSTOMER_TLS_INSECURE"},
 	},
 	&cli.StringFlag{
 		Name:        "customer.tls.ca",
 		Value:       "",
-		Usage:       "Path to CA certificate.",
+		Usage:       "Path to CA certificate for TLS verification.",
 		Destination: &customerCAFile,
 		EnvVars:     []string{"CUSTOMER_CA"},
 	},
@@ -214,6 +222,7 @@ func Init() *Container {
 	customerDataSource := customer.New(
 		customerEndpoint,
 		customerTLS,
+		customerTLSInsecure,
 		customerCAFile,
 		customerServerHostOverride,
 	)
