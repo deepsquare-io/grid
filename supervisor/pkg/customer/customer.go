@@ -3,9 +3,13 @@ package customer
 import (
 	"context"
 	"io"
+	"time"
 
 	customerv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/customer/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -24,7 +28,21 @@ func New(
 	caFile string,
 	serverHostOverride string,
 ) *DataSource {
-	var opts []grpc.DialOption
+	retryOpts := []grpc_retry.CallOption{
+		grpc_retry.WithMax(3),
+		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(1000 * time.Millisecond)),
+	}
+	opts := []grpc.DialOption{
+		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
+			grpc_zap.StreamClientInterceptor(logger.I),
+			grpc_retry.StreamClientInterceptor(retryOpts...),
+		)),
+		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
+			grpc_zap.UnaryClientInterceptor(logger.I),
+			grpc_retry.UnaryClientInterceptor(retryOpts...),
+		)),
+	}
+
 	if tls {
 		creds, err := credentials.NewClientTLSFromFile(caFile, serverHostOverride)
 		if err != nil {
