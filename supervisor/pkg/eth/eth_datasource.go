@@ -189,7 +189,7 @@ func (s *DataSource) StartJob(
 func (s *DataSource) FinishJob(
 	ctx context.Context,
 	jobID [32]byte,
-	jobDuration *big.Int,
+	jobDuration uint64,
 ) error {
 	auth, err := s.auth(ctx)
 	if err != nil {

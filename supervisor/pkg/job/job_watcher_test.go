@@ -4,7 +4,6 @@ package job_test
 
 import (
 	"context"
-	"math/big"
 	"testing"
 	"time"
 
@@ -22,7 +21,7 @@ var (
 	fixtureEvent      = &metascheduler.MetaSchedulerClaimNextJobEvent{
 		CustomerAddr:      common.HexToAddress("01"),
 		JobId:             [32]byte{1},
-		MaxDurationMinute: big.NewInt(5),
+		MaxDurationMinute: uint64(5),
 		JobDefinition:     metascheduler.JobDefinition{},
 	}
 	fixtureBody = `#!/bin/sh

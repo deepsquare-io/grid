@@ -1,12 +1,10 @@
 package slurm
 
-import "math/big"
-
 type JobDefinition struct {
 	// TimeLimit is a time allocation which at the end kills the running job.
 	//
 	// TimeLimit is in minutes.
-	TimeLimit *big.Int
+	TimeLimit uint64
 	// NTasks indicates the number
 	NTasks uint64
 	// GPUsPerNode indicates the number of requested GPU.

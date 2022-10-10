@@ -4,7 +4,6 @@ package slurm_test
 
 import (
 	"context"
-	"math/big"
 	"os"
 	"testing"
 
@@ -31,7 +30,7 @@ func (suite *ServiceTestSuite) submitJob() *slurm.SubmitJobRequest {
 		Name: name,
 		User: suite.user,
 		JobDefinition: &slurm.JobDefinition{
-			TimeLimit:     big.NewInt(5),
+			TimeLimit:     uint64(5),
 			NTasks:        1,
 			GPUsPerNode:   0,
 			CPUsPerTask:   1,

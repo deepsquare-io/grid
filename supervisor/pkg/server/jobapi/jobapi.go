@@ -3,7 +3,6 @@ package jobapi
 import (
 	"context"
 	"encoding/hex"
-	"math/big"
 
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
@@ -14,7 +13,7 @@ type JobHandler interface {
 	FinishJob(
 		ctx context.Context,
 		jobID [32]byte,
-		jobDuration *big.Int,
+		jobDuration uint64,
 	) error
 	FailJob(
 		ctx context.Context,
@@ -51,7 +50,7 @@ func (s *jobAPIServer) SendJobResult(ctx context.Context, req *supervisorv1alpha
 	}
 	var jobNameFixedLength [32]byte
 	copy(jobNameFixedLength[:], jobName)
-	err = s.jobHandler.FinishJob(ctx, jobNameFixedLength, new(big.Int).SetUint64(req.JobDuration))
+	err = s.jobHandler.FinishJob(ctx, jobNameFixedLength, req.JobDuration)
 	if err != nil {
 		return nil, err
 	}

@@ -4,7 +4,6 @@ package mocks
 
 import (
 	context "context"
-	big "math/big"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -29,11 +28,11 @@ func (_m *JobHandler) FailJob(ctx context.Context, jobID [32]byte) error {
 }
 
 // FinishJob provides a mock function with given fields: ctx, jobID, jobDuration
-func (_m *JobHandler) FinishJob(ctx context.Context, jobID [32]byte, jobDuration *big.Int) error {
+func (_m *JobHandler) FinishJob(ctx context.Context, jobID [32]byte, jobDuration uint64) error {
 	ret := _m.Called(ctx, jobID, jobDuration)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, [32]byte, *big.Int) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, [32]byte, uint64) error); ok {
 		r0 = rf(ctx, jobID, jobDuration)
 	} else {
 		r0 = ret.Error(0)
