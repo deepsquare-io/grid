@@ -2,6 +2,7 @@ package customer
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // DataSource fetches the resources linked to the smart-contract.
@@ -24,7 +24,7 @@ type DataSource struct {
 
 func New(
 	endpoint string,
-	tls bool,
+	insecure bool,
 	caFile string,
 	serverHostOverride string,
 ) *DataSource {
@@ -43,14 +43,17 @@ func New(
 		)),
 	}
 
-	if tls {
+	if insecure {
 		creds, err := credentials.NewClientTLSFromFile(caFile, serverHostOverride)
 		if err != nil {
 			logger.I.Fatal("Failed to create TLS credentials", zap.Error(err))
 		}
 		opts = append(opts, grpc.WithTransportCredentials(creds))
 	} else {
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 	}
 
 	return &DataSource{
