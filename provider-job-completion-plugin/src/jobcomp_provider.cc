@@ -126,7 +126,7 @@ extern int jobcomp_p_log_record(job_record_t *job_ptr) {
   grpc::experimental::TlsChannelCredentialsOptions options;
   options.set_verify_server_certs(false);
   JobAPIClient job_api(grpc::CreateChannel(
-      config.endpoint, grpc::experimental::TlsCredentials(options)));
+      report_url, grpc::experimental::TlsCredentials(options)));
 
   if (IS_JOB_FAILED(job_ptr) || IS_JOB_TIMEOUT(job_ptr)) {
     auto req = MakeSendJobFailRequestFromReport(report);
