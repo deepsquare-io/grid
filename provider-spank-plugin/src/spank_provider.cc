@@ -83,9 +83,10 @@ extern int slurm_spank_local_user_init(spank_t spank, int ac, char *argv[]) {
   parse_slurm_job_info(job, report);
 
   // Output
-
-  JobAPIClient job_api(
-      grpc::CreateChannel(config.endpoint, grpc::InsecureChannelCredentials()));
+  grpc::experimental::TlsChannelCredentialsOptions options;
+  options.set_verify_server_certs(false);
+  JobAPIClient job_api(grpc::CreateChannel(
+      config.endpoint, grpc::experimental::TlsCredentials(options)));
 
   auto req = MakeSendJobStartRequestFromReport(report);
   if (!job_api.SendJobStart(req)) {
