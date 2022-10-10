@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"os"
@@ -14,11 +15,10 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
-	tls                bool
+	insecure           bool
 	caFile             string
 	serverHostOverride string
 	supervisorEndpoint string
@@ -35,7 +35,7 @@ var flags = []cli.Flag{
 	&cli.BoolFlag{
 		Name:        "supervisor.tls",
 		Value:       false,
-		Destination: &tls,
+		Destination: &insecure,
 		Usage:       "Enable TLS for GRPC. Disabling it will enable insecure mode.",
 		EnvVars:     []string{"SUPERVISOR_TLS_ENABLE"},
 	},
@@ -79,14 +79,17 @@ func Fetch(ctx context.Context) (string, error) {
 		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(retryOpts...)),
 	}
 
-	if tls {
+	if insecure {
 		creds, err := credentials.NewClientTLSFromFile(caFile, serverHostOverride)
 		if err != nil {
 			logger.I.Fatal("Failed to create TLS credentials", zap.Error(err))
 		}
 		opts = append(opts, grpc.WithTransportCredentials(creds))
 	} else {
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 	}
 	conn, err := grpc.Dial(supervisorEndpoint, opts...)
 	if err != nil {
