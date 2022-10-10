@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/provider-ssh-authorized-keys/gen/go/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/provider-ssh-authorized-keys/logger"
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -68,7 +70,15 @@ var app = &cli.App{
 }
 
 func Fetch(ctx context.Context) (string, error) {
-	var opts []grpc.DialOption
+	retryOpts := []grpc_retry.CallOption{
+		grpc_retry.WithMax(3),
+		grpc_retry.WithBackoff(grpc_retry.BackoffLinear(1000 * time.Millisecond)),
+	}
+	opts := []grpc.DialOption{
+		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(retryOpts...)),
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(retryOpts...)),
+	}
+
 	if tls {
 		creds, err := credentials.NewClientTLSFromFile(caFile, serverHostOverride)
 		if err != nil {
