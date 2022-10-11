@@ -1,0 +1,20 @@
+# CI/CD
+.github/ @Darkness4
+docker/ @Darkness4
+
+# Contracts
+smart-contract/ @Lymnah @Darkness4 @efelem
+protos/ @Darkness4 @efelem @Lymnah
+
+# Customer side
+customer-api/ @efelem @Darkness4
+
+# Web3
+avalanche-subnet/ @efelem
+oracle-scheduler/ @efelem @Lymnah
+
+# Cluster-side
+provider-job-completion-plugin/ @Darkness4
+provider-spank-plugin/ @Darkness4
+provider-ssh-authorized-keys/ @Darkness4
+supervisor/ @Darkness4
