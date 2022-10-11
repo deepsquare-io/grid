@@ -14,7 +14,8 @@ import (
 	"go.uber.org/zap"
 )
 
-var claimNextJobSig = []byte("ClaimNextJobEvent(address,bytes32,uint256,(uint64,uint64,uint64,uint64,uint64,string))")
+// TODO: unit test to avoid runtime errors
+var claimNextJobSig = []byte("ClaimNextJobEvent(address,bytes32,uint64,(uint64,uint64,uint64,uint64,uint64,string))")
 var claimNextJobSigHash = crypto.Keccak256Hash(claimNextJobSig)
 
 // DataSource handles communications with the smart contract.
