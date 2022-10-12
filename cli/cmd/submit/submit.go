@@ -143,18 +143,10 @@ var Command = &cobra.Command{
 }
 
 func uploadFile(data *os.File) (string, error) {
-	req, err := http.NewRequest("POST", "https://transfer.sh/", data)
+	res, err := http.Post("https://transfer.sh/", "binary/octet-stream", data)
 	if err != nil {
 		return "", err
 	}
-
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		logger.I.Error("file upload failed", zap.Error(err))
-		return "", err
-	}
-	defer res.Body.Close()
 
 	urlResult, err := ioutil.ReadAll(res.Body)
 	if err != nil {
