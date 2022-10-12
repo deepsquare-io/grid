@@ -1,24 +1,23 @@
 package main
 
 import (
-	"os"
-
 	"github.com/deepsquare-io/the-grid/cli/cmd/submit"
 	"github.com/deepsquare-io/the-grid/cli/logger"
-	"github.com/urfave/cli/v2"
+	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
 
-var app = &cli.App{
-	Name:  "grid",
-	Usage: "The DeepSquare Grid Client CLI",
-	Commands: []*cli.Command{
-		submit.Command,
-	},
+var app = &cobra.Command{
+	Use:   "grid",
+	Short: "The DeepSquare Grid Client CLI",
+}
+
+func init() {
+	app.AddCommand(submit.Command)
 }
 
 func main() {
-	if err := app.Run(os.Args); err != nil {
+	if err := app.Execute(); err != nil {
 		logger.I.Fatal("app crashed", zap.Error(err))
 	}
 }
