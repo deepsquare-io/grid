@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/deepsquare-io/the-grid/cli/cmd/submit"
 	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -10,7 +11,10 @@ import (
 
 var app = &cli.App{
 	Name:  "grid",
-	Usage: "The GRID Client CLI",
+	Usage: "The DeepSquare Grid Client CLI",
+	Commands: []*cli.Command{
+		submit.Command,
+	},
 }
 
 func main() {
