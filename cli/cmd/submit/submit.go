@@ -1,8 +1,10 @@
 package submit
 
 import (
-	"io/ioutil"
+	"bytes"
+	"io"
 	"math/big"
+	"mime/multipart"
 	"net/http"
 	"os"
 
@@ -131,7 +133,7 @@ var Command = &cobra.Command{
 		}()
 
 		// TODO: implements file hash
-		urlResult, err := uploadFile(file)
+		urlResult, err := uploadFile(file, "job.sh")
 		if err != nil {
 			logger.I.Fatal("couldn't upload file", zap.String("file", args[0]), zap.Error(err))
 		}
@@ -142,15 +144,26 @@ var Command = &cobra.Command{
 	},
 }
 
-func uploadFile(data *os.File) (string, error) {
-	res, err := http.Post("https://transfer.sh/", "binary/octet-stream", data)
+func uploadFile(file *os.File, fileName string) (string, error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("asset", fileName)
+	if err != nil {
+		return "", err
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return "", err
+	}
+	writer.Close()
+
+	res, err := http.Post("https://transfer.sh/", writer.FormDataContentType(), body)
 	if err != nil {
 		return "", err
 	}
 
-	urlResult, err := ioutil.ReadAll(res.Body)
+	urlResult, err := io.ReadAll(res.Body)
 	if err != nil {
-		logger.I.Error("cannot read body", zap.Error(err))
 		return "", err
 	}
 	return string(urlResult), nil
