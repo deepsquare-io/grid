@@ -212,20 +212,14 @@ var flags = []cli.Flag{
 // Container stores the instances for dependency injection.
 type Container struct {
 	server     *server.Server
-	customer   *customer.DataSource
+	customer   *customer.FakeDataSource
 	eth        *eth.DataSource
 	slurm      *slurm.Service
 	jobWatcher *job.Watcher
 }
 
 func Init() *Container {
-	customerDataSource := customer.New(
-		customerEndpoint,
-		customerTLS,
-		customerTLSInsecure,
-		customerCAFile,
-		customerServerHostOverride,
-	)
+	customer := &customer.FakeDataSource{}
 	ethDataSource := eth.New(
 		ethEndpoint,
 		ethHexPK,
@@ -243,7 +237,7 @@ func Init() *Container {
 	watcher := job.New(
 		ethDataSource,
 		slurmJobService,
-		customerDataSource,
+		customer,
 	)
 	server := server.New(
 		tls,
@@ -254,7 +248,7 @@ func Init() *Container {
 	)
 
 	return &Container{
-		customer:   customerDataSource,
+		customer:   customer,
 		eth:        ethDataSource,
 		slurm:      slurmJobService,
 		jobWatcher: watcher,
