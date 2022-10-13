@@ -31,23 +31,33 @@ func init() {
 		"https://testnet.deepsquare.run/rpc",
 		"Metascheduler RPC endpoint. (env: METASCHEDULER_ENDPOINT)",
 	)
-	viper.BindPFlag("METASCHEDULER_ENDPOINT", flags.Lookup("metascheduler.endpoint"))
+	if err := viper.BindPFlag("METASCHEDULER_ENDPOINT", flags.Lookup("metascheduler.endpoint")); err != nil {
+		logger.I.Fatal("couldn't bind pFlag", zap.Error(err))
+	}
 	flags.StringVar(
 		&metaschedulerSmartContract,
 		"metascheduler.smart-contract",
 		"",
 		"Metascheduler smart-contract address. Must have the prefix 0x. (env: METASCHEDULER_SMART_CONTRACT)",
 	)
-	Command.MarkFlagRequired("metascheduler.smart-contract")
-	viper.BindPFlag("METASCHEDULER_SMART_CONTRACT", flags.Lookup("metascheduler.smart-contract"))
+	if err := Command.MarkFlagRequired("metascheduler.smart-contract"); err != nil {
+		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
+	}
+	if err := viper.BindPFlag("METASCHEDULER_SMART_CONTRACT", flags.Lookup("metascheduler.smart-contract")); err != nil {
+		logger.I.Fatal("couldn't bind pFlag", zap.Error(err))
+	}
 	flags.StringVar(
 		&ethHexPK,
 		"eth.private-key",
 		"",
 		"An hexadecimal private key for ethereum transactions. (env: ETH_PRIVATE_KEY)",
 	)
-	Command.MarkFlagRequired("eth.private-key")
-	viper.BindPFlag("ETH_PRIVATE_KEY", flags.Lookup("eth.private-key"))
+	if err := Command.MarkFlagRequired("eth.private-key"); err != nil {
+		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
+	}
+	if err := viper.BindPFlag("ETH_PRIVATE_KEY", flags.Lookup("eth.private-key")); err != nil {
+		logger.I.Fatal("couldn't bind pFlag", zap.Error(err))
+	}
 	flags.Uint64Var(
 		&jobDefinition.GpuPerNode,
 		"gpus",
@@ -60,7 +70,9 @@ func init() {
 		0,
 		"Allocated memory per node (MB).",
 	)
-	Command.MarkFlagRequired("mem")
+	if err := Command.MarkFlagRequired("mem"); err != nil {
+		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
+	}
 	flags.Uint64VarP(
 		&jobDefinition.CpuPerTask,
 		"cpus-per-task",
@@ -68,7 +80,9 @@ func init() {
 		0,
 		"Allocated CPUs per task.",
 	)
-	Command.MarkFlagRequired("cpus-per-task")
+	if err := Command.MarkFlagRequired("cpus-per-task"); err != nil {
+		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
+	}
 	flags.Uint64VarP(
 		&jobDefinition.Nodes,
 		"nodes",
@@ -90,7 +104,9 @@ func init() {
 		"",
 		"Amount of credits locked for the job, which is equivalent to the time limit.",
 	)
-	Command.MarkFlagRequired("credits")
+	if err := Command.MarkFlagRequired("credits"); err != nil {
+		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
+	}
 }
 
 // Container stores the instances for dependency injection.

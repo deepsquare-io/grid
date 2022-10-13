@@ -29,7 +29,9 @@ func init() {
 		false,
 		"Show debug logging.",
 	)
-	viper.BindPFlag("DEBUG", flags.Lookup("debug"))
+	if err := viper.BindPFlag("DEBUG", flags.Lookup("debug")); err != nil {
+		logger.I.Fatal("couldn't bind pFlag", zap.Error(err))
+	}
 	app.AddCommand(submit.Command)
 }
 
