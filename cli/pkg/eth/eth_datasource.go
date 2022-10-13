@@ -102,15 +102,14 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 
 // Request a job.
 func (s *DataSource) RequestNewJob(ctx context.Context, jobDefinition metascheduler.JobDefinition, amountLocked *big.Int) error {
-	auth, err := s.auth(ctx)
-	if err != nil {
-		return err
-	}
-
 	if err := s.approve(ctx, amountLocked); err != nil {
 		return err
 	}
 
+	auth, err := s.auth(ctx)
+	if err != nil {
+		return err
+	}
 	tx, err := s.metascheduler.RequestNewJob(auth, jobDefinition, amountLocked)
 	if err != nil {
 		return err
