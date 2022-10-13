@@ -9,8 +9,9 @@ import (
 
 var I *zap.Logger
 
+var atom = zap.NewAtomicLevel()
+
 func init() {
-	atom := zap.NewAtomicLevel()
 	config := zap.NewProductionEncoderConfig() // or zap.NewDevelopmentConfig() or any other zap.Config
 	config.TimeKey = "timestamp"
 	config.EncodeTime = zapcore.ISO8601TimeEncoder
@@ -21,5 +22,10 @@ func init() {
 		zapcore.Lock(os.Stdout),
 		atom,
 	))
+	atom.SetLevel(zap.InfoLevel)
+}
+
+func EnableDebug() {
 	atom.SetLevel(zap.DebugLevel)
+	I.Debug("Enabled debug logging.")
 }

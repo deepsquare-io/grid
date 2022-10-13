@@ -9,6 +9,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"go.uber.org/zap"
@@ -101,22 +102,22 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 }
 
 // Request a job.
-func (s *DataSource) RequestNewJob(ctx context.Context, jobDefinition metascheduler.JobDefinition, amountLocked *big.Int) error {
+func (s *DataSource) RequestNewJob(ctx context.Context, jobDefinition metascheduler.JobDefinition, amountLocked *big.Int) (*types.Transaction, error) {
 	if err := s.approve(ctx, amountLocked); err != nil {
-		return err
+		return nil, err
 	}
 
 	auth, err := s.auth(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	tx, err := s.metascheduler.RequestNewJob(auth, jobDefinition, amountLocked)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	logger.I.Debug("called RequestNewJob", zap.String("tx", tx.Hash().String()))
 
-	return nil
+	return tx, err
 }
 
 // Approve

@@ -50,43 +50,47 @@ func init() {
 	viper.BindPFlag("ETH_PRIVATE_KEY", flags.Lookup("eth.private-key"))
 	flags.Uint64Var(
 		&jobDefinition.GpuPerNode,
-		"res.gpus-per-node",
+		"gpus",
 		0,
 		"Allocated GPUs per node.",
 	)
 	flags.Uint64Var(
 		&jobDefinition.MemPerNode,
-		"res.mem-per-node",
+		"mem",
 		0,
 		"Allocated memory per node (MB).",
 	)
-	Command.MarkFlagRequired("res.mem-per-node")
-	flags.Uint64Var(
+	Command.MarkFlagRequired("mem")
+	flags.Uint64VarP(
 		&jobDefinition.CpuPerTask,
-		"res.cpus-per-task",
+		"cpus-per-task",
+		"c",
 		0,
 		"Allocated CPUs per task.",
 	)
-	Command.MarkFlagRequired("res.cpus-per-task")
-	flags.Uint64Var(
+	Command.MarkFlagRequired("cpus-per-task")
+	flags.Uint64VarP(
 		&jobDefinition.Nodes,
-		"res.nodes",
+		"nodes",
+		"N",
 		1,
 		"Allocated nodes.",
 	)
-	flags.Uint64Var(
+	flags.Uint64VarP(
 		&jobDefinition.Ntasks,
-		"res.tasks",
+		"tasks",
+		"n",
 		1,
 		"Run the same script in parallel if tasks > 1.",
 	)
-	flags.StringVar(
+	flags.StringVarP(
 		&amountLockedStr,
-		"res.credit-locked",
+		"credits",
+		"t",
 		"",
 		"Amount of credits locked for the job, which is equivalent to the time limit.",
 	)
-	Command.MarkFlagRequired("res.credit-locked")
+	Command.MarkFlagRequired("credits")
 }
 
 // Container stores the instances for dependency injection.
@@ -107,7 +111,7 @@ func Init() *Container {
 }
 
 var Command = &cobra.Command{
-	Use:   "submit [path to script]",
+	Use:   "submit <path to script>",
 	Short: "Submit a job to the DeepSquare Grid.",
 	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -117,13 +121,14 @@ var Command = &cobra.Command{
 
 		amountLocked, ok := big.NewInt(0).SetString(amountLockedStr, 10)
 		if !ok {
-			logger.I.Fatal("couldn't parse value of res.credit-locked in base 10")
+			logger.I.Fatal("couldn't parse value of credits in base 10")
 		}
 
 		file, err := os.Open(args[0])
 		if err != nil {
 			return err
 		}
+		logger.I.Debug("file handle created", zap.Any("file", file))
 		defer func() {
 			if err := file.Close(); err != nil {
 				logger.I.Fatal("couldn't open file", zap.String("file", args[0]), zap.Error(err))
@@ -135,10 +140,17 @@ var Command = &cobra.Command{
 		if err != nil {
 			logger.I.Fatal("couldn't upload file", zap.String("file", args[0]), zap.Error(err))
 		}
-		logger.I.Debug("submit succeeded", zap.String("hash", urlResult))
+		logger.I.Info("hash succeeded", zap.String("hash", urlResult))
 
 		jobDefinition.BatchLocationHash = urlResult
 
-		return container.eth.RequestNewJob(c, jobDefinition, amountLocked)
+		tx, err := container.eth.RequestNewJob(c, jobDefinition, amountLocked)
+		if err != nil {
+			return err
+		}
+
+		logger.I.Info("requested a new job successfully", zap.String("tx", tx.Hash().String()))
+
+		return nil
 	},
 }
