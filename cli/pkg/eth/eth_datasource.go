@@ -16,11 +16,13 @@ import (
 
 // DataSource handles communications with the smart contract.
 type DataSource struct {
-	client        *ethclient.Client
-	metascheduler *metascheduler.MetaScheduler
-	pk            *ecdsa.PrivateKey
-	pub           *ecdsa.PublicKey
-	fromAddress   common.Address
+	client               *ethclient.Client
+	metaschedulerAddress common.Address
+	metascheduler        *metascheduler.MetaScheduler
+	credit               *metascheduler.IERC20Metadata
+	pk                   *ecdsa.PrivateKey
+	pub                  *ecdsa.PublicKey
+	fromAddress          common.Address
 }
 
 func New(
@@ -33,10 +35,20 @@ func New(
 		logger.I.Fatal("ethclient dial failed", zap.Error(err))
 	}
 
-	ms, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerAddress), client)
+	ma := common.HexToAddress(metaschedulerAddress)
+	ms, err := metascheduler.NewMetaScheduler(ma, client)
 	if err != nil {
 		logger.I.Fatal("metascheduler dial failed", zap.Error(err))
 	}
+	creditAddr, err := ms.Credit(nil)
+	if err != nil {
+		logger.I.Fatal("metascheduler failed to fetch credit address", zap.Error(err))
+	}
+	ierc20, err := metascheduler.NewIERC20Metadata(creditAddr, client)
+	if err != nil {
+		logger.I.Fatal("IERC20Metadata dial failed", zap.Error(err))
+	}
+
 	pk, err := crypto.HexToECDSA(hexPK)
 	if err != nil {
 		logger.I.Fatal("couldn't decode private key", zap.Error(err))
@@ -50,11 +62,13 @@ func New(
 	fromAddress := crypto.PubkeyToAddress(*pubECDSA)
 
 	return &DataSource{
-		client:        client,
-		metascheduler: ms,
-		pk:            pk,
-		pub:           pubECDSA,
-		fromAddress:   fromAddress,
+		client:               client,
+		metaschedulerAddress: ma,
+		metascheduler:        ms,
+		credit:               ierc20,
+		pk:                   pk,
+		pub:                  pubECDSA,
+		fromAddress:          fromAddress,
 	}
 }
 
@@ -93,11 +107,35 @@ func (s *DataSource) RequestNewJob(ctx context.Context, jobDefinition metaschedu
 		return err
 	}
 
+	if err := s.approve(ctx, amountLocked); err != nil {
+		return err
+	}
+
 	tx, err := s.metascheduler.RequestNewJob(auth, jobDefinition, amountLocked)
 	if err != nil {
 		return err
 	}
 	logger.I.Debug("called RequestNewJob", zap.String("tx", tx.Hash().String()))
 
+	return nil
+}
+
+// Approve
+func (s *DataSource) approve(ctx context.Context, amount *big.Int) error {
+	auth, err := s.auth(ctx)
+	if err != nil {
+		return err
+	}
+
+	tx, err := s.credit.Approve(auth, s.metaschedulerAddress, amount)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("called Approve", zap.String("tx", tx.Hash().String()))
+	_, err = bind.WaitMined(ctx, s.client, tx)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("mined Approve", zap.String("tx", tx.Hash().String()))
 	return nil
 }

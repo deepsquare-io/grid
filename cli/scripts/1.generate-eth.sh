@@ -15,3 +15,11 @@ solc ./contracts/Metascheduler.sol \
   --combined-json abi,bin | abigen --pkg metascheduler \
   --combined-json - \
   --out "${PROJECTPATH}/gen/go/contracts/metascheduler/metascheduler.go"
+
+mkdir -p "${PROJECTPATH}/gen/go/contracts/credit"
+solc ./contracts/Credit.sol \
+  --base-path . \
+  --include-path "node_modules/" \
+  --combined-json abi,bin | abigen --pkg credit \
+  --combined-json - \
+  --out "${PROJECTPATH}/gen/go/contracts/credit/credit.go"

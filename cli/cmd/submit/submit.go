@@ -32,21 +32,22 @@ func init() {
 		&ethEndpoint,
 		"metascheduler.endpoint",
 		"https://testnet.deepsquare.run/rpc",
-		"Metascheduler RPC endpoint.",
+		"Metascheduler RPC endpoint. (env: METASCHEDULER_ENDPOINT)",
 	)
 	viper.BindPFlag("METASCHEDULER_ENDPOINT", flags.Lookup("metascheduler.endpoint"))
 	flags.StringVar(
 		&metaschedulerSmartContract,
 		"metascheduler.smart-contract",
-		"0x",
-		"Metascheduler smart-contract address.",
+		"",
+		"Metascheduler smart-contract address. Must have the prefix 0x. (env: METASCHEDULER_SMART_CONTRACT)",
 	)
+	Command.MarkFlagRequired("metascheduler.smart-contract")
 	viper.BindPFlag("METASCHEDULER_SMART_CONTRACT", flags.Lookup("metascheduler.smart-contract"))
 	flags.StringVar(
 		&ethHexPK,
 		"eth.private-key",
 		"",
-		"An hexadecimal private key for ethereum transactions.",
+		"An hexadecimal private key for ethereum transactions. (env: ETH_PRIVATE_KEY)",
 	)
 	Command.MarkFlagRequired("eth.private-key")
 	viper.BindPFlag("ETH_PRIVATE_KEY", flags.Lookup("eth.private-key"))
