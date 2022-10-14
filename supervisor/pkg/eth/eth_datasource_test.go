@@ -1,3 +1,5 @@
+// go:build unit
+
 package eth_test
 
 import (
