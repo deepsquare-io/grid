@@ -15,20 +15,6 @@ import (
 const pollingTime = time.Duration(5 * time.Second)
 const claimJobMaxTimeout = time.Duration(60 * time.Second)
 
-type JobMetaQueue interface {
-	Claim(ctx context.Context) (*metascheduler.MetaSchedulerClaimNextJobEvent, error)
-	RefuseJob(ctx context.Context, jobID [32]byte) error
-}
-
-type JobScheduler interface {
-	HealthCheck(ctx context.Context) error
-	Submit(ctx context.Context, req *slurm.SubmitJobRequest) (int, error)
-}
-
-type JobBatchFetcher interface {
-	Fetch(ctx context.Context, hash string) (string, error)
-}
-
 type Watcher struct {
 	metaQueue    JobMetaQueue
 	scheduler    JobScheduler
@@ -58,6 +44,9 @@ func New(
 
 // Watch submits a job when the metascheduler schedule a job.
 func (w *Watcher) Watch(parent context.Context) error {
+	queryTicker := time.NewTicker(pollingTime)
+	defer queryTicker.Stop()
+
 	resp := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
 	done := make(chan error)
 	for {
@@ -83,8 +72,10 @@ func (w *Watcher) Watch(parent context.Context) error {
 				}
 			}(ctx)
 
+			// Await for the claim response
 			select {
 			case r := <-resp:
+				// Fetch the job script
 				body, err := w.batchFetcher.Fetch(ctx, r.JobDefinition.BatchLocationHash)
 				if err != nil {
 					logger.I.Error("slurm fetch job body failed", zap.Error(err))
@@ -93,12 +84,15 @@ func (w *Watcher) Watch(parent context.Context) error {
 					}
 					return
 				}
+
 				job := eth.JobDefinitionMapToSlurm(r.JobDefinition, r.MaxDurationMinute, body)
 				req := &slurm.SubmitJobRequest{
 					Name:          hex.EncodeToString(r.JobId[:]),
 					User:          r.CustomerAddr.String(),
 					JobDefinition: &job,
 				}
+
+				// Submit the job script
 				slurmJobID, err := w.scheduler.Submit(ctx, req)
 				if err != nil {
 					logger.I.Error("slurm submit job failed", zap.Error(err))
@@ -122,6 +116,11 @@ func (w *Watcher) Watch(parent context.Context) error {
 			}
 		}(parent)
 
-		time.Sleep(pollingTime)
-	}
+		// Await for ticking
+		select {
+		case <-parent.Done():
+			return parent.Err()
+		case <-queryTicker.C:
+		}
+	} // for loop
 }

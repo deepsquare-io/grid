@@ -17,4 +17,4 @@ integration:
 
 .PHONY: mocks
 mocks:
-	mockery --all --keeptree
+	mockery --all

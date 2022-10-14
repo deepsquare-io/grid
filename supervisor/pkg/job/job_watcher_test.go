@@ -9,7 +9,7 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	mocks "github.com/deepsquare-io/the-grid/supervisor/mocks/pkg/job"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/mock"

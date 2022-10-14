@@ -10,40 +10,37 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"go.uber.org/zap"
 )
 
 // TODO: unit test to avoid runtime errors
-var claimNextJobSig = []byte("ClaimNextJobEvent(address,bytes32,uint64,(uint64,uint64,uint64,uint64,uint64,string))")
-var claimNextJobSigHash = crypto.Keccak256Hash(claimNextJobSig)
+var ClaimNextJobSig = []byte("ClaimNextJobEvent(address,bytes32,uint64,(uint64,uint64,uint64,uint64,uint64,string))")
+var ClaimNextJobSigHash = crypto.Keccak256Hash(ClaimNextJobSig)
 
 // DataSource handles communications with the smart contract.
 type DataSource struct {
-	client        *ethclient.Client
-	metascheduler *metascheduler.MetaScheduler
+	authenticator EthereumAuthenticator
+	deployBackend bind.DeployBackend
+	metascheduler MetaScheduler
 	pk            *ecdsa.PrivateKey
 	pub           *ecdsa.PublicKey
 	fromAddress   common.Address
 }
 
 func New(
-	rpcEndpoint string,
-	hexPK string,
-	metaschedulerAddress string,
+	a EthereumAuthenticator,
+	b bind.DeployBackend,
+	ms MetaScheduler,
+	pk *ecdsa.PrivateKey,
 ) *DataSource {
-	client, err := ethclient.Dial(rpcEndpoint)
-	if err != nil {
-		logger.I.Fatal("ethclient dial failed", zap.Error(err))
+	if a == nil {
+		logger.I.Fatal("EthereumAuthenticator is nil")
 	}
-
-	ms, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerAddress), client)
-	if err != nil {
-		logger.I.Fatal("metascheduler dial failed", zap.Error(err))
+	if b == nil {
+		logger.I.Fatal("DeployBackend is nil")
 	}
-	pk, err := crypto.HexToECDSA(hexPK)
-	if err != nil {
-		logger.I.Fatal("couldn't decode private key", zap.Error(err))
+	if ms == nil {
+		logger.I.Fatal("MetaScheduler is nil")
 	}
 	publicKey := pk.Public()
 	pubECDSA, ok := publicKey.(*ecdsa.PublicKey)
@@ -52,9 +49,9 @@ func New(
 	}
 
 	fromAddress := crypto.PubkeyToAddress(*pubECDSA)
-
 	return &DataSource{
-		client:        client,
+		authenticator: a,
+		deployBackend: b,
 		metascheduler: ms,
 		pk:            pk,
 		pub:           pubECDSA,
@@ -63,17 +60,17 @@ func New(
 }
 
 func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
-	nonce, err := s.client.PendingNonceAt(ctx, s.fromAddress)
+	nonce, err := s.authenticator.PendingNonceAt(ctx, s.fromAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	gasPrice, err := s.client.SuggestGasPrice(ctx)
+	gasPrice, err := s.authenticator.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	chainID, err := s.client.ChainID(ctx)
+	chainID, err := s.authenticator.ChainID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +102,7 @@ func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerCla
 		return nil, err
 	}
 	logger.I.Debug("called claimnextjob", zap.String("tx", tx.Hash().String()))
-	receipt, err := bind.WaitMined(ctx, s.client, tx)
+	receipt, err := bind.WaitMined(ctx, s.deployBackend, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +111,7 @@ func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerCla
 	for _, log := range receipt.Logs {
 		logger.I.Debug("claimnextjob found event", zap.Any("event", log))
 		switch log.Topics[0].Hex() {
-		case claimNextJobSigHash.Hex():
+		case ClaimNextJobSigHash.Hex():
 			// TODO: maybe filter by cluster
 			r, err := s.metascheduler.ParseClaimNextJobEvent(*log)
 			if err != nil {
@@ -178,7 +175,7 @@ func (s *DataSource) StartJob(
 	}
 	logger.I.Debug("called start job", zap.String("tx", tx.Hash().String()))
 	// We need to wait to make sure the job is accepted by the metascheduler and avoid race conditions
-	_, err = bind.WaitMined(ctx, s.client, tx)
+	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
 	if err != nil {
 		return err
 	}
@@ -246,7 +243,7 @@ func (s *DataSource) RefuseJob(
 		return err
 	}
 	logger.I.Debug("called refuse job", zap.String("tx", tx.Hash().String()))
-	_, err = bind.WaitMined(ctx, s.client, tx)
+	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
 	if err != nil {
 		return err
 	}

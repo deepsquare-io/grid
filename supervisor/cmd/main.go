@@ -4,12 +4,16 @@ import (
 	"context"
 	"os"
 
+	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/customer"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 )
@@ -220,10 +224,23 @@ type Container struct {
 
 func Init() *Container {
 	customer := &customer.FakeDataSource{}
+	ethClient, err := ethclient.Dial(ethEndpoint)
+	if err != nil {
+		logger.I.Fatal("ethclient dial failed", zap.Error(err))
+	}
+	ms, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerSmartContract), ethClient)
+	if err != nil {
+		logger.I.Fatal("metascheduler dial failed", zap.Error(err))
+	}
+	pk, err := crypto.HexToECDSA(ethHexPK)
+	if err != nil {
+		logger.I.Fatal("couldn't decode private key", zap.Error(err))
+	}
 	ethDataSource := eth.New(
-		ethEndpoint,
-		ethHexPK,
-		metaschedulerSmartContract,
+		ethClient,
+		ethClient,
+		ms,
+		pk,
 	)
 	slurmJobService := slurm.New(
 		slurmSSHAddress,
