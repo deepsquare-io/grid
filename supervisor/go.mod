@@ -9,7 +9,7 @@ require (
 	github.com/urfave/cli/v2 v2.19.2
 	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0
-	google.golang.org/grpc v1.50.0
+	google.golang.org/grpc v1.50.1
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	google.golang.org/protobuf v1.28.1
 )
