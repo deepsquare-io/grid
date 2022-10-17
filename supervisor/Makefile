@@ -11,6 +11,11 @@ supervisor:
 unit:
 	go test -v -race -covermode=atomic -tags=unit -timeout=30s ./...
 
+.PHONY: coverage
+unit:
+	go test -v -race -covermode=atomic -tags=unit -timeout=30s -coverprofile=coverage.out ./...
+	go tool cover -html coverage.out -o coverage.html
+
 .PHONY: integration
 integration:
 	go test -v -race -covermode=atomic -tags=integration -timeout=30s ./...

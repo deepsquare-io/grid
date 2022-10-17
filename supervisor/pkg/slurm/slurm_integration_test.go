@@ -9,6 +9,7 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/stretchr/testify/suite"
 )
@@ -52,9 +53,12 @@ srun sleep infinity
 }
 
 func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
-	suite.impl = slurm.New(
+	service := ssh.New(
 		suite.address,
 		suite.pkB64,
+	)
+	suite.impl = slurm.New(
+		service,
 		suite.adminUser,
 		"scancel",
 		"sbatch",

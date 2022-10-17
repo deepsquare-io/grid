@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
+	customerv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/customer/v1alpha1"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -14,67 +14,21 @@ type JobAPIServer struct {
 	mock.Mock
 }
 
-// SendJobFail provides a mock function with given fields: _a0, _a1
-func (_m *JobAPIServer) SendJobFail(_a0 context.Context, _a1 *supervisorv1alpha1.SendJobFailRequest) (*supervisorv1alpha1.SendJobFailResponse, error) {
+// FetchJobBatch provides a mock function with given fields: _a0, _a1
+func (_m *JobAPIServer) FetchJobBatch(_a0 context.Context, _a1 *customerv1alpha1.FetchJobBatchRequest) (*customerv1alpha1.FetchJobBatchResponse, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 *supervisorv1alpha1.SendJobFailResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SendJobFailRequest) *supervisorv1alpha1.SendJobFailResponse); ok {
+	var r0 *customerv1alpha1.FetchJobBatchResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *customerv1alpha1.FetchJobBatchRequest) *customerv1alpha1.FetchJobBatchResponse); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*supervisorv1alpha1.SendJobFailResponse)
+			r0 = ret.Get(0).(*customerv1alpha1.FetchJobBatchResponse)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobFailRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// SendJobResult provides a mock function with given fields: _a0, _a1
-func (_m *JobAPIServer) SendJobResult(_a0 context.Context, _a1 *supervisorv1alpha1.SendJobResultRequest) (*supervisorv1alpha1.SendJobResultResponse, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *supervisorv1alpha1.SendJobResultResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SendJobResultRequest) *supervisorv1alpha1.SendJobResultResponse); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*supervisorv1alpha1.SendJobResultResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobResultRequest) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// SendJobStart provides a mock function with given fields: _a0, _a1
-func (_m *JobAPIServer) SendJobStart(_a0 context.Context, _a1 *supervisorv1alpha1.SendJobStartRequest) (*supervisorv1alpha1.SendJobStartResponse, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 *supervisorv1alpha1.SendJobStartResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SendJobStartRequest) *supervisorv1alpha1.SendJobStartResponse); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*supervisorv1alpha1.SendJobStartResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobStartRequest) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *customerv1alpha1.FetchJobBatchRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)

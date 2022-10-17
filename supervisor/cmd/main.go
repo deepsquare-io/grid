@@ -12,6 +12,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -243,9 +244,12 @@ func Init() *Container {
 		ms,
 		pk,
 	)
-	slurmJobService := slurm.New(
+	sshService := ssh.New(
 		slurmSSHAddress,
 		slurmSSHB64PK,
+	)
+	slurmJobService := slurm.New(
+		sshService,
 		slurmSSHAdminUser,
 		scancel,
 		sbatch,
