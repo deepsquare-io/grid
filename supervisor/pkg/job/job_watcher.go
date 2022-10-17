@@ -12,19 +12,20 @@ import (
 	"go.uber.org/zap"
 )
 
-const pollingTime = time.Duration(5 * time.Second)
 const claimJobMaxTimeout = time.Duration(60 * time.Second)
 
 type Watcher struct {
 	metaQueue    JobMetaQueue
 	scheduler    JobScheduler
 	batchFetcher JobBatchFetcher
+	pollingTime  time.Duration
 }
 
 func New(
 	claimer JobMetaQueue,
 	scheduler JobScheduler,
 	batchFetcher JobBatchFetcher,
+	pollingTime time.Duration,
 ) *Watcher {
 	if claimer == nil {
 		logger.I.Panic("claimer is nil")
@@ -39,12 +40,13 @@ func New(
 		metaQueue:    claimer,
 		scheduler:    scheduler,
 		batchFetcher: batchFetcher,
+		pollingTime:  pollingTime,
 	}
 }
 
 // Watch submits a job when the metascheduler schedule a job.
 func (w *Watcher) Watch(parent context.Context) error {
-	queryTicker := time.NewTicker(pollingTime)
+	queryTicker := time.NewTicker(w.pollingTime)
 	defer queryTicker.Stop()
 
 	resp := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)

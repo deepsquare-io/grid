@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
@@ -255,6 +256,7 @@ func Init() *Container {
 		ethDataSource,
 		slurmJobService,
 		customer,
+		time.Duration(5*time.Second),
 	)
 	server := server.New(
 		tls,
