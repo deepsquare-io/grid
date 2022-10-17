@@ -12,7 +12,7 @@ unit:
 	go test -v -race -covermode=atomic -tags=unit -timeout=30s ./...
 
 .PHONY: coverage
-unit:
+coverage:
 	go test -v -race -covermode=atomic -tags=unit -timeout=30s -coverprofile=coverage.out ./...
 	go tool cover -html coverage.out -o coverage.html
 

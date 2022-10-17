@@ -37,11 +37,11 @@ var (
 	nonce       = uint64(1)
 	jobID       = [32]byte{1}
 	jobDuration = uint64(1000)
-	pk          *ecdsa.PrivateKey
+	privateKey  *ecdsa.PrivateKey
 	fromAddress common.Address
 )
 
-func init() {
+func generateAddress() (pk *ecdsa.PrivateKey, address common.Address) {
 	privateKey, err := crypto.GenerateKey()
 	if err != nil {
 		logger.I.Fatal("couldn't create pk", zap.Error(err))
@@ -52,7 +52,12 @@ func init() {
 	if !ok {
 		logger.I.Fatal("error casting public key to ECDSA")
 	}
-	fromAddress = crypto.PubkeyToAddress(*pubECDSA)
+	address = crypto.PubkeyToAddress(*pubECDSA)
+	return pk, address
+}
+
+func init() {
+	privateKey, fromAddress = generateAddress()
 }
 
 func (suite *DataSourceTestSuite) BeforeTest(suiteName, testName string) {
@@ -64,7 +69,7 @@ func (suite *DataSourceTestSuite) BeforeTest(suiteName, testName string) {
 		suite.authenticator,
 		suite.deployBackend,
 		suite.ms,
-		pk,
+		privateKey,
 	)
 }
 
@@ -91,13 +96,13 @@ func (suite *DataSourceTestSuite) mustWaitTx(tx *types.Transaction) {
 	).Return(&types.Receipt{}, nil)
 }
 
-func (suite *DataSourceTestSuite) mustWaitTxWithEvent(tx *types.Transaction, event *types.Log) {
+func (suite *DataSourceTestSuite) mustWaitTxWithEvents(tx *types.Transaction, events []*types.Log) {
 	suite.deployBackend.On(
 		"TransactionReceipt",
 		mock.Anything,
 		tx.Hash(),
 	).Return(&types.Receipt{
-		Logs: []*types.Log{event},
+		Logs: events,
 	}, nil)
 }
 
@@ -166,11 +171,22 @@ func (suite *DataSourceTestSuite) TestClaim() {
 		}),
 	).Return(tx, nil)
 	// Must wait for receipt
-	suite.mustWaitTxWithEvent(tx, event)
+	suite.mustWaitTxWithEvents(tx, []*types.Log{
+		event,
+		event, // Trash event
+	})
 	// Must parse ParseClaimNextJobEvent
+	// Event which is not ours
+	_, address := generateAddress()
 	suite.ms.On("ParseClaimNextJobEvent", *event).Return(&metascheduler.MetaSchedulerClaimNextJobEvent{
-		JobId: jobID,
-	}, nil)
+		JobId:        jobID,
+		ProviderAddr: address,
+	}, nil).Once()
+	// Our event
+	suite.ms.On("ParseClaimNextJobEvent", *event).Return(&metascheduler.MetaSchedulerClaimNextJobEvent{
+		JobId:        jobID,
+		ProviderAddr: fromAddress,
+	}, nil).Once()
 
 	// Act
 	e, err := suite.impl.Claim(context.Background())

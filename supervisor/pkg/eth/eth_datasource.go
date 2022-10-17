@@ -14,7 +14,8 @@ import (
 )
 
 // TODO: unit test to avoid runtime errors
-var ClaimNextJobSig = []byte("ClaimNextJobEvent(address,bytes32,uint64,(uint64,uint64,uint64,uint64,uint64,string))")
+
+var ClaimNextJobSig = []byte("ClaimNextJobEvent(address,address,bytes32,uint64,(uint64,uint64,uint64,uint64,uint64,string))")
 var ClaimNextJobSigHash = crypto.Keccak256Hash(ClaimNextJobSig)
 
 // DataSource handles communications with the smart contract.
@@ -91,6 +92,8 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 //
 // If the queue is not empty, it will claim the job and send it to the SLURM cluster.
 // Else, it will return an error.
+//
+// Can return nil if no event found.
 func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerClaimNextJobEvent, error) {
 	auth, err := s.auth(ctx)
 	if err != nil {
@@ -112,12 +115,15 @@ func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerCla
 		logger.I.Debug("claimnextjob found event", zap.Any("event", log))
 		switch log.Topics[0].Hex() {
 		case ClaimNextJobSigHash.Hex():
-			// TODO: maybe filter by cluster
 			r, err := s.metascheduler.ParseClaimNextJobEvent(*log)
 			if err != nil {
 				return nil, err
 			}
-			return r, nil
+			if r.ProviderAddr.Hex() == s.fromAddress.Hex() {
+				logger.I.Debug("claimnextjob selected event", zap.Any("event", log), zap.Any("content", r))
+				return r, nil
+			}
+			logger.I.Debug("claimnextjob skipped event", zap.Any("event", log), zap.Any("content", r))
 		}
 	}
 
