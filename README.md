@@ -1,10 +1,15 @@
-# the-grid
+# The DeepSquare Grid
 
+A decentralized network of compute resources.
 
-# Set up hardhat 
+## What is the DeepSquare Grid
 
-```
-pnpm install --save-dev hardhat
-pnpx hardat 
+TODO
 
-```
+## Why use the DeepSquare Grid
+
+TODO
+
+## Documentation
+
+TODO

@@ -1,5 +1,7 @@
 # provider-ssh-authorized-keys
 
+To enable impersonation for the supervisor.
+
 ## Build
 
 ```sh
