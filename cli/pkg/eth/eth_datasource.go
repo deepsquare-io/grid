@@ -101,7 +101,7 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 	return auth, nil
 }
 
-// Request a job.
+// RequestNewJob submits job.
 func (s *DataSource) RequestNewJob(ctx context.Context, jobDefinition metascheduler.JobDefinition, amountLocked *big.Int) (*types.Transaction, error) {
 	if err := s.approve(ctx, amountLocked); err != nil {
 		return nil, err
@@ -117,6 +117,21 @@ func (s *DataSource) RequestNewJob(ctx context.Context, jobDefinition metaschedu
 	}
 	logger.I.Debug("called RequestNewJob", zap.String("tx", tx.Hash().String()))
 
+	return tx, err
+}
+
+// Register a provider.
+func (s *DataSource) Register(ctx context.Context, providerAddress common.Address, providerDefinition metascheduler.ProviderDefinition) (*types.Transaction, error) {
+	auth, err := s.auth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := s.metascheduler.ProviderRegister(auth, providerAddress, providerDefinition)
+	if err != nil {
+		return nil, err
+	}
+	logger.I.Debug("called ProviderRegister", zap.String("tx", tx.Hash().String()))
 	return tx, err
 }
 
