@@ -15,6 +15,8 @@ type JobDefinition struct {
 	CPUsPerTask uint64
 	// MemoryPerNode indicates the number of requested MB of memory.
 	MemoryPerNode uint64
+	// Nodes indicates the number of allocated nodes.
+	Nodes uint64
 	// Body of the job, in a sbatch script.
 	Body string
 }

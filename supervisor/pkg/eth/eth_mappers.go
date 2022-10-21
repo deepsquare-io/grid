@@ -11,6 +11,7 @@ func JobDefinitionMapToSlurm(j metascheduler.JobDefinition, t uint64, body strin
 		GPUsPerNode:   j.GpuPerNode,
 		CPUsPerTask:   j.CpuPerTask,
 		TimeLimit:     t,
+		Nodes:         j.Nodes,
 		MemoryPerNode: j.MemPerNode,
 		Body:          body,
 	}

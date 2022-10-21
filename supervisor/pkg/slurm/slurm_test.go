@@ -79,6 +79,7 @@ func (suite *ServiceTestSuite) TestSubmit() {
 			NTasks:        1,
 			GPUsPerNode:   0,
 			CPUsPerTask:   1,
+			Nodes:         1,
 			MemoryPerNode: 512,
 			Body: `#!/bin/sh
 
@@ -96,6 +97,7 @@ srun sleep infinity
 				strings.Contains(cmd, strconv.FormatUint(req.GPUsPerNode, 10)) &&
 				strings.Contains(cmd, strconv.FormatUint(req.MemoryPerNode, 10)) &&
 				strings.Contains(cmd, strconv.FormatUint(req.NTasks, 10)) &&
+				strings.Contains(cmd, strconv.FormatUint(req.Nodes, 10)) &&
 				strings.Contains(cmd, strconv.FormatUint(req.TimeLimit, 10)) &&
 				strings.Contains(cmd, req.Name) &&
 				strings.Contains(cmd, req.Body)
