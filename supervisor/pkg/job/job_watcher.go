@@ -90,7 +90,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 				job := eth.JobDefinitionMapToSlurm(r.JobDefinition, r.MaxDurationMinute, body)
 				req := &slurm.SubmitJobRequest{
 					Name:          hex.EncodeToString(r.JobId[:]),
-					User:          r.CustomerAddr.String(),
+					User:          "root",
 					JobDefinition: &job,
 				}
 

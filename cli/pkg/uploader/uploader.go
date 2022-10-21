@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func UploadFile(file *os.File, fileName string) (string, error) {
@@ -30,5 +31,5 @@ func UploadFile(file *os.File, fileName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(urlResult), nil
+	return strings.Trim(string(urlResult), "\n"), nil
 }

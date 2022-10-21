@@ -40,9 +40,7 @@ func init() {
 		"",
 		"Metascheduler smart-contract address. Must have the prefix 0x. (env: METASCHEDULER_SMART_CONTRACT)",
 	)
-	if err := Command.MarkFlagRequired("metascheduler.smart-contract"); err != nil {
-		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
-	}
+	// TODO: fix required env
 	if err := viper.BindPFlag("METASCHEDULER_SMART_CONTRACT", flags.Lookup("metascheduler.smart-contract")); err != nil {
 		logger.I.Fatal("couldn't bind pFlag", zap.Error(err))
 	}
@@ -52,9 +50,6 @@ func init() {
 		"",
 		"An hexadecimal private key for ethereum transactions. (env: ETH_PRIVATE_KEY)",
 	)
-	if err := Command.MarkFlagRequired("eth.private-key"); err != nil {
-		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
-	}
 	if err := viper.BindPFlag("ETH_PRIVATE_KEY", flags.Lookup("eth.private-key")); err != nil {
 		logger.I.Fatal("couldn't bind pFlag", zap.Error(err))
 	}
