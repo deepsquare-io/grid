@@ -126,6 +126,11 @@ func (s *DataSource) Register(ctx context.Context, providerAddress common.Addres
 	if err != nil {
 		return nil, err
 	}
+	value, err := s.metascheduler.PROVIDERREGISTRATIONTAX(nil)
+	if err != nil {
+		return nil, err
+	}
+	auth.Value = value
 
 	tx, err := s.metascheduler.ProviderRegister(auth, providerAddress, providerDefinition)
 	if err != nil {
