@@ -77,6 +77,18 @@ func (w *Watcher) Watch(parent context.Context) error {
 			// Await for the claim response
 			select {
 			case r := <-resp:
+				// Reject the job if the time limit is incorrect
+				if r.MaxDurationMinute <= 0 {
+					logger.I.Error(
+						"refuse job because the time limit is invalid",
+						zap.Any("claim_resp", r),
+					)
+					if err := w.metaQueue.RefuseJob(ctx, r.JobId); err != nil {
+						logger.I.Error("failed to refuse a job", zap.Error(err))
+					}
+					return
+				}
+
 				// Fetch the job script
 				body, err := w.batchFetcher.Fetch(ctx, r.JobDefinition.BatchLocationHash)
 				if err != nil {

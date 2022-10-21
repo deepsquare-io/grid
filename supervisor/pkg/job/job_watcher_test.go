@@ -119,6 +119,31 @@ func (suite *WatcherTestSuite) TestWatchWithClaimFail() {
 	suite.scheduler.AssertNotCalled(suite.T(), "Submit", mock.Anything, mock.Anything)
 }
 
+func (suite *WatcherTestSuite) TestWatchWithTimeLimitFail() {
+	// Arrange
+	badFixtureEvent := fixtureEvent
+	badFixtureEvent.MaxDurationMinute = 0
+	suite.metaQueue.On("Claim", mock.Anything).Return(badFixtureEvent, nil)
+	suite.scheduler.On("HealthCheck", mock.Anything).Return(nil)
+	// Must refuse job because we couldn't  call
+	suite.metaQueue.On("RefuseJob", mock.Anything, mock.Anything).Return(nil)
+
+	// Act
+	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
+	defer cancel()
+	go suite.impl.Watch(ctx)
+	select {
+	case <-ctx.Done():
+		logger.I.Info("test ended")
+	}
+
+	// Assert
+	suite.scheduler.AssertExpectations(suite.T())
+	suite.metaQueue.AssertExpectations(suite.T())
+	suite.batchFetcher.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
+	suite.scheduler.AssertNotCalled(suite.T(), "Submit", mock.Anything, mock.Anything)
+}
+
 func (suite *WatcherTestSuite) TestWatchWithBatchFetchFail() {
 	// Arrange
 	suite.metaQueue.On("Claim", mock.Anything).Return(fixtureEvent, nil)
