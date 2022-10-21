@@ -90,6 +90,11 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 		}
 		defer close()
 
+		logger.I.Debug(
+			"called ssh command",
+			zap.String("cmd", cmd),
+			zap.String("user", user),
+		)
 		out, err := sess.CombinedOutput(cmd)
 		stdChan <- struct {
 			string
