@@ -112,7 +112,7 @@ func Init() *Container {
 
 var Command = &cobra.Command{
 	Use:   "register <provider address>",
-	Short: "Register a provider to the DeepSquare Grid",
+	Short: "Register a provider to the DeepSquare Grid.",
 	Args:  cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c := cmd.Context()

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/deepsquare-io/the-grid/cli/cmd/register"
 	"github.com/deepsquare-io/the-grid/cli/cmd/submit"
 	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/spf13/cobra"
@@ -33,6 +34,7 @@ func init() {
 		logger.I.Fatal("couldn't bind pFlag", zap.Error(err))
 	}
 	app.AddCommand(submit.Command)
+	app.AddCommand(register.Command)
 }
 
 func main() {
