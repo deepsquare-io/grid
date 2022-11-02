@@ -19,12 +19,21 @@ RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-
   && /tmp/cmake-install.sh --skip-license --prefix=/usr/local \
   && rm /tmp/cmake-install.sh
 
-COPY . .
+COPY CMakeLists.txt package.cmake ./
+COPY ./gen ./gen
+
+RUN ls -la \
+  && mkdir build \
+  && cd build \
+  && cmake .. -G "Ninja" \
+  && ninja -j$(nproc) grpc++
+
+COPY . ./
 
 RUN mkdir build \
   && cd build \
   && mkdir -p /artifacts \
-  && cmake .. -G "Ninja" -DCMAKE_INSTALL_PREFIX=/usr/local/lib/slurm \
+  && cmake .. -G "Ninja" -DCMAKE_INSTALL_PREFIX=/usr/lib/slurm \
   && ninja -j$(nproc) \
   && ninja package \
   && mv ./*.deb /artifacts
