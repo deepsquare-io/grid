@@ -18,6 +18,8 @@ typedef struct report {
   time_t end_time;
   /** @brief The job duration. */
   time_t elapsed;
+  /** @brief The job comment. Used to filter. */
+  std::string comment;
 } report_t;
 
 #endif  // REPORT_H

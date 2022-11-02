@@ -123,6 +123,12 @@ extern int jobcomp_p_log_record(job_record_t *job_ptr) {
   report_t report;
   parse_slurm_job_info(*job_ptr, report);
 
+  // Filter
+  if (report.comment != "from supervisor") {
+    debug("%s: won't report %d", plugin_type, report.job_id);
+    return SLURM_SUCCESS;
+  }
+
   grpc::experimental::TlsChannelCredentialsOptions options;
   options.set_verify_server_certs(false);
   JobAPIClient job_api(grpc::CreateChannel(
