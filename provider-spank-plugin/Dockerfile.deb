@@ -19,7 +19,8 @@ RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-
   && /tmp/cmake-install.sh --skip-license --prefix=/usr/local \
   && rm /tmp/cmake-install.sh
 
-COPY CMakeLists.txt package.cmake ./
+COPY CMakeLists.txt ./
+COPY cmake/dependencies.cmake ./cmake/dependencies.cmake
 COPY ./gen ./gen
 
 RUN ls -la \

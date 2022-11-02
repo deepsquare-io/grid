@@ -1,6 +1,6 @@
-ARG rocky_version=8.5
+ARG rocky_version=8.6
 
-FROM quay.io/rockylinux/rockylinux:${rocky_version}
+FROM docker.io/rockylinux/rockylinux:${rocky_version}
 
 ARG slurm_version
 
@@ -18,7 +18,8 @@ RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-
   && /tmp/cmake-install.sh --skip-license --prefix=/usr/local \
   && rm /tmp/cmake-install.sh
 
-COPY CMakeLists.txt package.cmake ./
+COPY CMakeLists.txt ./
+COPY cmake/dependencies.cmake ./cmake/dependencies.cmake
 COPY ./gen ./gen
 
 RUN ls -la \
