@@ -30,8 +30,7 @@ RUN ls -la \
 
 COPY . ./
 
-RUN mkdir build \
-  && cd build \
+RUN cd build \
   && mkdir -p /artifacts \
   && cmake .. -G "Ninja" -DCMAKE_INSTALL_PREFIX=/usr/lib/slurm \
   && ninja -j$(nproc) \
