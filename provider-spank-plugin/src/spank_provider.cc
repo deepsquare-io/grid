@@ -85,7 +85,7 @@ extern int slurm_spank_local_user_init(spank_t spank, int ac, char *argv[]) {
 
   // Filter
   if (report.comment != "from supervisor") {
-    slurm_info("%s: won't report job %d", plugin_type, report.job_id);
+    slurm_debug("%s: won't report job %d", plugin_type, report.job_id);
     return SLURM_SUCCESS;
   }
 
