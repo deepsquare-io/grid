@@ -15,6 +15,7 @@ extern "C" {
 using supervisor::v1alpha1::SendJobResultRequest;
 
 extern "C" {
+
 /*
  * These variables are required by the generic plugin interface.  If they
  * are not found in the plugin, the plugin loader will ignore it.
@@ -40,9 +41,9 @@ extern "C" {
  * plugin_version - an unsigned 32-bit integer containing the Slurm version
  * (major.minor.micro combined into a single number).
  */
-const char plugin_name[] = "Job completion plugin for providers";
-const char plugin_type[] = "jobcomp/provider";
-const uint32_t plugin_version = SLURM_VERSION_NUMBER;
+extern const char plugin_name[] = "Job completion plugin for providers";
+extern const char plugin_type[] = "jobcomp/provider";
+extern const uint32_t plugin_version = SLURM_VERSION_NUMBER;
 
 /**
  * @brief Called in local (srun) context only after all options have been

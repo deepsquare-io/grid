@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24.0)
 
 project(
   spank-provider
-  VERSION 1.0.1
+  VERSION 1.0.2
   DESCRIPTION "SPANK plugin for providers"
   LANGUAGES C CXX)
 
