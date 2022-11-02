@@ -63,13 +63,14 @@ func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (int, error
 	eof := utils.GenerateRandomString(10)
 
 	cmd := fmt.Sprintf(`%s \
-	--parsable \
+  --parsable \
   --job-name=%s \
-	--time=%d \
-	--nodes=%d \
+  --time=%d \
+  --nodes=%d \
   --ntasks=%d \
   --cpus-per-task=%d \
   --mem=%dM \
+  --comment="from supervisor" \
   --gpus-per-node=%d << %s
 %s
 
