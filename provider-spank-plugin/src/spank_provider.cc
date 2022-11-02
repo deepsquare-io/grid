@@ -83,6 +83,12 @@ extern int slurm_spank_local_user_init(spank_t spank, int ac, char *argv[]) {
   report_t report;
   parse_slurm_job_info(job, report);
 
+  // Filter
+  if (report.comment != "from supervisor") {
+    slurm_info("%s: won't report job %d", plugin_type, report.job_id);
+    return SLURM_SUCCESS;
+  }
+
   // Output
   grpc::experimental::TlsChannelCredentialsOptions options;
   options.set_verify_server_certs(false);
