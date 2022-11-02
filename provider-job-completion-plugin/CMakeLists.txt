@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24.0)
 
 project(
   jobcomp-provider
-  VERSION 1.0.1
+  VERSION 1.0.2
   DESCRIPTION "Job completion plugin for providers"
   LANGUAGES C CXX)
 
