@@ -3,6 +3,7 @@ package eth
 import (
 	"context"
 	"crypto/ecdsa"
+	"fmt"
 	"math/big"
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
@@ -102,7 +103,7 @@ func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerCla
 
 	tx, err := s.metascheduler.ClaimNextJob(auth)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("eth error %+v", err)
 	}
 	logger.I.Debug("called claimnextjob", zap.String("tx", tx.Hash().String()))
 	receipt, err := bind.WaitMined(ctx, s.deployBackend, tx)
@@ -111,6 +112,7 @@ func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerCla
 	}
 	logger.I.Debug("claimnextjob has been mined", zap.String("tx", tx.Hash().String()))
 
+	// TODO: handle in an independent listener
 	for _, log := range receipt.Logs {
 		logger.I.Debug("claimnextjob found event", zap.Any("event", log))
 		switch log.Topics[0].Hex() {
@@ -177,7 +179,7 @@ func (s *DataSource) StartJob(
 		jobID,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("eth error %+v", err)
 	}
 	logger.I.Debug("called start job", zap.String("tx", tx.Hash().String()))
 	// We need to wait to make sure the job is accepted by the metascheduler and avoid race conditions
@@ -205,7 +207,7 @@ func (s *DataSource) FinishJob(
 		jobDuration,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("eth error %+v", err)
 	}
 	logger.I.Debug("called finish job", zap.String("tx", tx.Hash().String()))
 	return err
@@ -225,7 +227,7 @@ func (s *DataSource) FailJob(
 		jobID,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("eth error %+v", err)
 	}
 	logger.I.Debug("called failed job", zap.String("tx", tx.Hash().String()))
 	return err
@@ -246,7 +248,7 @@ func (s *DataSource) RefuseJob(
 		jobID,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("eth error %+v", err)
 	}
 	logger.I.Debug("called refuse job", zap.String("tx", tx.Hash().String()))
 	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
