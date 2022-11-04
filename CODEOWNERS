@@ -7,6 +7,7 @@ smart-contracts/ @Lymnah @Darkness4 @efelem
 protos/ @Darkness4 @efelem @Lymnah
 
 # Customer side
+customer-portal/ @valentinpollart @Lymnah
 customer-api/ @efelem @Darkness4
 cli/ @Darkness4 @Lymnah
 
