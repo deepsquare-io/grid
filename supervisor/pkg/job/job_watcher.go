@@ -99,11 +99,10 @@ func (w *Watcher) Watch(parent context.Context) error {
 					return
 				}
 
-				// TODO: replace user with address when the LDAP implementation is done.
 				job := eth.JobDefinitionMapToSlurm(r.JobDefinition, r.MaxDurationMinute, body)
 				req := &slurm.SubmitJobRequest{
 					Name:          hex.EncodeToString(r.JobId[:]),
-					User:          "root",
+					User:          r.CustomerAddr.Hex(),
 					JobDefinition: &job,
 				}
 
