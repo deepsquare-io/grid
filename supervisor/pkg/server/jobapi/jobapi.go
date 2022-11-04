@@ -82,7 +82,7 @@ func (s *jobAPIServer) SendJobStart(ctx context.Context, req *supervisorv1alpha1
 	}
 	var jobNameFixedLength [32]byte
 	copy(jobNameFixedLength[:], jobName)
-	err = s.jobHandler.FailJob(ctx, jobNameFixedLength)
+	err = s.jobHandler.StartJob(ctx, jobNameFixedLength)
 	if err != nil {
 		return nil, err
 	}
