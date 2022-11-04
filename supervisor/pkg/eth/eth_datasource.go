@@ -3,7 +3,6 @@ package eth
 import (
 	"context"
 	"crypto/ecdsa"
-	"fmt"
 	"math/big"
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
@@ -103,7 +102,7 @@ func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerCla
 
 	tx, err := s.metascheduler.ClaimNextJob(auth)
 	if err != nil {
-		return nil, fmt.Errorf("eth error %+v", err)
+		return nil, err
 	}
 	logger.I.Debug("called claimnextjob", zap.String("tx", tx.Hash().String()))
 	receipt, err := bind.WaitMined(ctx, s.deployBackend, tx)
@@ -170,6 +169,7 @@ func (s *DataSource) StartJob(
 	ctx context.Context,
 	jobID [32]byte,
 ) error {
+	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
 	auth, err := s.auth(ctx)
 	if err != nil {
 		return err
@@ -179,15 +179,18 @@ func (s *DataSource) StartJob(
 		jobID,
 	)
 	if err != nil {
-		return fmt.Errorf("eth error %+v", err)
+		return err
 	}
-	logger.I.Debug("called start job", zap.String("tx", tx.Hash().String()))
+	logger.Debug(
+		"called start job",
+		zap.String("tx", tx.Hash().String()),
+	)
 	// We need to wait to make sure the job is accepted by the metascheduler and avoid race conditions
 	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
 	if err != nil {
 		return err
 	}
-	logger.I.Debug("start job has been mined", zap.String("tx", tx.Hash().String()))
+	logger.Debug("start job has been mined", zap.String("tx", tx.Hash().String()))
 	return err
 }
 
@@ -197,6 +200,7 @@ func (s *DataSource) FinishJob(
 	jobID [32]byte,
 	jobDuration uint64,
 ) error {
+	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
 	auth, err := s.auth(ctx)
 	if err != nil {
 		return err
@@ -207,9 +211,12 @@ func (s *DataSource) FinishJob(
 		jobDuration,
 	)
 	if err != nil {
-		return fmt.Errorf("eth error %+v", err)
+		return err
 	}
-	logger.I.Debug("called finish job", zap.String("tx", tx.Hash().String()))
+	logger.Debug(
+		"called finish job",
+		zap.String("tx", tx.Hash().String()),
+	)
 	return err
 }
 
@@ -218,6 +225,7 @@ func (s *DataSource) FailJob(
 	ctx context.Context,
 	jobID [32]byte,
 ) error {
+	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
 	auth, err := s.auth(ctx)
 	if err != nil {
 		return err
@@ -227,9 +235,9 @@ func (s *DataSource) FailJob(
 		jobID,
 	)
 	if err != nil {
-		return fmt.Errorf("eth error %+v", err)
+		return err
 	}
-	logger.I.Debug("called failed job", zap.String("tx", tx.Hash().String()))
+	logger.Debug("called failed job", zap.String("tx", tx.Hash().String()))
 	return err
 }
 
@@ -238,7 +246,8 @@ func (s *DataSource) RefuseJob(
 	ctx context.Context,
 	jobID [32]byte,
 ) error {
-	logger.I.Warn("calling refuse job", zap.String("jobID", string(jobID[:])))
+	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
+	logger.Warn("calling refuse job")
 	auth, err := s.auth(ctx)
 	if err != nil {
 		return err
@@ -248,13 +257,13 @@ func (s *DataSource) RefuseJob(
 		jobID,
 	)
 	if err != nil {
-		return fmt.Errorf("eth error %+v", err)
+		return err
 	}
-	logger.I.Debug("called refuse job", zap.String("tx", tx.Hash().String()))
+	logger.Debug("called refuse job", zap.String("tx", tx.Hash().String()))
 	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
 	if err != nil {
 		return err
 	}
-	logger.I.Debug("refuse job has been mined", zap.String("tx", tx.Hash().String()))
+	logger.Debug("refuse job has been mined", zap.String("tx", tx.Hash().String()))
 	return err
 }
