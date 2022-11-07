@@ -20,8 +20,3 @@ provider-job-completion-plugin/ @Darkness4
 provider-spank-plugin/ @Darkness4
 provider-ssh-authorized-keys/ @Darkness4
 supervisor/ @Darkness4
-
-# Else
-**/*.sol @Lymnah @efelem
-**/*.go @Darkness4
-* @Lymnah @Darkness4 @efelem
