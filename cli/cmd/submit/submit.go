@@ -54,18 +54,18 @@ func init() {
 		logger.I.Fatal("couldn't bind pFlag", zap.Error(err))
 	}
 	flags.Uint64Var(
-		&jobDefinition.GpuPerNode,
-		"gpus",
+		&jobDefinition.GpuPerTask,
+		"gpus-per-task",
 		0,
 		"Allocated GPUs per node.",
 	)
 	flags.Uint64Var(
-		&jobDefinition.MemPerNode,
-		"mem",
+		&jobDefinition.MemPerCpu,
+		"mem-per-cpu",
 		0,
-		"Allocated memory per node (MB).",
+		"Allocated memory per CPU (MB).",
 	)
-	if err := Command.MarkFlagRequired("mem"); err != nil {
+	if err := Command.MarkFlagRequired("mem-per-cpu"); err != nil {
 		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
 	}
 	flags.Uint64VarP(
@@ -78,13 +78,6 @@ func init() {
 	if err := Command.MarkFlagRequired("cpus-per-task"); err != nil {
 		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
 	}
-	flags.Uint64VarP(
-		&jobDefinition.Nodes,
-		"nodes",
-		"N",
-		1,
-		"Allocated nodes.",
-	)
 	flags.Uint64VarP(
 		&jobDefinition.Ntasks,
 		"tasks",

@@ -9,14 +9,12 @@ type JobDefinition struct {
 	TimeLimit uint64
 	// NTasks indicates the number
 	NTasks uint64
-	// GPUsPerNode indicates the number of requested GPU.
-	GPUsPerNode uint64
+	// GPUsPerTask indicates the number of requested GPU.
+	GPUsPerTask uint64
 	// CPUs indicates the number of requested CPU.
 	CPUsPerTask uint64
-	// MemoryPerNode indicates the number of requested MB of memory.
-	MemoryPerNode uint64
-	// Nodes indicates the number of allocated nodes.
-	Nodes uint64
+	// MemoryPerCpu indicates the number of requested MB of memory.
+	MemoryPerCPU uint64
 	// Body of the job, in a sbatch script.
 	Body string
 }

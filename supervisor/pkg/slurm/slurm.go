@@ -66,23 +66,21 @@ func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (int, error
   --parsable \
   --job-name=%s \
   --time=%d \
-  --nodes=%d \
   --ntasks=%d \
   --cpus-per-task=%d \
-  --mem=%dM \
+  --mem-per-cpu=%dM \
   --comment="from supervisor" \
-  --gpus-per-node=%d << %s
+  --gpus-per-task=%d << %s
 %s
 
 %s`,
 		s.sbatch,
 		req.Name,
 		req.TimeLimit,
-		req.Nodes,
 		req.NTasks,
 		req.CPUsPerTask,
-		req.MemoryPerNode,
-		req.GPUsPerNode,
+		req.MemoryPerCPU,
+		req.GPUsPerTask,
 		eof,
 		req.Body,
 		eof,
