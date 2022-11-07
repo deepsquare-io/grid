@@ -78,6 +78,12 @@ func (w *Watcher) Watch(parent context.Context) error {
 			// Await for the claim response
 			select {
 			case r := <-resp:
+				if r == nil {
+					logger.I.Warn(
+						"job is nil, we didn't find a job",
+					)
+					return
+				}
 				// Reject the job if the time limit is incorrect
 				if r.MaxDurationMinute <= 0 {
 					logger.I.Error(
