@@ -31,11 +31,11 @@ func (suite *ServiceTestSuite) submitJob() *slurm.SubmitJobRequest {
 		Name: name,
 		User: suite.user,
 		JobDefinition: &slurm.JobDefinition{
-			TimeLimit:     uint64(5),
-			NTasks:        1,
-			GPUsPerNode:   0,
-			CPUsPerTask:   1,
-			MemoryPerNode: 512,
+			TimeLimit:    uint64(5),
+			NTasks:       1,
+			GPUsPerTask:  0,
+			CPUsPerTask:  1,
+			MemoryPerCPU: 512,
 			Body: `#!/bin/sh
 
 srun sleep infinity
