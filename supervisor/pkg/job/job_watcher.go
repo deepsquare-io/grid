@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
@@ -45,12 +46,34 @@ func New(
 	}
 }
 
-// Watch submits a job when the metascheduler schedule a job.
-func (w *Watcher) Watch(parent context.Context) error {
+// Watch incoming jobs and handles it.
+func (w *Watcher) Watch(parent context.Context) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(ctx context.Context, wg *sync.WaitGroup) {
+		err := w.WatchClaimNextJob(ctx)
+		if err != nil {
+			logger.I.Error("WatchClaimNextJob failed", zap.Error(err))
+		}
+		wg.Done()
+	}(parent, &wg)
+
+	wg.Add(1)
+	go func(ctx context.Context, wg *sync.WaitGroup) {
+		err := w.ClaimNextJobIndefinitely(ctx)
+		if err != nil {
+			logger.I.Error("WatchClaimNextJob failed", zap.Error(err))
+		}
+		wg.Done()
+	}(parent, &wg)
+
+	wg.Wait()
+}
+
+func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 	queryTicker := time.NewTicker(w.pollingTime)
 	defer queryTicker.Stop()
 
-	resp := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
 	done := make(chan error)
 	for {
 		func(parent context.Context) {
@@ -65,75 +88,22 @@ func (w *Watcher) Watch(parent context.Context) error {
 					return
 				}
 
-				r, err := w.metaQueue.Claim(ctx)
+				err = w.metaQueue.Claim(ctx)
 				if err != nil {
 					logger.I.Info("failed to claim a job", zap.Error(err))
-					done <- err
-				} else {
-					logger.I.Info("claimed a job", zap.Any("event", r))
-					resp <- r
 				}
+				done <- err
 			}(ctx)
 
 			// Await for the claim response
 			select {
-			case r := <-resp:
-				if r == nil {
-					logger.I.Warn(
-						"job is nil, we didn't find a job",
-					)
-					return
-				}
-				// Reject the job if the time limit is incorrect
-				if r.MaxDurationMinute <= 0 {
-					logger.I.Error(
-						"refuse job because the time limit is invalid",
-						zap.Any("claim_resp", r),
-					)
-					if err := w.metaQueue.RefuseJob(ctx, r.JobId); err != nil {
-						logger.I.Error("failed to refuse a job", zap.Error(err))
-					}
-					return
-				}
-
-				// Fetch the job script
-				body, err := w.batchFetcher.Fetch(ctx, r.JobDefinition.BatchLocationHash)
-				if err != nil {
-					logger.I.Error("slurm fetch job body failed", zap.Error(err))
-					if err := w.metaQueue.RefuseJob(ctx, r.JobId); err != nil {
-						logger.I.Error("failed to refuse a job", zap.Error(err))
-					}
-					return
-				}
-
-				job := eth.JobDefinitionMapToSlurm(r.JobDefinition, r.MaxDurationMinute, body)
-				req := &slurm.SubmitJobRequest{
-					Name:          hex.EncodeToString(r.JobId[:]),
-					User:          strings.ToLower(r.CustomerAddr.Hex()),
-					JobDefinition: &job,
-				}
-
-				// Submit the job script
-				slurmJobID, err := w.scheduler.Submit(ctx, req)
-				if err != nil {
-					logger.I.Error("slurm submit job failed", zap.Error(err))
-					if err := w.metaQueue.RefuseJob(ctx, r.JobId); err != nil {
-						logger.I.Error("failed to refuse a job", zap.Error(err))
-					}
-					return
-				}
-				logger.I.Info(
-					"submitted a job successfully",
-					zap.Int("JobID", slurmJobID),
-					zap.Any("Req", req),
-				)
 			case err := <-done:
 				if err != nil {
-					logger.I.Error("watcher failed", zap.Error(err))
+					logger.I.Error("ClaimNextJobIndefinitely failed", zap.Error(err))
 				}
 
 			case <-ctx.Done():
-				logger.I.Warn("watcher context closed", zap.Error(ctx.Err()))
+				logger.I.Warn("ClaimNextJobIndefinitely context closed", zap.Error(ctx.Err()))
 			}
 		}(parent)
 
@@ -144,4 +114,82 @@ func (w *Watcher) Watch(parent context.Context) error {
 		case <-queryTicker.C:
 		}
 	} // for loop
+}
+
+func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
+	events := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
+	sub, err := w.metaQueue.WatchClaimNextJobEvent(parent, events)
+	if err != nil {
+		return err
+	}
+	defer sub.Unsubscribe()
+
+	for {
+		select {
+		case <-parent.Done():
+			logger.I.Warn("WatchClaimNextJobEvent context is done")
+			return nil
+		case err := <-sub.Err():
+			logger.I.Error("WatchClaimNextJobEvent thrown an error", zap.Error(err))
+			return err
+		case event := <-events:
+			err := w.handleClaimNextJob(parent, event)
+			if err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.MetaSchedulerClaimNextJobEvent) error {
+	if event == nil {
+		logger.I.Warn(
+			"job is nil, we didn't find a job",
+		)
+		return nil
+	}
+	// Reject the job if the time limit is incorrect
+	if event.MaxDurationMinute <= 0 {
+		logger.I.Error(
+			"refuse job because the time limit is invalid",
+			zap.Any("claim_resp", event),
+		)
+		if err := w.metaQueue.RefuseJob(ctx, event.JobId); err != nil {
+			logger.I.Error("failed to refuse a job", zap.Error(err))
+		}
+		return nil
+	}
+
+	// Fetch the job script
+	body, err := w.batchFetcher.Fetch(ctx, event.JobDefinition.BatchLocationHash)
+	if err != nil {
+		logger.I.Error("slurm fetch job body failed", zap.Error(err))
+		if err := w.metaQueue.RefuseJob(ctx, event.JobId); err != nil {
+			logger.I.Error("failed to refuse a job", zap.Error(err))
+		}
+		return nil
+	}
+
+	job := eth.JobDefinitionMapToSlurm(event.JobDefinition, event.MaxDurationMinute, body)
+	req := &slurm.SubmitJobRequest{
+		Name:          hex.EncodeToString(event.JobId[:]),
+		User:          strings.ToLower(event.CustomerAddr.Hex()),
+		JobDefinition: &job,
+	}
+
+	// Submit the job script
+	slurmJobID, err := w.scheduler.Submit(ctx, req)
+	if err != nil {
+		logger.I.Error("slurm submit job failed", zap.Error(err))
+		if err := w.metaQueue.RefuseJob(ctx, event.JobId); err != nil {
+			logger.I.Error("failed to refuse a job", zap.Error(err))
+		}
+		return nil
+	}
+	logger.I.Info(
+		"submitted a job successfully",
+		zap.Int("JobID", slurmJobID),
+		zap.Any("Req", req),
+	)
+	return nil
 }

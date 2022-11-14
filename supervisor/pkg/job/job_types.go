@@ -5,13 +5,19 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 type JobMetaQueue interface {
 	// Claim a job for scheduling.
-	Claim(ctx context.Context) (*metascheduler.MetaSchedulerClaimNextJobEvent, error)
+	Claim(ctx context.Context) error
 	// Refuse a job for metascheduling.
 	RefuseJob(ctx context.Context, jobID [32]byte) error
+	// WatchClaimNextJobEvent observes the incoming ClaimNextJobEvents.
+	WatchClaimNextJobEvent(
+		ctx context.Context,
+		sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent,
+	) (event.Subscription, error)
 }
 
 type JobScheduler interface {

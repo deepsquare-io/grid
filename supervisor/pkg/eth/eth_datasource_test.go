@@ -8,7 +8,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -26,7 +25,6 @@ import (
 type DataSourceTestSuite struct {
 	suite.Suite
 	authenticator *mocks.EthereumAuthenticator
-	deployBackend *mocks.DeployBackend
 	ms            *mocks.MetaScheduler
 	impl          *eth.DataSource
 }
@@ -62,12 +60,10 @@ func init() {
 
 func (suite *DataSourceTestSuite) BeforeTest(suiteName, testName string) {
 	suite.authenticator = mocks.NewEthereumAuthenticator(suite.T())
-	suite.deployBackend = mocks.NewDeployBackend(suite.T())
 	suite.ms = mocks.NewMetaScheduler(suite.T())
 
 	suite.impl = eth.New(
 		suite.authenticator,
-		suite.deployBackend,
 		suite.ms,
 		privateKey,
 	)
@@ -76,7 +72,6 @@ func (suite *DataSourceTestSuite) BeforeTest(suiteName, testName string) {
 func (suite *DataSourceTestSuite) assertMocksExpectations() {
 	suite.authenticator.AssertExpectations(suite.T())
 	suite.ms.AssertExpectations(suite.T())
-	suite.deployBackend.AssertExpectations(suite.T())
 }
 
 func (suite *DataSourceTestSuite) mustAuthenticate() {
@@ -86,24 +81,6 @@ func (suite *DataSourceTestSuite) mustAuthenticate() {
 	suite.authenticator.On("SuggestGasPrice", mock.Anything).Return(gasPrice, nil)
 	// Must fetch chainID
 	suite.authenticator.On("ChainID", mock.Anything).Return(chainID, nil)
-}
-
-func (suite *DataSourceTestSuite) mustWaitTx(tx *types.Transaction) {
-	suite.deployBackend.On(
-		"TransactionReceipt",
-		mock.Anything,
-		tx.Hash(),
-	).Return(&types.Receipt{}, nil)
-}
-
-func (suite *DataSourceTestSuite) mustWaitTxWithEvents(tx *types.Transaction, events []*types.Log) {
-	suite.deployBackend.On(
-		"TransactionReceipt",
-		mock.Anything,
-		tx.Hash(),
-	).Return(&types.Receipt{
-		Logs: events,
-	}, nil)
 }
 
 // legacyTx creates a fake transaction
@@ -158,11 +135,6 @@ func (suite *DataSourceTestSuite) TestClaim() {
 	// Arrange
 	suite.mustAuthenticate()
 	// Must call ClaimNextJob
-	event := &types.Log{
-		Topics: []common.Hash{
-			eth.ClaimNextJobSigHash,
-		},
-	}
 	tx := legacyTx()
 	suite.ms.On(
 		"ClaimNextJob",
@@ -170,30 +142,12 @@ func (suite *DataSourceTestSuite) TestClaim() {
 			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
 		}),
 	).Return(tx, nil)
-	// Must wait for receipt
-	suite.mustWaitTxWithEvents(tx, []*types.Log{
-		event,
-		event, // Trash event
-	})
-	// Must parse ParseClaimNextJobEvent
-	// Event which is not ours
-	_, address := generateAddress()
-	suite.ms.On("ParseClaimNextJobEvent", *event).Return(&metascheduler.MetaSchedulerClaimNextJobEvent{
-		JobId:        jobID,
-		ProviderAddr: address,
-	}, nil).Once()
-	// Our event
-	suite.ms.On("ParseClaimNextJobEvent", *event).Return(&metascheduler.MetaSchedulerClaimNextJobEvent{
-		JobId:        jobID,
-		ProviderAddr: fromAddress,
-	}, nil).Once()
 
 	// Act
-	e, err := suite.impl.Claim(context.Background())
+	err := suite.impl.Claim(context.Background())
 
 	// Assert
 	suite.NoError(err)
-	suite.Equal(jobID, e.JobId)
 	suite.assertMocksExpectations()
 }
 
@@ -209,8 +163,6 @@ func (suite *DataSourceTestSuite) TestStartJob() {
 		}),
 		jobID,
 	).Return(tx, nil)
-	// Must wait for receipt
-	suite.mustWaitTx(tx)
 
 	// Act
 	err := suite.impl.StartJob(context.Background(), jobID)
@@ -275,7 +227,6 @@ func (suite *DataSourceTestSuite) TestRefuseJob() {
 		}),
 		jobID,
 	).Return(tx, nil)
-	suite.mustWaitTx(tx)
 
 	// Act
 	err := suite.impl.RefuseJob(context.Background(), jobID)

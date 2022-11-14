@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/event"
 )
 
 type EthereumAuthenticator interface {
@@ -28,4 +29,5 @@ type MetaScheduler interface {
 	RefuseJob(opts *bind.TransactOpts, _jobID [32]byte) (*types.Transaction, error)
 	TriggerFailedJob(opts *bind.TransactOpts, _jobID [32]byte) (*types.Transaction, error)
 	ParseClaimNextJobEvent(log types.Log) (*metascheduler.MetaSchedulerClaimNextJobEvent, error)
+	WatchClaimNextJobEvent(opts *bind.WatchOpts, sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent) (event.Subscription, error)
 }

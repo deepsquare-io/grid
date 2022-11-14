@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/event"
 	"go.uber.org/zap"
 )
 
@@ -21,7 +22,6 @@ var ClaimNextJobSigHash = crypto.Keccak256Hash(ClaimNextJobSig)
 // DataSource handles communications with the smart contract.
 type DataSource struct {
 	authenticator EthereumAuthenticator
-	deployBackend bind.DeployBackend
 	metascheduler MetaScheduler
 	pk            *ecdsa.PrivateKey
 	pub           *ecdsa.PublicKey
@@ -30,15 +30,11 @@ type DataSource struct {
 
 func New(
 	a EthereumAuthenticator,
-	b bind.DeployBackend,
 	ms MetaScheduler,
 	pk *ecdsa.PrivateKey,
 ) *DataSource {
 	if a == nil {
 		logger.I.Fatal("EthereumAuthenticator is nil")
-	}
-	if b == nil {
-		logger.I.Fatal("DeployBackend is nil")
 	}
 	if ms == nil {
 		logger.I.Fatal("MetaScheduler is nil")
@@ -52,7 +48,6 @@ func New(
 	fromAddress := crypto.PubkeyToAddress(*pubECDSA)
 	return &DataSource{
 		authenticator: a,
-		deployBackend: b,
 		metascheduler: ms,
 		pk:            pk,
 		pub:           pubECDSA,
@@ -92,43 +87,19 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 //
 // If the queue is not empty, it will claim the job and send it to the SLURM cluster.
 // Else, it will return an error.
-//
-// Can return nil if no event found.
-func (s *DataSource) Claim(ctx context.Context) (*metascheduler.MetaSchedulerClaimNextJobEvent, error) {
+func (s *DataSource) Claim(ctx context.Context) error {
 	auth, err := s.auth(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	tx, err := s.metascheduler.ClaimNextJob(auth)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	logger.I.Debug("called claimnextjob", zap.String("tx", tx.Hash().String()))
-	receipt, err := bind.WaitMined(ctx, s.deployBackend, tx)
-	if err != nil {
-		return nil, err
-	}
-	logger.I.Debug("claimnextjob has been mined", zap.String("tx", tx.Hash().String()))
 
-	// TODO: handle in an independent listener
-	for _, log := range receipt.Logs {
-		logger.I.Debug("claimnextjob found event", zap.Any("event", log))
-		switch log.Topics[0].Hex() {
-		case ClaimNextJobSigHash.Hex():
-			r, err := s.metascheduler.ParseClaimNextJobEvent(*log)
-			if err != nil {
-				return nil, err
-			}
-			if r.ProviderAddr.Hex() == s.fromAddress.Hex() {
-				logger.I.Debug("claimnextjob selected event", zap.Any("event", log), zap.Any("content", r))
-				return r, nil
-			}
-			logger.I.Debug("claimnextjob skipped event", zap.Any("event", log), zap.Any("content", r))
-		}
-	}
-
-	return nil, nil
+	return nil
 }
 
 // Register a cluster
@@ -185,12 +156,6 @@ func (s *DataSource) StartJob(
 		"called start job",
 		zap.String("tx", tx.Hash().String()),
 	)
-	// We need to wait to make sure the job is accepted by the metascheduler and avoid race conditions
-	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
-	if err != nil {
-		return err
-	}
-	logger.Debug("start job has been mined", zap.String("tx", tx.Hash().String()))
 	return err
 }
 
@@ -260,10 +225,15 @@ func (s *DataSource) RefuseJob(
 		return err
 	}
 	logger.Debug("called refuse job", zap.String("tx", tx.Hash().String()))
-	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
-	if err != nil {
-		return err
-	}
-	logger.Debug("refuse job has been mined", zap.String("tx", tx.Hash().String()))
 	return err
+}
+
+// WatchClaimNextJobEvent observes the incoming ClaimNextJobEvents.
+func (s *DataSource) WatchClaimNextJobEvent(
+	ctx context.Context,
+	sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent,
+) (event.Subscription, error) {
+	return s.metascheduler.WatchClaimNextJobEvent(&bind.WatchOpts{
+		Context: ctx,
+	}, sink)
 }

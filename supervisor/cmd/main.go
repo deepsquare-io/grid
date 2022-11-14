@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"os"
 	"time"
 
@@ -240,7 +239,6 @@ func Init() *Container {
 	}
 	ethDataSource := eth.New(
 		ethClient,
-		ethClient,
 		ms,
 		pk,
 	)
@@ -299,11 +297,7 @@ var app = &cli.App{
 			return err
 		}
 
-		go func(c context.Context) {
-			if err := container.jobWatcher.Watch(c); err != nil {
-				logger.I.Fatal("app crashed", zap.Error(err))
-			}
-		}(c)
+		go container.jobWatcher.Watch(c)
 
 		logger.I.Info("listening", zap.String("address", listenAddress))
 
