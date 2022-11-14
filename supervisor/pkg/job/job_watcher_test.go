@@ -64,6 +64,7 @@ func (suite *WatcherTestSuite) TestClaimNextJobIndefinitely() {
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
 	}
 
 	// Assert
@@ -83,6 +84,7 @@ func (suite *WatcherTestSuite) TestClaimNextJobIndefinitelyWithSchedulerHealthCh
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
 	}
 
 	// Assert
@@ -104,6 +106,7 @@ func (suite *WatcherTestSuite) TestClaimNextJobIndefinitelyWithClaimFail() {
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
 	}
 
 	// Assert
@@ -119,7 +122,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
 		go func() {
-			time.Sleep(pollingTime)
 			sink <- fixtureEvent
 		}()
 	}).Return(sub, nil)
@@ -139,6 +141,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
 	}
 
 	// Assert
@@ -155,7 +158,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
 		go func() {
-			time.Sleep(pollingTime)
 			sink <- &badFixtureEvent
 		}()
 	}).Return(sub, nil)
@@ -171,6 +173,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
 	}
 
 	// Assert
@@ -186,7 +189,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
 		go func() {
-			time.Sleep(pollingTime)
 			sink <- fixtureEvent
 		}()
 	}).Return(sub, nil)
@@ -207,6 +209,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
 	}
 
 	// Assert
@@ -222,7 +225,6 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
 		go func() {
-			time.Sleep(pollingTime)
 			sink <- fixtureEvent
 		}()
 	}).Return(sub, nil)
@@ -244,6 +246,7 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
 	}
 
 	// Assert
