@@ -14,11 +14,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// TODO: unit test to avoid runtime errors
-
-var ClaimNextJobSig = []byte("ClaimNextJobEvent(address,address,bytes32,uint64,(uint64,uint64,uint64,uint64,string))")
-var ClaimNextJobSigHash = crypto.Keccak256Hash(ClaimNextJobSig)
-
 // DataSource handles communications with the smart contract.
 type DataSource struct {
 	authenticator EthereumAuthenticator
