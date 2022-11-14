@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -233,6 +234,25 @@ func (suite *DataSourceTestSuite) TestRefuseJob() {
 
 	// Assert
 	suite.NoError(err)
+	suite.assertMocksExpectations()
+}
+
+func (suite *DataSourceTestSuite) TestWatchClaimNextJobEvent() {
+	// Arrange
+	sink := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
+	sub := mocks.NewSubscription(suite.T())
+	suite.ms.On(
+		"WatchClaimNextJobEvent",
+		mock.Anything,
+		mock.Anything,
+	).Return(sub, nil)
+
+	// Act
+	res, err := suite.impl.WatchClaimNextJobEvent(context.Background(), sink)
+
+	// Assert
+	suite.NoError(err)
+	suite.Equal(res, sub)
 	suite.assertMocksExpectations()
 }
 
