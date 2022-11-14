@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -281,14 +282,14 @@ var app = &cli.App{
 	Name:  "supervisor",
 	Usage: "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
 	Flags: flags,
-	Action: func(ctx *cli.Context) error {
-		c := ctx.Context
+	Action: func(cCtx *cli.Context) error {
+		ctx := cCtx.Context
 		container := Init()
 
 		// Register the cluster with the declared resources
 		// TODO: automatically fetch the resources limit
 		if err := container.eth.Register(
-			c,
+			ctx,
 			nodes,
 			cpus,
 			gpus,
@@ -297,7 +298,11 @@ var app = &cli.App{
 			return err
 		}
 
-		go container.jobWatcher.Watch(c)
+		go func(ctx context.Context) {
+			if err := container.jobWatcher.Watch(ctx); err != nil {
+				logger.I.Fatal("jobWatcher crashed", zap.Error(err))
+			}
+		}(ctx)
 
 		logger.I.Info("listening", zap.String("address", listenAddress))
 

@@ -47,13 +47,16 @@ func New(
 }
 
 // Watch incoming jobs and handles it.
-func (w *Watcher) Watch(parent context.Context) {
+func (w *Watcher) Watch(parent context.Context) error {
 	var wg sync.WaitGroup
+	errChan := make(chan error)
+
 	wg.Add(1)
 	go func(ctx context.Context, wg *sync.WaitGroup) {
 		err := w.WatchClaimNextJob(ctx)
 		if err != nil {
 			logger.I.Error("WatchClaimNextJob failed", zap.Error(err))
+			errChan <- err
 		}
 		wg.Done()
 	}(parent, &wg)
@@ -63,11 +66,23 @@ func (w *Watcher) Watch(parent context.Context) {
 		err := w.ClaimNextJobIndefinitely(ctx)
 		if err != nil {
 			logger.I.Error("WatchClaimNextJob failed", zap.Error(err))
+			errChan <- err
 		}
 		wg.Done()
 	}(parent, &wg)
 
-	wg.Wait()
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+
+	for e := range errChan {
+		if e != nil {
+			return e
+		}
+	}
+
+	return nil
 }
 
 func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
