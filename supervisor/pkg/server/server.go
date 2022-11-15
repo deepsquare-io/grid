@@ -9,6 +9,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/health"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/sshapi"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"go.uber.org/zap"
@@ -25,6 +26,7 @@ func New(
 	keyFile string,
 	certFile string,
 	jobHandler jobapi.JobHandler,
+	slurm *slurm.Service,
 	pkB64 string,
 ) *Server {
 	opts := []grpc.ServerOption{
@@ -54,7 +56,7 @@ func New(
 	)
 	healthv1.RegisterHealthServer(
 		grpcServer,
-		health.New(),
+		health.New(slurm),
 	)
 
 	return &Server{

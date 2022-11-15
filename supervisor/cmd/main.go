@@ -266,6 +266,7 @@ func Init() *Container {
 		keyFile,
 		certFile,
 		ethDataSource,
+		slurmJobService,
 		slurmSSHB64PK,
 	)
 

@@ -97,17 +97,16 @@ func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 
 			go func(ctx context.Context) {
 				// Slurm healthcheck first
-				err := w.scheduler.HealthCheck(ctx)
-				if err != nil {
+				if err := w.scheduler.HealthCheck(ctx); err != nil {
 					done <- err
 					return
 				}
 
-				err = w.metaQueue.Claim(ctx)
-				if err != nil {
+				if err := w.metaQueue.Claim(ctx); err != nil {
 					logger.I.Info("failed to claim a job", zap.Error(err))
+					done <- err
 				}
-				done <- err
+				done <- nil
 			}(ctx)
 
 			// Await for the claim response
