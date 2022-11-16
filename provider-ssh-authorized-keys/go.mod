@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
-	github.com/urfave/cli/v2 v2.23.4
+	github.com/urfave/cli/v2 v2.23.5
 	go.uber.org/zap v1.23.0
 	google.golang.org/grpc v1.50.1
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
