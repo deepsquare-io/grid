@@ -5,7 +5,9 @@ import (
 	"time"
 
 	healthv1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/grpc/health/v1"
+	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"go.uber.org/zap"
 )
 
 type health struct {
@@ -41,13 +43,17 @@ func (h *health) Watch(
 	go func(ctx context.Context) {
 		for {
 			if err := h.slurm.HealthCheck(ctx); err != nil {
-				stream.Send(&healthv1.HealthCheckResponse{
+				if err := stream.Send(&healthv1.HealthCheckResponse{
 					Status: healthv1.HealthCheckResponse_NOT_SERVING,
-				})
+				}); err != nil {
+					logger.I.Error("healthcheck send failed", zap.Error(err))
+				}
 			} else {
-				stream.Send(&healthv1.HealthCheckResponse{
+				if err := stream.Send(&healthv1.HealthCheckResponse{
 					Status: healthv1.HealthCheckResponse_SERVING,
-				})
+				}); err != nil {
+					logger.I.Error("healthcheck send failed", zap.Error(err))
+				}
 			}
 
 			select {

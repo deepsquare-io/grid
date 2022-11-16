@@ -7,6 +7,10 @@ build: supervisor
 .PHONY: test
 test: unit
 
+.PHONY: lint
+lint:
+	golangci-lint run
+
 .PHONY: supervisor
 supervisor:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o $@ ./cmd
