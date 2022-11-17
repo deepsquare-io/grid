@@ -6,27 +6,18 @@ import (
 
 	healthv1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/grpc/health/v1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"go.uber.org/zap"
 )
 
 type health struct {
 	healthv1.UnimplementedHealthServer
-	slurm *slurm.Service
 }
 
-func New(slurm *slurm.Service) *health {
-	return &health{
-		slurm: slurm,
-	}
+func New() *health {
+	return &health{}
 }
 
 func (h *health) Check(ctx context.Context, req *healthv1.HealthCheckRequest) (*healthv1.HealthCheckResponse, error) {
-	if err := h.slurm.HealthCheck(ctx); err != nil {
-		return &healthv1.HealthCheckResponse{
-			Status: healthv1.HealthCheckResponse_NOT_SERVING,
-		}, nil
-	}
 	return &healthv1.HealthCheckResponse{
 		Status: healthv1.HealthCheckResponse_SERVING,
 	}, nil
@@ -42,18 +33,10 @@ func (h *health) Watch(
 
 	go func(ctx context.Context) {
 		for {
-			if err := h.slurm.HealthCheck(ctx); err != nil {
-				if err := stream.Send(&healthv1.HealthCheckResponse{
-					Status: healthv1.HealthCheckResponse_NOT_SERVING,
-				}); err != nil {
-					logger.I.Error("healthcheck send failed", zap.Error(err))
-				}
-			} else {
-				if err := stream.Send(&healthv1.HealthCheckResponse{
-					Status: healthv1.HealthCheckResponse_SERVING,
-				}); err != nil {
-					logger.I.Error("healthcheck send failed", zap.Error(err))
-				}
+			if err := stream.Send(&healthv1.HealthCheckResponse{
+				Status: healthv1.HealthCheckResponse_SERVING,
+			}); err != nil {
+				logger.I.Error("healthcheck send failed", zap.Error(err))
 			}
 
 			select {

@@ -56,7 +56,7 @@ func New(
 	)
 	healthv1.RegisterHealthServer(
 		grpcServer,
-		health.New(slurm),
+		health.New(),
 	)
 
 	return &Server{
