@@ -90,8 +90,9 @@ func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 	defer queryTicker.Stop()
 
 	for {
-		err := func(parent context.Context) error {
+		func(parent context.Context) {
 			done := make(chan error)
+			defer close(done)
 			ctx, cancel := context.WithTimeout(parent, claimJobMaxTimeout)
 			defer cancel()
 
@@ -114,18 +115,12 @@ func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 			case err := <-done:
 				if err != nil {
 					logger.I.Error("ClaimNextJobIndefinitely failed", zap.Error(err))
-					return err
 				}
 
 			case <-ctx.Done():
 				logger.I.Warn("ClaimNextJobIndefinitely context closed", zap.Error(ctx.Err()))
 			}
-			return nil
 		}(parent)
-
-		if err != nil {
-			return err
-		}
 
 		// Await for ticking
 		select {
