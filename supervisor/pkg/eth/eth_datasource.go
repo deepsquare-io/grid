@@ -16,23 +16,28 @@ import (
 
 // DataSource handles communications with the smart contract.
 type DataSource struct {
-	authenticator EthereumAuthenticator
-	metascheduler MetaScheduler
-	pk            *ecdsa.PrivateKey
-	pub           *ecdsa.PublicKey
-	fromAddress   common.Address
+	authenticator    EthereumAuthenticator
+	metaschedulerRPC MetaSchedulerRPC
+	metaschedulerWS  MetaSchedulerWS
+	pk               *ecdsa.PrivateKey
+	pub              *ecdsa.PublicKey
+	fromAddress      common.Address
 }
 
 func New(
 	a EthereumAuthenticator,
-	ms MetaScheduler,
+	msRPC MetaSchedulerRPC,
+	msWS MetaSchedulerWS,
 	pk *ecdsa.PrivateKey,
 ) *DataSource {
 	if a == nil {
 		logger.I.Fatal("EthereumAuthenticator is nil")
 	}
-	if ms == nil {
-		logger.I.Fatal("MetaScheduler is nil")
+	if msRPC == nil {
+		logger.I.Fatal("MetaSchedulerRPC is nil")
+	}
+	if msWS == nil {
+		logger.I.Fatal("metaschedulerWS is nil")
 	}
 	publicKey := pk.Public()
 	pubECDSA, ok := publicKey.(*ecdsa.PublicKey)
@@ -42,11 +47,12 @@ func New(
 
 	fromAddress := crypto.PubkeyToAddress(*pubECDSA)
 	return &DataSource{
-		authenticator: a,
-		metascheduler: ms,
-		pk:            pk,
-		pub:           pubECDSA,
-		fromAddress:   fromAddress,
+		authenticator:    a,
+		metaschedulerRPC: msRPC,
+		metaschedulerWS:  msWS,
+		pk:               pk,
+		pub:              pubECDSA,
+		fromAddress:      fromAddress,
 	}
 }
 
@@ -88,7 +94,7 @@ func (s *DataSource) Claim(ctx context.Context) error {
 		return err
 	}
 
-	tx, err := s.metascheduler.ClaimNextJob(auth)
+	tx, err := s.metaschedulerRPC.ClaimNextJob(auth)
 	if err != nil {
 		return err
 	}
@@ -113,7 +119,7 @@ func (s *DataSource) Register(
 	// 	return err
 	// }
 
-	// tx, err := s.metascheduler.Register(
+	// tx, err := s.metaschedulerRPC.Register(
 	// 	auth,
 	// 	cpus,
 	// 	gpus,
@@ -140,7 +146,7 @@ func (s *DataSource) StartJob(
 	if err != nil {
 		return err
 	}
-	tx, err := s.metascheduler.StartJob(
+	tx, err := s.metaschedulerRPC.StartJob(
 		auth,
 		jobID,
 	)
@@ -165,7 +171,7 @@ func (s *DataSource) FinishJob(
 	if err != nil {
 		return err
 	}
-	tx, err := s.metascheduler.FinishJob(
+	tx, err := s.metaschedulerRPC.FinishJob(
 		auth,
 		jobID,
 		jobDuration,
@@ -190,7 +196,7 @@ func (s *DataSource) FailJob(
 	if err != nil {
 		return err
 	}
-	tx, err := s.metascheduler.TriggerFailedJob(
+	tx, err := s.metaschedulerRPC.TriggerFailedJob(
 		auth,
 		jobID,
 	)
@@ -212,7 +218,7 @@ func (s *DataSource) RefuseJob(
 	if err != nil {
 		return err
 	}
-	tx, err := s.metascheduler.RefuseJob(
+	tx, err := s.metaschedulerRPC.RefuseJob(
 		auth,
 		jobID,
 	)
@@ -228,7 +234,7 @@ func (s *DataSource) WatchClaimNextJobEvent(
 	ctx context.Context,
 	sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent,
 ) (event.Subscription, error) {
-	return s.metascheduler.WatchClaimNextJobEvent(&bind.WatchOpts{
+	return s.metaschedulerWS.WatchClaimNextJobEvent(&bind.WatchOpts{
 		Context: ctx,
 	}, sink)
 }

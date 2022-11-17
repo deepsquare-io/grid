@@ -26,7 +26,8 @@ import (
 type DataSourceTestSuite struct {
 	suite.Suite
 	authenticator *mocks.EthereumAuthenticator
-	ms            *mocks.MetaScheduler
+	msRPC         *mocks.MetaSchedulerRPC
+	msWS          *mocks.MetaSchedulerWS
 	impl          *eth.DataSource
 }
 
@@ -61,18 +62,20 @@ func init() {
 
 func (suite *DataSourceTestSuite) BeforeTest(suiteName, testName string) {
 	suite.authenticator = mocks.NewEthereumAuthenticator(suite.T())
-	suite.ms = mocks.NewMetaScheduler(suite.T())
+	suite.msRPC = mocks.NewMetaSchedulerRPC(suite.T())
+	suite.msWS = mocks.NewMetaSchedulerWS(suite.T())
 
 	suite.impl = eth.New(
 		suite.authenticator,
-		suite.ms,
+		suite.msRPC,
+		suite.msWS,
 		privateKey,
 	)
 }
 
 func (suite *DataSourceTestSuite) assertMocksExpectations() {
 	suite.authenticator.AssertExpectations(suite.T())
-	suite.ms.AssertExpectations(suite.T())
+	suite.msWS.AssertExpectations(suite.T())
 }
 
 func (suite *DataSourceTestSuite) mustAuthenticate() {
@@ -137,7 +140,7 @@ func (suite *DataSourceTestSuite) TestClaim() {
 	suite.mustAuthenticate()
 	// Must call ClaimNextJob
 	tx := legacyTx()
-	suite.ms.On(
+	suite.msRPC.On(
 		"ClaimNextJob",
 		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
 			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
@@ -157,7 +160,7 @@ func (suite *DataSourceTestSuite) TestStartJob() {
 	suite.mustAuthenticate()
 	// Must call StartJob
 	tx := legacyTx()
-	suite.ms.On(
+	suite.msRPC.On(
 		"StartJob",
 		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
 			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
@@ -178,7 +181,7 @@ func (suite *DataSourceTestSuite) TestFinishJob() {
 	suite.mustAuthenticate()
 	// Must call FinishJob
 	tx := legacyTx()
-	suite.ms.On(
+	suite.msRPC.On(
 		"FinishJob",
 		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
 			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
@@ -200,7 +203,7 @@ func (suite *DataSourceTestSuite) TestFailedJob() {
 	suite.mustAuthenticate()
 	// Must call TriggerFailedJob
 	tx := legacyTx()
-	suite.ms.On(
+	suite.msRPC.On(
 		"TriggerFailedJob",
 		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
 			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
@@ -221,7 +224,7 @@ func (suite *DataSourceTestSuite) TestRefuseJob() {
 	suite.mustAuthenticate()
 	// Must call RefuseJob
 	tx := legacyTx()
-	suite.ms.On(
+	suite.msRPC.On(
 		"RefuseJob",
 		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
 			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
@@ -241,7 +244,7 @@ func (suite *DataSourceTestSuite) TestWatchClaimNextJobEvent() {
 	// Arrange
 	sink := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
 	sub := mocks.NewSubscription(suite.T())
-	suite.ms.On(
+	suite.msWS.On(
 		"WatchClaimNextJobEvent",
 		mock.Anything,
 		mock.Anything,

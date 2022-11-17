@@ -32,7 +32,8 @@ var (
 	customerTLSInsecure        bool
 	customerCAFile             string
 	customerServerHostOverride string
-	ethEndpoint                string
+	ethEndpointRPC             string
+	ethEndpointWS              string
 	ethHexPK                   string
 	metaschedulerSmartContract string
 
@@ -81,11 +82,18 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"TLS_CERT"},
 	},
 	&cli.StringFlag{
-		Name:        "metascheduler.endpoint",
+		Name:        "metascheduler.endpoint.rpc",
 		Value:       "https://testnet.deepsquare.run/rpc",
-		Usage:       "Metascheduler RPC endpoint.",
-		Destination: &ethEndpoint,
-		EnvVars:     []string{"METASCHEDULER_ENDPOINT"},
+		Usage:       "Metascheduler Avalanche C-Chain JSON-RPC endpoint.",
+		Destination: &ethEndpointRPC,
+		EnvVars:     []string{"METASCHEDULER_ENDPOINT_RPC"},
+	},
+	&cli.StringFlag{
+		Name:        "metascheduler.endpoint.ws",
+		Value:       "wss://testnet.deepsquare.run/ws",
+		Usage:       "Metascheduler Avalanche C-Chain WS endpoint.",
+		Destination: &ethEndpointWS,
+		EnvVars:     []string{"METASCHEDULER_ENDPOINT_WS"},
 	},
 	&cli.StringFlag{
 		Name:        "customer.endpoint",
@@ -187,28 +195,28 @@ var flags = []cli.Flag{
 	},
 	&cli.Uint64Flag{
 		Name:        "res.nodes",
-		Usage:       "Total number of Nodes reported by `scontrol show partitions`",
+		Usage:       "Total number of Nodes reported by 'scontrol show partitions'",
 		Destination: &nodes,
 		Required:    true,
 		EnvVars:     []string{"TOTAL_NODES"},
 	},
 	&cli.Uint64Flag{
 		Name:        "res.cpus",
-		Usage:       "Total number of CPUs reported by `scontrol show partitions`",
+		Usage:       "Total number of CPUs reported by 'scontrol show partitions'",
 		Destination: &cpus,
 		Required:    true,
 		EnvVars:     []string{"TOTAL_CPUS"},
 	},
 	&cli.Uint64Flag{
 		Name:        "res.gpus",
-		Usage:       "Total number of GPUs reported by `scontrol show partitions`",
+		Usage:       "Total number of GPUs reported by 'scontrol show partitions'",
 		Destination: &gpus,
 		Required:    true,
 		EnvVars:     []string{"TOTAL_GPUS"},
 	},
 	&cli.Uint64Flag{
 		Name:        "res.mem",
-		Usage:       "Total number of Memory (MB) reported by `scontrol show partitions`",
+		Usage:       "Total number of Memory (MB) reported by 'scontrol show partitions'",
 		Destination: &mem,
 		Required:    true,
 		EnvVars:     []string{"TOTAL_MEMORY"},
@@ -226,21 +234,30 @@ type Container struct {
 
 func Init() *Container {
 	customer := &customer.FakeDataSource{}
-	ethClient, err := ethclient.Dial(ethEndpoint)
+	ethClientRPC, err := ethclient.Dial(ethEndpointRPC)
 	if err != nil {
-		logger.I.Fatal("ethclient dial failed", zap.Error(err))
+		logger.I.Fatal("ethclientRPC dial failed", zap.Error(err))
 	}
-	ms, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerSmartContract), ethClient)
+	msRPC, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerSmartContract), ethClientRPC)
 	if err != nil {
-		logger.I.Fatal("metascheduler dial failed", zap.Error(err))
+		logger.I.Fatal("metaschedulerRPC dial failed", zap.Error(err))
+	}
+	ethClientWS, err := ethclient.Dial(ethEndpointWS)
+	if err != nil {
+		logger.I.Fatal("ethClientWS dial failed", zap.Error(err))
+	}
+	msWS, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerSmartContract), ethClientWS)
+	if err != nil {
+		logger.I.Fatal("metaschedulerWS dial failed", zap.Error(err))
 	}
 	pk, err := crypto.HexToECDSA(ethHexPK)
 	if err != nil {
 		logger.I.Fatal("couldn't decode private key", zap.Error(err))
 	}
 	ethDataSource := eth.New(
-		ethClient,
-		ms,
+		ethClientRPC,
+		msRPC,
+		msWS,
 		pk,
 	)
 	sshService := ssh.New(
