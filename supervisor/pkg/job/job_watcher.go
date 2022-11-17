@@ -92,7 +92,6 @@ func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 	for {
 		func(parent context.Context) {
 			done := make(chan error)
-			defer close(done)
 			ctx, cancel := context.WithTimeout(parent, claimJobMaxTimeout)
 			defer cancel()
 
@@ -107,7 +106,7 @@ func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 					logger.I.Info("failed to claim a job", zap.Error(err))
 					done <- err
 				}
-				done <- nil
+				close(done)
 			}(ctx)
 
 			// Await for the claim response

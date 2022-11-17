@@ -58,7 +58,7 @@ func (suite *WatcherTestSuite) TestClaimNextJobIndefinitely() {
 	suite.scheduler.On("HealthCheck", mock.Anything).Return(nil)
 
 	// Act
-	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)
 	defer cancel()
 	go suite.impl.ClaimNextJobIndefinitely(ctx)
 	select {

@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-const execTimeout = time.Duration(5 * time.Second)
+const execTimeout = time.Duration(10 * time.Second)
 
 type Service struct {
 	address    string
