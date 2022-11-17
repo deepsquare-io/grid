@@ -137,6 +137,7 @@ func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
 		return err
 	}
 	defer sub.Unsubscribe()
+	logger.I.Debug("Watching ClaimNextJob events...")
 
 	for {
 		select {
