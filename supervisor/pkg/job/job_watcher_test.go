@@ -5,6 +5,7 @@ package job_test
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 	"time"
 
@@ -18,7 +19,7 @@ import (
 )
 
 var (
-	fixtureSchedulerJobID = uint8(1)
+	fixtureSchedulerJobID = 1
 	fixtureEvent          = &metascheduler.MetaSchedulerClaimNextJobEvent{
 		CustomerAddr:      common.HexToAddress("01"),
 		JobId:             [32]byte{1},
@@ -130,7 +131,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 		mock.Anything,
 		fixtureEvent.JobDefinition.BatchLocationHash,
 	).Return(fixtureBody, nil)
-	suite.scheduler.On("Submit", mock.Anything, mock.Anything).Return(int(fixtureSchedulerJobID), nil)
+	suite.scheduler.On("Submit", mock.Anything, mock.Anything).Return(strconv.Itoa(fixtureSchedulerJobID), nil)
 	sub.On("Err").Return(nil)
 	sub.On("Unsubscribe")
 
@@ -235,7 +236,7 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 		mock.Anything,
 		fixtureEvent.JobDefinition.BatchLocationHash,
 	).Return(fixtureBody, nil)
-	suite.scheduler.On("Submit", mock.Anything, mock.Anything).Return(0, errors.New("expected error"))
+	suite.scheduler.On("Submit", mock.Anything, mock.Anything).Return("0", errors.New("expected error"))
 	// Must refuse job because we couldn't fetch the job batch script
 	suite.metaQueue.On("RefuseJob", mock.Anything, mock.Anything).Return(nil)
 

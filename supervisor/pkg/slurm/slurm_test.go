@@ -70,7 +70,7 @@ func (suite *ServiceTestSuite) TestCancel() {
 func (suite *ServiceTestSuite) TestSubmit() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
-	expectedJobID := 123
+	expectedJobID := "123"
 	req := &slurm.SubmitJobRequest{
 		Name: name,
 		User: user,
@@ -100,7 +100,7 @@ srun sleep infinity
 				strings.Contains(cmd, req.Name) &&
 				strings.Contains(cmd, req.Body)
 		}),
-	).Return(fmt.Sprintf("%d\n", expectedJobID), nil)
+	).Return(fmt.Sprintf("%s\n", expectedJobID), nil)
 	ctx := context.Background()
 
 	// Act
