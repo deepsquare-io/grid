@@ -96,6 +96,9 @@ func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 			defer cancel()
 
 			go func(ctx context.Context) {
+				// One shot
+				defer close(done)
+
 				// Slurm healthcheck first
 				if err := w.scheduler.HealthCheck(ctx); err != nil {
 					done <- err
@@ -106,14 +109,17 @@ func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 					logger.I.Info("failed to claim a job", zap.Error(err))
 					done <- err
 				}
-				close(done)
 			}(ctx)
 
 			// Await for the claim response
 			select {
 			case err := <-done:
 				if err != nil {
-					logger.I.Error("ClaimNextJobIndefinitely failed", zap.Error(err))
+					if !strings.Contains(err.Error(), "No available job") {
+						logger.I.Debug("No available job")
+					} else {
+						logger.I.Error("ClaimNextJobIndefinitely failed", zap.Error(err))
+					}
 				}
 
 			case <-ctx.Done():
