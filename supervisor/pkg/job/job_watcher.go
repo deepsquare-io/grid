@@ -193,7 +193,7 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 	}
 
 	// Submit the job script
-	slurmJobID, err := w.scheduler.Submit(ctx, req)
+	resp, err := w.scheduler.Submit(ctx, req)
 	if err != nil {
 		logger.I.Error("slurm submit job failed", zap.Error(err))
 		if err := w.metaQueue.RefuseJob(ctx, event.JobId); err != nil {
@@ -203,7 +203,7 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 	}
 	logger.I.Info(
 		"submitted a job successfully",
-		zap.Int("JobID", slurmJobID),
+		zap.String("Response", resp),
 		zap.Any("Req", req),
 	)
 	return nil

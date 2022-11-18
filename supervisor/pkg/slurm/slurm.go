@@ -59,7 +59,7 @@ type SubmitJobRequest struct {
 }
 
 // Submit a sbatch definition script to the SLURM controller using the sbatch command.
-func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (int, error) {
+func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (string, error) {
 	eof := utils.GenerateRandomString(10)
 
 	cmd := fmt.Sprintf(`%s \
@@ -70,7 +70,7 @@ func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (int, error
   --cpus-per-task=%d \
   --mem-per-cpu=%dM \
   --comment="from supervisor" \
-  --gpus-per-task=%d << %s
+  --gpus-per-task=%d << '%s'
 %s
 
 %s`,
@@ -87,10 +87,10 @@ func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (int, error
 	)
 	out, err := s.executor.ExecAs(ctx, req.User, cmd)
 	if err != nil {
-		return 0, err
+		return strings.TrimSpace(strings.TrimRight(string(out), "\n")), err
 	}
 
-	return strconv.Atoi(strings.TrimSpace(strings.TrimRight(string(out), "\n")))
+	return strings.TrimSpace(strings.TrimRight(string(out), "\n")), nil
 }
 
 type TopUpRequest struct {

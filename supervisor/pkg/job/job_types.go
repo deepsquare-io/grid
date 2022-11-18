@@ -24,7 +24,7 @@ type JobScheduler interface {
 	// HealthCheck verifies if the scheduler accepts jobs.
 	HealthCheck(ctx context.Context) error
 	// Submit a job to the scheduler.
-	Submit(ctx context.Context, req *slurm.SubmitJobRequest) (int, error)
+	Submit(ctx context.Context, req *slurm.SubmitJobRequest) (string, error)
 }
 
 type JobBatchFetcher interface {

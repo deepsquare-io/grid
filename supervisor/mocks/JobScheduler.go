@@ -30,14 +30,14 @@ func (_m *JobScheduler) HealthCheck(ctx context.Context) error {
 }
 
 // Submit provides a mock function with given fields: ctx, req
-func (_m *JobScheduler) Submit(ctx context.Context, req *slurm.SubmitJobRequest) (int, error) {
+func (_m *JobScheduler) Submit(ctx context.Context, req *slurm.SubmitJobRequest) (string, error) {
 	ret := _m.Called(ctx, req)
 
-	var r0 int
-	if rf, ok := ret.Get(0).(func(context.Context, *slurm.SubmitJobRequest) int); ok {
+	var r0 string
+	if rf, ok := ret.Get(0).(func(context.Context, *slurm.SubmitJobRequest) string); ok {
 		r0 = rf(ctx, req)
 	} else {
-		r0 = ret.Get(0).(int)
+		r0 = ret.Get(0).(string)
 	}
 
 	var r1 error
