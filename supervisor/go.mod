@@ -5,17 +5,18 @@ go 1.19
 require (
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+	github.com/joho/godotenv v1.4.0
 	github.com/stretchr/testify v1.8.1
 	github.com/urfave/cli/v2 v2.23.5
 	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.3.0
-	google.golang.org/grpc v1.50.1
+	google.golang.org/grpc v1.51.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	google.golang.org/protobuf v1.28.1
 )
 
 require (
-	github.com/btcsuite/btcd/btcec/v2 v2.3.1 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -47,7 +48,7 @@ require (
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
-	google.golang.org/genproto v0.0.0-20221111202108-142d8a6fa32e // indirect
+	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

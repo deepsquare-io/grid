@@ -181,7 +181,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "slurm.squeue",
-		Value:       "/usr/bin/ssqueue",
+		Value:       "/usr/bin/squeue",
 		Usage:       "Server-side SLURM squeue path.",
 		Destination: &squeue,
 		EnvVars:     []string{"SLURM_SQUEUE_PATH"},

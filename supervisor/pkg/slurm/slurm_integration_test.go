@@ -11,7 +11,9 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
 )
 
 type ServiceTestSuite struct {
@@ -103,19 +105,16 @@ func (suite *ServiceTestSuite) TestTopUp() {
 }
 
 func TestServiceTestSuite(t *testing.T) {
-	address := os.Getenv("SLURM_SSH_ADDRESS")
-	user := os.Getenv("SLURM_SSH_USER")
-	adminUser := os.Getenv("SLURM_ADMIN_SSH_USER")
-	pkB64 := os.Getenv("SLURM_SSH_PRIVATE_KEY")
-	// Skip test if not defined
-	if address == "" || user == "" || pkB64 == "" {
-		logger.I.Warn("mandatory variables are not set!")
+	err := godotenv.Load(".env.test")
+	if err != nil {
+		// Skip test if not defined
+		logger.I.Error("Error loading .env.test file", zap.Error(err))
 	} else {
 		suite.Run(t, &ServiceTestSuite{
-			address:   address,
-			user:      user,
-			adminUser: adminUser,
-			pkB64:     pkB64,
+			address:   os.Getenv("SLURM_SSH_ADDRESS"),
+			user:      os.Getenv("SLURM_SSH_USER"),
+			adminUser: os.Getenv("SLURM_ADMIN_SSH_USER"),
+			pkB64:     os.Getenv("SLURM_SSH_PRIVATE_KEY"),
 		})
 	}
 }
