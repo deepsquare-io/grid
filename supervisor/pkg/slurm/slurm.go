@@ -107,7 +107,7 @@ func (s *Service) TopUp(ctx context.Context, req *TopUpRequest) error {
 	// Fetch jobID
 	jobID, err := s.FindRunningJobByName(ctx, &FindRunningJobByNameRequest{
 		Name: req.Name,
-		User: req.User,
+		User: s.adminUser,
 	})
 	if err != nil {
 		return err

@@ -1,0 +1,22 @@
+peopleDN: ou=people,dc=hpc,dc=deepsquare,dc=run
+groupDN: ou=groups,dc=hpc,dc=deepsquare,dc=run
+addUserToGroup:
+  memberAttributes:
+    - member
+createUser:
+  objectClasses:
+    - nsPerson
+    - nsOrgPerson
+    - nsAccount
+    - posixAccount
+  userNameAttributes:
+    - uid
+    - displayName
+    - cn
+  defaultAttributes:
+    homeDirectory:
+      - /dev/shm
+    gidNumber:
+      - '1600'
+    uidNumber:
+      - '-1'

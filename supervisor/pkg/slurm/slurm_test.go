@@ -124,7 +124,7 @@ func (suite *ServiceTestSuite) TestTopUp() {
 	suite.ssh.On(
 		"ExecAs",
 		mock.Anything,
-		user,
+		admin,
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "squeue") &&
 				strings.Contains(cmd, req.Name)
