@@ -26,7 +26,7 @@ func LDAPUserIsValid(user string) string {
 	if user[0] == ' ' {
 		return "contains leading spaces"
 	}
-	if user[len(user)] == ' ' {
+	if user[len(user)-1] == ' ' {
 		return "contains trailing spaces"
 	}
 

@@ -1,9 +1,10 @@
 peopleDN: ou=people,dc=hpc,dc=deepsquare,dc=run
-groupDN: ou=groups,dc=hpc,dc=deepsquare,dc=run
+groupDN: cn=cluster-users,ou=groups,dc=hpc,dc=deepsquare,dc=run
 addUserToGroup:
   memberAttributes:
     - member
 createUser:
+  rdnAttribute: uid
   objectClasses:
     - nsPerson
     - nsOrgPerson

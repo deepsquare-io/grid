@@ -6,6 +6,8 @@ import (
 	"crypto/x509"
 	"errors"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/ldap-connector/config"
 	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
@@ -40,13 +42,15 @@ func New(
 		if rootCAs == nil {
 			rootCAs = x509.NewCertPool()
 		}
-		certs, err := os.ReadFile(caFile)
-		if err != nil {
-			logger.I.Error("failed to read caFile", zap.String("caFile", caFile), zap.Error(err))
-		}
+		if caFile != "" {
+			certs, err := os.ReadFile(caFile)
+			if err != nil {
+				logger.I.Error("failed to read caFile", zap.String("caFile", caFile), zap.Error(err))
+			}
 
-		if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-			logger.I.Error("No certs appended, using system certs only")
+			if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+				logger.I.Error("No certs appended, using system certs only")
+			}
 		}
 
 		tlsConfig = tls.Config{
@@ -58,8 +62,10 @@ func New(
 		}
 	}
 	return &DataSource{
-		url:    url,
-		config: config,
+		url:      url,
+		bindDN:   bindDN,
+		password: password,
+		config:   config,
 		opts: []ldap.DialOpt{
 			ldap.DialWithTLSConfig(&tlsConfig),
 		},
@@ -69,13 +75,38 @@ func New(
 func (d *DataSource) auth() (*ldap.Conn, error) {
 	conn, err := ldap.DialURL(d.url, d.opts...)
 	if err != nil {
+		logger.I.Error("ldap dial failed", zap.Error(err))
 		return nil, err
 	}
 	err = conn.Bind(d.bindDN, d.password)
 	if err != nil {
+		logger.I.Error("ldap auth failed", zap.Error(err))
 		return nil, err
 	}
 	return conn, nil
+}
+
+func (d *DataSource) doWithTimeout(ctx context.Context, fn func() error) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	ch := make(chan error, 1)
+
+	go func() {
+		err := fn()
+		ch <- err
+	}()
+
+	select {
+	case <-ctx.Done():
+		logger.I.Error("ldap context cancelled", zap.Error(ctx.Err()))
+		return ctx.Err()
+	case err := <-ch:
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (d *DataSource) CreateUser(ctx context.Context, user string) error {
@@ -100,7 +131,17 @@ func (d *DataSource) CreateUser(ctx context.Context, user string) error {
 		req.Attribute(key, value)
 	}
 
-	return conn.Add(req)
+	if err := d.doWithTimeout(ctx, func() error {
+		return conn.Add(req)
+	}); err != nil {
+		if strings.Contains(err.Error(), "LDAP Result Code 68") {
+			logger.I.Info("user already exists, ignoring", zap.Error(err), zap.Any("req", req))
+		}
+		logger.I.Error("ldap create user failed", zap.Error(err), zap.Any("req", req))
+		return err
+	}
+
+	return nil
 }
 
 func (d *DataSource) AddUserToGroup(ctx context.Context, user string) error {
@@ -119,5 +160,15 @@ func (d *DataSource) AddUserToGroup(ctx context.Context, user string) error {
 		req.Add(attr, []string{d.config.GetUserDN(user)})
 	}
 
-	return conn.Modify(req)
+	if err := d.doWithTimeout(ctx, func() error {
+		return conn.Modify(req)
+	}); err != nil {
+		if strings.Contains(err.Error(), "LDAP Result Code 68") {
+			logger.I.Info("user already exists, ignoring", zap.Error(err), zap.Any("req", req))
+		}
+		logger.I.Error("ldap modify group failed", zap.Error(err), zap.Any("req", req))
+		return err
+	}
+
+	return nil
 }

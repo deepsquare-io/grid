@@ -91,7 +91,7 @@ func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 
 	for {
 		func(parent context.Context) {
-			done := make(chan error)
+			done := make(chan error, 1)
 			ctx, cancel := context.WithTimeout(parent, claimJobMaxTimeout)
 			defer cancel()
 
