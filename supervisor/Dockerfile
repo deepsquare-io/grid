@@ -1,10 +1,11 @@
+# syntax=docker/dockerfile:1
 FROM golang:1.19.3-alpine as builder
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o app ./cmd
+RUN --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o app ./cmd
 
 # ---
 FROM alpine as certs
