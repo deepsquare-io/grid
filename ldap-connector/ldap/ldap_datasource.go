@@ -146,6 +146,7 @@ func (d *DataSource) CreateUser(ctx context.Context, user string) error {
 	}); err != nil {
 		if strings.Contains(err.Error(), "LDAP Result Code 68") {
 			logger.I.Info("user already exists, ignoring", zap.Error(err), zap.Any("req", req))
+			return nil
 		}
 		logger.I.Error("ldap create user failed", zap.Error(err), zap.Any("req", req))
 		return err
@@ -176,6 +177,7 @@ func (d *DataSource) AddUserToGroup(ctx context.Context, user string) error {
 	}); err != nil {
 		if strings.Contains(err.Error(), "LDAP Result Code 68") {
 			logger.I.Info("user already exists, ignoring", zap.Error(err), zap.Any("req", req))
+			return nil
 		}
 		logger.I.Error("ldap modify group failed", zap.Error(err), zap.Any("req", req))
 		return err
