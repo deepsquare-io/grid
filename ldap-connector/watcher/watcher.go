@@ -3,7 +3,7 @@ package watcher
 import (
 	"context"
 
-	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/metascheduler"
+	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/jobmanager"
 	"github.com/deepsquare-io/the-grid/ldap-connector/ldap"
 	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -11,30 +11,30 @@ import (
 )
 
 type Watcher struct {
-	ms   *metascheduler.MetaScheduler
-	ldap *ldap.DataSource
+	jobManager *jobmanager.JobManager
+	ldap       *ldap.DataSource
 }
 
 func New(
-	ms *metascheduler.MetaScheduler,
+	jobManager *jobmanager.JobManager,
 	ldap *ldap.DataSource,
 ) *Watcher {
-	if ms == nil {
-		logger.I.Panic("ms is nil")
+	if jobManager == nil {
+		logger.I.Panic("jobManager is nil")
 	}
 	if ldap == nil {
 		logger.I.Panic("ldap is nil")
 	}
 	return &Watcher{
-		ms:   ms,
-		ldap: ldap,
+		jobManager: jobManager,
+		ldap:       ldap,
 	}
 }
 
 func (w *Watcher) Watch(parent context.Context) error {
-	events := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
+	events := make(chan *jobmanager.JobManagerNewJobRequestEvent)
 
-	sub, err := w.ms.WatchClaimNextJobEvent(&bind.WatchOpts{
+	sub, err := w.jobManager.WatchNewJobRequestEvent(&bind.WatchOpts{
 		Context: parent,
 	}, events)
 	if err != nil {
@@ -61,7 +61,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 	}
 }
 
-func (w *Watcher) handleEvent(parent context.Context, event *metascheduler.MetaSchedulerClaimNextJobEvent) error {
+func (w *Watcher) handleEvent(parent context.Context, event *jobmanager.JobManagerNewJobRequestEvent) error {
 	user := event.CustomerAddr.Hex()
 	if err := w.ldap.CreateUser(parent, user); err != nil {
 		return err

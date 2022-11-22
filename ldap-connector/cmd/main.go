@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/deepsquare-io/the-grid/ldap-connector/config"
-	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/metascheduler"
+	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/jobmanager"
 	"github.com/deepsquare-io/the-grid/ldap-connector/ldap"
 	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
 	"github.com/deepsquare-io/the-grid/ldap-connector/watcher"
@@ -21,26 +21,26 @@ var (
 	ldapBindDN       string
 	ldapBindPassword string
 
-	ethEndpointWS              string
-	metaschedulerSmartContract string
+	avaxEndpointWS          string
+	jobManagerSmartContract string
 
 	configPath string
 )
 
 var flags = []cli.Flag{
 	&cli.StringFlag{
-		Name:        "metascheduler.endpoint.ws",
+		Name:        "avax.endpoint.ws",
 		Value:       "wss://testnet.deepsquare.run/ws",
-		Usage:       "Metascheduler Avalanche C-Chain WS endpoint.",
-		Destination: &ethEndpointWS,
-		EnvVars:     []string{"METASCHEDULER_ENDPOINT_WS"},
+		Usage:       "Avalanche C-Chain WS endpoint.",
+		Destination: &avaxEndpointWS,
+		EnvVars:     []string{"AVAX_ENDPOINT_WS"},
 	},
 	&cli.StringFlag{
-		Name:        "metascheduler.smart-contract",
+		Name:        "jobmanager.smart-contract",
 		Value:       "0x",
-		Usage:       "Metascheduler smart-contract address.",
-		Destination: &metaschedulerSmartContract,
-		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
+		Usage:       "JobManager smart-contract address.",
+		Destination: &jobManagerSmartContract,
+		EnvVars:     []string{"JOBMANAGER_SMART_CONTRACT"},
 	},
 	&cli.StringFlag{
 		Name:        "ldap.url",
@@ -98,11 +98,11 @@ var app = &cli.App{
 		if err := conf.Validate(); err != nil {
 			logger.I.Fatal("config validation failed", zap.Error(err))
 		}
-		ethClientWS, err := ethclient.Dial(ethEndpointWS)
+		ethClientWS, err := ethclient.Dial(avaxEndpointWS)
 		if err != nil {
 			logger.I.Fatal("ethClientWS dial failed", zap.Error(err))
 		}
-		msWS, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerSmartContract), ethClientWS)
+		contract, err := jobmanager.NewJobManager(common.HexToAddress(jobManagerSmartContract), ethClientWS)
 		if err != nil {
 			logger.I.Fatal("metaschedulerWS dial failed", zap.Error(err))
 		}
@@ -119,7 +119,7 @@ var app = &cli.App{
 		}
 
 		watcher := watcher.New(
-			msWS,
+			contract,
 			ldap,
 		)
 
