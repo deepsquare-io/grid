@@ -109,6 +109,15 @@ func (d *DataSource) doWithTimeout(ctx context.Context, fn func() error) error {
 	return nil
 }
 
+func (d *DataSource) HealthCheck(ctx context.Context) error {
+	conn, err := d.auth()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	return nil
+}
+
 func (d *DataSource) CreateUser(ctx context.Context, user string) error {
 	if errMsg := validate.LDAPUserIsValid(user); errMsg != "" {
 		return errors.New(errMsg)

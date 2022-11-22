@@ -114,6 +114,9 @@ var app = &cli.App{
 			ldapInsecure,
 			ldapCAFile,
 		)
+		if err := ldap.HealthCheck(ctx); err != nil {
+			return err
+		}
 
 		watcher := watcher.New(
 			msWS,
