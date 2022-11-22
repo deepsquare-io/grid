@@ -42,6 +42,8 @@ func (w *Watcher) Watch(parent context.Context) error {
 	}
 	defer sub.Unsubscribe()
 
+	logger.I.Info("Watching events...")
+
 	for {
 		select {
 		case <-parent.Done():
@@ -51,6 +53,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 			logger.I.Error("watch thrown an error", zap.Error(err))
 			return err
 		case event := <-events:
+			logger.I.Info("Received event", zap.Any("event", event))
 			if err := w.handleEvent(parent, event); err != nil {
 				return err
 			}
@@ -63,10 +66,12 @@ func (w *Watcher) handleEvent(parent context.Context, event *metascheduler.MetaS
 	if err := w.ldap.CreateUser(parent, user); err != nil {
 		return err
 	}
+	logger.I.Info("Created user", zap.String("user", user))
 
 	if err := w.ldap.AddUserToGroup(parent, user); err != nil {
 		return err
 	}
+	logger.I.Info("Added user to group", zap.String("user", user))
 
 	return nil
 }

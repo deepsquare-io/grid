@@ -132,6 +132,7 @@ func (d *DataSource) CreateUser(ctx context.Context, user string) error {
 	}
 
 	if err := d.doWithTimeout(ctx, func() error {
+		logger.I.Debug("ldap add", zap.Any("req", req))
 		return conn.Add(req)
 	}); err != nil {
 		if strings.Contains(err.Error(), "LDAP Result Code 68") {
@@ -161,6 +162,7 @@ func (d *DataSource) AddUserToGroup(ctx context.Context, user string) error {
 	}
 
 	if err := d.doWithTimeout(ctx, func() error {
+		logger.I.Debug("ldap modify", zap.Any("req", req))
 		return conn.Modify(req)
 	}); err != nil {
 		if strings.Contains(err.Error(), "LDAP Result Code 68") {
