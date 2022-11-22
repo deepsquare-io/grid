@@ -175,7 +175,7 @@ func (d *DataSource) AddUserToGroup(ctx context.Context, user string) error {
 		logger.I.Debug("ldap modify", zap.Any("req", req))
 		return conn.Modify(req)
 	}); err != nil {
-		if strings.Contains(err.Error(), "LDAP Result Code 68") {
+		if strings.Contains(err.Error(), "LDAP Result Code 20") {
 			logger.I.Info("user already exists, ignoring", zap.Error(err), zap.Any("req", req))
 			return nil
 		}
