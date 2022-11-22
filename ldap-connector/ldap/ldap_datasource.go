@@ -120,8 +120,7 @@ func (d *DataSource) HealthCheck(ctx context.Context) error {
 
 func (d *DataSource) CreateUser(ctx context.Context, user string) error {
 	if errMsg := validate.LDAPUserIsValid(user); errMsg != "" {
-		logger.I.Error("user is invalid", zap.Error(errors.New(errMsg)))
-		return nil
+		return errors.New(errMsg)
 	}
 
 	conn, err := d.auth()
@@ -158,8 +157,7 @@ func (d *DataSource) CreateUser(ctx context.Context, user string) error {
 
 func (d *DataSource) AddUserToGroup(ctx context.Context, user string) error {
 	if errMsg := validate.LDAPUserIsValid(user); errMsg != "" {
-		logger.I.Error("user is invalid", zap.Error(errors.New(errMsg)))
-		return nil
+		return errors.New(errMsg)
 	}
 
 	conn, err := d.auth()

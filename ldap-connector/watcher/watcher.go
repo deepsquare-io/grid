@@ -2,10 +2,12 @@ package watcher
 
 import (
 	"context"
+	"errors"
 
 	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/jobmanager"
 	"github.com/deepsquare-io/the-grid/ldap-connector/ldap"
 	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
+	"github.com/deepsquare-io/the-grid/ldap-connector/validate"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"go.uber.org/zap"
 )
@@ -63,6 +65,11 @@ func (w *Watcher) Watch(parent context.Context) error {
 
 func (w *Watcher) handleEvent(parent context.Context, event *jobmanager.JobManagerNewJobRequestEvent) error {
 	user := event.CustomerAddr.Hex()
+	if errMsg := validate.LDAPUserIsValid(user); errMsg != "" {
+		logger.I.Error("user is invalid", zap.Error(errors.New(errMsg)))
+		return nil
+	}
+
 	if err := w.ldap.CreateUser(parent, user); err != nil {
 		return err
 	}
