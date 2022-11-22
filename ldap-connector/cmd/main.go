@@ -91,7 +91,7 @@ var app = &cli.App{
 	Flags: flags,
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context
-		conf, err := config.ParseFile(ldapCAFile)
+		conf, err := config.ParseFile(configPath)
 		if err != nil {
 			logger.I.Fatal("config parse failed", zap.Error(err))
 		}
