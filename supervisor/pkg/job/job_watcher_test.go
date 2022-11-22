@@ -126,6 +126,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 			sink <- fixtureEvent
 		}()
 	}).Return(sub, nil)
+	suite.metaQueue.On("GetProviderAddress").Return(fixtureEvent.ProviderAddr)
 	suite.batchFetcher.On(
 		"Fetch",
 		mock.Anything,
@@ -151,11 +152,41 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 	suite.batchFetcher.AssertExpectations(suite.T())
 }
 
+func (suite *WatcherTestSuite) TestWatchClaimNextJobIgnoresEvent() {
+	// Arrange
+	sub := mocks.NewSubscription(suite.T())
+	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
+		go func() {
+			sink <- fixtureEvent
+		}()
+	}).Return(sub, nil)
+	suite.metaQueue.On("GetProviderAddress").Return(common.HexToAddress("123"))
+	sub.On("Err").Return(nil)
+	sub.On("Unsubscribe")
+
+	// Act
+	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)
+	defer cancel()
+	go suite.impl.WatchClaimNextJob(ctx)
+	select {
+	case <-ctx.Done():
+		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
+	}
+
+	// Assert
+	suite.metaQueue.AssertExpectations(suite.T())
+	suite.batchFetcher.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
+	suite.scheduler.AssertNotCalled(suite.T(), "Submit", mock.Anything, mock.Anything)
+}
+
 func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
 	// Arrange
 	badFixtureEvent := *fixtureEvent
 	badFixtureEvent.MaxDurationMinute = 0
 	sub := mocks.NewSubscription(suite.T())
+	suite.metaQueue.On("GetProviderAddress").Return(fixtureEvent.ProviderAddr)
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
 		go func() {
@@ -187,6 +218,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
 func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 	// Arrange
 	sub := mocks.NewSubscription(suite.T())
+	suite.metaQueue.On("GetProviderAddress").Return(fixtureEvent.ProviderAddr)
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
 		go func() {
@@ -223,6 +255,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	// Arrange
 	sub := mocks.NewSubscription(suite.T())
+	suite.metaQueue.On("GetProviderAddress").Return(fixtureEvent.ProviderAddr)
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
 		go func() {

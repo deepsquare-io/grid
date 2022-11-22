@@ -154,6 +154,10 @@ func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
 			logger.I.Error("WatchClaimNextJobEvent thrown an error", zap.Error(err))
 			return err
 		case event := <-events:
+			if event.ProviderAddr.Hex() != w.metaQueue.GetProviderAddress().Hex() {
+				// Ignore event
+				continue
+			}
 			err := w.handleClaimNextJob(parent, event)
 			if err != nil {
 				return err

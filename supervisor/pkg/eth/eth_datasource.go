@@ -56,6 +56,10 @@ func New(
 	}
 }
 
+func (s *DataSource) GetProviderAddress() common.Address {
+	return s.fromAddress
+}
+
 func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 	nonce, err := s.authenticator.PendingNonceAt(ctx, s.fromAddress)
 	if err != nil {

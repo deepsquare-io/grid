@@ -5,6 +5,8 @@ package mocks
 import (
 	context "context"
 
+	common "github.com/ethereum/go-ethereum/common"
+
 	event "github.com/ethereum/go-ethereum/event"
 
 	metascheduler "github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
@@ -26,6 +28,22 @@ func (_m *JobMetaQueue) Claim(ctx context.Context) error {
 		r0 = rf(ctx)
 	} else {
 		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GetProviderAddress provides a mock function with given fields:
+func (_m *JobMetaQueue) GetProviderAddress() common.Address {
+	ret := _m.Called()
+
+	var r0 common.Address
+	if rf, ok := ret.Get(0).(func() common.Address); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.Address)
+		}
 	}
 
 	return r0

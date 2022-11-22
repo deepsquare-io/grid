@@ -5,6 +5,7 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 )
 
@@ -18,6 +19,8 @@ type JobMetaQueue interface {
 		ctx context.Context,
 		sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent,
 	) (event.Subscription, error)
+	// GetProviderAddress fetches the provider public address
+	GetProviderAddress() common.Address
 }
 
 type JobScheduler interface {
