@@ -3,6 +3,7 @@ package submit
 import (
 	"math/big"
 	"os"
+	"strings"
 
 	"github.com/deepsquare-io/the-grid/cli/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/logger"
@@ -10,6 +11,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/pkg/uploader"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tyler-smith/go-bip39"
 	"go.uber.org/zap"
 )
 
@@ -17,6 +19,7 @@ var (
 	ethEndpoint                string
 	ethHexPK                   string
 	metaschedulerSmartContract string
+	name                       string
 
 	jobDefinition   = metascheduler.JobDefinition{}
 	amountLockedStr string
@@ -95,6 +98,12 @@ func init() {
 	if err := Command.MarkFlagRequired("credits"); err != nil {
 		logger.I.Fatal("couldn't mark flag required", zap.Error(err))
 	}
+	flags.StringVar(
+		&name,
+		"name",
+		"",
+		"A job name. If empty, will be generated.",
+	)
 }
 
 // Container stores the instances for dependency injection.
@@ -123,6 +132,20 @@ var Command = &cobra.Command{
 
 		container := Init()
 
+		if name == "" {
+			entropy, err := bip39.NewEntropy(256)
+			if err != nil {
+				return err
+			}
+			mnemonic, err := bip39.NewMnemonic(entropy)
+			if err != nil {
+				return err
+			}
+			words := strings.Split(mnemonic, " ")
+			name = strings.Join(words[:6], "-")
+			logger.I.Sugar().Warnf("no job name were given, the new job name is %s", name)
+		}
+
 		amountLocked, ok := big.NewInt(0).SetString(amountLockedStr, 10)
 		if !ok {
 			logger.I.Fatal("couldn't parse value of credits in base 10")
@@ -148,7 +171,7 @@ var Command = &cobra.Command{
 
 		jobDefinition.BatchLocationHash = urlResult
 
-		tx, err := container.eth.RequestNewJob(c, jobDefinition, amountLocked)
+		tx, err := container.eth.RequestNewJob(c, jobDefinition, amountLocked, name)
 		if err != nil {
 			return err
 		}

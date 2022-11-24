@@ -102,7 +102,12 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 }
 
 // RequestNewJob submits job.
-func (s *DataSource) RequestNewJob(ctx context.Context, jobDefinition metascheduler.JobDefinition, amountLocked *big.Int) (*types.Transaction, error) {
+func (s *DataSource) RequestNewJob(
+	ctx context.Context,
+	jobDefinition metascheduler.JobDefinition,
+	amountLocked *big.Int,
+	name string,
+) (*types.Transaction, error) {
 	if err := s.approve(ctx, amountLocked); err != nil {
 		return nil, err
 	}
@@ -111,7 +116,9 @@ func (s *DataSource) RequestNewJob(ctx context.Context, jobDefinition metaschedu
 	if err != nil {
 		return nil, err
 	}
-	tx, err := s.metascheduler.RequestNewJob(auth, jobDefinition, amountLocked)
+	var nameB [32]byte
+	copy(nameB[:], []byte(name))
+	tx, err := s.metascheduler.RequestNewJob(auth, jobDefinition, amountLocked, nameB)
 	if err != nil {
 		return nil, err
 	}

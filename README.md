@@ -6,12 +6,12 @@ A decentralized network of compute resources.
 
 ```mermaid
 flowchart TD
-  smart-contracts --> cli
-  smart-contracts --> customer-portal
-  smart-contracts --> supervisor
+  cli --> smart-contracts
+  customer-portal --> smart-contracts
   smart-contracts --> ldap-connector
   smart-contracts --> meta-scheduler
   smart-contracts --> oracle-scheduler
+  smart-contracts --> supervisor
   supervisor --> protos/supervisorapis
   protos/supervisorapis --> provider-job-completion-plugin
   protos/supervisorapis --> provider-spank-plugin

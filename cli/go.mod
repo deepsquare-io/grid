@@ -6,6 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
+	github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef
 	go.uber.org/zap v1.23.0
 )
 
