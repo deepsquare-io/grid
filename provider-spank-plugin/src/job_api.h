@@ -7,8 +7,8 @@
 #include "supervisor/v1alpha1/job.grpc.pb.h"
 
 using supervisor::v1alpha1::JobAPI;
-using supervisor::v1alpha1::SendJobStartRequest;
-SendJobStartRequest MakeSendJobStartRequestFromReport(const report_t& report);
+using supervisor::v1alpha1::SetJobStatusRequest;
+SetJobStatusRequest MakeSetJobRunning(const report_t& report);
 
 class JobAPIClient {
  private:
@@ -18,7 +18,7 @@ class JobAPIClient {
   JobAPIClient(std::shared_ptr<grpc::Channel> channel)
       : stub_(JobAPI::NewStub(channel)) {}
 
-  bool SendJobStart(const SendJobStartRequest& req);
+  bool SetJobStatus(const SetJobStatusRequest& req);
 };
 
 #endif  // JOB_API_H

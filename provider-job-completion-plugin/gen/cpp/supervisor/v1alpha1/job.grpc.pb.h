@@ -7,23 +7,23 @@
 #include "supervisor/v1alpha1/job.pb.h"
 
 #include <functional>
-#include <grpcpp/impl/codegen/async_generic_service.h>
-#include <grpcpp/impl/codegen/async_stream.h>
-#include <grpcpp/impl/codegen/async_unary_call.h>
-#include <grpcpp/impl/codegen/client_callback.h>
-#include <grpcpp/impl/codegen/client_context.h>
-#include <grpcpp/impl/codegen/completion_queue.h>
-#include <grpcpp/impl/codegen/message_allocator.h>
-#include <grpcpp/impl/codegen/method_handler.h>
+#include <grpcpp/generic/async_generic_service.h>
+#include <grpcpp/support/async_stream.h>
+#include <grpcpp/support/async_unary_call.h>
+#include <grpcpp/support/client_callback.h>
+#include <grpcpp/client_context.h>
+#include <grpcpp/completion_queue.h>
+#include <grpcpp/support/message_allocator.h>
+#include <grpcpp/support/method_handler.h>
 #include <grpcpp/impl/codegen/proto_utils.h>
-#include <grpcpp/impl/codegen/rpc_method.h>
-#include <grpcpp/impl/codegen/server_callback.h>
+#include <grpcpp/impl/rpc_method.h>
+#include <grpcpp/support/server_callback.h>
 #include <grpcpp/impl/codegen/server_callback_handlers.h>
-#include <grpcpp/impl/codegen/server_context.h>
-#include <grpcpp/impl/codegen/service_type.h>
+#include <grpcpp/server_context.h>
+#include <grpcpp/impl/service_type.h>
 #include <grpcpp/impl/codegen/status.h>
-#include <grpcpp/impl/codegen/stub_options.h>
-#include <grpcpp/impl/codegen/sync_stream.h>
+#include <grpcpp/support/stub_options.h>
+#include <grpcpp/support/sync_stream.h>
 
 namespace supervisor {
 namespace v1alpha1 {
@@ -37,81 +37,41 @@ class JobAPI final {
   class StubInterface {
    public:
     virtual ~StubInterface() {}
-    virtual ::grpc::Status SendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::supervisor::v1alpha1::SendJobStartResponse* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobStartResponse>> AsyncSendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobStartResponse>>(AsyncSendJobStartRaw(context, request, cq));
+    virtual ::grpc::Status SetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::supervisor::v1alpha1::SetJobStatusResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SetJobStatusResponse>> AsyncSetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SetJobStatusResponse>>(AsyncSetJobStatusRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobStartResponse>> PrepareAsyncSendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobStartResponse>>(PrepareAsyncSendJobStartRaw(context, request, cq));
-    }
-    virtual ::grpc::Status SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::supervisor::v1alpha1::SendJobResultResponse* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobResultResponse>> AsyncSendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobResultResponse>>(AsyncSendJobResultRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobResultResponse>> PrepareAsyncSendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobResultResponse>>(PrepareAsyncSendJobResultRaw(context, request, cq));
-    }
-    virtual ::grpc::Status SendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::supervisor::v1alpha1::SendJobFailResponse* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobFailResponse>> AsyncSendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobFailResponse>>(AsyncSendJobFailRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobFailResponse>> PrepareAsyncSendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobFailResponse>>(PrepareAsyncSendJobFailRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SetJobStatusResponse>> PrepareAsyncSetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SetJobStatusResponse>>(PrepareAsyncSetJobStatusRaw(context, request, cq));
     }
     class async_interface {
      public:
       virtual ~async_interface() {}
-      virtual void SendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest* request, ::supervisor::v1alpha1::SendJobStartResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void SendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest* request, ::supervisor::v1alpha1::SendJobStartResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      virtual void SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      virtual void SendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest* request, ::supervisor::v1alpha1::SendJobFailResponse* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void SendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest* request, ::supervisor::v1alpha1::SendJobFailResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      virtual void SetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest* request, ::supervisor::v1alpha1::SetJobStatusResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void SetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest* request, ::supervisor::v1alpha1::SetJobStatusResponse* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
     class async_interface* experimental_async() { return async(); }
    private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobStartResponse>* AsyncSendJobStartRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobStartResponse>* PrepareAsyncSendJobStartRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobResultResponse>* AsyncSendJobResultRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobResultResponse>* PrepareAsyncSendJobResultRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobFailResponse>* AsyncSendJobFailRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SendJobFailResponse>* PrepareAsyncSendJobFailRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SetJobStatusResponse>* AsyncSetJobStatusRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::supervisor::v1alpha1::SetJobStatusResponse>* PrepareAsyncSetJobStatusRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
     Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
-    ::grpc::Status SendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::supervisor::v1alpha1::SendJobStartResponse* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobStartResponse>> AsyncSendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobStartResponse>>(AsyncSendJobStartRaw(context, request, cq));
+    ::grpc::Status SetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::supervisor::v1alpha1::SetJobStatusResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SetJobStatusResponse>> AsyncSetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SetJobStatusResponse>>(AsyncSetJobStatusRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobStartResponse>> PrepareAsyncSendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobStartResponse>>(PrepareAsyncSendJobStartRaw(context, request, cq));
-    }
-    ::grpc::Status SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::supervisor::v1alpha1::SendJobResultResponse* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobResultResponse>> AsyncSendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobResultResponse>>(AsyncSendJobResultRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobResultResponse>> PrepareAsyncSendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobResultResponse>>(PrepareAsyncSendJobResultRaw(context, request, cq));
-    }
-    ::grpc::Status SendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::supervisor::v1alpha1::SendJobFailResponse* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailResponse>> AsyncSendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailResponse>>(AsyncSendJobFailRaw(context, request, cq));
-    }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailResponse>> PrepareAsyncSendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailResponse>>(PrepareAsyncSendJobFailRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SetJobStatusResponse>> PrepareAsyncSetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SetJobStatusResponse>>(PrepareAsyncSetJobStatusRaw(context, request, cq));
     }
     class async final :
       public StubInterface::async_interface {
      public:
-      void SendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest* request, ::supervisor::v1alpha1::SendJobStartResponse* response, std::function<void(::grpc::Status)>) override;
-      void SendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest* request, ::supervisor::v1alpha1::SendJobStartResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
-      void SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response, std::function<void(::grpc::Status)>) override;
-      void SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
-      void SendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest* request, ::supervisor::v1alpha1::SendJobFailResponse* response, std::function<void(::grpc::Status)>) override;
-      void SendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest* request, ::supervisor::v1alpha1::SendJobFailResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
+      void SetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest* request, ::supervisor::v1alpha1::SetJobStatusResponse* response, std::function<void(::grpc::Status)>) override;
+      void SetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest* request, ::supervisor::v1alpha1::SetJobStatusResponse* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -123,15 +83,9 @@ class JobAPI final {
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
     class async async_stub_{this};
-    ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobStartResponse>* AsyncSendJobStartRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobStartResponse>* PrepareAsyncSendJobStartRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobResultResponse>* AsyncSendJobResultRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobResultResponse>* PrepareAsyncSendJobResultRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailResponse>* AsyncSendJobFailRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailResponse>* PrepareAsyncSendJobFailRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) override;
-    const ::grpc::internal::RpcMethod rpcmethod_SendJobStart_;
-    const ::grpc::internal::RpcMethod rpcmethod_SendJobResult_;
-    const ::grpc::internal::RpcMethod rpcmethod_SendJobFail_;
+    ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SetJobStatusResponse>* AsyncSetJobStatusRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SetJobStatusResponse>* PrepareAsyncSetJobStatusRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) override;
+    const ::grpc::internal::RpcMethod rpcmethod_SetJobStatus_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -139,415 +93,147 @@ class JobAPI final {
    public:
     Service();
     virtual ~Service();
-    virtual ::grpc::Status SendJobStart(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SendJobStartRequest* request, ::supervisor::v1alpha1::SendJobStartResponse* response);
-    virtual ::grpc::Status SendJobResult(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response);
-    virtual ::grpc::Status SendJobFail(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SendJobFailRequest* request, ::supervisor::v1alpha1::SendJobFailResponse* response);
+    virtual ::grpc::Status SetJobStatus(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest* request, ::supervisor::v1alpha1::SetJobStatusResponse* response);
   };
   template <class BaseClass>
-  class WithAsyncMethod_SendJobStart : public BaseClass {
+  class WithAsyncMethod_SetJobStatus : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithAsyncMethod_SendJobStart() {
+    WithAsyncMethod_SetJobStatus() {
       ::grpc::Service::MarkMethodAsync(0);
     }
-    ~WithAsyncMethod_SendJobStart() override {
+    ~WithAsyncMethod_SetJobStatus() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SendJobStart(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobStartRequest* /*request*/, ::supervisor::v1alpha1::SendJobStartResponse* /*response*/) override {
+    ::grpc::Status SetJobStatus(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SetJobStatusRequest* /*request*/, ::supervisor::v1alpha1::SetJobStatusResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestSendJobStart(::grpc::ServerContext* context, ::supervisor::v1alpha1::SendJobStartRequest* request, ::grpc::ServerAsyncResponseWriter< ::supervisor::v1alpha1::SendJobStartResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestSetJobStatus(::grpc::ServerContext* context, ::supervisor::v1alpha1::SetJobStatusRequest* request, ::grpc::ServerAsyncResponseWriter< ::supervisor::v1alpha1::SetJobStatusResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
+  typedef WithAsyncMethod_SetJobStatus<Service > AsyncService;
   template <class BaseClass>
-  class WithAsyncMethod_SendJobResult : public BaseClass {
+  class WithCallbackMethod_SetJobStatus : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithAsyncMethod_SendJobResult() {
-      ::grpc::Service::MarkMethodAsync(1);
-    }
-    ~WithAsyncMethod_SendJobResult() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobResult(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobResultRequest* /*request*/, ::supervisor::v1alpha1::SendJobResultResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestSendJobResult(::grpc::ServerContext* context, ::supervisor::v1alpha1::SendJobResultRequest* request, ::grpc::ServerAsyncResponseWriter< ::supervisor::v1alpha1::SendJobResultResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  template <class BaseClass>
-  class WithAsyncMethod_SendJobFail : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithAsyncMethod_SendJobFail() {
-      ::grpc::Service::MarkMethodAsync(2);
-    }
-    ~WithAsyncMethod_SendJobFail() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobFail(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobFailRequest* /*request*/, ::supervisor::v1alpha1::SendJobFailResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestSendJobFail(::grpc::ServerContext* context, ::supervisor::v1alpha1::SendJobFailRequest* request, ::grpc::ServerAsyncResponseWriter< ::supervisor::v1alpha1::SendJobFailResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  typedef WithAsyncMethod_SendJobStart<WithAsyncMethod_SendJobResult<WithAsyncMethod_SendJobFail<Service > > > AsyncService;
-  template <class BaseClass>
-  class WithCallbackMethod_SendJobStart : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithCallbackMethod_SendJobStart() {
+    WithCallbackMethod_SetJobStatus() {
       ::grpc::Service::MarkMethodCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::supervisor::v1alpha1::SendJobStartRequest, ::supervisor::v1alpha1::SendJobStartResponse>(
+          new ::grpc::internal::CallbackUnaryHandler< ::supervisor::v1alpha1::SetJobStatusRequest, ::supervisor::v1alpha1::SetJobStatusResponse>(
             [this](
-                   ::grpc::CallbackServerContext* context, const ::supervisor::v1alpha1::SendJobStartRequest* request, ::supervisor::v1alpha1::SendJobStartResponse* response) { return this->SendJobStart(context, request, response); }));}
-    void SetMessageAllocatorFor_SendJobStart(
-        ::grpc::MessageAllocator< ::supervisor::v1alpha1::SendJobStartRequest, ::supervisor::v1alpha1::SendJobStartResponse>* allocator) {
+                   ::grpc::CallbackServerContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest* request, ::supervisor::v1alpha1::SetJobStatusResponse* response) { return this->SetJobStatus(context, request, response); }));}
+    void SetMessageAllocatorFor_SetJobStatus(
+        ::grpc::MessageAllocator< ::supervisor::v1alpha1::SetJobStatusRequest, ::supervisor::v1alpha1::SetJobStatusResponse>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::supervisor::v1alpha1::SendJobStartRequest, ::supervisor::v1alpha1::SendJobStartResponse>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::supervisor::v1alpha1::SetJobStatusRequest, ::supervisor::v1alpha1::SetJobStatusResponse>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~WithCallbackMethod_SendJobStart() override {
+    ~WithCallbackMethod_SetJobStatus() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SendJobStart(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobStartRequest* /*request*/, ::supervisor::v1alpha1::SendJobStartResponse* /*response*/) override {
+    ::grpc::Status SetJobStatus(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SetJobStatusRequest* /*request*/, ::supervisor::v1alpha1::SetJobStatusResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* SendJobStart(
-      ::grpc::CallbackServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobStartRequest* /*request*/, ::supervisor::v1alpha1::SendJobStartResponse* /*response*/)  { return nullptr; }
+    virtual ::grpc::ServerUnaryReactor* SetJobStatus(
+      ::grpc::CallbackServerContext* /*context*/, const ::supervisor::v1alpha1::SetJobStatusRequest* /*request*/, ::supervisor::v1alpha1::SetJobStatusResponse* /*response*/)  { return nullptr; }
   };
-  template <class BaseClass>
-  class WithCallbackMethod_SendJobResult : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithCallbackMethod_SendJobResult() {
-      ::grpc::Service::MarkMethodCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::supervisor::v1alpha1::SendJobResultRequest, ::supervisor::v1alpha1::SendJobResultResponse>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response) { return this->SendJobResult(context, request, response); }));}
-    void SetMessageAllocatorFor_SendJobResult(
-        ::grpc::MessageAllocator< ::supervisor::v1alpha1::SendJobResultRequest, ::supervisor::v1alpha1::SendJobResultResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(1);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::supervisor::v1alpha1::SendJobResultRequest, ::supervisor::v1alpha1::SendJobResultResponse>*>(handler)
-              ->SetMessageAllocator(allocator);
-    }
-    ~WithCallbackMethod_SendJobResult() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobResult(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobResultRequest* /*request*/, ::supervisor::v1alpha1::SendJobResultResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* SendJobResult(
-      ::grpc::CallbackServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobResultRequest* /*request*/, ::supervisor::v1alpha1::SendJobResultResponse* /*response*/)  { return nullptr; }
-  };
-  template <class BaseClass>
-  class WithCallbackMethod_SendJobFail : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithCallbackMethod_SendJobFail() {
-      ::grpc::Service::MarkMethodCallback(2,
-          new ::grpc::internal::CallbackUnaryHandler< ::supervisor::v1alpha1::SendJobFailRequest, ::supervisor::v1alpha1::SendJobFailResponse>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::supervisor::v1alpha1::SendJobFailRequest* request, ::supervisor::v1alpha1::SendJobFailResponse* response) { return this->SendJobFail(context, request, response); }));}
-    void SetMessageAllocatorFor_SendJobFail(
-        ::grpc::MessageAllocator< ::supervisor::v1alpha1::SendJobFailRequest, ::supervisor::v1alpha1::SendJobFailResponse>* allocator) {
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(2);
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::supervisor::v1alpha1::SendJobFailRequest, ::supervisor::v1alpha1::SendJobFailResponse>*>(handler)
-              ->SetMessageAllocator(allocator);
-    }
-    ~WithCallbackMethod_SendJobFail() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobFail(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobFailRequest* /*request*/, ::supervisor::v1alpha1::SendJobFailResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* SendJobFail(
-      ::grpc::CallbackServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobFailRequest* /*request*/, ::supervisor::v1alpha1::SendJobFailResponse* /*response*/)  { return nullptr; }
-  };
-  typedef WithCallbackMethod_SendJobStart<WithCallbackMethod_SendJobResult<WithCallbackMethod_SendJobFail<Service > > > CallbackService;
+  typedef WithCallbackMethod_SetJobStatus<Service > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
-  class WithGenericMethod_SendJobStart : public BaseClass {
+  class WithGenericMethod_SetJobStatus : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithGenericMethod_SendJobStart() {
+    WithGenericMethod_SetJobStatus() {
       ::grpc::Service::MarkMethodGeneric(0);
     }
-    ~WithGenericMethod_SendJobStart() override {
+    ~WithGenericMethod_SetJobStatus() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SendJobStart(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobStartRequest* /*request*/, ::supervisor::v1alpha1::SendJobStartResponse* /*response*/) override {
+    ::grpc::Status SetJobStatus(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SetJobStatusRequest* /*request*/, ::supervisor::v1alpha1::SetJobStatusResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
   };
   template <class BaseClass>
-  class WithGenericMethod_SendJobResult : public BaseClass {
+  class WithRawMethod_SetJobStatus : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithGenericMethod_SendJobResult() {
-      ::grpc::Service::MarkMethodGeneric(1);
-    }
-    ~WithGenericMethod_SendJobResult() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobResult(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobResultRequest* /*request*/, ::supervisor::v1alpha1::SendJobResultResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-  };
-  template <class BaseClass>
-  class WithGenericMethod_SendJobFail : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithGenericMethod_SendJobFail() {
-      ::grpc::Service::MarkMethodGeneric(2);
-    }
-    ~WithGenericMethod_SendJobFail() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobFail(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobFailRequest* /*request*/, ::supervisor::v1alpha1::SendJobFailResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-  };
-  template <class BaseClass>
-  class WithRawMethod_SendJobStart : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_SendJobStart() {
+    WithRawMethod_SetJobStatus() {
       ::grpc::Service::MarkMethodRaw(0);
     }
-    ~WithRawMethod_SendJobStart() override {
+    ~WithRawMethod_SetJobStatus() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SendJobStart(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobStartRequest* /*request*/, ::supervisor::v1alpha1::SendJobStartResponse* /*response*/) override {
+    ::grpc::Status SetJobStatus(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SetJobStatusRequest* /*request*/, ::supervisor::v1alpha1::SetJobStatusResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestSendJobStart(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestSetJobStatus(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
-  class WithRawMethod_SendJobResult : public BaseClass {
+  class WithRawCallbackMethod_SetJobStatus : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithRawMethod_SendJobResult() {
-      ::grpc::Service::MarkMethodRaw(1);
-    }
-    ~WithRawMethod_SendJobResult() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobResult(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobResultRequest* /*request*/, ::supervisor::v1alpha1::SendJobResultResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestSendJobResult(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  template <class BaseClass>
-  class WithRawMethod_SendJobFail : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawMethod_SendJobFail() {
-      ::grpc::Service::MarkMethodRaw(2);
-    }
-    ~WithRawMethod_SendJobFail() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobFail(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobFailRequest* /*request*/, ::supervisor::v1alpha1::SendJobFailResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    void RequestSendJobFail(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
-    }
-  };
-  template <class BaseClass>
-  class WithRawCallbackMethod_SendJobStart : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawCallbackMethod_SendJobStart() {
+    WithRawCallbackMethod_SetJobStatus() {
       ::grpc::Service::MarkMethodRawCallback(0,
           new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SendJobStart(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SetJobStatus(context, request, response); }));
     }
-    ~WithRawCallbackMethod_SendJobStart() override {
+    ~WithRawCallbackMethod_SetJobStatus() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SendJobStart(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobStartRequest* /*request*/, ::supervisor::v1alpha1::SendJobStartResponse* /*response*/) override {
+    ::grpc::Status SetJobStatus(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SetJobStatusRequest* /*request*/, ::supervisor::v1alpha1::SetJobStatusResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual ::grpc::ServerUnaryReactor* SendJobStart(
+    virtual ::grpc::ServerUnaryReactor* SetJobStatus(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class WithRawCallbackMethod_SendJobResult : public BaseClass {
+  class WithStreamedUnaryMethod_SetJobStatus : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithRawCallbackMethod_SendJobResult() {
-      ::grpc::Service::MarkMethodRawCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SendJobResult(context, request, response); }));
-    }
-    ~WithRawCallbackMethod_SendJobResult() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobResult(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobResultRequest* /*request*/, ::supervisor::v1alpha1::SendJobResultResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* SendJobResult(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
-  };
-  template <class BaseClass>
-  class WithRawCallbackMethod_SendJobFail : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithRawCallbackMethod_SendJobFail() {
-      ::grpc::Service::MarkMethodRawCallback(2,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
-            [this](
-                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SendJobFail(context, request, response); }));
-    }
-    ~WithRawCallbackMethod_SendJobFail() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable synchronous version of this method
-    ::grpc::Status SendJobFail(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobFailRequest* /*request*/, ::supervisor::v1alpha1::SendJobFailResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    virtual ::grpc::ServerUnaryReactor* SendJobFail(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
-  };
-  template <class BaseClass>
-  class WithStreamedUnaryMethod_SendJobStart : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithStreamedUnaryMethod_SendJobStart() {
+    WithStreamedUnaryMethod_SetJobStatus() {
       ::grpc::Service::MarkMethodStreamed(0,
         new ::grpc::internal::StreamedUnaryHandler<
-          ::supervisor::v1alpha1::SendJobStartRequest, ::supervisor::v1alpha1::SendJobStartResponse>(
+          ::supervisor::v1alpha1::SetJobStatusRequest, ::supervisor::v1alpha1::SetJobStatusResponse>(
             [this](::grpc::ServerContext* context,
                    ::grpc::ServerUnaryStreamer<
-                     ::supervisor::v1alpha1::SendJobStartRequest, ::supervisor::v1alpha1::SendJobStartResponse>* streamer) {
-                       return this->StreamedSendJobStart(context,
+                     ::supervisor::v1alpha1::SetJobStatusRequest, ::supervisor::v1alpha1::SetJobStatusResponse>* streamer) {
+                       return this->StreamedSetJobStatus(context,
                          streamer);
                   }));
     }
-    ~WithStreamedUnaryMethod_SendJobStart() override {
+    ~WithStreamedUnaryMethod_SetJobStatus() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status SendJobStart(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobStartRequest* /*request*/, ::supervisor::v1alpha1::SendJobStartResponse* /*response*/) override {
+    ::grpc::Status SetJobStatus(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SetJobStatusRequest* /*request*/, ::supervisor::v1alpha1::SetJobStatusResponse* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedSendJobStart(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::supervisor::v1alpha1::SendJobStartRequest,::supervisor::v1alpha1::SendJobStartResponse>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedSetJobStatus(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::supervisor::v1alpha1::SetJobStatusRequest,::supervisor::v1alpha1::SetJobStatusResponse>* server_unary_streamer) = 0;
   };
-  template <class BaseClass>
-  class WithStreamedUnaryMethod_SendJobResult : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithStreamedUnaryMethod_SendJobResult() {
-      ::grpc::Service::MarkMethodStreamed(1,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::supervisor::v1alpha1::SendJobResultRequest, ::supervisor::v1alpha1::SendJobResultResponse>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::supervisor::v1alpha1::SendJobResultRequest, ::supervisor::v1alpha1::SendJobResultResponse>* streamer) {
-                       return this->StreamedSendJobResult(context,
-                         streamer);
-                  }));
-    }
-    ~WithStreamedUnaryMethod_SendJobResult() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable regular version of this method
-    ::grpc::Status SendJobResult(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobResultRequest* /*request*/, ::supervisor::v1alpha1::SendJobResultResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedSendJobResult(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::supervisor::v1alpha1::SendJobResultRequest,::supervisor::v1alpha1::SendJobResultResponse>* server_unary_streamer) = 0;
-  };
-  template <class BaseClass>
-  class WithStreamedUnaryMethod_SendJobFail : public BaseClass {
-   private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
-   public:
-    WithStreamedUnaryMethod_SendJobFail() {
-      ::grpc::Service::MarkMethodStreamed(2,
-        new ::grpc::internal::StreamedUnaryHandler<
-          ::supervisor::v1alpha1::SendJobFailRequest, ::supervisor::v1alpha1::SendJobFailResponse>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
-                     ::supervisor::v1alpha1::SendJobFailRequest, ::supervisor::v1alpha1::SendJobFailResponse>* streamer) {
-                       return this->StreamedSendJobFail(context,
-                         streamer);
-                  }));
-    }
-    ~WithStreamedUnaryMethod_SendJobFail() override {
-      BaseClassMustBeDerivedFromService(this);
-    }
-    // disable regular version of this method
-    ::grpc::Status SendJobFail(::grpc::ServerContext* /*context*/, const ::supervisor::v1alpha1::SendJobFailRequest* /*request*/, ::supervisor::v1alpha1::SendJobFailResponse* /*response*/) override {
-      abort();
-      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-    }
-    // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedSendJobFail(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::supervisor::v1alpha1::SendJobFailRequest,::supervisor::v1alpha1::SendJobFailResponse>* server_unary_streamer) = 0;
-  };
-  typedef WithStreamedUnaryMethod_SendJobStart<WithStreamedUnaryMethod_SendJobResult<WithStreamedUnaryMethod_SendJobFail<Service > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_SetJobStatus<Service > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_SendJobStart<WithStreamedUnaryMethod_SendJobResult<WithStreamedUnaryMethod_SendJobFail<Service > > > StreamedService;
+  typedef WithStreamedUnaryMethod_SetJobStatus<Service > StreamedService;
 };
 
 }  // namespace v1alpha1

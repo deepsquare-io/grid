@@ -140,74 +140,32 @@ func (s *DataSource) Register(
 	return nil
 }
 
-// StartJob reports the RUNNING state to the metascheduler.
-func (s *DataSource) StartJob(
+// SetJobStatus reports the [State] state to the metascheduler.
+func (s *DataSource) SetJobStatus(
 	ctx context.Context,
 	jobID [32]byte,
+	status JobStatus,
+	jobDurationMinute uint64,
 ) error {
 	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
 	auth, err := s.auth(ctx)
 	if err != nil {
 		return err
 	}
-	tx, err := s.metaschedulerRPC.StartJob(
+	tx, err := s.metaschedulerRPC.ProviderSetJobStatus(
 		auth,
 		jobID,
+		uint8(status),
+		jobDurationMinute,
 	)
 	if err != nil {
 		return err
 	}
 	logger.Debug(
-		"called start job",
+		"called set job status",
 		zap.String("tx", tx.Hash().String()),
+		zap.Uint8("status", uint8(status)),
 	)
-	return err
-}
-
-// FinishJob sends the invoice to the metascheduler
-func (s *DataSource) FinishJob(
-	ctx context.Context,
-	jobID [32]byte,
-	jobDuration uint64,
-) error {
-	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
-	auth, err := s.auth(ctx)
-	if err != nil {
-		return err
-	}
-	tx, err := s.metaschedulerRPC.FinishJob(
-		auth,
-		jobID,
-		jobDuration,
-	)
-	if err != nil {
-		return err
-	}
-	logger.Debug(
-		"called finish job",
-		zap.String("tx", tx.Hash().String()),
-	)
-	return err
-}
-
-// FailJob reports the FAILED state to the metascheduler.
-func (s *DataSource) FailJob(
-	ctx context.Context,
-	jobID [32]byte,
-) error {
-	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
-	auth, err := s.auth(ctx)
-	if err != nil {
-		return err
-	}
-	tx, err := s.metaschedulerRPC.TriggerFailedJob(
-		auth,
-		jobID,
-	)
-	if err != nil {
-		return err
-	}
-	logger.Debug("called failed job", zap.String("tx", tx.Hash().String()))
 	return err
 }
 
@@ -241,4 +199,25 @@ func (s *DataSource) WatchClaimNextJobEvent(
 	return s.metaschedulerWS.WatchClaimNextJobEvent(&bind.WatchOpts{
 		Context: ctx,
 	}, sink)
+}
+
+// WatchJobCanceledEvent observes the incoming JobCanceledEvents.
+func (s *DataSource) WatchJobCanceledEvent(
+	ctx context.Context,
+	sink chan<- *metascheduler.MetaSchedulerJobCanceledEvent,
+) (event.Subscription, error) {
+	return s.metaschedulerWS.WatchJobCanceledEvent(&bind.WatchOpts{
+		Context: ctx,
+	}, sink)
+}
+
+// GetJobStatus fetches the job status.
+func (s *DataSource) GetJobStatus(ctx context.Context, jobID [32]byte) (JobStatus, error) {
+	status, err := s.metaschedulerRPC.GetJobStatus(&bind.CallOpts{
+		Context: ctx,
+	}, jobID)
+	if err != nil {
+		return 0, err
+	}
+	return JobStatus(status), nil
 }

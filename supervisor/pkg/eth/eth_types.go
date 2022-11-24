@@ -24,13 +24,13 @@ type EthereumAuthenticator interface {
 
 type MetaSchedulerRPC interface {
 	ClaimNextJob(opts *bind.TransactOpts) (*types.Transaction, error)
-	FinishJob(opts *bind.TransactOpts, _jobID [32]byte, actualJobDurationMinute uint64) (*types.Transaction, error)
-	StartJob(opts *bind.TransactOpts, _jobID [32]byte) (*types.Transaction, error)
 	RefuseJob(opts *bind.TransactOpts, _jobID [32]byte) (*types.Transaction, error)
-	TriggerFailedJob(opts *bind.TransactOpts, _jobID [32]byte) (*types.Transaction, error)
 	ParseClaimNextJobEvent(log types.Log) (*metascheduler.MetaSchedulerClaimNextJobEvent, error)
+	ProviderSetJobStatus(opts *bind.TransactOpts, _jobID [32]byte, _jobStatus uint8, jobDurationMinute uint64) (*types.Transaction, error)
+	GetJobStatus(opts *bind.CallOpts, _jobID [32]byte) (uint8, error)
 }
 
 type MetaSchedulerWS interface {
 	WatchClaimNextJobEvent(opts *bind.WatchOpts, sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent) (event.Subscription, error)
+	WatchJobCanceledEvent(opts *bind.WatchOpts, sink chan<- *metascheduler.MetaSchedulerJobCanceledEvent) (event.Subscription, error)
 }

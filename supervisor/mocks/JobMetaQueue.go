@@ -7,6 +7,8 @@ import (
 
 	common "github.com/ethereum/go-ethereum/common"
 
+	eth "github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
+
 	event "github.com/ethereum/go-ethereum/event"
 
 	metascheduler "github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
@@ -31,6 +33,27 @@ func (_m *JobMetaQueue) Claim(ctx context.Context) error {
 	}
 
 	return r0
+}
+
+// GetJobStatus provides a mock function with given fields: ctx, jobID
+func (_m *JobMetaQueue) GetJobStatus(ctx context.Context, jobID [32]byte) (eth.JobStatus, error) {
+	ret := _m.Called(ctx, jobID)
+
+	var r0 eth.JobStatus
+	if rf, ok := ret.Get(0).(func(context.Context, [32]byte) eth.JobStatus); ok {
+		r0 = rf(ctx, jobID)
+	} else {
+		r0 = ret.Get(0).(eth.JobStatus)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, [32]byte) error); ok {
+		r1 = rf(ctx, jobID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetProviderAddress provides a mock function with given fields:
@@ -78,6 +101,29 @@ func (_m *JobMetaQueue) WatchClaimNextJobEvent(ctx context.Context, sink chan<- 
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextJobEvent) error); ok {
+		r1 = rf(ctx, sink)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// WatchJobCanceledEvent provides a mock function with given fields: ctx, sink
+func (_m *JobMetaQueue) WatchJobCanceledEvent(ctx context.Context, sink chan<- *metascheduler.MetaSchedulerJobCanceledEvent) (event.Subscription, error) {
+	ret := _m.Called(ctx, sink)
+
+	var r0 event.Subscription
+	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerJobCanceledEvent) event.Subscription); ok {
+		r0 = rf(ctx, sink)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(event.Subscription)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, chan<- *metascheduler.MetaSchedulerJobCanceledEvent) error); ok {
 		r1 = rf(ctx, sink)
 	} else {
 		r1 = ret.Error(1)

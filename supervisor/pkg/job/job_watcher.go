@@ -11,6 +11,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
 	"go.uber.org/zap"
 )
 
@@ -63,6 +64,16 @@ func (w *Watcher) Watch(parent context.Context) error {
 
 	wg.Add(1)
 	go func(ctx context.Context, wg *sync.WaitGroup) {
+		err := w.WatchJobCanceledEvent(ctx)
+		if err != nil {
+			logger.I.Error("WatchJobCanceledEvent failed", zap.Error(err))
+			errChan <- err
+		}
+		wg.Done()
+	}(parent, &wg)
+
+	wg.Add(1)
+	go func(ctx context.Context, wg *sync.WaitGroup) {
 		err := w.ClaimNextJobIndefinitely(ctx)
 		if err != nil {
 			logger.I.Error("WatchClaimNextJob failed", zap.Error(err))
@@ -76,6 +87,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 		close(errChan)
 	}()
 
+	// Return error on the first error
 	for e := range errChan {
 		if e != nil {
 			return e
@@ -154,8 +166,9 @@ func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
 			logger.I.Error("WatchClaimNextJobEvent thrown an error", zap.Error(err))
 			return err
 		case event := <-events:
-			if event.ProviderAddr.Hex() != w.metaQueue.GetProviderAddress().Hex() {
+			if !strings.EqualFold(event.ProviderAddr.Hex(), w.metaQueue.GetProviderAddress().Hex()) {
 				// Ignore event
+				logger.I.Debug("ignore event", zap.Any("event", event))
 				continue
 			}
 			err := w.handleClaimNextJob(parent, event)
@@ -217,4 +230,61 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 		zap.Any("Req", req),
 	)
 	return nil
+}
+
+func (w *Watcher) WatchJobCanceledEvent(parent context.Context) error {
+	events := make(chan *metascheduler.MetaSchedulerJobCanceledEvent)
+	sub, err := w.metaQueue.WatchJobCanceledEvent(parent, events)
+	if err != nil {
+		return err
+	}
+	defer sub.Unsubscribe()
+	logger.I.Debug("Watching WatchJobCanceled events...")
+
+	for {
+		select {
+		case <-parent.Done():
+			logger.I.Warn("WatchJobCanceledEvent context is done")
+			return nil
+		case err := <-sub.Err():
+			logger.I.Error("WatchJobCanceledEvent thrown an error", zap.Error(err))
+			return err
+		case event := <-events:
+			if !strings.EqualFold(event.ProviderAddr.Hex(), w.metaQueue.GetProviderAddress().Hex()) {
+				// Ignore event
+				logger.I.Debug("ignore event", zap.Any("event", event))
+				continue
+			}
+			// Fire and forget
+			go w.handleJobCanceledEvent(parent, event)
+		}
+	}
+}
+
+func (w *Watcher) handleJobCanceledEvent(ctx context.Context, event *metascheduler.MetaSchedulerJobCanceledEvent) {
+	status, err := w.metaQueue.GetJobStatus(ctx, event.JobId)
+	if err != nil {
+		logger.I.Error("GetJobStatus failed, abort handleJobCanceledEvent", zap.Error(err))
+		return
+	}
+	for status == eth.JobStatusCancelling {
+
+		if err := try.Do(func() error {
+			return w.scheduler.CancelJob(ctx, &slurm.CancelJobRequest{
+				Name: hex.EncodeToString(event.JobId[:]),
+				User: strings.ToLower(event.CustomerAddr.Hex()),
+			})
+		}, 5, 5*time.Second); err != nil {
+			logger.I.Error("CancelJob failed, abort handleJobCanceledEvent", zap.Error(err))
+			return
+		}
+
+		time.Sleep(5 * time.Second)
+
+		status, err = w.metaQueue.GetJobStatus(ctx, event.JobId)
+		if err != nil {
+			logger.I.Error("GetJobStatus failed, considering as Cancelling", zap.Error(err))
+			status = eth.JobStatusCancelling
+		}
+	}
 }

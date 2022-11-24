@@ -40,22 +40,20 @@ func (_m *MetaSchedulerRPC) ClaimNextJob(opts *bind.TransactOpts) (*types.Transa
 	return r0, r1
 }
 
-// FinishJob provides a mock function with given fields: opts, _jobID, actualJobDurationMinute
-func (_m *MetaSchedulerRPC) FinishJob(opts *bind.TransactOpts, _jobID [32]byte, actualJobDurationMinute uint64) (*types.Transaction, error) {
-	ret := _m.Called(opts, _jobID, actualJobDurationMinute)
+// GetJobStatus provides a mock function with given fields: opts, _jobID
+func (_m *MetaSchedulerRPC) GetJobStatus(opts *bind.CallOpts, _jobID [32]byte) (uint8, error) {
+	ret := _m.Called(opts, _jobID)
 
-	var r0 *types.Transaction
-	if rf, ok := ret.Get(0).(func(*bind.TransactOpts, [32]byte, uint64) *types.Transaction); ok {
-		r0 = rf(opts, _jobID, actualJobDurationMinute)
+	var r0 uint8
+	if rf, ok := ret.Get(0).(func(*bind.CallOpts, [32]byte) uint8); ok {
+		r0 = rf(opts, _jobID)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.Transaction)
-		}
+		r0 = ret.Get(0).(uint8)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*bind.TransactOpts, [32]byte, uint64) error); ok {
-		r1 = rf(opts, _jobID, actualJobDurationMinute)
+	if rf, ok := ret.Get(1).(func(*bind.CallOpts, [32]byte) error); ok {
+		r1 = rf(opts, _jobID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -86,54 +84,31 @@ func (_m *MetaSchedulerRPC) ParseClaimNextJobEvent(log types.Log) (*metaschedule
 	return r0, r1
 }
 
+// ProviderSetJobStatus provides a mock function with given fields: opts, _jobID, _jobStatus, jobDurationMinute
+func (_m *MetaSchedulerRPC) ProviderSetJobStatus(opts *bind.TransactOpts, _jobID [32]byte, _jobStatus uint8, jobDurationMinute uint64) (*types.Transaction, error) {
+	ret := _m.Called(opts, _jobID, _jobStatus, jobDurationMinute)
+
+	var r0 *types.Transaction
+	if rf, ok := ret.Get(0).(func(*bind.TransactOpts, [32]byte, uint8, uint64) *types.Transaction); ok {
+		r0 = rf(opts, _jobID, _jobStatus, jobDurationMinute)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.Transaction)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*bind.TransactOpts, [32]byte, uint8, uint64) error); ok {
+		r1 = rf(opts, _jobID, _jobStatus, jobDurationMinute)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RefuseJob provides a mock function with given fields: opts, _jobID
 func (_m *MetaSchedulerRPC) RefuseJob(opts *bind.TransactOpts, _jobID [32]byte) (*types.Transaction, error) {
-	ret := _m.Called(opts, _jobID)
-
-	var r0 *types.Transaction
-	if rf, ok := ret.Get(0).(func(*bind.TransactOpts, [32]byte) *types.Transaction); ok {
-		r0 = rf(opts, _jobID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.Transaction)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(*bind.TransactOpts, [32]byte) error); ok {
-		r1 = rf(opts, _jobID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// StartJob provides a mock function with given fields: opts, _jobID
-func (_m *MetaSchedulerRPC) StartJob(opts *bind.TransactOpts, _jobID [32]byte) (*types.Transaction, error) {
-	ret := _m.Called(opts, _jobID)
-
-	var r0 *types.Transaction
-	if rf, ok := ret.Get(0).(func(*bind.TransactOpts, [32]byte) *types.Transaction); ok {
-		r0 = rf(opts, _jobID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.Transaction)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(*bind.TransactOpts, [32]byte) error); ok {
-		r1 = rf(opts, _jobID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// TriggerFailedJob provides a mock function with given fields: opts, _jobID
-func (_m *MetaSchedulerRPC) TriggerFailedJob(opts *bind.TransactOpts, _jobID [32]byte) (*types.Transaction, error) {
 	ret := _m.Called(opts, _jobID)
 
 	var r0 *types.Transaction

@@ -12,7 +12,7 @@ extern "C" {
 #include "slurm_utils.h"
 #include "supervisor/v1alpha1/job.grpc.pb.h"
 
-using supervisor::v1alpha1::SendJobResultRequest;
+using supervisor::v1alpha1::SetJobStatusRequest;
 
 extern "C" {
 
@@ -46,9 +46,9 @@ extern const char plugin_type[] = "jobcomp/provider";
 extern const uint32_t plugin_version = SLURM_VERSION_NUMBER;
 
 /**
- * @brief Called in local (srun) context only after all options have been
- * processed. This is called after the job ID and step IDs are available. This
- * happens in srun after the allocation is made, but before tasks are launched.
+ * @brief Called at the same time as the job prolog. If this function returns
+ * a non-zero value and the SPANK plugin that contains it is required in the
+ * plugstack.conf, the node that this is run on will be drained.
  *
  * @param spank (input) SPANK handle which must be passed back to Slurm when the
  * plugin calls functions like spank_get_item and spank_getenv.
@@ -56,7 +56,7 @@ extern const uint32_t plugin_version = SLURM_VERSION_NUMBER;
  * @param argv Argument vector
  * @return int Error code
  */
-extern int slurm_spank_local_user_init(spank_t spank, int ac, char *argv[]) {
+extern int slurm_spank_job_prolog(spank_t spank, int ac, char *argv[]) {
   // Parse argv
   config_t config = {
       .endpoint = {0},
@@ -95,9 +95,9 @@ extern int slurm_spank_local_user_init(spank_t spank, int ac, char *argv[]) {
   JobAPIClient job_api(grpc::CreateChannel(
       config.endpoint, grpc::experimental::TlsCredentials(options)));
 
-  auto req = MakeSendJobStartRequestFromReport(report);
-  if (!job_api.SendJobStart(req)) {
-    slurm_error("%s: SendJobStart failed", plugin_type);
+  auto req = MakeSetJobRunning(report);
+  if (!job_api.SetJobStatus(req)) {
+    slurm_error("%s: SetJobStatus failed", plugin_type);
   }
 
   return SLURM_SUCCESS;

@@ -8,8 +8,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update \
   && apt install -y \
-  ninja-build \
-  build-essential \
+  clang \
+  make \
   curl \
   git \
   && rm -rf /var/lib/apt/lists/*
@@ -26,14 +26,14 @@ COPY ./gen ./gen
 RUN ls -la \
   && mkdir build \
   && cd build \
-  && cmake -G "Ninja" .. \
-  && ninja -j$(nproc) grpc++
+  && CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake .. \
+  && make -j$(nproc) grpc++
 
 COPY . ./
 
 RUN cd build \
   && mkdir -p /artifacts \
-  && cmake .. -G "Ninja" -DCMAKE_INSTALL_PREFIX=/usr/lib/slurm \
-  && ninja -j$(nproc) \
-  && ninja package \
+  && CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake .. -DCMAKE_INSTALL_PREFIX=/usr/lib/slurm \
+  && make -j$(nproc) \
+  && make package \
   && mv ./*.deb /artifacts

@@ -3,25 +3,20 @@ package jobapi
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"go.uber.org/zap"
 )
 
 type JobHandler interface {
-	FinishJob(
+	SetJobStatus(
 		ctx context.Context,
 		jobID [32]byte,
+		jobStatus eth.JobStatus,
 		jobDuration uint64,
-	) error
-	FailJob(
-		ctx context.Context,
-		jobID [32]byte,
-	) error
-	StartJob(
-		ctx context.Context,
-		jobID [32]byte,
 	) error
 }
 
@@ -41,50 +36,41 @@ func New(
 	}
 }
 
-// SendJobResult to the ethereum network
-func (s *jobAPIServer) SendJobResult(ctx context.Context, req *supervisorv1alpha1.SendJobResultRequest) (*supervisorv1alpha1.SendJobResultResponse, error) {
+var gRPCToEthJobStatus = map[supervisorv1alpha1.JobStatus]eth.JobStatus{
+	supervisorv1alpha1.JobStatus_JOB_STATUS_PENDING:        eth.JobStatusPending,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_META_SCHEDULED: eth.JobStatusMetaScheduled,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_SCHEDULED:      eth.JobStatusScheduled,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING:        eth.JobStatusRunning,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLING:     eth.JobStatusCancelling,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLED:      eth.JobStatusCancelled,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_FINISHED:       eth.JobStatusFinished,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_FAILED:         eth.JobStatusFailed,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_OUT_OF_CREDITS: eth.JobStatusOutOfCredits,
+}
+
+// SetJobStatus to the ethereum network
+func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1.SetJobStatusRequest) (*supervisorv1alpha1.SetJobStatusResponse, error) {
 	logger.I.Info("grpc received job result", zap.Any("job_result", req))
-	jobName, err := hex.DecodeString(req.JobName)
+	jobName, err := hex.DecodeString(req.Name)
 	if err != nil {
 		return nil, err
 	}
 	var jobNameFixedLength [32]byte
 	copy(jobNameFixedLength[:], jobName)
-	err = s.jobHandler.FinishJob(ctx, jobNameFixedLength, req.JobDuration)
-	if err != nil {
-		return nil, err
-	}
-	return &supervisorv1alpha1.SendJobResultResponse{}, nil
-}
 
-// SendJobFail to the ethereum network
-func (s *jobAPIServer) SendJobFail(ctx context.Context, req *supervisorv1alpha1.SendJobFailRequest) (*supervisorv1alpha1.SendJobFailResponse, error) {
-	logger.I.Info("grpc received job fail", zap.Any("job_fail", req))
-	jobName, err := hex.DecodeString(req.JobName)
-	if err != nil {
-		return nil, err
+	if status, ok := gRPCToEthJobStatus[req.Status]; ok {
+		err = s.jobHandler.SetJobStatus(
+			ctx,
+			jobNameFixedLength,
+			status,
+			req.Duration,
+		)
+		if err != nil {
+			return nil, err
+		}
+		return &supervisorv1alpha1.SetJobStatusResponse{}, nil
+	} else {
+		return nil, fmt.Errorf("unknown job status %s", req.Status.String())
 	}
-	var jobNameFixedLength [32]byte
-	copy(jobNameFixedLength[:], jobName)
-	err = s.jobHandler.FailJob(ctx, jobNameFixedLength)
-	if err != nil {
-		return nil, err
-	}
-	return &supervisorv1alpha1.SendJobFailResponse{}, nil
-}
 
-// SendJobStart to the ethereum network
-func (s *jobAPIServer) SendJobStart(ctx context.Context, req *supervisorv1alpha1.SendJobStartRequest) (*supervisorv1alpha1.SendJobStartResponse, error) {
-	logger.I.Info("grpc received job start", zap.Any("job_start", req))
-	jobName, err := hex.DecodeString(req.JobName)
-	if err != nil {
-		return nil, err
-	}
-	var jobNameFixedLength [32]byte
-	copy(jobNameFixedLength[:], jobName)
-	err = s.jobHandler.StartJob(ctx, jobNameFixedLength)
-	if err != nil {
-		return nil, err
-	}
-	return &supervisorv1alpha1.SendJobStartResponse{}, nil
 }

@@ -17,8 +17,8 @@ type JobAPIClient struct {
 	mock.Mock
 }
 
-// SendJobFail provides a mock function with given fields: ctx, in, opts
-func (_m *JobAPIClient) SendJobFail(ctx context.Context, in *supervisorv1alpha1.SendJobFailRequest, opts ...grpc.CallOption) (*supervisorv1alpha1.SendJobFailResponse, error) {
+// SetJobStatus provides a mock function with given fields: ctx, in, opts
+func (_m *JobAPIClient) SetJobStatus(ctx context.Context, in *supervisorv1alpha1.SetJobStatusRequest, opts ...grpc.CallOption) (*supervisorv1alpha1.SetJobStatusResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -28,77 +28,17 @@ func (_m *JobAPIClient) SendJobFail(ctx context.Context, in *supervisorv1alpha1.
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 *supervisorv1alpha1.SendJobFailResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SendJobFailRequest, ...grpc.CallOption) *supervisorv1alpha1.SendJobFailResponse); ok {
+	var r0 *supervisorv1alpha1.SetJobStatusResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SetJobStatusRequest, ...grpc.CallOption) *supervisorv1alpha1.SetJobStatusResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*supervisorv1alpha1.SendJobFailResponse)
+			r0 = ret.Get(0).(*supervisorv1alpha1.SetJobStatusResponse)
 		}
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobFailRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// SendJobResult provides a mock function with given fields: ctx, in, opts
-func (_m *JobAPIClient) SendJobResult(ctx context.Context, in *supervisorv1alpha1.SendJobResultRequest, opts ...grpc.CallOption) (*supervisorv1alpha1.SendJobResultResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 *supervisorv1alpha1.SendJobResultResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SendJobResultRequest, ...grpc.CallOption) *supervisorv1alpha1.SendJobResultResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*supervisorv1alpha1.SendJobResultResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobResultRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// SendJobStart provides a mock function with given fields: ctx, in, opts
-func (_m *JobAPIClient) SendJobStart(ctx context.Context, in *supervisorv1alpha1.SendJobStartRequest, opts ...grpc.CallOption) (*supervisorv1alpha1.SendJobStartResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 *supervisorv1alpha1.SendJobStartResponse
-	if rf, ok := ret.Get(0).(func(context.Context, *supervisorv1alpha1.SendJobStartRequest, ...grpc.CallOption) *supervisorv1alpha1.SendJobStartResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*supervisorv1alpha1.SendJobStartResponse)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SendJobStartRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *supervisorv1alpha1.SetJobStatusRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

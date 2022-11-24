@@ -6,7 +6,7 @@
 #include "slurm_utils.h"
 #include "supervisor/v1alpha1/job.grpc.pb.h"
 
-using supervisor::v1alpha1::SendJobResultRequest;
+using supervisor::v1alpha1::SetJobStatusRequest;
 
 extern "C" {
 
@@ -107,8 +107,9 @@ extern int jobcomp_p_log_record(job_record_t *job_ptr) {
   if (job_ptr == NULL) return error("%s: job_ptr is NULL", plugin_type);
 
   // Assert the job state
-  if (!IS_JOB_COMPLETE(job_ptr) && !IS_JOB_TIMEOUT(job_ptr) &&
-      !IS_JOB_FAILED(job_ptr) && !IS_JOB_COMPLETING(job_ptr)) {
+  if (!IS_JOB_COMPLETE(job_ptr) && !IS_JOB_CANCELLED(job_ptr) &&
+      !IS_JOB_TIMEOUT(job_ptr) && !IS_JOB_FAILED(job_ptr) &&
+      !IS_JOB_COMPLETING(job_ptr)) {
     debug(
         "%s: job %u is not COMPLETED but was %s, "
         "ignoring...",
@@ -134,16 +135,9 @@ extern int jobcomp_p_log_record(job_record_t *job_ptr) {
   JobAPIClient job_api(grpc::CreateChannel(
       report_url, grpc::experimental::TlsCredentials(options)));
 
-  if (IS_JOB_FAILED(job_ptr) || IS_JOB_TIMEOUT(job_ptr)) {
-    auto req = MakeSendJobFailRequestFromReport(report);
-    if (!job_api.SendJobFail(req)) {
-      error("%s: SendJobFailed failed", plugin_type);
-    }
-  } else {
-    auto req = MakeSendJobResultRequestFromReport(report);
-    if (!job_api.SendJobResult(req)) {
-      error("%s: SendJobResult failed", plugin_type);
-    }
+  auto req = MakeSetJobStatusRequest(report);
+  if (!job_api.SetJobStatus(req)) {
+    error("%s: SetJobStatus failed", plugin_type);
   }
 
   debug("%s: end %s %u", plugin_type, __func__, job_ptr->job_id);

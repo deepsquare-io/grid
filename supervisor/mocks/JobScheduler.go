@@ -15,6 +15,20 @@ type JobScheduler struct {
 	mock.Mock
 }
 
+// CancelJob provides a mock function with given fields: ctx, req
+func (_m *JobScheduler) CancelJob(ctx context.Context, req *slurm.CancelJobRequest) error {
+	ret := _m.Called(ctx, req)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *slurm.CancelJobRequest) error); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // HealthCheck provides a mock function with given fields: ctx
 func (_m *JobScheduler) HealthCheck(ctx context.Context) error {
 	ret := _m.Called(ctx)

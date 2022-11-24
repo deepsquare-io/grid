@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.twig": "twig",
+    "*.eb": "python",
+    "*.inc": "cpp"
+  }
+}

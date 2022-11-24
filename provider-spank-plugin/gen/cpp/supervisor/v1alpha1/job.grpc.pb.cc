@@ -6,26 +6,24 @@
 #include "supervisor/v1alpha1/job.grpc.pb.h"
 
 #include <functional>
-#include <grpcpp/impl/codegen/async_stream.h>
-#include <grpcpp/impl/codegen/async_unary_call.h>
-#include <grpcpp/impl/codegen/channel_interface.h>
-#include <grpcpp/impl/codegen/client_unary_call.h>
-#include <grpcpp/impl/codegen/client_callback.h>
-#include <grpcpp/impl/codegen/message_allocator.h>
-#include <grpcpp/impl/codegen/method_handler.h>
-#include <grpcpp/impl/codegen/rpc_service_method.h>
-#include <grpcpp/impl/codegen/server_callback.h>
+#include <grpcpp/support/async_stream.h>
+#include <grpcpp/support/async_unary_call.h>
+#include <grpcpp/impl/channel_interface.h>
+#include <grpcpp/impl/client_unary_call.h>
+#include <grpcpp/support/client_callback.h>
+#include <grpcpp/support/message_allocator.h>
+#include <grpcpp/support/method_handler.h>
+#include <grpcpp/impl/rpc_service_method.h>
+#include <grpcpp/support/server_callback.h>
 #include <grpcpp/impl/codegen/server_callback_handlers.h>
-#include <grpcpp/impl/codegen/server_context.h>
-#include <grpcpp/impl/codegen/service_type.h>
-#include <grpcpp/impl/codegen/sync_stream.h>
+#include <grpcpp/server_context.h>
+#include <grpcpp/impl/service_type.h>
+#include <grpcpp/support/sync_stream.h>
 namespace supervisor {
 namespace v1alpha1 {
 
 static const char* JobAPI_method_names[] = {
-  "/supervisor.v1alpha1.JobAPI/SendJobStart",
-  "/supervisor.v1alpha1.JobAPI/SendJobResult",
-  "/supervisor.v1alpha1.JobAPI/SendJobFail",
+  "/supervisor.v1alpha1.JobAPI/SetJobStatus",
 };
 
 std::unique_ptr< JobAPI::Stub> JobAPI::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -35,76 +33,28 @@ std::unique_ptr< JobAPI::Stub> JobAPI::NewStub(const std::shared_ptr< ::grpc::Ch
 }
 
 JobAPI::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
-  : channel_(channel), rpcmethod_SendJobStart_(JobAPI_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SendJobResult_(JobAPI_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_SendJobFail_(JobAPI_method_names[2], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  : channel_(channel), rpcmethod_SetJobStatus_(JobAPI_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
-::grpc::Status JobAPI::Stub::SendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::supervisor::v1alpha1::SendJobStartResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall< ::supervisor::v1alpha1::SendJobStartRequest, ::supervisor::v1alpha1::SendJobStartResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SendJobStart_, context, request, response);
+::grpc::Status JobAPI::Stub::SetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::supervisor::v1alpha1::SetJobStatusResponse* response) {
+  return ::grpc::internal::BlockingUnaryCall< ::supervisor::v1alpha1::SetJobStatusRequest, ::supervisor::v1alpha1::SetJobStatusResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SetJobStatus_, context, request, response);
 }
 
-void JobAPI::Stub::async::SendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest* request, ::supervisor::v1alpha1::SendJobStartResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc::internal::CallbackUnaryCall< ::supervisor::v1alpha1::SendJobStartRequest, ::supervisor::v1alpha1::SendJobStartResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendJobStart_, context, request, response, std::move(f));
+void JobAPI::Stub::async::SetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest* request, ::supervisor::v1alpha1::SetJobStatusResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc::internal::CallbackUnaryCall< ::supervisor::v1alpha1::SetJobStatusRequest, ::supervisor::v1alpha1::SetJobStatusResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetJobStatus_, context, request, response, std::move(f));
 }
 
-void JobAPI::Stub::async::SendJobStart(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest* request, ::supervisor::v1alpha1::SendJobStartResponse* response, ::grpc::ClientUnaryReactor* reactor) {
-  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendJobStart_, context, request, response, reactor);
+void JobAPI::Stub::async::SetJobStatus(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest* request, ::supervisor::v1alpha1::SetJobStatusResponse* response, ::grpc::ClientUnaryReactor* reactor) {
+  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SetJobStatus_, context, request, response, reactor);
 }
 
-::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobStartResponse>* JobAPI::Stub::PrepareAsyncSendJobStartRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::supervisor::v1alpha1::SendJobStartResponse, ::supervisor::v1alpha1::SendJobStartRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SendJobStart_, context, request);
+::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SetJobStatusResponse>* JobAPI::Stub::PrepareAsyncSetJobStatusRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::supervisor::v1alpha1::SetJobStatusResponse, ::supervisor::v1alpha1::SetJobStatusRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SetJobStatus_, context, request);
 }
 
-::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobStartResponse>* JobAPI::Stub::AsyncSendJobStartRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobStartRequest& request, ::grpc::CompletionQueue* cq) {
+::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SetJobStatusResponse>* JobAPI::Stub::AsyncSetJobStatusRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest& request, ::grpc::CompletionQueue* cq) {
   auto* result =
-    this->PrepareAsyncSendJobStartRaw(context, request, cq);
-  result->StartCall();
-  return result;
-}
-
-::grpc::Status JobAPI::Stub::SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::supervisor::v1alpha1::SendJobResultResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall< ::supervisor::v1alpha1::SendJobResultRequest, ::supervisor::v1alpha1::SendJobResultResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SendJobResult_, context, request, response);
-}
-
-void JobAPI::Stub::async::SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc::internal::CallbackUnaryCall< ::supervisor::v1alpha1::SendJobResultRequest, ::supervisor::v1alpha1::SendJobResultResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendJobResult_, context, request, response, std::move(f));
-}
-
-void JobAPI::Stub::async::SendJobResult(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response, ::grpc::ClientUnaryReactor* reactor) {
-  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendJobResult_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobResultResponse>* JobAPI::Stub::PrepareAsyncSendJobResultRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::supervisor::v1alpha1::SendJobResultResponse, ::supervisor::v1alpha1::SendJobResultRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SendJobResult_, context, request);
-}
-
-::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobResultResponse>* JobAPI::Stub::AsyncSendJobResultRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobResultRequest& request, ::grpc::CompletionQueue* cq) {
-  auto* result =
-    this->PrepareAsyncSendJobResultRaw(context, request, cq);
-  result->StartCall();
-  return result;
-}
-
-::grpc::Status JobAPI::Stub::SendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::supervisor::v1alpha1::SendJobFailResponse* response) {
-  return ::grpc::internal::BlockingUnaryCall< ::supervisor::v1alpha1::SendJobFailRequest, ::supervisor::v1alpha1::SendJobFailResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), rpcmethod_SendJobFail_, context, request, response);
-}
-
-void JobAPI::Stub::async::SendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest* request, ::supervisor::v1alpha1::SendJobFailResponse* response, std::function<void(::grpc::Status)> f) {
-  ::grpc::internal::CallbackUnaryCall< ::supervisor::v1alpha1::SendJobFailRequest, ::supervisor::v1alpha1::SendJobFailResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendJobFail_, context, request, response, std::move(f));
-}
-
-void JobAPI::Stub::async::SendJobFail(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest* request, ::supervisor::v1alpha1::SendJobFailResponse* response, ::grpc::ClientUnaryReactor* reactor) {
-  ::grpc::internal::ClientCallbackUnaryFactory::Create< ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(stub_->channel_.get(), stub_->rpcmethod_SendJobFail_, context, request, response, reactor);
-}
-
-::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailResponse>* JobAPI::Stub::PrepareAsyncSendJobFailRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderHelper::Create< ::supervisor::v1alpha1::SendJobFailResponse, ::supervisor::v1alpha1::SendJobFailRequest, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(channel_.get(), cq, rpcmethod_SendJobFail_, context, request);
-}
-
-::grpc::ClientAsyncResponseReader< ::supervisor::v1alpha1::SendJobFailResponse>* JobAPI::Stub::AsyncSendJobFailRaw(::grpc::ClientContext* context, const ::supervisor::v1alpha1::SendJobFailRequest& request, ::grpc::CompletionQueue* cq) {
-  auto* result =
-    this->PrepareAsyncSendJobFailRaw(context, request, cq);
+    this->PrepareAsyncSetJobStatusRaw(context, request, cq);
   result->StartCall();
   return result;
 }
@@ -113,53 +63,19 @@ JobAPI::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       JobAPI_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< JobAPI::Service, ::supervisor::v1alpha1::SendJobStartRequest, ::supervisor::v1alpha1::SendJobStartResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
+      new ::grpc::internal::RpcMethodHandler< JobAPI::Service, ::supervisor::v1alpha1::SetJobStatusRequest, ::supervisor::v1alpha1::SetJobStatusResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
           [](JobAPI::Service* service,
              ::grpc::ServerContext* ctx,
-             const ::supervisor::v1alpha1::SendJobStartRequest* req,
-             ::supervisor::v1alpha1::SendJobStartResponse* resp) {
-               return service->SendJobStart(ctx, req, resp);
-             }, this)));
-  AddMethod(new ::grpc::internal::RpcServiceMethod(
-      JobAPI_method_names[1],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< JobAPI::Service, ::supervisor::v1alpha1::SendJobResultRequest, ::supervisor::v1alpha1::SendJobResultResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
-          [](JobAPI::Service* service,
-             ::grpc::ServerContext* ctx,
-             const ::supervisor::v1alpha1::SendJobResultRequest* req,
-             ::supervisor::v1alpha1::SendJobResultResponse* resp) {
-               return service->SendJobResult(ctx, req, resp);
-             }, this)));
-  AddMethod(new ::grpc::internal::RpcServiceMethod(
-      JobAPI_method_names[2],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< JobAPI::Service, ::supervisor::v1alpha1::SendJobFailRequest, ::supervisor::v1alpha1::SendJobFailResponse, ::grpc::protobuf::MessageLite, ::grpc::protobuf::MessageLite>(
-          [](JobAPI::Service* service,
-             ::grpc::ServerContext* ctx,
-             const ::supervisor::v1alpha1::SendJobFailRequest* req,
-             ::supervisor::v1alpha1::SendJobFailResponse* resp) {
-               return service->SendJobFail(ctx, req, resp);
+             const ::supervisor::v1alpha1::SetJobStatusRequest* req,
+             ::supervisor::v1alpha1::SetJobStatusResponse* resp) {
+               return service->SetJobStatus(ctx, req, resp);
              }, this)));
 }
 
 JobAPI::Service::~Service() {
 }
 
-::grpc::Status JobAPI::Service::SendJobStart(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SendJobStartRequest* request, ::supervisor::v1alpha1::SendJobStartResponse* response) {
-  (void) context;
-  (void) request;
-  (void) response;
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-}
-
-::grpc::Status JobAPI::Service::SendJobResult(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SendJobResultRequest* request, ::supervisor::v1alpha1::SendJobResultResponse* response) {
-  (void) context;
-  (void) request;
-  (void) response;
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
-}
-
-::grpc::Status JobAPI::Service::SendJobFail(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SendJobFailRequest* request, ::supervisor::v1alpha1::SendJobFailResponse* response) {
+::grpc::Status JobAPI::Service::SetJobStatus(::grpc::ServerContext* context, const ::supervisor::v1alpha1::SetJobStatusRequest* request, ::supervisor::v1alpha1::SetJobStatusResponse* response) {
   (void) context;
   (void) request;
   (void) response;

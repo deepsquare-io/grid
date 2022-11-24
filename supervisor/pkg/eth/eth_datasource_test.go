@@ -155,64 +155,23 @@ func (suite *DataSourceTestSuite) TestClaim() {
 	suite.assertMocksExpectations()
 }
 
-func (suite *DataSourceTestSuite) TestStartJob() {
+func (suite *DataSourceTestSuite) TestSetJobStatus() {
 	// Arrange
 	suite.mustAuthenticate()
 	// Must call StartJob
 	tx := legacyTx()
 	suite.msRPC.On(
-		"StartJob",
+		"ProviderSetJobStatus",
 		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
 			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
 		}),
 		jobID,
-	).Return(tx, nil)
-
-	// Act
-	err := suite.impl.StartJob(context.Background(), jobID)
-
-	// Assert
-	suite.NoError(err)
-	suite.assertMocksExpectations()
-}
-
-func (suite *DataSourceTestSuite) TestFinishJob() {
-	// Arrange
-	suite.mustAuthenticate()
-	// Must call FinishJob
-	tx := legacyTx()
-	suite.msRPC.On(
-		"FinishJob",
-		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
-			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
-		}),
-		jobID,
+		uint8(eth.JobStatusFailed),
 		jobDuration,
 	).Return(tx, nil)
 
 	// Act
-	err := suite.impl.FinishJob(context.Background(), jobID, jobDuration)
-
-	// Assert
-	suite.NoError(err)
-	suite.assertMocksExpectations()
-}
-
-func (suite *DataSourceTestSuite) TestFailedJob() {
-	// Arrange
-	suite.mustAuthenticate()
-	// Must call TriggerFailedJob
-	tx := legacyTx()
-	suite.msRPC.On(
-		"TriggerFailedJob",
-		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
-			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
-		}),
-		jobID,
-	).Return(tx, nil)
-
-	// Act
-	err := suite.impl.FailJob(context.Background(), jobID)
+	err := suite.impl.SetJobStatus(context.Background(), jobID, eth.JobStatusFailed, jobDuration)
 
 	// Assert
 	suite.NoError(err)

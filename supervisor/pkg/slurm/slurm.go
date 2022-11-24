@@ -43,7 +43,7 @@ type CancelJobRequest struct {
 	User string
 }
 
-// CancelJob kils a job using scancel command.
+// CancelJob kills a job using scancel command.
 func (s *Service) CancelJob(ctx context.Context, req *CancelJobRequest) error {
 	cmd := fmt.Sprintf("%s --name=%s --me", s.scancel, req.Name)
 	_, err := s.executor.ExecAs(ctx, req.User, cmd)
