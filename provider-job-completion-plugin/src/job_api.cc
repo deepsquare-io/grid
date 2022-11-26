@@ -14,14 +14,19 @@ SetJobStatusRequest MakeSetJobStatusRequest(const report_t& report) {
   req.set_id(report.job_id);
   req.set_duration(report.elapsed);
 
-  if ((report.job_state & JOB_STATE_BASE) == JOB_FAILED) {
-    req.set_status(JobStatus::JOB_STATUS_FAILED);
-  } else if ((report.job_state & JOB_STATE_BASE) == JOB_TIMEOUT) {
-    req.set_status(JobStatus::JOB_STATUS_OUT_OF_CREDITS);
-  } else if ((report.job_state & JOB_STATE_BASE) == JOB_CANCELLED) {
-    req.set_status(JobStatus::JOB_STATUS_CANCELLED);
-  } else {
-    req.set_status(JobStatus::JOB_STATUS_FINISHED);
+  switch (report.job_state & JOB_STATE_BASE) {
+    case JOB_FAILED:
+      req.set_status(JobStatus::JOB_STATUS_FAILED);
+      break;
+    case JOB_TIMEOUT:
+      req.set_status(JobStatus::JOB_STATUS_OUT_OF_CREDITS);
+      break;
+    case JOB_CANCELLED:
+      req.set_status(JobStatus::JOB_STATUS_CANCELLED);
+      break;
+    default:
+      req.set_status(JobStatus::JOB_STATUS_FINISHED);
+      break;
   }
 
   return req;
