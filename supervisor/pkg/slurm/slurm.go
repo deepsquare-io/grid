@@ -70,14 +70,11 @@ func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (string, er
   --cpus-per-task=%d \
   --mem-per-cpu=%dM \
   --comment="from supervisor" \
-  --gpus-per-task=%d
+  --gpus-per-task=%d \
   --output=/opt/jobs-logs/%s.log << '%s'
 #!/bin/bash -l
-
 true
-
 %s
-
 %s`,
 		s.sbatch,
 		req.Name,
