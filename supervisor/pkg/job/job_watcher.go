@@ -127,7 +127,7 @@ func (w *Watcher) ClaimNextJobIndefinitely(parent context.Context) error {
 			select {
 			case err := <-done:
 				if err != nil {
-					if !strings.Contains(err.Error(), "No available job") {
+					if strings.Contains(err.Error(), "No available job") {
 						logger.I.Debug("No available job")
 					} else {
 						logger.I.Error("ClaimNextJobIndefinitely failed", zap.Error(err))
