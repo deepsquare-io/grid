@@ -17,6 +17,29 @@ type MetaSchedulerRPC struct {
 	mock.Mock
 }
 
+// ClaimNextCancellingJob provides a mock function with given fields: opts
+func (_m *MetaSchedulerRPC) ClaimNextCancellingJob(opts *bind.TransactOpts) (*types.Transaction, error) {
+	ret := _m.Called(opts)
+
+	var r0 *types.Transaction
+	if rf, ok := ret.Get(0).(func(*bind.TransactOpts) *types.Transaction); ok {
+		r0 = rf(opts)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.Transaction)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*bind.TransactOpts) error); ok {
+		r1 = rf(opts)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ClaimNextJob provides a mock function with given fields: opts
 func (_m *MetaSchedulerRPC) ClaimNextJob(opts *bind.TransactOpts) (*types.Transaction, error) {
 	ret := _m.Called(opts)
@@ -54,6 +77,48 @@ func (_m *MetaSchedulerRPC) GetJobStatus(opts *bind.CallOpts, _jobID [32]byte) (
 	var r1 error
 	if rf, ok := ret.Get(1).(func(*bind.CallOpts, [32]byte) error); ok {
 		r1 = rf(opts, _jobID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// HasCancellingJob provides a mock function with given fields: opts
+func (_m *MetaSchedulerRPC) HasCancellingJob(opts *bind.CallOpts) (bool, error) {
+	ret := _m.Called(opts)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(*bind.CallOpts) bool); ok {
+		r0 = rf(opts)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*bind.CallOpts) error); ok {
+		r1 = rf(opts)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// HasNextJob provides a mock function with given fields: opts
+func (_m *MetaSchedulerRPC) HasNextJob(opts *bind.CallOpts) (bool, error) {
+	ret := _m.Called(opts)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(*bind.CallOpts) bool); ok {
+		r0 = rf(opts)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*bind.CallOpts) error); ok {
+		r1 = rf(opts)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -35,6 +35,20 @@ func (_m *JobMetaQueue) Claim(ctx context.Context) error {
 	return r0
 }
 
+// ClaimCancelling provides a mock function with given fields: ctx
+func (_m *JobMetaQueue) ClaimCancelling(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetJobStatus provides a mock function with given fields: ctx, jobID
 func (_m *JobMetaQueue) GetJobStatus(ctx context.Context, jobID [32]byte) (eth.JobStatus, error) {
 	ret := _m.Called(ctx, jobID)
@@ -86,6 +100,43 @@ func (_m *JobMetaQueue) RefuseJob(ctx context.Context, jobID [32]byte) error {
 	return r0
 }
 
+// SetJobStatus provides a mock function with given fields: ctx, jobID, status, jobDurationMinute
+func (_m *JobMetaQueue) SetJobStatus(ctx context.Context, jobID [32]byte, status eth.JobStatus, jobDurationMinute uint64) error {
+	ret := _m.Called(ctx, jobID, status, jobDurationMinute)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, [32]byte, eth.JobStatus, uint64) error); ok {
+		r0 = rf(ctx, jobID, status, jobDurationMinute)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// WatchClaimNextCancellingJobEvent provides a mock function with given fields: ctx, sink
+func (_m *JobMetaQueue) WatchClaimNextCancellingJobEvent(ctx context.Context, sink chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) (event.Subscription, error) {
+	ret := _m.Called(ctx, sink)
+
+	var r0 event.Subscription
+	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) event.Subscription); ok {
+		r0 = rf(ctx, sink)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(event.Subscription)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) error); ok {
+		r1 = rf(ctx, sink)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // WatchClaimNextJobEvent provides a mock function with given fields: ctx, sink
 func (_m *JobMetaQueue) WatchClaimNextJobEvent(ctx context.Context, sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent) (event.Subscription, error) {
 	ret := _m.Called(ctx, sink)
@@ -101,29 +152,6 @@ func (_m *JobMetaQueue) WatchClaimNextJobEvent(ctx context.Context, sink chan<- 
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextJobEvent) error); ok {
-		r1 = rf(ctx, sink)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// WatchJobCanceledEvent provides a mock function with given fields: ctx, sink
-func (_m *JobMetaQueue) WatchJobCanceledEvent(ctx context.Context, sink chan<- *metascheduler.MetaSchedulerJobCanceledEvent) (event.Subscription, error) {
-	ret := _m.Called(ctx, sink)
-
-	var r0 event.Subscription
-	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerJobCanceledEvent) event.Subscription); ok {
-		r0 = rf(ctx, sink)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(event.Subscription)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, chan<- *metascheduler.MetaSchedulerJobCanceledEvent) error); ok {
 		r1 = rf(ctx, sink)
 	} else {
 		r1 = ret.Error(1)

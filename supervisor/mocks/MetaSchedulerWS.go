@@ -17,6 +17,29 @@ type MetaSchedulerWS struct {
 	mock.Mock
 }
 
+// WatchClaimNextCancellingJobEvent provides a mock function with given fields: opts, sink
+func (_m *MetaSchedulerWS) WatchClaimNextCancellingJobEvent(opts *bind.WatchOpts, sink chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) (event.Subscription, error) {
+	ret := _m.Called(opts, sink)
+
+	var r0 event.Subscription
+	if rf, ok := ret.Get(0).(func(*bind.WatchOpts, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) event.Subscription); ok {
+		r0 = rf(opts, sink)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(event.Subscription)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*bind.WatchOpts, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) error); ok {
+		r1 = rf(opts, sink)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // WatchClaimNextJobEvent provides a mock function with given fields: opts, sink
 func (_m *MetaSchedulerWS) WatchClaimNextJobEvent(opts *bind.WatchOpts, sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent) (event.Subscription, error) {
 	ret := _m.Called(opts, sink)
@@ -32,29 +55,6 @@ func (_m *MetaSchedulerWS) WatchClaimNextJobEvent(opts *bind.WatchOpts, sink cha
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(*bind.WatchOpts, chan<- *metascheduler.MetaSchedulerClaimNextJobEvent) error); ok {
-		r1 = rf(opts, sink)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// WatchJobCanceledEvent provides a mock function with given fields: opts, sink
-func (_m *MetaSchedulerWS) WatchJobCanceledEvent(opts *bind.WatchOpts, sink chan<- *metascheduler.MetaSchedulerJobCanceledEvent) (event.Subscription, error) {
-	ret := _m.Called(opts, sink)
-
-	var r0 event.Subscription
-	if rf, ok := ret.Get(0).(func(*bind.WatchOpts, chan<- *metascheduler.MetaSchedulerJobCanceledEvent) event.Subscription); ok {
-		r0 = rf(opts, sink)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(event.Subscription)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(*bind.WatchOpts, chan<- *metascheduler.MetaSchedulerJobCanceledEvent) error); ok {
 		r1 = rf(opts, sink)
 	} else {
 		r1 = ret.Error(1)

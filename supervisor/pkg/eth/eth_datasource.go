@@ -90,9 +90,19 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 
 // Claim a job.
 //
-// If the queue is not empty, it will claim the job and send it to the SLURM cluster.
-// Else, it will return an error.
+// If the queue is not empty, it will claim the job and return true.
+// Else, it will return false.
+// Else, it will return false and an error.
 func (s *DataSource) Claim(ctx context.Context) error {
+	ok, err := s.metaschedulerRPC.HasNextJob(&bind.CallOpts{})
+	if err != nil {
+		return err
+	}
+	if !ok {
+		logger.I.Debug("No available job")
+		return nil
+	}
+
 	auth, err := s.auth(ctx)
 	if err != nil {
 		return err
@@ -102,7 +112,7 @@ func (s *DataSource) Claim(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	logger.I.Debug("called claimnextjob", zap.String("tx", tx.Hash().String()))
+	logger.I.Debug("called ClaimNextJob", zap.String("tx", tx.Hash().String()))
 
 	return nil
 }
@@ -201,12 +211,12 @@ func (s *DataSource) WatchClaimNextJobEvent(
 	}, sink)
 }
 
-// WatchJobCanceledEvent observes the incoming JobCanceledEvents.
-func (s *DataSource) WatchJobCanceledEvent(
+// WatchClaimNextCancellingJobEvent observes the incoming JobCanceledEvents.
+func (s *DataSource) WatchClaimNextCancellingJobEvent(
 	ctx context.Context,
-	sink chan<- *metascheduler.MetaSchedulerJobCanceledEvent,
+	sink chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
 ) (event.Subscription, error) {
-	return s.metaschedulerWS.WatchJobCanceledEvent(&bind.WatchOpts{
+	return s.metaschedulerWS.WatchClaimNextCancellingJobEvent(&bind.WatchOpts{
 		Context: ctx,
 	}, sink)
 }
@@ -220,4 +230,33 @@ func (s *DataSource) GetJobStatus(ctx context.Context, jobID [32]byte) (JobStatu
 		return 0, err
 	}
 	return JobStatus(status), nil
+}
+
+// ClaimCancelling a cancelling call.
+//
+// If the queue is not empty, it will claim the cancelling call and return true.
+// Else, it will return false.
+// Else, it will return false and an error.
+func (s *DataSource) ClaimCancelling(ctx context.Context) error {
+	ok, err := s.metaschedulerRPC.HasCancellingJob(&bind.CallOpts{})
+	if err != nil {
+		return err
+	}
+	if !ok {
+		logger.I.Debug("No cancelling call")
+		return nil
+	}
+
+	auth, err := s.auth(ctx)
+	if err != nil {
+		return err
+	}
+
+	tx, err := s.metaschedulerRPC.ClaimNextCancellingJob(auth)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("called ClaimNextCancellingJob", zap.String("tx", tx.Hash().String()))
+
+	return nil
 }
