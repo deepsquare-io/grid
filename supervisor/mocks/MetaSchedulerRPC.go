@@ -4,6 +4,7 @@ package mocks
 
 import (
 	bind "github.com/ethereum/go-ethereum/accounts/abi/bind"
+	common "github.com/ethereum/go-ethereum/common"
 
 	metascheduler "github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 
@@ -84,20 +85,20 @@ func (_m *MetaSchedulerRPC) GetJobStatus(opts *bind.CallOpts, _jobID [32]byte) (
 	return r0, r1
 }
 
-// HasCancellingJob provides a mock function with given fields: opts
-func (_m *MetaSchedulerRPC) HasCancellingJob(opts *bind.CallOpts) (bool, error) {
-	ret := _m.Called(opts)
+// HasCancellingJob provides a mock function with given fields: opts, _providerAddr
+func (_m *MetaSchedulerRPC) HasCancellingJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
+	ret := _m.Called(opts, _providerAddr)
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(*bind.CallOpts) bool); ok {
-		r0 = rf(opts)
+	if rf, ok := ret.Get(0).(func(*bind.CallOpts, common.Address) bool); ok {
+		r0 = rf(opts, _providerAddr)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*bind.CallOpts) error); ok {
-		r1 = rf(opts)
+	if rf, ok := ret.Get(1).(func(*bind.CallOpts, common.Address) error); ok {
+		r1 = rf(opts, _providerAddr)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -105,20 +106,20 @@ func (_m *MetaSchedulerRPC) HasCancellingJob(opts *bind.CallOpts) (bool, error) 
 	return r0, r1
 }
 
-// HasNextJob provides a mock function with given fields: opts
-func (_m *MetaSchedulerRPC) HasNextJob(opts *bind.CallOpts) (bool, error) {
-	ret := _m.Called(opts)
+// HasNextJob provides a mock function with given fields: opts, _providerAddr
+func (_m *MetaSchedulerRPC) HasNextJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
+	ret := _m.Called(opts, _providerAddr)
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(*bind.CallOpts) bool); ok {
-		r0 = rf(opts)
+	if rf, ok := ret.Get(0).(func(*bind.CallOpts, common.Address) bool); ok {
+		r0 = rf(opts, _providerAddr)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*bind.CallOpts) error); ok {
-		r1 = rf(opts)
+	if rf, ok := ret.Get(1).(func(*bind.CallOpts, common.Address) error); ok {
+		r1 = rf(opts, _providerAddr)
 	} else {
 		r1 = ret.Error(1)
 	}

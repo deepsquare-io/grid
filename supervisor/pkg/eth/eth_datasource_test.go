@@ -140,7 +140,7 @@ func (suite *DataSourceTestSuite) TestClaim() {
 	suite.mustAuthenticate()
 	// Must call ClaimNextJob
 	tx := legacyTx()
-	suite.msRPC.On("HasNextJob", mock.Anything).Return(true, nil)
+	suite.msRPC.On("HasNextJob", mock.Anything, fromAddress).Return(true, nil)
 	suite.msRPC.On(
 		"ClaimNextJob",
 		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
@@ -159,7 +159,7 @@ func (suite *DataSourceTestSuite) TestClaim() {
 func (suite *DataSourceTestSuite) TestClaimNoJob() {
 	// Arrange
 	// Must call ClaimNextJob
-	suite.msRPC.On("HasNextJob", mock.Anything).Return(false, nil)
+	suite.msRPC.On("HasNextJob", mock.Anything, fromAddress).Return(false, nil)
 
 	// Act
 	err := suite.impl.Claim(context.Background())
@@ -256,7 +256,7 @@ func (suite *DataSourceTestSuite) TestClaimCancelling() {
 	// Arrange
 	suite.mustAuthenticate()
 	tx := legacyTx()
-	suite.msRPC.On("HasCancellingJob", mock.Anything).Return(true, nil)
+	suite.msRPC.On("HasCancellingJob", mock.Anything, fromAddress).Return(true, nil)
 	suite.msRPC.On(
 		"ClaimNextCancellingJob",
 		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
@@ -285,7 +285,7 @@ func (suite *DataSourceTestSuite) TestGetJobStatus() {
 
 func (suite *DataSourceTestSuite) TestClaimCancellingNoCancelling() {
 	// Arrange
-	suite.msRPC.On("HasCancellingJob", mock.Anything).Return(false, nil)
+	suite.msRPC.On("HasCancellingJob", mock.Anything, fromAddress).Return(false, nil)
 
 	// Act
 	err := suite.impl.ClaimCancelling(context.Background())

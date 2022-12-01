@@ -96,7 +96,7 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 func (s *DataSource) Claim(ctx context.Context) error {
 	ok, err := s.metaschedulerRPC.HasNextJob(&bind.CallOpts{
 		Context: ctx,
-	})
+	}, s.fromAddress)
 	if err != nil {
 		logger.I.Error("HasNextJob failed", zap.Error(err))
 		return err
@@ -243,7 +243,7 @@ func (s *DataSource) GetJobStatus(ctx context.Context, jobID [32]byte) (JobStatu
 func (s *DataSource) ClaimCancelling(ctx context.Context) error {
 	ok, err := s.metaschedulerRPC.HasCancellingJob(&bind.CallOpts{
 		Context: ctx,
-	})
+	}, s.fromAddress)
 	if err != nil {
 		logger.I.Error("HasCancellingJob failed", zap.Error(err))
 		return err
