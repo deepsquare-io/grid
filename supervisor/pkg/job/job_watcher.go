@@ -76,7 +76,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 	go func(ctx context.Context, wg *sync.WaitGroup) {
 		err := w.ClaimIndefinitely(ctx)
 		if err != nil {
-			logger.I.Error("WatchClaimNextJob failed", zap.Error(err))
+			logger.I.Error("ClaimIndefinitely failed", zap.Error(err))
 			errChan <- err
 		}
 		wg.Done()
