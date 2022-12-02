@@ -10,8 +10,6 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/sshapi"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -29,14 +27,7 @@ func New(
 	slurm *slurm.Service,
 	pkB64 string,
 ) *Server {
-	opts := []grpc.ServerOption{
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-			grpc_zap.StreamServerInterceptor(logger.I),
-		)),
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_zap.UnaryServerInterceptor(logger.I),
-		)),
-	}
+	opts := []grpc.ServerOption{}
 	if tls {
 		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 		if err != nil {

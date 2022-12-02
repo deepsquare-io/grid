@@ -4,15 +4,19 @@ package job_test
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -22,9 +26,15 @@ var (
 	fixtureSchedulerJobID = 1
 	fixtureEvent          = &metascheduler.MetaSchedulerClaimNextJobEvent{
 		CustomerAddr:      common.HexToAddress("01"),
+		ProviderAddr:      common.HexToAddress("02"),
 		JobId:             [32]byte{1},
 		MaxDurationMinute: uint64(5),
 		JobDefinition:     metascheduler.JobDefinition{},
+	}
+	fixtureCancellingEvent = &metascheduler.MetaSchedulerClaimNextCancellingJobEvent{
+		CustomerAddr: common.HexToAddress("01"),
+		ProviderAddr: common.HexToAddress("02"),
+		JobId:        [32]byte{1},
 	}
 	fixtureBody = `#!/bin/sh
 
@@ -53,15 +63,16 @@ func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
 	)
 }
 
-func (suite *WatcherTestSuite) TestClaimNextJobIndefinitely() {
+func (suite *WatcherTestSuite) TestClaimIndefinitely() {
 	// Arrange
 	suite.metaQueue.On("Claim", mock.Anything).Return(nil)
+	suite.metaQueue.On("ClaimCancelling", mock.Anything).Return(nil)
 	suite.scheduler.On("HealthCheck", mock.Anything).Return(nil)
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)
 	defer cancel()
-	go suite.impl.ClaimNextJobIndefinitely(ctx)
+	go suite.impl.ClaimIndefinitely(ctx)
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
@@ -74,14 +85,14 @@ func (suite *WatcherTestSuite) TestClaimNextJobIndefinitely() {
 	suite.batchFetcher.AssertExpectations(suite.T())
 }
 
-func (suite *WatcherTestSuite) TestClaimNextJobIndefinitelyWithSchedulerHealthCheckFail() {
+func (suite *WatcherTestSuite) TestClaimIndefinitelyWithSchedulerHealthCheckFail() {
 	// Arrange
 	suite.scheduler.On("HealthCheck", mock.Anything).Return(errors.New("expected error"))
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
 	defer cancel()
-	go suite.impl.ClaimNextJobIndefinitely(ctx)
+	go suite.impl.ClaimIndefinitely(ctx)
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
@@ -91,19 +102,21 @@ func (suite *WatcherTestSuite) TestClaimNextJobIndefinitelyWithSchedulerHealthCh
 	// Assert
 	suite.scheduler.AssertExpectations(suite.T())
 	suite.metaQueue.AssertNotCalled(suite.T(), "Claim", mock.Anything)
+	suite.metaQueue.AssertNotCalled(suite.T(), "ClaimCancelling", mock.Anything)
 	suite.batchFetcher.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
 	suite.scheduler.AssertNotCalled(suite.T(), "Submit", mock.Anything, mock.Anything)
 }
 
-func (suite *WatcherTestSuite) TestClaimNextJobIndefinitelyWithClaimFail() {
+func (suite *WatcherTestSuite) TestClaimIndefinitelyWithClaimFail() {
 	// Arrange
 	suite.scheduler.On("HealthCheck", mock.Anything).Return(nil)
 	suite.metaQueue.On("Claim", mock.Anything).Return(nil, errors.New("expected error"))
+	suite.metaQueue.On("ClaimCancelling", mock.Anything).Return(nil)
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
 	defer cancel()
-	go suite.impl.ClaimNextJobIndefinitely(ctx)
+	go suite.impl.ClaimIndefinitely(ctx)
 	select {
 	case <-ctx.Done():
 		logger.I.Info("test ended")
@@ -132,7 +145,12 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 		mock.Anything,
 		fixtureEvent.JobDefinition.BatchLocationHash,
 	).Return(fixtureBody, nil)
-	suite.scheduler.On("Submit", mock.Anything, mock.Anything).Return(strconv.Itoa(fixtureSchedulerJobID), nil)
+	job := eth.JobDefinitionMapToSlurm(fixtureEvent.JobDefinition, fixtureEvent.MaxDurationMinute, fixtureBody)
+	suite.scheduler.On("Submit", mock.Anything, &slurm.SubmitJobRequest{
+		Name:          hex.EncodeToString(fixtureEvent.JobId[:]),
+		User:          strings.ToLower(fixtureEvent.CustomerAddr.Hex()),
+		JobDefinition: &job,
+	}).Return(strconv.Itoa(fixtureSchedulerJobID), nil)
 	sub.On("Err").Return(nil)
 	sub.On("Unsubscribe")
 
@@ -195,8 +213,8 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
 	}).Return(sub, nil)
 	sub.On("Err").Return(nil)
 	sub.On("Unsubscribe")
-	// Must refuse job because we couldn't  call
-	suite.metaQueue.On("RefuseJob", mock.Anything, mock.Anything).Return(nil)
+	// Must fail job
+	suite.metaQueue.On("SetJobStatus", mock.Anything, badFixtureEvent.JobId, eth.JobStatusFailed, uint64(0)).Return(nil)
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
@@ -232,8 +250,8 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 		mock.Anything,
 		fixtureEvent.JobDefinition.BatchLocationHash,
 	).Return("", errors.New("expected error"))
-	// Must refuse job because we couldn't fetch the job batch script
-	suite.metaQueue.On("RefuseJob", mock.Anything, mock.Anything).Return(nil)
+	// Must fail job
+	suite.metaQueue.On("SetJobStatus", mock.Anything, fixtureEvent.JobId, eth.JobStatusFailed, uint64(0)).Return(nil)
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
@@ -269,7 +287,12 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 		mock.Anything,
 		fixtureEvent.JobDefinition.BatchLocationHash,
 	).Return(fixtureBody, nil)
-	suite.scheduler.On("Submit", mock.Anything, mock.Anything).Return("0", errors.New("expected error"))
+	job := eth.JobDefinitionMapToSlurm(fixtureEvent.JobDefinition, fixtureEvent.MaxDurationMinute, fixtureBody)
+	suite.scheduler.On("Submit", mock.Anything, &slurm.SubmitJobRequest{
+		Name:          hex.EncodeToString(fixtureEvent.JobId[:]),
+		User:          strings.ToLower(fixtureEvent.CustomerAddr.Hex()),
+		JobDefinition: &job,
+	}).Return("0", errors.New("expected error"))
 	// Must refuse job because we couldn't fetch the job batch script
 	suite.metaQueue.On("RefuseJob", mock.Anything, mock.Anything).Return(nil)
 
@@ -287,6 +310,70 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	suite.scheduler.AssertExpectations(suite.T())
 	suite.metaQueue.AssertExpectations(suite.T())
 	suite.batchFetcher.AssertExpectations(suite.T())
+}
+
+func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEvent() {
+	// Arrange
+	status := eth.JobStatusCancelling
+	sub := mocks.NewSubscription(suite.T())
+	suite.metaQueue.On("WatchClaimNextCancellingJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)
+		go func() {
+			sink <- fixtureCancellingEvent
+		}()
+	}).Return(sub, nil)
+	suite.metaQueue.On("GetJobStatus", mock.Anything, fixtureCancellingEvent.JobId).Return(status, nil)
+	suite.metaQueue.On("GetProviderAddress").Return(fixtureCancellingEvent.ProviderAddr)
+	suite.scheduler.On("CancelJob", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+		status = eth.JobStatusCancelled
+	}).Return(nil)
+	sub.On("Err").Return(nil)
+	sub.On("Unsubscribe")
+
+	// Act
+	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)
+	defer cancel()
+	go suite.impl.WatchClaimNextCancellingJobEvent(ctx)
+	select {
+	case <-ctx.Done():
+		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
+	}
+
+	// Assert
+	suite.scheduler.AssertExpectations(suite.T())
+	suite.metaQueue.AssertExpectations(suite.T())
+	suite.batchFetcher.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
+}
+
+func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEventIgnoresEvent() {
+	// Arrange
+	sub := mocks.NewSubscription(suite.T())
+	suite.metaQueue.On("WatchClaimNextCancellingJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)
+		go func() {
+			sink <- fixtureCancellingEvent
+		}()
+	}).Return(sub, nil)
+	suite.metaQueue.On("GetProviderAddress").Return(common.HexToAddress("123"))
+	sub.On("Err").Return(nil)
+	sub.On("Unsubscribe")
+
+	// Act
+	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)
+	defer cancel()
+	go suite.impl.WatchClaimNextCancellingJobEvent(ctx)
+	select {
+	case <-ctx.Done():
+		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
+	}
+
+	// Assert
+	suite.scheduler.AssertNotCalled(suite.T(), "GetJobStatus", mock.Anything, mock.Anything)
+	suite.scheduler.AssertNotCalled(suite.T(), "CancelJob", mock.Anything, mock.Anything)
+	suite.metaQueue.AssertExpectations(suite.T())
+	suite.batchFetcher.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
 }
 
 func TestWatcherTestSuite(t *testing.T) {

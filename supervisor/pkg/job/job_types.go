@@ -13,6 +13,8 @@ import (
 type JobMetaQueue interface {
 	// Claim a job for scheduling.
 	Claim(ctx context.Context) error
+	// Claim cancelling calls.
+	ClaimCancelling(ctx context.Context) error
 	// Refuse a job for metascheduling.
 	RefuseJob(ctx context.Context, jobID [32]byte) error
 	// WatchClaimNextJobEvent observes the incoming ClaimNextJobEvents.
@@ -21,14 +23,20 @@ type JobMetaQueue interface {
 		sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent,
 	) (event.Subscription, error)
 	// WatchJobCanceledEvent observes the incoming WatchJobCanceledEvents.
-	WatchJobCanceledEvent(
+	WatchClaimNextCancellingJobEvent(
 		ctx context.Context,
-		sink chan<- *metascheduler.MetaSchedulerJobCanceledEvent,
+		sink chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
 	) (event.Subscription, error)
 	// GetProviderAddress fetches the provider public address
 	GetProviderAddress() common.Address
 	// GetJobStatus fetches the job status.
 	GetJobStatus(ctx context.Context, jobID [32]byte) (eth.JobStatus, error)
+	SetJobStatus(
+		ctx context.Context,
+		jobID [32]byte,
+		status eth.JobStatus,
+		jobDurationMinute uint64,
+	) error
 }
 
 type JobScheduler interface {

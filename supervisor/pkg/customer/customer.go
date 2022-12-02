@@ -9,7 +9,6 @@ import (
 	customerv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/customer/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -36,11 +35,9 @@ func New(
 	}
 	opts := []grpc.DialOption{
 		grpc.WithStreamInterceptor(grpc_middleware.ChainStreamClient(
-			grpc_zap.StreamClientInterceptor(logger.I),
 			grpc_retry.StreamClientInterceptor(retryOpts...),
 		)),
 		grpc.WithUnaryInterceptor(grpc_middleware.ChainUnaryClient(
-			grpc_zap.UnaryClientInterceptor(logger.I),
 			grpc_retry.UnaryClientInterceptor(retryOpts...),
 		)),
 	}

@@ -140,6 +140,7 @@ func (suite *DataSourceTestSuite) TestClaim() {
 	suite.mustAuthenticate()
 	// Must call ClaimNextJob
 	tx := legacyTx()
+	suite.msRPC.On("HasNextJob", mock.Anything, fromAddress).Return(true, nil)
 	suite.msRPC.On(
 		"ClaimNextJob",
 		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
@@ -153,6 +154,20 @@ func (suite *DataSourceTestSuite) TestClaim() {
 	// Assert
 	suite.NoError(err)
 	suite.assertMocksExpectations()
+}
+
+func (suite *DataSourceTestSuite) TestClaimNoJob() {
+	// Arrange
+	// Must call ClaimNextJob
+	suite.msRPC.On("HasNextJob", mock.Anything, fromAddress).Return(false, nil)
+
+	// Act
+	err := suite.impl.Claim(context.Background())
+
+	// Assert
+	suite.NoError(err)
+	suite.assertMocksExpectations()
+	suite.msRPC.AssertNotCalled(suite.T(), "ClaimNextJob", mock.Anything)
 }
 
 func (suite *DataSourceTestSuite) TestSetJobStatus() {
@@ -216,6 +231,69 @@ func (suite *DataSourceTestSuite) TestWatchClaimNextJobEvent() {
 	suite.NoError(err)
 	suite.Equal(res, sub)
 	suite.assertMocksExpectations()
+}
+
+func (suite *DataSourceTestSuite) TestWatchClaimNextCancellingJobEvent() {
+	// Arrange
+	sink := make(chan *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)
+	sub := mocks.NewSubscription(suite.T())
+	suite.msWS.On(
+		"WatchClaimNextCancellingJobEvent",
+		mock.Anything,
+		mock.Anything,
+	).Return(sub, nil)
+
+	// Act
+	res, err := suite.impl.WatchClaimNextCancellingJobEvent(context.Background(), sink)
+
+	// Assert
+	suite.NoError(err)
+	suite.Equal(res, sub)
+	suite.assertMocksExpectations()
+}
+
+func (suite *DataSourceTestSuite) TestClaimCancelling() {
+	// Arrange
+	suite.mustAuthenticate()
+	tx := legacyTx()
+	suite.msRPC.On("HasCancellingJob", mock.Anything, fromAddress).Return(true, nil)
+	suite.msRPC.On(
+		"ClaimNextCancellingJob",
+		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
+			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
+		}),
+	).Return(tx, nil)
+
+	// Act
+	err := suite.impl.ClaimCancelling(context.Background())
+
+	// Assert
+	suite.NoError(err)
+	suite.assertMocksExpectations()
+}
+
+func (suite *DataSourceTestSuite) TestGetJobStatus() {
+	// Arrange
+	fixtureStatus := eth.JobStatusRunning
+	suite.msRPC.On("GetJobStatus", mock.Anything, jobID).Return(uint8(fixtureStatus), nil)
+	// Act
+	status, err := suite.impl.GetJobStatus(context.Background(), jobID)
+	// Assert
+	suite.NoError(err)
+	suite.Equal(fixtureStatus, status)
+}
+
+func (suite *DataSourceTestSuite) TestClaimCancellingNoCancelling() {
+	// Arrange
+	suite.msRPC.On("HasCancellingJob", mock.Anything, fromAddress).Return(false, nil)
+
+	// Act
+	err := suite.impl.ClaimCancelling(context.Background())
+
+	// Assert
+	suite.NoError(err)
+	suite.assertMocksExpectations()
+	suite.msRPC.AssertNotCalled(suite.T(), "ClaimNextCancellingJob", mock.Anything)
 }
 
 func TestDataSourceTestSuite(t *testing.T) {
