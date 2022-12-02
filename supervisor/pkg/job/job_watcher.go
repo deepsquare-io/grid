@@ -3,6 +3,7 @@ package job
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"strings"
 	"sync"
 	"time"
@@ -269,8 +270,7 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 		logger.I.Error("GetJobStatus failed, abort handleClaimNextCancellingJobEvent", zap.Error(err))
 		return
 	}
-	for status == eth.JobStatusCancelling {
-
+	if err := try.Do(func() error {
 		if err := try.Do(func() error {
 			return w.scheduler.CancelJob(ctx, &slurm.CancelJobRequest{
 				Name: hex.EncodeToString(event.JobId[:]),
@@ -278,7 +278,7 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 			})
 		}, 5, 5*time.Second); err != nil {
 			logger.I.Error("CancelJob failed, abort handleClaimNextCancellingJobEvent", zap.Error(err))
-			return
+			return err
 		}
 
 		time.Sleep(5 * time.Second)
@@ -287,6 +287,15 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 		if err != nil {
 			logger.I.Error("GetJobStatus failed, considering as Cancelling", zap.Error(err))
 			status = eth.JobStatusCancelling
+		}
+		if status == eth.JobStatusCancelling {
+			return errors.New("failed to cancel job")
+		}
+		return nil
+	}, 10, 5*time.Second); err != nil {
+		logger.I.Error("failed to cancel, considering as CANCELLED")
+		if err := w.metaQueue.SetJobStatus(ctx, event.JobId, eth.JobStatusCancelled, 0); err != nil {
+			return
 		}
 	}
 }

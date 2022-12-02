@@ -53,23 +53,31 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 	logger.I.Info("grpc received job result", zap.Any("job_result", req))
 	jobName, err := hex.DecodeString(req.Name)
 	if err != nil {
+		logger.I.Warn("SetJobStatus: DecodeString failed", zap.Error(err), zap.String("name", req.Name))
 		return nil, err
 	}
 	var jobNameFixedLength [32]byte
 	copy(jobNameFixedLength[:], jobName)
 
 	if status, ok := gRPCToEthJobStatus[req.Status]; ok {
-		err = s.jobHandler.SetJobStatus(
+		if err = s.jobHandler.SetJobStatus(
 			ctx,
 			jobNameFixedLength,
 			status,
-			req.Duration,
-		)
-		if err != nil {
+			req.Duration/60,
+		); err != nil {
+			logger.I.Error(
+				"SetJobStatus failed",
+				zap.Error(err),
+				zap.String("status", req.Status.String()),
+				zap.String("name", string(jobName)),
+				zap.Uint64("duration", req.Duration/60),
+			)
 			return nil, err
 		}
 		return &supervisorv1alpha1.SetJobStatusResponse{}, nil
 	} else {
+		logger.I.Error("SetJobStatus unknown job status", zap.Error(err), zap.String("status", req.Status.String()))
 		return nil, fmt.Errorf("unknown job status %s", req.Status.String())
 	}
 
