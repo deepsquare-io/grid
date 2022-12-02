@@ -33,3 +33,4 @@ go.work
 app
 coverage*
 bin/
+*.log

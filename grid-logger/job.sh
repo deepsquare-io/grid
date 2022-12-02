@@ -1,6 +1,11 @@
 #!/bin/bash
 
-./bin/grid-logger-client --server.tls=false --pipe-file=pipe >/dev/stdout 2>/dev/stderr &
+./bin/grid-logger-writer \
+  --server.tls=false \
+  --pipe.path=pipe \
+  --log-name=test \
+  --user=user \
+  >/dev/stdout 2>/dev/stderr &
 LOGGER_PID=$!
 
 echo "logger running at $LOGGER_PID"

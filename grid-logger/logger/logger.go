@@ -1,17 +1,25 @@
 package logger
 
 import (
-	"log"
+	"os"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
-var I *zap.SugaredLogger
+var I *zap.Logger
 
 func init() {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatal("logger failed:", err)
-	}
-	I = logger.Sugar()
+	atom := zap.NewAtomicLevel()
+	config := zap.NewProductionEncoderConfig() // or zap.NewDevelopmentConfig() or any other zap.Config
+	config.TimeKey = "timestamp"
+	config.EncodeTime = zapcore.ISO8601TimeEncoder
+	config.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	config.EncodeCaller = zapcore.FullCallerEncoder
+	I = zap.New(zapcore.NewCore(
+		zapcore.NewConsoleEncoder(config),
+		zapcore.Lock(os.Stdout),
+		atom,
+	))
+	atom.SetLevel(zap.DebugLevel)
 }

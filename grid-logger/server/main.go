@@ -1,5 +1,3 @@
-// go:build server
-
 package main
 
 import (
@@ -9,6 +7,7 @@ import (
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
 	"github.com/deepsquare-io/the-grid/grid-logger/server/api"
+	"github.com/deepsquare-io/the-grid/grid-logger/server/db"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -21,6 +20,8 @@ var (
 	tls      bool
 	keyFile  string
 	certFile string
+
+	storagePath string
 )
 
 var flags = []cli.Flag{
@@ -52,6 +53,12 @@ var flags = []cli.Flag{
 		Usage:       "TLS Certificate file.",
 		EnvVars:     []string{"TLS_CERT"},
 	},
+	&cli.StringFlag{
+		Name:        "storage.path",
+		Usage:       "Directory path to store logs.",
+		Value:       "./db",
+		Destination: &storagePath,
+	},
 }
 
 var app = &cli.App{
@@ -62,7 +69,7 @@ var app = &cli.App{
 	Action: func(cCtx *cli.Context) error {
 		lis, err := net.Listen("tcp", listenAddress)
 		if err != nil {
-			logger.I.Error("listen failed:", err)
+			logger.I.Error("listen failed", zap.Error(err))
 			return err
 		}
 		opts := []grpc.ServerOption{}
@@ -75,7 +82,12 @@ var app = &cli.App{
 		}
 
 		server := grpc.NewServer(opts...)
-		loggerv1alpha1.RegisterLoggerAPIServer(server, &api.LoggerAPIServer{})
+		loggerv1alpha1.RegisterLoggerAPIServer(
+			server,
+			api.NewLoggerAPIServer(
+				db.NewFileDB(storagePath),
+			),
+		)
 
 		logger.I.Info("listening")
 

@@ -3,6 +3,7 @@ module github.com/deepsquare-io/the-grid/grid-logger
 go 1.19
 
 require (
+	github.com/nxadm/tail v1.4.8
 	github.com/urfave/cli/v2 v2.23.5
 	go.uber.org/zap v1.24.0
 	google.golang.org/grpc v1.51.0
@@ -12,6 +13,7 @@ require (
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -23,4 +25,5 @@ require (
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20221201204527-e3fa12d562f3 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )

@@ -4,13 +4,16 @@ TAG_NAME = $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 TAG_NAME_DEV = $(shell git describe --tags --abbrev=0 2>/dev/null)
 GIT_COMMIT = $(shell git rev-parse --short=7 HEAD)
 VERSION = $(or ${TAG_NAME},$(TAG_NAME_DEV)-dev)
-bins := grid-logger-client grid-logger-server
+bins := grid-logger-writer grid-logger-reader grid-logger-server
 
 .PHONY: all
 all: $(addprefix bin/,$(bins))
 
-bin/grid-logger-client: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags client -o "$@" ./client/main.go
+bin/grid-logger-writer: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags writer -o "$@" ./writer/main.go
+
+bin/grid-logger-reader: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags reader -o "$@" ./reader/main.go
 
 bin/grid-logger-server: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags server -o "$@" ./server/main.go
@@ -46,11 +49,15 @@ $(golint):
 
 .PHONY: lint
 lint: $(golint)
-	$(golint) run ./...
+	golangci-lint run ./...
 
 .PHONY: mocks
 mocks:
 	mockery --all
+
+.PHONY: grpc
+grpc:
+	cd ../protos/loggerapis && buf generate
 
 .PHONY: clean
 clean:

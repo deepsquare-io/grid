@@ -1,5 +1,3 @@
-// go:build client
-
 package main
 
 import (
@@ -27,6 +25,8 @@ var (
 	serverHostOverride string
 
 	pipeFile string
+	logName  string
+	user     string
 )
 
 var flags = []cli.Flag{
@@ -67,16 +67,28 @@ var flags = []cli.Flag{
 	},
 
 	&cli.StringFlag{
-		Name:        "pipe-file",
+		Name:        "pipe.path",
 		Value:       "pipe",
 		Destination: &pipeFile,
 		Usage:       "FIFO Pipe file.",
 	},
+	&cli.StringFlag{
+		Name:        "log-name",
+		Usage:       "Name of the log. Used as a key in the database.",
+		Required:    true,
+		Destination: &logName,
+	},
+	&cli.StringFlag{
+		Name:        "user",
+		Usage:       "User/Owner of the log. Used for authentication.",
+		Required:    true,
+		Destination: &user,
+	},
 }
 
 var app = &cli.App{
-	Name:    "grid-logger-client",
-	Usage:   "Send log from pipe",
+	Name:    "grid-logger-writer",
+	Usage:   "Send logs from pipe",
 	Flags:   flags,
 	Suggest: true,
 	Action: func(cCtx *cli.Context) error {
@@ -112,13 +124,13 @@ var app = &cli.App{
 		}
 		conn, err := grpc.Dial(serverEndpoint, opts...)
 		if err != nil {
-			logger.I.Error("grpc dial failed:", err)
+			logger.I.Error("grpc dial failed", zap.Error(err))
 			return err
 		}
 		defer func() {
 			if err := conn.Close(); err != nil {
 				if err != io.EOF {
-					logger.I.Error("grpc close failed:", err)
+					logger.I.Error("grpc close failed", zap.Error(err))
 				}
 			}
 		}()
@@ -127,20 +139,20 @@ var app = &cli.App{
 		// Open pipe
 		_ = os.Remove(pipeFile)
 		if err := syscall.Mkfifo(pipeFile, 0666); err != nil {
-			logger.I.Error("mkfifo failed:", err)
+			logger.I.Error("mkfifo failed", zap.Error(err))
 			return err
 		}
 
 		pipe, err := os.OpenFile(pipeFile, os.O_RDWR, os.ModeNamedPipe)
 		if err != nil {
-			logger.I.Error("pipe open failed:", err)
+			logger.I.Error("pipe open failed", zap.Error(err))
 			return err
 		}
 
 		// Open grpc stream
 		stream, err := client.Write(ctx)
 		if err != nil {
-			logger.I.Fatal("grpc open failed:", err)
+			logger.I.Fatal("grpc open failed", zap.Error(err))
 		}
 
 		logger.I.Info("reading")
@@ -151,21 +163,26 @@ var app = &cli.App{
 			if err == io.EOF {
 				_, err := stream.CloseAndRecv()
 				if err != nil {
-					logger.I.Error("grpc close failed:", err)
+					logger.I.Error("grpc close failed", zap.Error(err))
 					return err
 				}
 				logger.I.Info("pipe EOF, exiting...")
 				return nil
 			}
 			if err != nil {
-				logger.I.Error("pipe read failed:", err)
+				logger.I.Error("pipe read failed", zap.Error(err))
 				return err
 			}
-			logger.I.Debug("recv", line)
+			logger.I.Info(
+				"pipe recv",
+				zap.String("data", string(line)),
+			)
 			if err := stream.Send(&loggerv1alpha1.WriteRequest{
-				Data: line,
+				LogName: logName,
+				Data:    line,
+				User:    user,
 			}); err != nil {
-				logger.I.Error("grpc write failed:", err)
+				logger.I.Error("grpc write failed", zap.Error(err))
 			}
 		}
 	},
