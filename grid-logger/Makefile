@@ -4,17 +4,16 @@ TAG_NAME = $(shell git describe --tags --abbrev=0 --exact-match 2>/dev/null)
 TAG_NAME_DEV = $(shell git describe --tags --abbrev=0 2>/dev/null)
 GIT_COMMIT = $(shell git rev-parse --short=7 HEAD)
 VERSION = $(or ${TAG_NAME},$(TAG_NAME_DEV)-dev)
+bins := grid-logger-client grid-logger-server
 
 .PHONY: all
-all: bin/client bin/server
+all: $(addprefix bin/,$(bins))
 
 bin/grid-logger-client: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags client -o "$@" ./client/main.go
 
 bin/grid-logger-server: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags server -o "$@" ./server/main.go
-
-bins := grid-logger-client grid-logger-server
 
 bin/checksums.txt: $(addprefix bin/,$(bins))
 	sha256sum -b $(addprefix bin/,$(bins)) | sed 's/bin\///' > $@
