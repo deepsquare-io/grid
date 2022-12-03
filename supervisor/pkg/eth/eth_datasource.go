@@ -20,7 +20,6 @@ type DataSource struct {
 	metaschedulerRPC MetaSchedulerRPC
 	metaschedulerWS  MetaSchedulerWS
 	pk               *ecdsa.PrivateKey
-	pub              *ecdsa.PublicKey
 	fromAddress      common.Address
 }
 
@@ -39,19 +38,13 @@ func New(
 	if msWS == nil {
 		logger.I.Fatal("metaschedulerWS is nil")
 	}
-	publicKey := pk.Public()
-	pubECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		logger.I.Fatal("error casting public key to ECDSA")
-	}
 
-	fromAddress := crypto.PubkeyToAddress(*pubECDSA)
+	fromAddress := crypto.PubkeyToAddress(pk.PublicKey)
 	return &DataSource{
 		authenticator:    a,
 		metaschedulerRPC: msRPC,
 		metaschedulerWS:  msWS,
 		pk:               pk,
-		pub:              pubECDSA,
 		fromAddress:      fromAddress,
 	}
 }
