@@ -73,6 +73,17 @@ var flags = []cli.Flag{
 		Destination: &secret,
 		EnvVars:     []string{"JWT_SECRET"},
 	},
+	&cli.BoolFlag{
+		Name:    "debug",
+		EnvVars: []string{"DEBUG"},
+		Value:   false,
+		Action: func(ctx *cli.Context, s bool) error {
+			if s {
+				logger.EnableDebug()
+			}
+			return nil
+		},
+	},
 }
 
 var app = &cli.App{

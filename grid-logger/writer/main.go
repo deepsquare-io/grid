@@ -88,6 +88,17 @@ var flags = []cli.Flag{
 		Destination: &user,
 		EnvVars:     []string{"OWNER"},
 	},
+	&cli.BoolFlag{
+		Name:    "debug",
+		EnvVars: []string{"DEBUG"},
+		Value:   false,
+		Action: func(ctx *cli.Context, s bool) error {
+			if s {
+				logger.EnableDebug()
+			}
+			return nil
+		},
+	},
 }
 
 var app = &cli.App{
@@ -177,7 +188,7 @@ var app = &cli.App{
 				logger.I.Error("pipe read failed", zap.Error(err))
 				return err
 			}
-			logger.I.Info(
+			logger.I.Debug(
 				"pipe recv",
 				zap.String("data", string(line)),
 			)

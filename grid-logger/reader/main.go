@@ -94,6 +94,17 @@ var flags = []cli.Flag{
 		Required:    true,
 		Destination: &logName,
 	},
+	&cli.BoolFlag{
+		Name:    "debug",
+		EnvVars: []string{"DEBUG"},
+		Value:   false,
+		Action: func(ctx *cli.Context, s bool) error {
+			if s {
+				logger.EnableDebug()
+			}
+			return nil
+		},
+	},
 }
 
 var app = &cli.App{

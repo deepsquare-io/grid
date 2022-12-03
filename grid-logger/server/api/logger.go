@@ -46,7 +46,7 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 		if err != nil {
 			return err
 		}
-		logger.I.Info("write", zap.Int("size", n), zap.String("log-name", req.GetLogName()))
+		logger.I.Debug("write", zap.Int("size", n), zap.Any("req", req))
 	}
 }
 
