@@ -1,13 +1,16 @@
 package api
 
 import (
+	"errors"
 	"io"
 	"strings"
 
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	"github.com/deepsquare-io/the-grid/grid-logger/server/auth"
 	"github.com/deepsquare-io/the-grid/grid-logger/server/db"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
 
@@ -58,9 +61,21 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 		logger.I.Info("reader connected but was not identified")
 	}
 
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		logger.I.Error("couldn't read metadata")
+		return errors.New("couldn't read metadata")
+	}
+
+	user, ok := ctx.Value(auth.UserField{}).(auth.User)
+	if !ok {
+		return errors.New("failed to find user")
+	}
+	logger.I.Info("reader authenticated", zap.Any("user", user), zap.Any("authorization", md.Get("authorization")))
+
 	logs := make(chan string)
 	go func() {
-		if err := s.db.ReadAndWatch(req.GetLogName(), req.GetUser(), logs); err != nil {
+		if err := s.db.ReadAndWatch(req.GetLogName(), user.Address, logs); err != nil {
 			logger.I.Error("read and watch failed", zap.Error(err))
 		}
 	}()

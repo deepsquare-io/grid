@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -42,12 +43,12 @@ func (i *interceptor) Unary() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-
-		if err := i.authorize(ctx, info.FullMethod); err != nil {
+		user, err := i.authorize(ctx, info.FullMethod)
+		if err != nil {
 			return nil, err
 		}
 
-		return handler(ctx, req)
+		return handler(context.WithValue(ctx, UserField{}, user), req)
 	}
 }
 
@@ -58,55 +59,58 @@ func (i *interceptor) Stream() grpc.StreamServerInterceptor {
 		info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler,
 	) error {
-
-		if err := i.authorize(stream.Context(), info.FullMethod); err != nil {
+		ctx := stream.Context()
+		user, err := i.authorize(ctx, info.FullMethod)
+		if err != nil {
 			return err
 		}
+		newStream := middleware.WrapServerStream(stream)
+		newStream.WrappedContext = context.WithValue(ctx, UserField{}, user)
 
-		return handler(srv, stream)
+		return handler(srv, newStream)
 	}
 }
 
-func (i *interceptor) authorize(ctx context.Context, method string) error {
+func (i *interceptor) authorize(ctx context.Context, method string) (User, error) {
 	ok := i.accessibleRoutes[method]
 	if !ok {
 		// everyone can access
-		return nil
+		return User{}, nil
 	}
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return status.Error(codes.Unauthenticated, "metadata is not provided")
+		return User{}, status.Error(codes.Unauthenticated, "metadata is not provided")
 	}
 
 	values := md["authorization"]
 	if len(values) == 0 {
-		return status.Error(codes.Unauthenticated, "authorization token is not provided")
+		return User{}, status.Error(codes.Unauthenticated, "authorization token is not provided")
 	}
 
 	const prefix = "Bearer "
 	if len(values[0]) < len(prefix) {
-		return status.Errorf(codes.Unauthenticated, "access token is in bad format, expected: 'Bearer <token>', received: %s", values[0])
+		return User{}, status.Errorf(codes.Unauthenticated, "access token is in bad format, expected: 'Bearer <token>', received: %s", values[0])
 	}
 
 	accessToken := values[0][len(prefix):]
 	claims, err := i.jwtProvider.Verify(accessToken)
 	if err != nil {
-		return status.Errorf(codes.Unauthenticated, "access token is invalid: %v", err)
+		return User{}, status.Errorf(codes.Unauthenticated, "access token is invalid: %v", err)
 	}
 
 	for _, ok := range i.accessibleRoutes {
 		if ok {
-			_, err := i.storage.Get(claims.Subject)
+			user, err := i.storage.Get(claims.Subject)
 			if err != nil {
 				if errors.Is(err, ErrUserNotExists) {
-					return status.Errorf(codes.Unauthenticated, "user not found: %v", err)
+					return User{}, status.Errorf(codes.Unauthenticated, "user not found: %v", err)
 				}
-				return err
+				return User{}, err
 			}
-			return nil
+			return user, nil
 		}
 	}
 
-	return status.Error(codes.PermissionDenied, "no permission to access this RPC")
+	return User{}, status.Error(codes.PermissionDenied, "no permission to access this RPC")
 }

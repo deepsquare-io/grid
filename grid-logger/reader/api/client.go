@@ -95,7 +95,6 @@ func (c *Client) ReadAndWatch(
 	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token)
 	stream, err := c.loggerAPI.Read(ctx, &loggerv1alpha1.ReadRequest{
 		LogName: logName,
-		User:    user,
 	})
 	if err != nil {
 		return err
