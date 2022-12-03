@@ -2,6 +2,7 @@ package api
 
 import (
 	"io"
+	"strings"
 
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
@@ -41,11 +42,11 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 			return err
 		}
 
-		n, err := s.db.Append(req.LogName, req.User, req.Data)
+		n, err := s.db.Append(req.GetLogName(), strings.ToLower(req.GetUser()), req.GetData())
 		if err != nil {
 			return err
 		}
-		logger.I.Info("write", zap.Int("size", n), zap.String("log-name", req.LogName))
+		logger.I.Info("write", zap.Int("size", n), zap.String("log-name", req.GetLogName()))
 	}
 }
 
@@ -59,7 +60,7 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 
 	logs := make(chan string)
 	go func() {
-		if err := s.db.ReadAndWatch(req.LogName, req.User, logs); err != nil {
+		if err := s.db.ReadAndWatch(req.GetLogName(), req.GetUser(), logs); err != nil {
 			logger.I.Error("read and watch failed", zap.Error(err))
 		}
 	}()

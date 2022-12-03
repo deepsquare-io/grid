@@ -34,3 +34,4 @@ app
 coverage*
 bin/
 *.log
+*.local

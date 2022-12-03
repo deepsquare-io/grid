@@ -4,7 +4,7 @@
   --server.tls=false \
   --pipe.path=pipe \
   --log-name=test \
-  --user=user \
+  --user=0x75761B17c3088ce5Cd8e02575c6DAa438FFA6e12 \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID=$!
 

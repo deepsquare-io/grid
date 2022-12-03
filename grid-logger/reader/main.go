@@ -1,18 +1,24 @@
 package main
 
 import (
+	"crypto/ecdsa"
 	"crypto/tls"
-	"fmt"
 	"io"
 	"os"
+	"strings"
 
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	"github.com/deepsquare-io/the-grid/grid-logger/reader/api"
+	"github.com/deepsquare-io/the-grid/grid-logger/reader/eth"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -22,8 +28,11 @@ var (
 	serverCAFile       string
 	serverHostOverride string
 
-	logName string
-	user    string
+	logName  string
+	ethHexPK string
+	pk       *ecdsa.PrivateKey
+	pub      ecdsa.PublicKey
+	address  string
 )
 
 var flags = []cli.Flag{
@@ -64,16 +73,26 @@ var flags = []cli.Flag{
 	},
 
 	&cli.StringFlag{
+		Name:        "eth.pk",
+		Usage:       "Private key (hexadecimal format: 0xabcdef).",
+		Required:    true,
+		Destination: &ethHexPK,
+		Action: func(ctx *cli.Context, s string) (err error) {
+			pk, err = crypto.HexToECDSA(ethHexPK)
+			if err != nil {
+				logger.I.Fatal("couldn't decode private key", zap.Error(err))
+			}
+			pub = pk.PublicKey
+			address = strings.ToLower(crypto.PubkeyToAddress(pub).Hex())
+			return nil
+		},
+		EnvVars: []string{"ETH_PK"},
+	},
+	&cli.StringFlag{
 		Name:        "log-name",
 		Usage:       "Name of the log. Used as a key in the database.",
 		Required:    true,
 		Destination: &logName,
-	},
-	&cli.StringFlag{
-		Name:        "user",
-		Usage:       "User/Owner of the log. Used for authentication.",
-		Required:    true,
-		Destination: &user,
 	},
 }
 
@@ -86,24 +105,7 @@ var app = &cli.App{
 		ctx := cCtx.Context
 
 		// Dial server
-		opts := []grpc.DialOption{}
-		if serverTLS {
-			if !serverTLSInsecure {
-				creds, err := credentials.NewClientTLSFromFile(serverCAFile, serverHostOverride)
-				if err != nil {
-					logger.I.Fatal("Failed to create TLS credentials", zap.Error(err))
-				}
-				opts = append(opts, grpc.WithTransportCredentials(creds))
-			} else {
-				tlsConfig := &tls.Config{
-					InsecureSkipVerify: true,
-				}
-				opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
-			}
-		} else {
-			opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		}
-		conn, err := grpc.Dial(serverEndpoint, opts...)
+		conn, err := dial()
 		if err != nil {
 			logger.I.Error("grpc dial failed", zap.Error(err))
 			return err
@@ -115,31 +117,63 @@ var app = &cli.App{
 				}
 			}
 		}()
-		client := loggerv1alpha1.NewLoggerAPIClient(conn)
-
-		stream, err := client.Read(ctx, &loggerv1alpha1.ReadRequest{
-			LogName: logName,
-			User:    user,
-		})
+		client := api.New(conn)
+		nonce, err := client.GetNonce(ctx, strings.ToLower(address))
+		if err != nil {
+			if st, ok := status.FromError(err); !ok {
+				return err
+			} else if st.Code() == codes.NotFound {
+				if err := client.Register(ctx, address); err != nil {
+					return err
+				}
+				nonce, err = client.GetNonce(ctx, strings.ToLower(address))
+				if err != nil {
+					return err
+				}
+			}
+		}
+		signature, err := eth.Sign(pk, nonce)
+		if err != nil {
+			return err
+		}
+		token, err := client.SignIn(
+			ctx,
+			strings.ToLower(address),
+			nonce,
+			signature,
+		)
 		if err != nil {
 			return err
 		}
 
-		for {
-			log, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return err
-			}
-			fmt.Println(string(log.Data))
-		}
-		return nil
+		return client.ReadAndWatch(ctx, logName, strings.ToLower(address), token)
 	},
 }
 
+func dial() (*grpc.ClientConn, error) {
+	opts := []grpc.DialOption{}
+	if serverTLS {
+		if !serverTLSInsecure {
+			creds, err := credentials.NewClientTLSFromFile(serverCAFile, serverHostOverride)
+			if err != nil {
+				logger.I.Fatal("Failed to create TLS credentials", zap.Error(err))
+			}
+			opts = append(opts, grpc.WithTransportCredentials(creds))
+		} else {
+			tlsConfig := &tls.Config{
+				InsecureSkipVerify: true,
+			}
+			opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
+		}
+	} else {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+	conn, err := grpc.Dial(serverEndpoint, opts...)
+	return conn, err
+}
+
 func main() {
+	_ = godotenv.Load(".reader.env", ".reader.env.local")
 	if err := app.Run(os.Args); err != nil {
 		logger.I.Fatal("app crashed", zap.Error(err))
 	}

@@ -10,6 +10,7 @@ import (
 
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -71,18 +72,21 @@ var flags = []cli.Flag{
 		Value:       "pipe",
 		Destination: &pipeFile,
 		Usage:       "FIFO Pipe file.",
+		EnvVars:     []string{"PIPE_PATH"},
 	},
 	&cli.StringFlag{
 		Name:        "log-name",
 		Usage:       "Name of the log. Used as a key in the database.",
 		Required:    true,
 		Destination: &logName,
+		EnvVars:     []string{"LOG_NAME"},
 	},
 	&cli.StringFlag{
 		Name:        "user",
 		Usage:       "User/Owner of the log. Used for authentication.",
 		Required:    true,
 		Destination: &user,
+		EnvVars:     []string{"OWNER"},
 	},
 }
 
@@ -189,6 +193,7 @@ var app = &cli.App{
 }
 
 func main() {
+	_ = godotenv.Load(".writer.env", ".writer.env.local")
 	if err := app.Run(os.Args); err != nil {
 		logger.I.Fatal("app crashed", zap.Error(err))
 	}
