@@ -9,16 +9,13 @@ import (
 
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
 	"github.com/deepsquare-io/the-grid/grid-logger/reader/api"
-	"github.com/deepsquare-io/the-grid/grid-logger/reader/eth"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/status"
 )
 
 var (
@@ -129,29 +126,10 @@ var app = &cli.App{
 			}
 		}()
 		client := api.New(conn)
-		nonce, err := client.GetNonce(ctx, strings.ToLower(address))
-		if err != nil {
-			if st, ok := status.FromError(err); !ok {
-				return err
-			} else if st.Code() == codes.NotFound {
-				if err := client.Register(ctx, address); err != nil {
-					return err
-				}
-				nonce, err = client.GetNonce(ctx, strings.ToLower(address))
-				if err != nil {
-					return err
-				}
-			}
-		}
-		signature, err := eth.Sign(pk, nonce)
-		if err != nil {
-			return err
-		}
-		token, err := client.SignIn(
+		token, err := client.RegisterOrSignIn(
 			ctx,
 			strings.ToLower(address),
-			nonce,
-			signature,
+			pk,
 		)
 		if err != nil {
 			return err

@@ -2,16 +2,21 @@ package api
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"fmt"
 	"io"
+	"strings"
 
 	authv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/auth/v1alpha1"
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	"github.com/deepsquare-io/the-grid/grid-logger/reader/eth"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 type Client struct {
@@ -80,6 +85,37 @@ func (c *Client) GetNonce(
 		return []byte{}, err
 	}
 	return resp.GetNonce(), nil
+}
+
+func (c *Client) RegisterOrSignIn(ctx context.Context, address string, pk *ecdsa.PrivateKey) (string, error) {
+	nonce, err := c.GetNonce(ctx, strings.ToLower(address))
+	if err != nil {
+		if st, ok := status.FromError(err); !ok {
+			return "", err
+		} else if st.Code() == codes.NotFound {
+			if err := c.Register(ctx, address); err != nil {
+				return "", err
+			}
+			nonce, err = c.GetNonce(ctx, strings.ToLower(address))
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+	signature, err := eth.Sign(pk, nonce)
+	if err != nil {
+		return "", err
+	}
+	token, err := c.SignIn(
+		ctx,
+		strings.ToLower(address),
+		nonce,
+		signature,
+	)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
 func (c *Client) ReadAndWatch(
