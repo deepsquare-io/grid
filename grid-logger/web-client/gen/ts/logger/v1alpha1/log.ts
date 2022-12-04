@@ -45,9 +45,23 @@ export interface WriteResponse {
  */
 export interface ReadRequest {
     /**
-     * @generated from protobuf field: string log_name = 1;
+     * @generated from protobuf field: string address = 1;
+     */
+    address: string;
+    /**
+     * @generated from protobuf field: string log_name = 2;
      */
     logName: string;
+    /**
+     * @generated from protobuf field: uint64 timestamp = 3;
+     */
+    timestamp: bigint;
+    /**
+     * signedHash = sign(hash(address + '/' + log_name + '/' + timestamp))
+     *
+     * @generated from protobuf field: bytes signed_hash = 4;
+     */
+    signedHash: Uint8Array;
 }
 /**
  * @generated from protobuf message logger.v1alpha1.ReadResponse
@@ -149,11 +163,14 @@ export const WriteResponse = new WriteResponse$Type();
 class ReadRequest$Type extends MessageType<ReadRequest> {
     constructor() {
         super("logger.v1alpha1.ReadRequest", [
-            { no: 1, name: "log_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "log_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "timestamp", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 4, name: "signed_hash", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
         ]);
     }
     create(value?: PartialMessage<ReadRequest>): ReadRequest {
-        const message = { logName: "" };
+        const message = { address: "", logName: "", timestamp: 0n, signedHash: new Uint8Array(0) };
         globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
         if (value !== undefined)
             reflectionMergePartial<ReadRequest>(this, message, value);
@@ -164,8 +181,17 @@ class ReadRequest$Type extends MessageType<ReadRequest> {
         while (reader.pos < end) {
             let [fieldNo, wireType] = reader.tag();
             switch (fieldNo) {
-                case /* string log_name */ 1:
+                case /* string address */ 1:
+                    message.address = reader.string();
+                    break;
+                case /* string log_name */ 2:
                     message.logName = reader.string();
+                    break;
+                case /* uint64 timestamp */ 3:
+                    message.timestamp = reader.uint64().toBigInt();
+                    break;
+                case /* bytes signed_hash */ 4:
+                    message.signedHash = reader.bytes();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -179,9 +205,18 @@ class ReadRequest$Type extends MessageType<ReadRequest> {
         return message;
     }
     internalBinaryWrite(message: ReadRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
-        /* string log_name = 1; */
+        /* string address = 1; */
+        if (message.address !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.address);
+        /* string log_name = 2; */
         if (message.logName !== "")
-            writer.tag(1, WireType.LengthDelimited).string(message.logName);
+            writer.tag(2, WireType.LengthDelimited).string(message.logName);
+        /* uint64 timestamp = 3; */
+        if (message.timestamp !== 0n)
+            writer.tag(3, WireType.Varint).uint64(message.timestamp);
+        /* bytes signed_hash = 4; */
+        if (message.signedHash.length)
+            writer.tag(4, WireType.LengthDelimited).bytes(message.signedHash);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

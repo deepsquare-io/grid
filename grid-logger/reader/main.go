@@ -3,12 +3,15 @@ package main
 import (
 	"crypto/ecdsa"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
 	"github.com/deepsquare-io/the-grid/grid-logger/reader/api"
+	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
@@ -126,16 +129,16 @@ var app = &cli.App{
 			}
 		}()
 		client := api.New(conn)
-		token, err := client.RegisterOrSignIn(
-			ctx,
-			strings.ToLower(address),
-			pk,
-		)
+
+		timestamp := uint64(time.Now().Unix())
+		data := []byte(fmt.Sprintf("%s/%s/%d", strings.ToLower(address), logName, timestamp))
+		hash := accounts.TextHash(data)
+
+		signature, err := crypto.Sign(hash, pk)
 		if err != nil {
 			return err
 		}
-
-		return client.ReadAndWatch(ctx, logName, token)
+		return client.ReadAndWatch(ctx, address, logName, timestamp, signature)
 	},
 }
 

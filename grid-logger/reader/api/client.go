@@ -2,27 +2,19 @@ package api
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"io"
-	"strings"
 
-	authv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/auth/v1alpha1"
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
-	"github.com/deepsquare-io/the-grid/grid-logger/reader/eth"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
 
 type Client struct {
 	conn      *grpc.ClientConn
 	loggerAPI loggerv1alpha1.LoggerAPIClient
-	authAPI   authv1alpha1.AuthAPIClient
 }
 
 func New(conn *grpc.ClientConn) *Client {
@@ -31,107 +23,28 @@ func New(conn *grpc.ClientConn) *Client {
 	}
 	return &Client{
 		conn:      conn,
-		authAPI:   authv1alpha1.NewAuthAPIClient(conn),
 		loggerAPI: loggerv1alpha1.NewLoggerAPIClient(conn),
 	}
 }
 
-func (c *Client) SignIn(
-	ctx context.Context,
-	address string,
-	nonce []byte,
-	sig []byte,
-) (string, error) {
-	logger.I.Debug(
-		"SignIn",
-		zap.String("address", address),
-		zap.String("nonce", hexutil.Encode(nonce)),
-		zap.String("sig", hexutil.Encode(sig)),
-	)
-	resp, err := c.authAPI.SignIn(ctx, &authv1alpha1.SignInRequest{
-		Address: address,
-		Nonce:   nonce,
-		Sig:     sig,
-	})
-	if err != nil {
-		return "", err
-	}
-	return resp.GetAccessToken(), nil
-}
-
-func (c *Client) Register(
-	ctx context.Context,
-	address string,
-) error {
-	logger.I.Debug("Register", zap.String("address", address))
-	_, err := c.authAPI.Register(ctx, &authv1alpha1.RegisterRequest{
-		Address: address,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Client) GetNonce(
-	ctx context.Context,
-	address string,
-) ([]byte, error) {
-	logger.I.Debug("GetNonce", zap.String("address", address))
-	resp, err := c.authAPI.Nonce(ctx, &authv1alpha1.NonceRequest{
-		Address: address,
-	})
-	if err != nil {
-		return []byte{}, err
-	}
-	return resp.GetNonce(), nil
-}
-
-func (c *Client) RegisterOrSignIn(ctx context.Context, address string, pk *ecdsa.PrivateKey) (string, error) {
-	nonce, err := c.GetNonce(ctx, strings.ToLower(address))
-	if err != nil {
-		if st, ok := status.FromError(err); !ok {
-			return "", err
-		} else if st.Code() == codes.NotFound {
-			if err := c.Register(ctx, address); err != nil {
-				return "", err
-			}
-			nonce, err = c.GetNonce(ctx, strings.ToLower(address))
-			if err != nil {
-				return "", err
-			}
-		}
-	}
-	logger.I.Info("nonce", zap.Any("nonce", hexutil.Encode(nonce)))
-	signature, err := eth.Sign(pk, nonce)
-	if err != nil {
-		return "", err
-	}
-	logger.I.Info("signature", zap.Any("signature", hexutil.Encode(signature)))
-	token, err := c.SignIn(
-		ctx,
-		strings.ToLower(address),
-		nonce,
-		signature,
-	)
-	if err != nil {
-		return "", err
-	}
-	return token, nil
-}
-
 func (c *Client) ReadAndWatch(
 	ctx context.Context,
-	logName, token string,
+	address string,
+	logName string,
+	timestamp uint64,
+	signedHash []byte,
 ) error {
 	logger.I.Debug(
 		"ReadAndWatch",
-		zap.String("address", logName),
-		zap.String("token", token),
+		zap.String("address", address),
+		zap.String("logName", logName),
+		zap.String("signedHash", hexutil.Encode(signedHash)),
 	)
-	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token)
 	stream, err := c.loggerAPI.Read(ctx, &loggerv1alpha1.ReadRequest{
-		LogName: logName,
+		LogName:    logName,
+		Address:    address,
+		Timestamp:  timestamp,
+		SignedHash: signedHash,
 	})
 	if err != nil {
 		return err

@@ -40,11 +40,15 @@ func (db *File) Append(logName string, user string, content []byte) (n int, err 
 	return n, nil
 }
 
-func (db *File) ReadAndWatch(logName string, user string, out chan<- string) error {
-	if err := os.MkdirAll(fmt.Sprintf("%s/%s", db.storagePath, user), 0o700); err != nil {
+func (db *File) ReadAndWatch(
+	address string,
+	logName string,
+	out chan<- string,
+) error {
+	if err := os.MkdirAll(fmt.Sprintf("%s/%s", db.storagePath, address), 0o700); err != nil {
 		logger.I.Error("failed to mkdir storage path", zap.Error(err))
 	}
-	logPath := fmt.Sprintf("%s/%s/%s.log", db.storagePath, user, logName)
+	logPath := fmt.Sprintf("%s/%s/%s.log", db.storagePath, address, logName)
 
 	t, err := tail.TailFile(logPath, tail.Config{
 		Follow: true,

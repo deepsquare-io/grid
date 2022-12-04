@@ -3,13 +3,10 @@ package main
 import (
 	"net"
 	"os"
-	"time"
 
-	authv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/auth/v1alpha1"
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
 	"github.com/deepsquare-io/the-grid/grid-logger/server/api"
-	"github.com/deepsquare-io/the-grid/grid-logger/server/auth"
 	"github.com/deepsquare-io/the-grid/grid-logger/server/db"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
@@ -92,26 +89,13 @@ var app = &cli.App{
 	Flags:   flags,
 	Suggest: true,
 	Action: func(cCtx *cli.Context) error {
-		storage := auth.NewMemStorage()
-		jwtProvider := auth.NewJwtHmacProvider(
-			secret,
-			"DeepSquare SA",
-			15*time.Minute,
-		)
-
 		lis, err := net.Listen("tcp", listenAddress)
 		if err != nil {
 			logger.I.Error("listen failed", zap.Error(err))
 			return err
 		}
 
-		interceptor := auth.NewInterceptor(jwtProvider, storage, map[string]bool{
-			"/logger.v1alpha1.LoggerAPI/Read": true,
-		})
-		opts := []grpc.ServerOption{
-			grpc.UnaryInterceptor(interceptor.Unary()),
-			grpc.StreamInterceptor(interceptor.Stream()),
-		}
+		opts := []grpc.ServerOption{}
 		if tls {
 			creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 			if err != nil {
@@ -126,10 +110,6 @@ var app = &cli.App{
 			api.NewLoggerAPIServer(
 				db.NewFileDB(storagePath),
 			),
-		)
-		authv1alpha1.RegisterAuthAPIServer(
-			server,
-			api.NewAuthAPIServer(storage, jwtProvider),
 		)
 
 		logger.I.Info("listening")

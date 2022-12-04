@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { GRPCService } from '$lib/services/grpc';
-	import { token } from '$lib/stores/jwt';
-	import { AuthAPIClient } from '@gen/ts/auth/v1alpha1/auth.client';
 	import { LoggerAPIClient } from '@gen/ts/logger/v1alpha1/log.client';
 	import MetaMaskOnboarding from '@metamask/onboarding';
 	import { GrpcStatusCode, GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
@@ -26,7 +24,6 @@
 
 	// gRPC
 	const url = 'http://localhost:9000';
-	let authClient: AuthAPIClient;
 	let loggerClient: LoggerAPIClient;
 	let grpcService: GRPCService;
 
@@ -34,12 +31,12 @@
 	let logName: string;
 
 	// Refresh login button
-	$: if ($token) {
+	$: if (address) {
 		onboarding.stopOnboarding();
 	}
 
 	// Refresh terminal
-	$: if ($token) {
+	$: if (address) {
 		terminal.open(terminalElement);
 		fitAddon.fit();
 	}
@@ -52,26 +49,25 @@
 			await provider.send('eth_requestAccounts', []);
 			signer = provider.getSigner();
 			address = await signer.getAddress();
-
-			// Do gRPC
-			try {
-				token.set(await grpcService.registerOrSignIn(address, signer));
-				console.log($token);
-			} catch (e) {
-				// TODO: handle error
-				console.log(e);
-			}
 		}
 	}
 
 	// Read and watch button action
 	async function doReadAndWatch() {
-		isTermHidden = false;
 		terminal.clear();
 		grpcService.stopReadAndWatch();
 
 		try {
-			const responses = grpcService.readAndWatch(logName, $token);
+			const timestamp = Date.now();
+			const msg = `${address.toLowerCase()}/${logName}/${timestamp}`;
+			const sig = await signer.signMessage(msg);
+			const responses = grpcService.readAndWatch(
+				address.toLowerCase(),
+				logName,
+				BigInt(timestamp),
+				ethers.utils.arrayify(sig)
+			);
+			isTermHidden = false;
 			for await (let message of responses) {
 				terminal.writeln(message.data);
 			}
@@ -102,13 +98,18 @@
 
 		// Configure gRPC
 		const transport = new GrpcWebFetchTransport({ baseUrl: url });
-		authClient = new AuthAPIClient(transport);
 		loggerClient = new LoggerAPIClient(transport);
-		grpcService = new GRPCService(authClient, loggerClient);
+		grpcService = new GRPCService(loggerClient);
 
 		// Configure metamask
 		onboarding = new MetaMaskOnboarding();
 		provider = new ethers.providers.Web3Provider(window.ethereum);
+
+		if (MetaMaskOnboarding.isMetaMaskInstalled()) {
+			await provider.send('eth_requestAccounts', []);
+			signer = provider.getSigner();
+			address = await signer.getAddress();
+		}
 	});
 </script>
 
@@ -121,7 +122,7 @@
 
 <main class="container">
 	<section>
-		{#if !$token}
+		{#if !address}
 			<dialog transition:fade open>
 				<article>
 					<button on:click={doLogin}>Login with MetaMask</button>
@@ -129,7 +130,7 @@
 			</dialog>
 		{/if}
 
-		{#if $token}
+		{#if address}
 			<article>
 				<form transition:fade on:submit|preventDefault={doReadAndWatch}>
 					<label for="logname">
@@ -143,6 +144,8 @@
 			</article>
 		{/if}
 
-		<div transition:fade bind:this={terminalElement} hidden={isTermHidden} />
+		{#key !address}
+			<div in:fade bind:this={terminalElement} hidden={isTermHidden} />
+		{/key}
 	</section>
 </main>
