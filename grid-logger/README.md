@@ -10,14 +10,14 @@ sequenceDiagram
     participant server
     participant logger
     participant app
-    Note over client,server: Authentication logic
+    Note over client,app: Authentication logic
     client->>+server: rpc nonce(addr)
     server->>-client: nonce
     client->>client: sig = sign nonce
     client->>+server: rpc signin(addr,nonce,sig)
     server->>-client: token
 
-    Note over server,app: Logging logic
+    Note over client,app: Logging logic
     app->>logger: pipe fifo
     logger->>server: stream rpc write(logname,user,data)
     opt if client logged
