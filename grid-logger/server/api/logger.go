@@ -65,7 +65,7 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 
 	if err := auth.Verify(
 		address,
-		[]byte(fmt.Sprintf("%s/%s/%d", address, req.GetLogName(), req.GetTimestamp())),
+		[]byte(fmt.Sprintf("read:%s/%s/%d", address, req.GetLogName(), req.GetTimestamp())),
 		req.GetSignedHash(),
 	); err != nil {
 		return status.Errorf(codes.Unauthenticated, "failed to authenticate: %v", err)
@@ -74,7 +74,7 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 
 	logs := make(chan string)
 	go func() {
-		if err := s.db.ReadAndWatch(address, req.GetLogName(), logs); err != nil {
+		if err := s.db.ReadAndWatch(ctx, address, req.GetLogName(), logs); err != nil {
 			logger.I.Error("read and watch failed", zap.Error(err))
 		}
 	}()
@@ -85,5 +85,35 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 			return err
 		}
 	}
+	return nil
+}
+
+func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream loggerv1alpha1.LoggerAPI_WatchListServer) error {
+	ctx := stream.Context()
+	address := strings.ToLower(req.GetAddress())
+
+	if err := auth.Verify(
+		address,
+		[]byte(fmt.Sprintf("watchList:%s/%d", address, req.GetTimestamp())),
+		req.GetSignedHash(),
+	); err != nil {
+		return status.Errorf(codes.Unauthenticated, "failed to authenticate: %v", err)
+	}
+
+	lists := make(chan []string)
+	go func() {
+		if err := s.db.ListAndWatch(ctx, address, lists); err != nil {
+			logger.I.Error("list and watch failed", zap.Error(err))
+		}
+	}()
+
+	for list := range lists {
+		if err := stream.Send(&loggerv1alpha1.WatchListResponse{
+			LogNames: list,
+		}); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

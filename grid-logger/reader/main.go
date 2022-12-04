@@ -3,15 +3,13 @@ package main
 import (
 	"crypto/ecdsa"
 	"crypto/tls"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
 	"github.com/deepsquare-io/the-grid/grid-logger/reader/api"
-	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
@@ -28,7 +26,6 @@ var (
 	serverCAFile       string
 	serverHostOverride string
 
-	logName  string
 	ethHexPK string
 	pk       *ecdsa.PrivateKey
 	pub      ecdsa.PublicKey
@@ -88,12 +85,6 @@ var flags = []cli.Flag{
 		},
 		EnvVars: []string{"ETH_PK"},
 	},
-	&cli.StringFlag{
-		Name:        "log-name",
-		Usage:       "Name of the log. Used as a key in the database.",
-		Required:    true,
-		Destination: &logName,
-	},
 	&cli.BoolFlag{
 		Name:    "debug",
 		EnvVars: []string{"DEBUG"},
@@ -108,12 +99,47 @@ var flags = []cli.Flag{
 }
 
 var app = &cli.App{
-	Name:    "grid-logger-reader",
-	Usage:   "Read logs",
+	Name:      "grid-logger-reader",
+	Usage:     "Read logs",
+	ArgsUsage: "<log name>",
+
 	Flags:   flags,
 	Suggest: true,
+
+	Commands: []*cli.Command{
+		{
+			Name: "list",
+			Action: func(cCtx *cli.Context) error {
+				ctx := cCtx.Context
+
+				// Dial server
+				conn, err := dial()
+				if err != nil {
+					logger.I.Error("grpc dial failed", zap.Error(err))
+					return err
+				}
+				defer func() {
+					if err := conn.Close(); err != nil {
+						if err != io.EOF {
+							logger.I.Error("grpc close failed", zap.Error(err))
+						}
+					}
+				}()
+				client := api.New(conn, pk)
+
+				return client.List(ctx, address)
+			},
+		},
+	},
+
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context
+
+		if cCtx.NArg() < 1 {
+			return errors.New("not enough arguments")
+		}
+
+		logName := cCtx.Args().First()
 
 		// Dial server
 		conn, err := dial()
@@ -128,17 +154,9 @@ var app = &cli.App{
 				}
 			}
 		}()
-		client := api.New(conn)
+		client := api.New(conn, pk)
 
-		timestamp := uint64(time.Now().Unix())
-		data := []byte(fmt.Sprintf("%s/%s/%d", strings.ToLower(address), logName, timestamp))
-		hash := accounts.TextHash(data)
-
-		signature, err := crypto.Sign(hash, pk)
-		if err != nil {
-			return err
-		}
-		return client.ReadAndWatch(ctx, address, logName, timestamp, signature)
+		return client.ReadAndWatch(ctx, address, logName)
 	},
 }
 

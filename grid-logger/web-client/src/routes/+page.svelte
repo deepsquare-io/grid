@@ -22,6 +22,11 @@
 	let fitAddon: FitAddon;
 	let isTermHidden = true;
 
+	// List logs
+	let logs: string[] = [];
+
+	let errorMessage = '';
+
 	// gRPC
 	const url = 'http://localhost:9000';
 	let loggerClient: LoggerAPIClient;
@@ -30,13 +35,13 @@
 	// Fields
 	let logName: string;
 
-	// Refresh login button
+	// onAddressDefined
 	$: if (address) {
 		onboarding.stopOnboarding();
+		listAndWatch();
 	}
 
-	// Refresh terminal
-	$: if (address) {
+	$: if (terminalElement) {
 		terminal.open(terminalElement);
 		fitAddon.fit();
 	}
@@ -46,10 +51,15 @@
 		if (!MetaMaskOnboarding.isMetaMaskInstalled()) {
 			onboarding.startOnboarding();
 		} else {
-			await provider.send('eth_requestAccounts', []);
-			signer = provider.getSigner();
-			address = await signer.getAddress();
+			await login();
 		}
+	}
+
+	async function login() {
+		await provider.send('eth_requestAccounts', []);
+		signer = provider.getSigner();
+		address = await signer.getAddress();
+		grpcService = new GRPCService(loggerClient, signer);
 	}
 
 	// Read and watch button action
@@ -58,29 +68,40 @@
 		grpcService.stopReadAndWatch();
 
 		try {
-			const timestamp = Date.now();
-			const msg = `${address.toLowerCase()}/${logName}/${timestamp}`;
-			const sig = await signer.signMessage(msg);
-			const responses = grpcService.readAndWatch(
-				address.toLowerCase(),
-				logName,
-				BigInt(timestamp),
-				ethers.utils.arrayify(sig)
-			);
+			const responses = await grpcService.readAndWatch(address.toLowerCase(), logName);
 			isTermHidden = false;
-			for await (let message of responses) {
-				terminal.writeln(message.data);
+			for await (let resp of responses) {
+				terminal.writeln(resp.data);
 			}
 		} catch (e) {
 			if (e instanceof RpcError) {
 				if (e.code == GrpcStatusCode[GrpcStatusCode.ABORTED]) {
 					console.log(e);
 				} else {
-					// TODO: handle error
+					if (e instanceof Error) {
+						errorMessage = e.message;
+					}
 					console.error(e);
 				}
 			}
-			// TODO: handle error
+			if (e instanceof Error) {
+				errorMessage = e.message;
+			}
+			console.error(e);
+		}
+	}
+
+	async function listAndWatch() {
+		try {
+			const responses = await grpcService.listAndWatch(address.toLowerCase());
+			for await (let resp of responses) {
+				logs = resp.logNames;
+			}
+		} catch (e) {
+			if (e instanceof Error) {
+				errorMessage = e.message;
+			}
+
 			console.error(e);
 		}
 	}
@@ -99,16 +120,13 @@
 		// Configure gRPC
 		const transport = new GrpcWebFetchTransport({ baseUrl: url });
 		loggerClient = new LoggerAPIClient(transport);
-		grpcService = new GRPCService(loggerClient);
 
 		// Configure metamask
 		onboarding = new MetaMaskOnboarding();
 		provider = new ethers.providers.Web3Provider(window.ethereum);
 
 		if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-			await provider.send('eth_requestAccounts', []);
-			signer = provider.getSigner();
-			address = await signer.getAddress();
+			await login();
 		}
 	});
 </script>
@@ -132,20 +150,42 @@
 
 		{#if address}
 			<article>
+				<header>
+					<table>
+						<thead>
+							<tr>
+								<th>Available logs</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each logs as log}
+								<tr>
+									<td>{log}</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</header>
+
 				<form transition:fade on:submit|preventDefault={doReadAndWatch}>
 					<label for="logname">
 						Log Name
 						<input name="logname" bind:value={logName} />
 					</label>
-					<footer>
-						<button>Fetch</button>
-					</footer>
+
+					<button>Fetch</button>
 				</form>
+
+				{#if errorMessage || !isTermHidden}
+					<footer transition:fade>
+						{#if errorMessage}
+							<span class="error">{errorMessage}</span>
+						{/if}
+
+						<div bind:this={terminalElement} />
+					</footer>
+				{/if}
 			</article>
 		{/if}
-
-		{#key !address}
-			<div in:fade bind:this={terminalElement} hidden={isTermHidden} />
-		{/key}
 	</section>
 </main>

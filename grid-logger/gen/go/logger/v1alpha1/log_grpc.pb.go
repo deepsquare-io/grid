@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type LoggerAPIClient interface {
 	Write(ctx context.Context, opts ...grpc.CallOption) (LoggerAPI_WriteClient, error)
 	Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (LoggerAPI_ReadClient, error)
+	WatchList(ctx context.Context, in *WatchListRequest, opts ...grpc.CallOption) (LoggerAPI_WatchListClient, error)
 }
 
 type loggerAPIClient struct {
@@ -100,12 +101,45 @@ func (x *loggerAPIReadClient) Recv() (*ReadResponse, error) {
 	return m, nil
 }
 
+func (c *loggerAPIClient) WatchList(ctx context.Context, in *WatchListRequest, opts ...grpc.CallOption) (LoggerAPI_WatchListClient, error) {
+	stream, err := c.cc.NewStream(ctx, &LoggerAPI_ServiceDesc.Streams[2], "/logger.v1alpha1.LoggerAPI/WatchList", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &loggerAPIWatchListClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type LoggerAPI_WatchListClient interface {
+	Recv() (*WatchListResponse, error)
+	grpc.ClientStream
+}
+
+type loggerAPIWatchListClient struct {
+	grpc.ClientStream
+}
+
+func (x *loggerAPIWatchListClient) Recv() (*WatchListResponse, error) {
+	m := new(WatchListResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // LoggerAPIServer is the server API for LoggerAPI service.
 // All implementations must embed UnimplementedLoggerAPIServer
 // for forward compatibility
 type LoggerAPIServer interface {
 	Write(LoggerAPI_WriteServer) error
 	Read(*ReadRequest, LoggerAPI_ReadServer) error
+	WatchList(*WatchListRequest, LoggerAPI_WatchListServer) error
 	mustEmbedUnimplementedLoggerAPIServer()
 }
 
@@ -118,6 +152,9 @@ func (UnimplementedLoggerAPIServer) Write(LoggerAPI_WriteServer) error {
 }
 func (UnimplementedLoggerAPIServer) Read(*ReadRequest, LoggerAPI_ReadServer) error {
 	return status.Errorf(codes.Unimplemented, "method Read not implemented")
+}
+func (UnimplementedLoggerAPIServer) WatchList(*WatchListRequest, LoggerAPI_WatchListServer) error {
+	return status.Errorf(codes.Unimplemented, "method WatchList not implemented")
 }
 func (UnimplementedLoggerAPIServer) mustEmbedUnimplementedLoggerAPIServer() {}
 
@@ -179,6 +216,27 @@ func (x *loggerAPIReadServer) Send(m *ReadResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _LoggerAPI_WatchList_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(WatchListRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(LoggerAPIServer).WatchList(m, &loggerAPIWatchListServer{stream})
+}
+
+type LoggerAPI_WatchListServer interface {
+	Send(*WatchListResponse) error
+	grpc.ServerStream
+}
+
+type loggerAPIWatchListServer struct {
+	grpc.ServerStream
+}
+
+func (x *loggerAPIWatchListServer) Send(m *WatchListResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // LoggerAPI_ServiceDesc is the grpc.ServiceDesc for LoggerAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -195,6 +253,11 @@ var LoggerAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "Read",
 			Handler:       _LoggerAPI_Read_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "WatchList",
+			Handler:       _LoggerAPI_WatchList_Handler,
 			ServerStreams: true,
 		},
 	},

@@ -4,6 +4,8 @@
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { LoggerAPI } from "./log";
+import type { WatchListResponse } from "./log";
+import type { WatchListRequest } from "./log";
 import type { ReadResponse } from "./log";
 import type { ReadRequest } from "./log";
 import type { ServerStreamingCall } from "@protobuf-ts/runtime-rpc";
@@ -24,6 +26,10 @@ export interface ILoggerAPIClient {
      * @generated from protobuf rpc: Read(logger.v1alpha1.ReadRequest) returns (stream logger.v1alpha1.ReadResponse);
      */
     read(input: ReadRequest, options?: RpcOptions): ServerStreamingCall<ReadRequest, ReadResponse>;
+    /**
+     * @generated from protobuf rpc: WatchList(logger.v1alpha1.WatchListRequest) returns (stream logger.v1alpha1.WatchListResponse);
+     */
+    watchList(input: WatchListRequest, options?: RpcOptions): ServerStreamingCall<WatchListRequest, WatchListResponse>;
 }
 /**
  * @generated from protobuf service logger.v1alpha1.LoggerAPI
@@ -47,5 +53,12 @@ export class LoggerAPIClient implements ILoggerAPIClient, ServiceInfo {
     read(input: ReadRequest, options?: RpcOptions): ServerStreamingCall<ReadRequest, ReadResponse> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
         return stackIntercept<ReadRequest, ReadResponse>("serverStreaming", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: WatchList(logger.v1alpha1.WatchListRequest) returns (stream logger.v1alpha1.WatchListResponse);
+     */
+    watchList(input: WatchListRequest, options?: RpcOptions): ServerStreamingCall<WatchListRequest, WatchListResponse> {
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        return stackIntercept<WatchListRequest, WatchListResponse>("serverStreaming", this._transport, method, opt, input);
     }
 }

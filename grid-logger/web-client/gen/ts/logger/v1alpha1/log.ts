@@ -57,7 +57,7 @@ export interface ReadRequest {
      */
     timestamp: bigint;
     /**
-     * signedHash = sign(hash(address + '/' + log_name + '/' + timestamp))
+     * signedHash = sign(hash('read:'+address + '/' + log_name + '/' + timestamp))
      *
      * @generated from protobuf field: bytes signed_hash = 4;
      */
@@ -71,6 +71,34 @@ export interface ReadResponse {
      * @generated from protobuf field: bytes data = 1;
      */
     data: Uint8Array;
+}
+/**
+ * @generated from protobuf message logger.v1alpha1.WatchListRequest
+ */
+export interface WatchListRequest {
+    /**
+     * @generated from protobuf field: string address = 1;
+     */
+    address: string;
+    /**
+     * @generated from protobuf field: uint64 timestamp = 2;
+     */
+    timestamp: bigint;
+    /**
+     * signedHash = sign(hash('watchList:'+address + '/' + timestamp))
+     *
+     * @generated from protobuf field: bytes signed_hash = 3;
+     */
+    signedHash: Uint8Array;
+}
+/**
+ * @generated from protobuf message logger.v1alpha1.WatchListResponse
+ */
+export interface WatchListResponse {
+    /**
+     * @generated from protobuf field: repeated string log_names = 1;
+     */
+    logNames: string[];
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class WriteRequest$Type extends MessageType<WriteRequest> {
@@ -274,10 +302,119 @@ class ReadResponse$Type extends MessageType<ReadResponse> {
  * @generated MessageType for protobuf message logger.v1alpha1.ReadResponse
  */
 export const ReadResponse = new ReadResponse$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WatchListRequest$Type extends MessageType<WatchListRequest> {
+    constructor() {
+        super("logger.v1alpha1.WatchListRequest", [
+            { no: 1, name: "address", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "timestamp", kind: "scalar", T: 4 /*ScalarType.UINT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 3, name: "signed_hash", kind: "scalar", T: 12 /*ScalarType.BYTES*/ }
+        ]);
+    }
+    create(value?: PartialMessage<WatchListRequest>): WatchListRequest {
+        const message = { address: "", timestamp: 0n, signedHash: new Uint8Array(0) };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<WatchListRequest>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WatchListRequest): WatchListRequest {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string address */ 1:
+                    message.address = reader.string();
+                    break;
+                case /* uint64 timestamp */ 2:
+                    message.timestamp = reader.uint64().toBigInt();
+                    break;
+                case /* bytes signed_hash */ 3:
+                    message.signedHash = reader.bytes();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WatchListRequest, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string address = 1; */
+        if (message.address !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.address);
+        /* uint64 timestamp = 2; */
+        if (message.timestamp !== 0n)
+            writer.tag(2, WireType.Varint).uint64(message.timestamp);
+        /* bytes signed_hash = 3; */
+        if (message.signedHash.length)
+            writer.tag(3, WireType.LengthDelimited).bytes(message.signedHash);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message logger.v1alpha1.WatchListRequest
+ */
+export const WatchListRequest = new WatchListRequest$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class WatchListResponse$Type extends MessageType<WatchListResponse> {
+    constructor() {
+        super("logger.v1alpha1.WatchListResponse", [
+            { no: 1, name: "log_names", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+    create(value?: PartialMessage<WatchListResponse>): WatchListResponse {
+        const message = { logNames: [] };
+        globalThis.Object.defineProperty(message, MESSAGE_TYPE, { enumerable: false, value: this });
+        if (value !== undefined)
+            reflectionMergePartial<WatchListResponse>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: WatchListResponse): WatchListResponse {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* repeated string log_names */ 1:
+                    message.logNames.push(reader.string());
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: WatchListResponse, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* repeated string log_names = 1; */
+        for (let i = 0; i < message.logNames.length; i++)
+            writer.tag(1, WireType.LengthDelimited).string(message.logNames[i]);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message logger.v1alpha1.WatchListResponse
+ */
+export const WatchListResponse = new WatchListResponse$Type();
 /**
  * @generated ServiceType for protobuf service logger.v1alpha1.LoggerAPI
  */
 export const LoggerAPI = new ServiceType("logger.v1alpha1.LoggerAPI", [
     { name: "Write", clientStreaming: true, options: {}, I: WriteRequest, O: WriteResponse },
-    { name: "Read", serverStreaming: true, options: {}, I: ReadRequest, O: ReadResponse }
+    { name: "Read", serverStreaming: true, options: {}, I: ReadRequest, O: ReadResponse },
+    { name: "WatchList", serverStreaming: true, options: {}, I: WatchListRequest, O: WatchListResponse }
 ]);
