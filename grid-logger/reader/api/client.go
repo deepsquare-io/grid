@@ -102,10 +102,12 @@ func (c *Client) RegisterOrSignIn(ctx context.Context, address string, pk *ecdsa
 			}
 		}
 	}
+	logger.I.Info("nonce", zap.Any("nonce", hexutil.Encode(nonce)))
 	signature, err := eth.Sign(pk, nonce)
 	if err != nil {
 		return "", err
 	}
+	logger.I.Info("signature", zap.Any("signature", hexutil.Encode(signature)))
 	token, err := c.SignIn(
 		ctx,
 		strings.ToLower(address),
@@ -120,12 +122,11 @@ func (c *Client) RegisterOrSignIn(ctx context.Context, address string, pk *ecdsa
 
 func (c *Client) ReadAndWatch(
 	ctx context.Context,
-	logName, user, token string,
+	logName, token string,
 ) error {
 	logger.I.Debug(
 		"ReadAndWatch",
 		zap.String("address", logName),
-		zap.String("user", user),
 		zap.String("token", token),
 	)
 	ctx = metadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token)

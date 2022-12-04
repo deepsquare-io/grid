@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  server:
+    image: grid-logger-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .server.env
+    ports:
+      - "3000:3000"
+  envoy:
+    image: registry-1.docker.io/envoyproxy/envoy:v1.24-latest
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    depends_on:
+      - server

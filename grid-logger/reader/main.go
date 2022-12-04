@@ -135,7 +135,7 @@ var app = &cli.App{
 			return err
 		}
 
-		return client.ReadAndWatch(ctx, logName, strings.ToLower(address), token)
+		return client.ReadAndWatch(ctx, logName, token)
 	},
 }
 

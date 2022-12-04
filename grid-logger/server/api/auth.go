@@ -69,7 +69,7 @@ func (s *authAPIServer) Nonce(ctx context.Context, req *authv1alpha1.NonceReques
 }
 func (s *authAPIServer) SignIn(ctx context.Context, req *authv1alpha1.SignInRequest) (*authv1alpha1.SignInResponse, error) {
 	logger.I.Debug("SignIn", zap.Any("req", req))
-	user, err := auth.Authenticate(s.storage, req.GetAddress(), req.GetNonce(), req.GetSig())
+	user, err := auth.Authenticate(s.storage, strings.ToLower(req.GetAddress()), req.GetNonce(), req.GetSig())
 	if err != nil {
 		logger.I.Error("SignIn.Authenticate", zap.Error(err))
 		if errors.Is(err, auth.ErrAuthError) {
