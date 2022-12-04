@@ -20,12 +20,12 @@ td {
 	padding: 0.25rem;
 }
 
-button {
-	background-image: linear-gradient(to right, var(--tw-gradient-stops));
-	--tw-gradient-from: var(--primary);
-	--tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(99 102 241/0));
-	--tw-gradient-to: var(--primary-hover);
-}
+// button {
+// 	background-image: linear-gradient(to right, var(--tw-gradient-stops));
+// 	--tw-gradient-from: var(--primary);
+// 	--tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(99 102 241/0));
+// 	--tw-gradient-to: var(--primary-hover);
+// }
 
 .error {
 	color: var(--error-color);

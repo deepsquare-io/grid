@@ -6,6 +6,8 @@ import (
 	"sync"
 )
 
+const prefix = "signin request, nonce: "
+
 var (
 	max  *big.Int
 	once sync.Once
@@ -20,5 +22,5 @@ func GetNonce() ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	return n.Bytes(), nil
+	return append([]byte(prefix), n.Bytes()...), nil
 }
