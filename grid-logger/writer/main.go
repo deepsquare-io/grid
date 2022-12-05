@@ -112,9 +112,11 @@ var app = &cli.App{
 		// Trap cleanup
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+		var stream loggerv1alpha1.LoggerAPI_WriteClient
 		go func() {
 			<-c
 			logger.I.Info("cleaning up")
+			_ = stream.CloseSend()
 			_ = os.Remove(pipeFile)
 			os.Exit(0)
 		}()
@@ -165,7 +167,7 @@ var app = &cli.App{
 		}
 
 		// Open grpc stream
-		stream, err := client.Write(ctx)
+		stream, err = client.Write(ctx)
 		if err != nil {
 			logger.I.Fatal("grpc open failed", zap.Error(err))
 		}

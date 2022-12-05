@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { GRPCService } from '$lib/services/grpc';
+	import type { ReadResponse } from '@gen/ts/logger/v1alpha1/log';
 	import { LoggerAPIClient } from '@gen/ts/logger/v1alpha1/log.client';
 	import MetaMaskOnboarding from '@metamask/onboarding';
 	import { GrpcStatusCode, GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 	import { RpcError } from '@protobuf-ts/runtime-rpc';
 	import { ethers } from 'ethers';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import type { Terminal } from 'xterm';
 	import type { FitAddon } from 'xterm-addon-fit';
@@ -22,6 +23,11 @@
 	let fitAddon: FitAddon;
 	let isTermHidden = true;
 
+	onDestroy(() => {
+		terminal?.dispose();
+		grpcService?.stopReadAndWatch();
+	});
+
 	// List logs
 	let logs: string[] = [];
 
@@ -31,9 +37,7 @@
 	const url = 'http://localhost:9000';
 	let loggerClient: LoggerAPIClient;
 	let grpcService: GRPCService;
-
-	// Fields
-	let logName: string;
+	let logStream: AsyncIterable<ReadResponse> | null = null;
 
 	// onAddressDefined
 	$: if (address) {
@@ -41,7 +45,7 @@
 		listAndWatch();
 	}
 
-	$: if (terminalElement) {
+	$: if (terminalElement && logStream !== null) {
 		terminal.open(terminalElement);
 		fitAddon.fit();
 	}
@@ -62,15 +66,17 @@
 		grpcService = new GRPCService(loggerClient, signer);
 	}
 
-	// Read and watch button action
-	async function doReadAndWatch() {
+	// Selected table data action
+	async function onLogNameSelected(log: string) {
 		terminal.clear();
+		isTermHidden = true;
 		grpcService.stopReadAndWatch();
 
 		try {
-			const responses = await grpcService.readAndWatch(address.toLowerCase(), logName);
+			logStream = await grpcService.readAndWatch(address.toLowerCase(), log);
 			isTermHidden = false;
-			for await (let resp of responses) {
+
+			for await (let resp of logStream) {
 				terminal.writeln(resp.data);
 			}
 		} catch (e) {
@@ -150,39 +156,29 @@
 
 		{#if address}
 			<article>
-				<header>
-					<table>
-						<thead>
+				<table>
+					<thead>
+						<tr>
+							<th>Available logs</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each logs as log}
 							<tr>
-								<th>Available logs</th>
+								<!-- svelte-ignore a11y-click-events-have-key-events -->
+								<td class="clickable" on:click={() => onLogNameSelected(log)}>{log}</td>
 							</tr>
-						</thead>
-						<tbody>
-							{#each logs as log}
-								<tr>
-									<td>{log}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</header>
-
-				<form transition:fade on:submit|preventDefault={doReadAndWatch}>
-					<label for="logname">
-						Log Name
-						<input name="logname" bind:value={logName} />
-					</label>
-
-					<button>Fetch</button>
-				</form>
+						{/each}
+					</tbody>
+				</table>
 
 				{#if errorMessage || !isTermHidden}
 					<footer transition:fade>
 						{#if errorMessage}
-							<span class="error">{errorMessage}</span>
+							<span transition:fade class="error">{errorMessage}</span>
 						{/if}
 
-						<div bind:this={terminalElement} />
+						<div transition:fade bind:this={terminalElement} />
 					</footer>
 				{/if}
 			</article>

@@ -31,7 +31,8 @@ func NewLoggerAPIServer(db *db.File) *loggerAPIServer {
 
 func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) error {
 	ctx := stream.Context()
-	if p, ok := peer.FromContext(ctx); ok {
+	p, ok := peer.FromContext(ctx)
+	if ok {
 		logger.I.Info("writer connected", zap.String("IP", p.Addr.String()))
 	} else {
 		logger.I.Info("writer connected but was not identified")
@@ -40,6 +41,7 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF {
+			logger.I.Info("writer closed", zap.String("IP", p.Addr.String()))
 			return stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
 		}
 		if err != nil {
@@ -70,7 +72,7 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 	); err != nil {
 		return status.Errorf(codes.Unauthenticated, "failed to authenticate: %v", err)
 	}
-	logger.I.Info("reader authenticated", zap.Any("user", address))
+	logger.I.Info("reader authenticated", zap.String("user", address))
 
 	logs := make(chan string)
 	go func() {
@@ -78,14 +80,19 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 			logger.I.Error("read and watch failed", zap.Error(err))
 		}
 	}()
-	for log := range logs {
-		if err := stream.Send(&loggerv1alpha1.ReadResponse{
-			Data: []byte(log),
-		}); err != nil {
-			return err
+	for {
+		select {
+		case <-ctx.Done():
+			logger.I.Info("reader closed", zap.String("user", address))
+			return nil
+		case log := <-logs:
+			if err := stream.Send(&loggerv1alpha1.ReadResponse{
+				Data: []byte(log),
+			}); err != nil {
+				return err
+			}
 		}
 	}
-	return nil
 }
 
 func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream loggerv1alpha1.LoggerAPI_WatchListServer) error {
@@ -107,13 +114,16 @@ func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream
 		}
 	}()
 
-	for list := range lists {
-		if err := stream.Send(&loggerv1alpha1.WatchListResponse{
-			LogNames: list,
-		}); err != nil {
-			return err
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case list := <-lists:
+			if err := stream.Send(&loggerv1alpha1.WatchListResponse{
+				LogNames: list,
+			}); err != nil {
+				return err
+			}
 		}
 	}
-
-	return nil
 }
