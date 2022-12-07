@@ -7,9 +7,9 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/customer"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/sbatchapi"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
@@ -226,14 +226,14 @@ var flags = []cli.Flag{
 // Container stores the instances for dependency injection.
 type Container struct {
 	server     *server.Server
-	customer   *customer.FakeDataSource
+	customer   *sbatchapi.FakeDataSource
 	eth        *eth.DataSource
 	slurm      *slurm.Service
 	jobWatcher *job.Watcher
 }
 
 func Init() *Container {
-	customer := &customer.FakeDataSource{}
+	customer := &sbatchapi.FakeDataSource{}
 	ethClientRPC, err := ethclient.Dial(ethEndpointRPC)
 	if err != nil {
 		logger.I.Fatal("ethclientRPC dial failed", zap.Error(err))
