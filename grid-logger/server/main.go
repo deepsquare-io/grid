@@ -4,9 +4,11 @@ import (
 	"net"
 	"os"
 
+	healthv1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/grpc/health/v1"
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
 	"github.com/deepsquare-io/the-grid/grid-logger/server/api"
+	"github.com/deepsquare-io/the-grid/grid-logger/server/api/health"
 	"github.com/deepsquare-io/the-grid/grid-logger/server/db"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
@@ -110,6 +112,10 @@ var app = &cli.App{
 			api.NewLoggerAPIServer(
 				db.NewFileDB(storagePath),
 			),
+		)
+		healthv1.RegisterHealthServer(
+			server,
+			health.New(),
 		)
 
 		logger.I.Info("listening")
