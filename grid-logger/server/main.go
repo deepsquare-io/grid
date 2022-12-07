@@ -25,8 +25,6 @@ var (
 	certFile string
 
 	storagePath string
-
-	secret string
 )
 
 var flags = []cli.Flag{
