@@ -65,13 +65,6 @@ var flags = []cli.Flag{
 		Destination: &storagePath,
 		EnvVars:     []string{"STORAGE_PATH"},
 	},
-	&cli.StringFlag{
-		Name:        "jwt.secret",
-		Usage:       "JWT Secret Key",
-		Value:       "secret",
-		Destination: &secret,
-		EnvVars:     []string{"JWT_SECRET"},
-	},
 	&cli.BoolFlag{
 		Name:    "debug",
 		EnvVars: []string{"DEBUG"},

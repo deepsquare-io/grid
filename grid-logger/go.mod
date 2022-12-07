@@ -4,8 +4,6 @@ go 1.19
 
 require (
 	github.com/ethereum/go-ethereum v1.10.26
-	github.com/golang-jwt/jwt/v4 v4.4.3
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.3
 	github.com/joho/godotenv v1.4.0
 	github.com/nxadm/tail v1.4.8
 	github.com/urfave/cli/v2 v2.23.5
