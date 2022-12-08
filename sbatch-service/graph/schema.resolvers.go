@@ -6,19 +6,29 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
+	shortuuid "github.com/lithammer/shortuuid/v4"
 )
 
 // Submit is the resolver for the submit field.
 func (r *mutationResolver) Submit(ctx context.Context, job model.Job) (string, error) {
-	panic(fmt.Errorf("not implemented: Submit - submit"))
+	script := ""
+	u := shortuuid.New()
+	_, err := r.RedisClient.Set(ctx, u, script, 0).Result()
+	if err != nil {
+		return "", err
+	}
+	return u, nil
 }
 
 // Job is the resolver for the job field.
 func (r *queryResolver) Job(ctx context.Context, batchLocationHash string) (string, error) {
-	panic(fmt.Errorf("not implemented: Job - job"))
+	resp, err := r.RedisClient.Get(ctx, batchLocationHash).Result()
+	if err != nil {
+		return "", err
+	}
+	return resp, nil
 }
 
 // Mutation returns MutationResolver implementation.

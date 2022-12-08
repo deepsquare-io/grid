@@ -245,6 +245,19 @@ input StepRun {
   """
   resources: Resources!
   """
+  Run the command inside a container.
+
+  Format [<user>@][<registry>#]<image>[:<tag>].
+  reg_user="[[:alnum:]_.!~*\'()%\;:\&=+$,-@]+"
+  reg_registry="[^#]+"
+  reg_image="[[:lower:][:digit:]/._-]+"
+  reg_tag="[[:alnum:]._:-]+"
+  reg_url="^docker://((${reg_user})@)?((${reg_registry})#)?(${reg_image})(:(${reg_tag}))?$"
+
+  If null or empty, run on the host.
+  """
+  image: String
+  """
   Command specifies a shell script.
   """
   command: String!
@@ -2628,7 +2641,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "command"}
+	fieldsInOrder := [...]string{"resources", "image", "command"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2640,6 +2653,14 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
 			it.Resources, err = ec.unmarshalNResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐResources(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "image":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
+			it.Image, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
