@@ -24,8 +24,6 @@ var (
 	redisTLSInsecure  bool
 	redisCAFile       string
 	redisHostOverride string
-
-	secret string
 )
 
 var flags = []cli.Flag{
@@ -85,8 +83,8 @@ var flags = []cli.Flag{
 }
 
 var app = &cli.App{
-	Name:    "grid-logger-server",
-	Usage:   "Receives log and stores it",
+	Name:    "sbatch-service",
+	Usage:   "sbatch script hosting service",
 	Flags:   flags,
 	Suggest: true,
 	Action: func(cCtx *cli.Context) error {
@@ -135,6 +133,9 @@ var app = &cli.App{
 
 		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 		http.Handle("/query", srv)
+		http.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
+			_, _ = w.Write([]byte("ok"))
+		})
 
 		logger.I.Info("listening", zap.String("listeningAddress", listenAddress))
 
