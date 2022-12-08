@@ -50,6 +50,59 @@ func cleanStepWithRun(command string) *model.Step {
 	}
 }
 
+func TestRenderJob(t *testing.T) {
+	tests := []struct {
+		input         model.Job
+		isError       bool
+		errorContains []string
+		expected      string
+		title         string
+	}{
+		{
+			input: model.Job{
+				Steps: []*model.Step{
+					cleanStepWithRun("echo 'hello world'"),
+				},
+			},
+			expected: `set -e
+
+export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+mkdir -p "$STORAGE_PATH"
+chmod -R 700 "$STORAGE_PATH"
+chown -R "$UID:cluster-users" "$STORAGE_PATH"
+srun --job-name='test' \
+  --export=ALL \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --container-image='image' \
+  sh -c 'echo '\''hello world'\'''
+`,
+			title: "Positive test 'hello world'",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.title, func(t *testing.T) {
+			// Act
+			actual, err := renderer.RenderJob(&tt.input)
+
+			// Assert
+			if tt.isError {
+				assert.Error(t, err)
+				for _, contain := range tt.errorContains {
+					assert.ErrorContains(t, err, contain)
+				}
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, actual)
+				shellcheck(t, actual)
+			}
+		})
+	}
+}
+
 func TestRenderStepRun(t *testing.T) {
 	tests := []struct {
 		input         model.Step
@@ -116,8 +169,25 @@ echo "test"'`,
 				},
 			},
 			isError:       true,
-			errorContains: []string{"valid_container_image_url"},
+			errorContains: []string{"Image", "valid_container_image_url"},
 			title:         "Negative test with invalid image",
+		},
+		{
+			input: model.Step{
+				Name: "test",
+				Run: &model.StepRun{
+					Resources: &model.Resources{
+						Tasks:       0,
+						CpusPerTask: 1,
+						MemPerCPU:   1,
+						GpusPerTask: 0,
+					},
+					Command: "hostname",
+				},
+			},
+			isError:       true,
+			errorContains: []string{"Tasks", "gte"},
+			title:         "Negative test with invalid resources",
 		},
 	}
 

@@ -93,7 +93,7 @@ func (s *StepFor) Validate() error {
 // echo "KEY=value" >> "$STORAGE_PATH/env" can be used to share environment variables.
 type StepRun struct {
 	// Allocated resources for the command.
-	Resources *Resources `json:"resources"`
+	Resources *Resources `json:"resources" validate:"dive"`
 	// Run the command inside a container.
 	//
 	// Format [user:password]@<host>#<image>:<tag>.
