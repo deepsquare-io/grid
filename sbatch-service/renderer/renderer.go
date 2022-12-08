@@ -6,6 +6,7 @@ import (
 	_ "embed"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
 )
 
 var (
@@ -16,7 +17,7 @@ var (
 )
 
 func RenderJob(s *model.Job) (string, error) {
-	if err := s.Validate(); err != nil {
+	if err := validate.I.Struct(s); err != nil {
 		return "", err
 	}
 
@@ -33,7 +34,7 @@ func RenderJob(s *model.Job) (string, error) {
 }
 
 func RenderStep(s *model.Step) (string, error) {
-	if err := s.Validate(); err != nil {
+	if err := validate.I.Struct(s); err != nil {
 		return "", err
 	}
 

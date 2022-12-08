@@ -1,8 +1,10 @@
 package model
 
-import (
-	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
-)
+// An environment variable.
+type EnvVar struct {
+	Key   string `json:"key" validate:"valid_envvar_name"`
+	Value string `json:"value"`
+}
 
 // ForRange describes the parameter for a range loop.
 type ForRange struct {
@@ -11,17 +13,10 @@ type ForRange struct {
 	Increment int `json:"Increment"`
 }
 
-func (s *ForRange) Validate() error {
-	return validate.I.Struct(s)
-}
-
 // A Job is a finite sequence of instructions.
 type Job struct {
-	Steps []*Step `json:"steps" validate:"dive"`
-}
-
-func (s *Job) Validate() error {
-	return validate.I.Struct(s)
+	Env   []*EnvVar `json:"env" validate:"dive"`
+	Steps []*Step   `json:"steps" validate:"dive"`
 }
 
 // Resources are the allocated resources for a command.
@@ -44,10 +39,6 @@ type Resources struct {
 	GpusPerTask int `json:"gpusPerTask" validate:"gte=0"`
 }
 
-func (s *Resources) Validate() error {
-	return validate.I.Struct(s)
-}
-
 // Step is one instruction.
 type Step struct {
 	// Name of the instruction.
@@ -60,10 +51,6 @@ type Step struct {
 	//
 	// Is exclusive with "run".
 	For *StepFor `json:"for"`
-}
-
-func (s *Step) Validate() error {
-	return validate.I.Struct(s)
 }
 
 // StepFor describes a for loop.
@@ -82,10 +69,6 @@ type StepFor struct {
 	Steps []*Step `json:"steps"`
 }
 
-func (s *StepFor) Validate() error {
-	return validate.I.Struct(s)
-}
-
 // StepRun is one script executed with the shell.
 //
 // Shared storage is accessible through the $STORAGE_PATH environment variable.
@@ -94,6 +77,8 @@ func (s *StepFor) Validate() error {
 type StepRun struct {
 	// Allocated resources for the command.
 	Resources *Resources `json:"resources" validate:"dive"`
+	// Environment variables accessible over the command.
+	Env []*EnvVar `json:"env" validate:"dive"`
 	// Run the command inside a container.
 	//
 	// Format [user:password]@<host>#<image>:<tag>.
@@ -101,8 +86,4 @@ type StepRun struct {
 	Image *string `json:"image" validate:"omitempty,valid_container_image_url"`
 	// Command specifies a shell script.
 	Command string `json:"command"`
-}
-
-func (s *StepRun) Validate() error {
-	return validate.I.Struct(s)
 }

@@ -15,4 +15,10 @@ func init() {
 	}); err != nil {
 		logger.I.Panic("failed to register valid_container_image_url")
 	}
+	if err := I.RegisterValidation("valid_envvar_name", func(fl validator.FieldLevel) bool {
+		url := fl.Field().String()
+		return EnvVarNameValidator(url)
+	}); err != nil {
+		logger.I.Panic("failed to register valid_envvar_name")
+	}
 }

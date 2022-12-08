@@ -1,6 +1,7 @@
 package renderer_test
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"testing"
@@ -23,13 +24,25 @@ func shellcheck(t *testing.T, script string) {
 	if err := os.WriteFile("test.sh", []byte(script), 0o777); err != nil {
 		logger.I.Panic("failed to write", zap.Error(err))
 	}
-	out, err := exec.Command("shellcheck", "-s", "bash", "test.sh").CombinedOutput()
+	out, err := exec.Command("shellcheck", "-S", "warning", "-s", "bash", "test.sh").CombinedOutput()
 	if err != nil {
 		logger.I.Error(string(out))
-		require.NoError(t, err)
+		require.NoError(t, errors.New("shellcheck failed"))
 	}
 
 	_ = os.Remove("test.sh")
+}
+
+var cleanJob = model.Job{
+	Env: []*model.EnvVar{
+		{
+			Key:   "key",
+			Value: "test'test",
+		},
+	},
+	Steps: []*model.Step{
+		cleanStepWithRun("echo 'hello world'"),
+	},
 }
 
 var cleanResources = model.Resources{
@@ -44,8 +57,14 @@ func cleanStepWithRun(command string) *model.Step {
 		Name: "test",
 		Run: &model.StepRun{
 			Resources: &cleanResources,
-			Image:     utils.Ptr("image"),
-			Command:   command,
+			Env: []*model.EnvVar{
+				{
+					Key:   "test",
+					Value: "value",
+				},
+			},
+			Image:   utils.Ptr("image"),
+			Command: command,
 		},
 	}
 }
@@ -59,19 +78,16 @@ func TestRenderJob(t *testing.T) {
 		title         string
 	}{
 		{
-			input: model.Job{
-				Steps: []*model.Step{
-					cleanStepWithRun("echo 'hello world'"),
-				},
-			},
+			input: cleanJob,
 			expected: `set -e
 
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 mkdir -p "$STORAGE_PATH"
 chmod -R 700 "$STORAGE_PATH"
 chown -R "$UID:cluster-users" "$STORAGE_PATH"
+export 'key'='test'\''test'
 srun --job-name='test' \
-  --export=ALL \
+  --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -80,6 +96,19 @@ srun --job-name='test' \
   sh -c 'echo '\''hello world'\'''
 `,
 			title: "Positive test 'hello world'",
+		},
+		{
+			input: model.Job{
+				Env: []*model.EnvVar{
+					{
+						Key:   "aze'aze",
+						Value: "test'test",
+					},
+				},
+			},
+			isError:       true,
+			errorContains: []string{"valid_envvar_name", "Key"},
+			title:         "Negative test invalid env var name",
 		},
 	}
 
@@ -114,7 +143,7 @@ func TestRenderStepRun(t *testing.T) {
 		{
 			input: *cleanStepWithRun("hostname"),
 			expected: `srun --job-name='test' \
-  --export=ALL \
+  --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -127,12 +156,13 @@ func TestRenderStepRun(t *testing.T) {
 			input: model.Step{
 				Name: "test",
 				Run: &model.StepRun{
+					Env:       cleanStepWithRun("").Run.Env,
 					Resources: &cleanResources,
 					Command:   "hostname",
 				},
 			},
 			expected: `srun --job-name='test' \
-  --export=ALL \
+  --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -144,13 +174,14 @@ func TestRenderStepRun(t *testing.T) {
 			input: model.Step{
 				Name: "test",
 				Run: &model.StepRun{
+					Env:       cleanStepWithRun("").Run.Env,
 					Resources: &cleanResources,
 					Command: `hostname
 echo "test"`,
 				},
 			},
 			expected: `srun --job-name='test' \
-  --export=ALL \
+  --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -232,9 +263,9 @@ func TestRenderStepFor(t *testing.T) {
 				},
 			},
 			expected: `doFor() {
-  item=$1
+  export item="$1"
   srun --job-name='test' \
-    --export=ALL \
+    --export=ALL,'test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
@@ -242,7 +273,7 @@ func TestRenderStepFor(t *testing.T) {
     --container-image='image' \
     sh -c 'echo $item'
   srun --job-name='test' \
-    --export=ALL \
+    --export=ALL,'test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
@@ -251,7 +282,7 @@ func TestRenderStepFor(t *testing.T) {
     sh -c 'echo $item'
 }
 items=('a' 'b' 'c' )
-for item in $(items[@]); do
+for item in "${items[@]}"; do
 doFor "$item" &
 done
 wait`,
@@ -274,9 +305,9 @@ wait`,
 				},
 			},
 			expected: `doFor() {
-  index=$1
+  export index="$1"
   srun --job-name='test' \
-    --export=ALL \
+    --export=ALL,'test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
@@ -284,7 +315,7 @@ wait`,
     --container-image='image' \
     sh -c 'echo $index'
   srun --job-name='test' \
-    --export=ALL \
+    --export=ALL,'test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \

@@ -1,6 +1,6 @@
 {{- if .Run -}}
 srun --job-name={{ .Name | squote }} \
-  --export=ALL \
+  --export=ALL{{ range $env := .Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ .Run.Resources.CpusPerTask }} \
   --mem-per-cpu={{ .Run.Resources.MemPerCPU }} \
   --gpus-per-task={{ .Run.Resources.GpusPerTask }} \
@@ -28,7 +28,7 @@ doFor "$index" {{if .For.Parallel}}&{{end}}
 done
 {{- else if .For.Items }}
 items=({{ range $item := .For.Items }}{{ $item | squote }} {{ end }})
-for item in $(items[@]); do
+for item in "${items[@]}"; do
 doFor "$item" {{ if .For.Parallel }}&{{ end }}
 done
 {{- end }}
