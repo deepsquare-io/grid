@@ -1,14 +1,36 @@
 package renderer_test
 
 import (
+	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
 	"github.com/deepsquare-io/the-grid/sbatch-service/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
+
+func shellcheck(t *testing.T, script string) {
+	_, err := exec.LookPath("shellcheck")
+	if err != nil {
+		logger.I.Warn("shellcheck is disabled, test is not complete")
+		return
+	}
+	if err := os.WriteFile("test.sh", []byte(script), 0o777); err != nil {
+		logger.I.Panic("failed to write", zap.Error(err))
+	}
+	out, err := exec.Command("shellcheck", "-s", "bash", "test.sh").CombinedOutput()
+	if err != nil {
+		logger.I.Error(string(out))
+		require.NoError(t, err)
+	}
+
+	_ = os.Remove("test.sh")
+}
 
 var cleanResources = model.Resources{
 	Tasks:       1,
@@ -39,6 +61,7 @@ func TestRenderStepRun(t *testing.T) {
 		{
 			input: *cleanStepWithRun("hostname"),
 			expected: `srun --job-name='test' \
+  --export=ALL \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -56,6 +79,7 @@ func TestRenderStepRun(t *testing.T) {
 				},
 			},
 			expected: `srun --job-name='test' \
+  --export=ALL \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -73,6 +97,7 @@ echo "test"`,
 				},
 			},
 			expected: `srun --job-name='test' \
+  --export=ALL \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -110,6 +135,7 @@ echo "test"'`,
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, actual)
+				shellcheck(t, actual)
 			}
 		})
 	}
@@ -138,6 +164,7 @@ func TestRenderStepFor(t *testing.T) {
 			expected: `doFor() {
   item=$1
   srun --job-name='test' \
+    --export=ALL \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
@@ -145,6 +172,7 @@ func TestRenderStepFor(t *testing.T) {
     --container-image='image' \
     sh -c 'echo $item'
   srun --job-name='test' \
+    --export=ALL \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
@@ -178,6 +206,7 @@ wait`,
 			expected: `doFor() {
   index=$1
   srun --job-name='test' \
+    --export=ALL \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
@@ -185,6 +214,7 @@ wait`,
     --container-image='image' \
     sh -c 'echo $index'
   srun --job-name='test' \
+    --export=ALL \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
@@ -214,6 +244,7 @@ wait`,
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, actual)
+				shellcheck(t, actual)
 			}
 		})
 	}
