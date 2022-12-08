@@ -1,6 +1,23 @@
 ifeq ($(golint),)
 golint := $(shell go env GOPATH)/bin/golangci-lint
 endif
+bins := sbatch-service
+
+bin/checksums.txt: $(addprefix bin/,$(bins))
+	sha256sum -b $(addprefix bin/,$(bins)) | sed 's/bin\///' > $@
+
+bin/checksums.md: bin/checksums.txt
+	@echo "### SHA256 Checksums" > $@
+	@echo >> $@
+	@echo "\`\`\`" >> $@
+	@cat $< >> $@
+	@echo "\`\`\`" >> $@
+
+.PHONY: build-all
+build-all: $(addprefix bin/,$(bins)) bin/checksums.md
+
+.PHONY: all
+all: $(addprefix bin/,$(bins))
 
 bin/sbatch-service:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags reader -o "$@" ./server.go
