@@ -70,11 +70,11 @@ func (s *Step) Validate() error {
 type StepFor struct {
 	// Do a parallel for loop. Each iteration is run in parallel.
 	Parallel bool `json:"parallel"`
-	// Item accessible via the {{ .Item }} variable. Index accessible via the {{ .Index }} variable.
+	// Item accessible via the "$item" variable.
 	//
 	// Exclusive with "range".
 	Items []string `json:"items"`
-	// Index accessible via the {{ .Index }} variable.
+	// Index accessible via the "$index" variable.
 	//
 	// Exclusive with "items".
 	Range *ForRange `json:"range"`

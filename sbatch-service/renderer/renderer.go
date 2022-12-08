@@ -6,7 +6,6 @@ import (
 	_ "embed"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
-	"github.com/deepsquare-io/the-grid/sbatch-service/template"
 )
 
 var (
@@ -19,7 +18,7 @@ func RenderStep(s *model.Step) (string, error) {
 		return "", err
 	}
 
-	tmpl, err := template.Init().Parse(stepTpl)
+	tmpl, err := engine().Parse(stepTpl)
 	if err != nil {
 		return "", err
 	}

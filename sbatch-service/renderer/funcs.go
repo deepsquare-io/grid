@@ -1,4 +1,4 @@
-package template
+package renderer
 
 import (
 	"text/template"
@@ -9,9 +9,10 @@ import (
 func funcMap() template.FuncMap {
 	f := sprig.TxtFuncMap()
 	f["deref"] = func(i *string) string { return *i }
+	f["renderStep"] = RenderStep
 	return f
 }
 
-func Init() *template.Template {
+func engine() *template.Template {
 	return template.New("gotpl").Funcs(funcMap())
 }
