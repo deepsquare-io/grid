@@ -11,8 +11,6 @@ sequenceDiagram
     participant logger
     participant app
     Note over client,app: Authentication logic
-    client->>+server: rpc nonce(addr)
-    server->>-client: data
     client->>client: sig = sign data
     client->>+server: rpc auth_rpc(addr,data,sig)
     server->>-client: resp
