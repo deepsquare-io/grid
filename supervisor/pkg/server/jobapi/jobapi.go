@@ -2,7 +2,6 @@ package jobapi
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
 )
 
@@ -53,7 +53,7 @@ var gRPCToEthJobStatus = map[supervisorv1alpha1.JobStatus]eth.JobStatus{
 // SetJobStatus to the ethereum network
 func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1.SetJobStatusRequest) (*supervisorv1alpha1.SetJobStatusResponse, error) {
 	logger.I.Info("grpc received job result", zap.Any("job_result", req))
-	jobName, err := hex.DecodeString(req.Name)
+	jobName, err := hexutil.Decode(req.Name)
 	if err != nil {
 		logger.I.Warn("SetJobStatus: DecodeString failed", zap.Error(err), zap.String("name", req.Name))
 		return nil, err
