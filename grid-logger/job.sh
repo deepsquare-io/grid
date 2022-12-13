@@ -15,7 +15,7 @@ echo "logger running at $LOGGER_PID"
 
 sleep 1
 
-exec &>>"$(pwd)/pipe"
+exec &>>"$JOB_NAME"
 
 echo "$(date): Running some workload!"
 echo "$(date): Huh!"

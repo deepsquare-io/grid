@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -58,6 +59,10 @@ func (db *File) ReadAndWatch(
 
 	t, err := tail.TailFile(logPath, tail.Config{
 		Follow: true,
+		Location: &tail.SeekInfo{
+			Offset: 0,
+			Whence: io.SeekStart,
+		},
 		Logger: tail.DiscardingLogger,
 	})
 	if err != nil {
