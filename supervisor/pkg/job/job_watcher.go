@@ -2,7 +2,6 @@ package job
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"strings"
 	"sync"
@@ -13,6 +12,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
 )
 
@@ -213,7 +213,7 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 
 	job := eth.JobDefinitionMapToSlurm(event.JobDefinition, event.MaxDurationMinute, body)
 	req := &slurm.SubmitJobRequest{
-		Name:          hex.EncodeToString(event.JobId[:]),
+		Name:          hexutil.Encode(event.JobId[:]),
 		User:          strings.ToLower(event.CustomerAddr.Hex()),
 		JobDefinition: &job,
 	}
@@ -273,7 +273,7 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 	if err := try.Do(func() error {
 		if err := try.Do(func() error {
 			return w.scheduler.CancelJob(ctx, &slurm.CancelJobRequest{
-				Name: hex.EncodeToString(event.JobId[:]),
+				Name: hexutil.Encode(event.JobId[:]),
 				User: strings.ToLower(event.CustomerAddr.Hex()),
 			})
 		}, 5, 5*time.Second); err != nil {

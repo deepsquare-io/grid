@@ -59,9 +59,9 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1alpha1.LoggerAPI_ReadServer) error {
 	ctx := stream.Context()
 	if p, ok := peer.FromContext(ctx); ok {
-		logger.I.Info("reader connected", zap.String("IP", p.Addr.String()))
+		logger.I.Info("reader connected", zap.String("IP", p.Addr.String()), zap.Any("req", req))
 	} else {
-		logger.I.Info("reader connected but was not identified")
+		logger.I.Info("reader connected but was not identified", zap.Any("req", req))
 	}
 	address := strings.ToLower(req.GetAddress())
 
@@ -72,7 +72,7 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 	); err != nil {
 		return status.Errorf(codes.Unauthenticated, "failed to authenticate: %v", err)
 	}
-	logger.I.Info("reader authenticated", zap.String("user", address))
+	logger.I.Info("reader authenticated", zap.String("user", address), zap.Any("req", req))
 
 	logs := make(chan string)
 	go func() {
@@ -86,8 +86,10 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 			logger.I.Info("reader closed", zap.String("user", address))
 			return nil
 		case log := <-logs:
+			bytes := []byte(log)
+			logger.I.Debug("reader send", zap.Int("size", len(bytes)))
 			if err := stream.Send(&loggerv1alpha1.ReadResponse{
-				Data: []byte(log),
+				Data: bytes,
 			}); err != nil {
 				return err
 			}
