@@ -15,8 +15,11 @@ type ForRange struct {
 
 // A Job is a finite sequence of instructions.
 type Job struct {
-	Env   []*EnvVar `json:"env" validate:"dive"`
-	Steps []*Step   `json:"steps" validate:"dive"`
+	// Environment variables accessible for the entire job.
+	Env []*EnvVar `json:"env" validate:"dive"`
+	// EnableLogging enables the DeepSquare GRID Logger.
+	EnableLogging *bool   `json:"enableLogging"`
+	Steps         []*Step `json:"steps" validate:"dive"`
 }
 
 // Resources are the allocated resources for a command.
@@ -79,6 +82,8 @@ type StepRun struct {
 	Resources *Resources `json:"resources" validate:"dive"`
 	// Environment variables accessible over the command.
 	Env []*EnvVar `json:"env" validate:"dive"`
+	// EnableLogging enables the DeepSquare GRID Logger.
+	X11 *bool `json:"x11"`
 	// Run the command inside a container.
 	//
 	// Format [user:password]@<host>#<image>:<tag>.

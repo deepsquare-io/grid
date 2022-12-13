@@ -6,16 +6,22 @@ package graph
 
 import (
 	"context"
-
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
+	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
+	"go.uber.org/zap"
 	shortuuid "github.com/lithammer/shortuuid/v4"
 )
 
 // Submit is the resolver for the submit field.
 func (r *mutationResolver) Submit(ctx context.Context, job model.Job) (string, error) {
-	script := ""
+	script, err := renderer.RenderJob(&job)
+	if err != nil {
+		return "", err
+	}
 	u := shortuuid.New()
-	_, err := r.RedisClient.Set(ctx, u, script, 0).Result()
+	logger.I.Info("set", zap.String("uuid", u), zap.String("script", script))
+	_, err = r.RedisClient.Set(ctx, u, script, 0).Result()
 	if err != nil {
 		return "", err
 	}
@@ -24,6 +30,7 @@ func (r *mutationResolver) Submit(ctx context.Context, job model.Job) (string, e
 
 // Job is the resolver for the job field.
 func (r *queryResolver) Job(ctx context.Context, batchLocationHash string) (string, error) {
+	logger.I.Info("get", zap.String("batchLocationHash", batchLocationHash))
 	resp, err := r.RedisClient.Get(ctx, batchLocationHash).Result()
 	if err != nil {
 		return "", err

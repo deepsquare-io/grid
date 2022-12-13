@@ -57,6 +57,7 @@ func cleanStepWithRun(command string) *model.Step {
 		Name: "test",
 		Run: &model.StepRun{
 			Resources: &cleanResources,
+			X11:       utils.Ptr(true),
 			Env: []*model.EnvVar{
 				{
 					Key:   "test",
@@ -79,23 +80,69 @@ func TestRenderJob(t *testing.T) {
 	}{
 		{
 			input: cleanJob,
-			expected: `set -e
+			expected: `#!/bin/bash -l
+
+set -e
 
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 mkdir -p "$STORAGE_PATH"
 chmod -R 700 "$STORAGE_PATH"
 chown -R "$UID:cluster-users" "$STORAGE_PATH"
 export 'key'='test'\''test'
+MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
 srun --job-name='test' \
   --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
   --container-image='image' \
   sh -c 'echo '\''hello world'\'''
 `,
 			title: "Positive test 'hello world'",
+		},
+		{
+			input: model.Job{
+				Env:           cleanJob.Env,
+				EnableLogging: utils.Ptr(true),
+				Steps:         cleanJob.Steps,
+			},
+			expected: `#!/bin/bash -l
+
+set -e
+
+export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+mkdir -p "$STORAGE_PATH"
+chmod -R 700 "$STORAGE_PATH"
+chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/local/bin/grid-logger-writer \
+  --server.tls \
+  --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
+  --server.tls.server-host-override=grid-logger.deepsquare.run \
+  --server.endpoint=grid-logger.deepsquare.run:443 \
+  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --log-name="$SLURM_JOB_NAME" \
+  --user="$USER" \
+  >/dev/stdout 2>/dev/stderr &
+LOGGER_PID="$!"
+sleep 1
+exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+export 'key'='test'\''test'
+MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
+srun --job-name='test' \
+  --export=ALL,'test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
+  --container-image='image' \
+  sh -c 'echo '\''hello world'\'''
+kill $LOGGER_PID
+wait $LOGGER_PID
+`,
+			title: "Positive test with logs",
 		},
 		{
 			input: model.Job{
@@ -142,12 +189,14 @@ func TestRenderStepRun(t *testing.T) {
 	}{
 		{
 			input: *cleanStepWithRun("hostname"),
-			expected: `srun --job-name='test' \
+			expected: `MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
+srun --job-name='test' \
   --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
   --container-image='image' \
   sh -c 'hostname'`,
 			title: "Positive test with image",
@@ -161,7 +210,8 @@ func TestRenderStepRun(t *testing.T) {
 					Command:   "hostname",
 				},
 			},
-			expected: `srun --job-name='test' \
+			expected: `
+srun --job-name='test' \
   --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
@@ -180,7 +230,8 @@ func TestRenderStepRun(t *testing.T) {
 echo "test"`,
 				},
 			},
-			expected: `srun --job-name='test' \
+			expected: `
+srun --job-name='test' \
   --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
@@ -264,28 +315,36 @@ func TestRenderStepFor(t *testing.T) {
 			},
 			expected: `doFor() {
   export item="$1"
+  MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
   srun --job-name='test' \
     --export=ALL,'test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
     --ntasks=1 \
+    --container-mounts="${MOUNTS}" \
     --container-image='image' \
     sh -c 'echo $item'
+  MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
   srun --job-name='test' \
     --export=ALL,'test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
     --ntasks=1 \
+    --container-mounts="${MOUNTS}" \
     --container-image='image' \
     sh -c 'echo $item'
 }
+pids=()
 items=('a' 'b' 'c' )
 for item in "${items[@]}"; do
-doFor "$item" &
+  doFor "$item" &
+  pids+=("$!")
 done
-wait`,
+for pid in "${pids[@]}"; do
+  wait "$pid"
+done`,
 			title: "Positive test with items",
 		},
 		{
@@ -306,28 +365,36 @@ wait`,
 			},
 			expected: `doFor() {
   export index="$1"
+  MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
   srun --job-name='test' \
     --export=ALL,'test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
     --ntasks=1 \
+    --container-mounts="${MOUNTS}" \
     --container-image='image' \
     sh -c 'echo $index'
+  MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
   srun --job-name='test' \
     --export=ALL,'test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
     --ntasks=1 \
+    --container-mounts="${MOUNTS}" \
     --container-image='image' \
     sh -c 'echo $index'
 }
+pids=()
 for index in $(seq 0 -2 -10); do
-doFor "$index" &
+  doFor "$index" &
+  pids+=("$!")
 done
-wait`,
-			title: "Positive test with items",
+for pid in "${pids[@]}"; do
+  wait "$pid"
+done`,
+			title: "Positive test with range",
 		},
 	}
 

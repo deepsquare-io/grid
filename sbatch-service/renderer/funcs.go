@@ -26,7 +26,8 @@ func squote(str ...interface{}) string {
 
 func funcMap() template.FuncMap {
 	f := sprig.TxtFuncMap()
-	f["deref"] = func(i *string) string { return *i }
+	f["derefStr"] = func(i *string) string { return *i }
+	f["derefBool"] = func(i *bool) bool { return *i }
 	f["renderStep"] = RenderStep
 	f["squote"] = squote
 	return f

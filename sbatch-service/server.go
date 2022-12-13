@@ -37,13 +37,13 @@ var flags = []cli.Flag{
 	&cli.StringFlag{
 		Name:        "redis.url",
 		Usage:       "Redis storage connection string.",
-		Value:       "./db",
+		Value:       "redis://redis:6379/0",
 		Destination: &redisAddress,
 		EnvVars:     []string{"REDIS_ADDRESS"},
 	},
 	&cli.BoolFlag{
 		Name:        "redis.tls",
-		Value:       true,
+		Value:       false,
 		Usage:       "Enable TLS for Redis.",
 		Destination: &redisTLS,
 		EnvVars:     []string{"REDIS_TLS_ENABLE"},
@@ -144,7 +144,8 @@ var app = &cli.App{
 }
 
 func main() {
-	_ = godotenv.Load(".server.env", ".server.env.local")
+	_ = godotenv.Load(".env.local")
+	_ = godotenv.Load(".env")
 	if err := app.Run(os.Args); err != nil {
 		logger.I.Fatal("app crashed", zap.Error(err))
 	}

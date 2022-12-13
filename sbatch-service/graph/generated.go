@@ -192,6 +192,10 @@ input Job {
   Environment variables accessible for the entire job.
   """
   env: [EnvVar!]
+  """
+  EnableLogging enables the DeepSquare GRID Logger.
+  """
+  enableLogging: Boolean
   steps: [Step!]!
 }
 
@@ -272,6 +276,12 @@ input StepRun {
   If null or empty, run on the host.
   """
   image: String
+  """
+  X11 mounts /tmp/.X11-unix in the container.
+
+  If image is not defined, there is no need to define x11.
+  """
+  x11: Boolean
   """
   Environment variables accessible over the command.
   """
@@ -2520,7 +2530,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"env", "steps"}
+	fieldsInOrder := [...]string{"env", "enableLogging", "steps"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2532,6 +2542,14 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("env"))
 			it.Env, err = ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "enableLogging":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enableLogging"))
+			it.EnableLogging, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2704,7 +2722,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "image", "env", "command"}
+	fieldsInOrder := [...]string{"resources", "image", "x11", "env", "command"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2724,6 +2742,14 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
 			it.Image, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "x11":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("x11"))
+			it.X11, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}

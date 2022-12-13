@@ -1,0 +1,19 @@
+version: '3'
+services:
+  redis:
+    image: redis:7
+    expose:
+      - 6379
+
+  sbatch-service:
+    image: sbatch-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    pull_policy: never
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    depends_on:
+      - redis

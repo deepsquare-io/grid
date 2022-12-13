@@ -3,6 +3,7 @@ package validate
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -13,6 +14,7 @@ const (
 )
 
 var (
+	// regexContainerURL is a matcher from https://github.com/NVIDIA/enroot/blob/master/src/docker.sh
 	regexContainerURL = regexp.MustCompilePOSIX(
 		fmt.Sprintf(
 			"^((%s)@)?((%s)#)?(%s)(:(%s))?$",
@@ -25,5 +27,5 @@ var (
 )
 
 func ContainerURLValidator(url string) bool {
-	return regexContainerURL.MatchString(url)
+	return strings.HasPrefix(url, "/") || regexContainerURL.MatchString(url)
 }
