@@ -6,11 +6,12 @@ package graph
 
 import (
 	"context"
+
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
-	"go.uber.org/zap"
 	shortuuid "github.com/lithammer/shortuuid/v4"
+	"go.uber.org/zap"
 )
 
 // Submit is the resolver for the submit field.

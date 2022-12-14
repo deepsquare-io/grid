@@ -1,49 +1,14 @@
 package renderer_test
 
 import (
-	"errors"
-	"os"
-	"os/exec"
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
-	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
 	"github.com/deepsquare-io/the-grid/sbatch-service/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
-
-func shellcheck(t *testing.T, script string) {
-	_, err := exec.LookPath("shellcheck")
-	if err != nil {
-		logger.I.Warn("shellcheck is disabled, test is not complete")
-		return
-	}
-	if err := os.WriteFile("test.sh", []byte(script), 0o777); err != nil {
-		logger.I.Panic("failed to write", zap.Error(err))
-	}
-	out, err := exec.Command("shellcheck", "-S", "warning", "-s", "bash", "test.sh").CombinedOutput()
-	if err != nil {
-		logger.I.Error(string(out))
-		require.NoError(t, errors.New("shellcheck failed"))
-	}
-
-	_ = os.Remove("test.sh")
-}
-
-var cleanJob = model.Job{
-	Env: []*model.EnvVar{
-		{
-			Key:   "key",
-			Value: "test'test",
-		},
-	},
-	Steps: []*model.Step{
-		cleanStepWithRun("echo 'hello world'"),
-	},
-}
 
 var cleanResources = model.Resources{
 	Tasks:       1,
@@ -70,115 +35,6 @@ func cleanStepWithRun(command string) *model.Step {
 	}
 }
 
-func TestRenderJob(t *testing.T) {
-	tests := []struct {
-		input         model.Job
-		isError       bool
-		errorContains []string
-		expected      string
-		title         string
-	}{
-		{
-			input: cleanJob,
-			expected: `#!/bin/bash -l
-
-set -e
-
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-mkdir -p "$STORAGE_PATH"
-chmod -R 700 "$STORAGE_PATH"
-chown -R "$UID:cluster-users" "$STORAGE_PATH"
-export 'key'='test'\''test'
-MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
-srun --job-name='test' \
-  --export=ALL,'test'='value' \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1 \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  --container-mounts="${MOUNTS}" \
-  --container-image='image' \
-  sh -c 'echo '\''hello world'\'''
-`,
-			title: "Positive test 'hello world'",
-		},
-		{
-			input: model.Job{
-				Env:           cleanJob.Env,
-				EnableLogging: utils.Ptr(true),
-				Steps:         cleanJob.Steps,
-			},
-			expected: `#!/bin/bash -l
-
-set -e
-
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-mkdir -p "$STORAGE_PATH"
-chmod -R 700 "$STORAGE_PATH"
-chown -R "$UID:cluster-users" "$STORAGE_PATH"
-/usr/local/bin/grid-logger-writer \
-  --server.tls \
-  --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
-  --server.tls.server-host-override=grid-logger.deepsquare.run \
-  --server.endpoint=grid-logger.deepsquare.run:443 \
-  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
-  --log-name="$SLURM_JOB_NAME" \
-  --user="$USER" \
-  >/dev/stdout 2>/dev/stderr &
-LOGGER_PID="$!"
-sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
-export 'key'='test'\''test'
-MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
-srun --job-name='test' \
-  --export=ALL,'test'='value' \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1 \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  --container-mounts="${MOUNTS}" \
-  --container-image='image' \
-  sh -c 'echo '\''hello world'\'''
-kill $LOGGER_PID
-wait $LOGGER_PID
-`,
-			title: "Positive test with logs",
-		},
-		{
-			input: model.Job{
-				Env: []*model.EnvVar{
-					{
-						Key:   "aze'aze",
-						Value: "test'test",
-					},
-				},
-			},
-			isError:       true,
-			errorContains: []string{"valid_envvar_name", "Key"},
-			title:         "Negative test invalid env var name",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.title, func(t *testing.T) {
-			// Act
-			actual, err := renderer.RenderJob(&tt.input)
-
-			// Assert
-			if tt.isError {
-				assert.Error(t, err)
-				for _, contain := range tt.errorContains {
-					assert.ErrorContains(t, err, contain)
-				}
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.expected, actual)
-				shellcheck(t, actual)
-			}
-		})
-	}
-}
-
 func TestRenderStepRun(t *testing.T) {
 	tests := []struct {
 		input         model.Step
@@ -189,7 +45,7 @@ func TestRenderStepRun(t *testing.T) {
 	}{
 		{
 			input: *cleanStepWithRun("hostname"),
-			expected: `MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
+			expected: `MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 srun --job-name='test' \
   --export=ALL,'test'='value' \
   --cpus-per-task=1 \
@@ -315,7 +171,7 @@ func TestRenderStepFor(t *testing.T) {
 			},
 			expected: `doFor() {
   export item="$1"
-  MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
+  MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
   srun --job-name='test' \
     --export=ALL,'test'='value' \
     --cpus-per-task=1 \
@@ -325,7 +181,7 @@ func TestRenderStepFor(t *testing.T) {
     --container-mounts="${MOUNTS}" \
     --container-image='image' \
     sh -c 'echo $item'
-  MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
+  MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
   srun --job-name='test' \
     --export=ALL,'test'='value' \
     --cpus-per-task=1 \
@@ -365,7 +221,7 @@ done`,
 			},
 			expected: `doFor() {
   export index="$1"
-  MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
+  MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
   srun --job-name='test' \
     --export=ALL,'test'='value' \
     --cpus-per-task=1 \
@@ -375,7 +231,7 @@ done`,
     --container-mounts="${MOUNTS}" \
     --container-image='image' \
     sh -c 'echo $index'
-  MOUNTS="/tmp/.X11-unix:/tmp/.X11-unix:ro"
+  MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
   srun --job-name='test' \
     --export=ALL,'test'='value' \
     --cpus-per-task=1 \

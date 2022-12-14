@@ -109,11 +109,14 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputEnvVar,
 		ec.unmarshalInputForRange,
+		ec.unmarshalInputHTTPData,
 		ec.unmarshalInputJob,
 		ec.unmarshalInputResources,
+		ec.unmarshalInputS3Data,
 		ec.unmarshalInputStep,
 		ec.unmarshalInputStepFor,
 		ec.unmarshalInputStepRun,
+		ec.unmarshalInputTransportData,
 	)
 	first := true
 
@@ -185,6 +188,56 @@ input EnvVar {
 }
 
 """
+S3Data describes the necessary variables to connect to a HTTP storage.
+"""
+input HTTPData {
+  url: String!
+}
+
+"""
+S3Data describes the necessary variables to connect to a S3 storage.
+"""
+input S3Data {
+  """
+  S3 region. Example: "us‑east‑2".
+  """
+  region: String!
+  """
+  The S3 Bucket URL. Must not end with "/".
+
+  Example: "s3://my-bucket".
+  """
+  bucketUrl: String!
+  """
+  The absolute path to a directory/file inside the bucket. Must start with "/".
+  """
+  path: String!
+  """
+  An access key for the S3 endpoint.
+  """
+  accessKey: String!
+  """
+  A secret access key for the S3 endpoint.
+  """
+  secretAccessKey: String!
+  """
+  A S3 Endpoint URL used for authentication. Example: https://s3.us‑east‑2.amazonaws.com
+  """
+  endpointUrl: String!
+}
+
+input TransportData {
+  """
+  Use http to download a file or archive, which will be autoextracted.
+  """
+  http: HTTPData
+  """
+  Use s3 to sync a file or directory.
+  """
+  s3: S3Data
+}
+
+"""
 A Job is a finite sequence of instructions.
 """
 input Job {
@@ -196,7 +249,23 @@ input Job {
   EnableLogging enables the DeepSquare GRID Logger.
   """
   enableLogging: Boolean
+  """
+  Pull data at the start of the job.
+  """
+  input: TransportData
   steps: [Step!]!
+  """
+  Push data at the end of the job.
+
+  Continuous sync/push can be enabled using the ` + "`" + `continuousOutputSync` + "`" + ` flag.
+  """
+  output: TransportData
+  """
+  ContinuousOutputSync will push data during the whole job.
+
+  This is useful when it is not desired to lose data when the job is suddenly stopped.
+  """
+  continuousOutputSync: Boolean
 }
 
 """
@@ -2523,6 +2592,34 @@ func (ec *executionContext) unmarshalInputForRange(ctx context.Context, obj inte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputHTTPData(ctx context.Context, obj interface{}) (model.HTTPData, error) {
+	var it model.HTTPData
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"url"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "url":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+			it.URL, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface{}) (model.Job, error) {
 	var it model.Job
 	asMap := map[string]interface{}{}
@@ -2530,7 +2627,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"env", "enableLogging", "steps"}
+	fieldsInOrder := [...]string{"env", "enableLogging", "input", "steps", "output", "continuousOutputSync"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2553,11 +2650,35 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			if err != nil {
 				return it, err
 			}
+		case "input":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+			it.Input, err = ec.unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "steps":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
 			it.Steps, err = ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "output":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("output"))
+			it.Output, err = ec.unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "continuousOutputSync":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("continuousOutputSync"))
+			it.ContinuousOutputSync, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2610,6 +2731,74 @@ func (ec *executionContext) unmarshalInputResources(ctx context.Context, obj int
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gpusPerTask"))
 			it.GpusPerTask, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interface{}) (model.S3Data, error) {
+	var it model.S3Data
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"region", "bucketUrl", "path", "accessKey", "secretAccessKey", "endpointUrl"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "region":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("region"))
+			it.Region, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "bucketUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bucketUrl"))
+			it.BucketURL, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "path":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
+			it.Path, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "accessKey":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accessKey"))
+			it.AccessKey, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "secretAccessKey":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("secretAccessKey"))
+			it.SecretAccessKey, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "endpointUrl":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endpointUrl"))
+			it.EndpointURL, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2766,6 +2955,42 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("command"))
 			it.Command, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTransportData(ctx context.Context, obj interface{}) (model.TransportData, error) {
+	var it model.TransportData
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"http", "s3"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "http":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("http"))
+			it.HTTP, err = ec.unmarshalOHTTPData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐHTTPData(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "s3":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("s3"))
+			it.S3, err = ec.unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3594,6 +3819,22 @@ func (ec *executionContext) unmarshalOForRange2ᚖgithubᚗcomᚋdeepsquareᚑio
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOHTTPData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐHTTPData(ctx context.Context, v interface{}) (*model.HTTPData, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputHTTPData(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx context.Context, v interface{}) (*model.S3Data, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputS3Data(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOStepFor2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepFor(ctx context.Context, v interface{}) (*model.StepFor, error) {
 	if v == nil {
 		return nil, nil
@@ -3662,6 +3903,14 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx context.Context, v interface{}) (*model.TransportData, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTransportData(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

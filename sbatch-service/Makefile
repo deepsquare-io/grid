@@ -1,7 +1,13 @@
+GO_SRCS := $(shell find . -type f -name '*.go' -a ! \( -name 'zz_generated*' -o -name '*_test.go' \))
+GO_TESTS := $(shell find . -type f -name '*_test.go')
+
 ifeq ($(golint),)
 golint := $(shell go env GOPATH)/bin/golangci-lint
 endif
 bins := sbatch-service
+
+.PHONY: all
+all: $(addprefix bin/,$(bins))
 
 bin/checksums.txt: $(addprefix bin/,$(bins))
 	sha256sum -b $(addprefix bin/,$(bins)) | sed 's/bin\///' > $@
@@ -16,10 +22,7 @@ bin/checksums.md: bin/checksums.txt
 .PHONY: build-all
 build-all: $(addprefix bin/,$(bins)) bin/checksums.md
 
-.PHONY: all
-all: $(addprefix bin/,$(bins))
-
-bin/sbatch-service:
+bin/sbatch-service: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags reader -o "$@" ./server.go
 
 .PHONY: graphql
