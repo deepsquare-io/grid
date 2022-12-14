@@ -12,6 +12,12 @@ import (
 
 var cleanJob = model.Job{
 	EnableLogging: utils.Ptr(true),
+	Resources: &model.Resources{
+		Tasks:       1,
+		CpusPerTask: 4,
+		MemPerCPU:   4096,
+		GpusPerTask: 1,
+	},
 	Env: []*model.EnvVar{
 		{
 			Key:   "key",
@@ -36,6 +42,14 @@ func TestRenderJob(t *testing.T) {
 			expected: `#!/bin/bash -l
 
 set -e
+
+export NTASKS='1'
+export CPUS_PER_TASK='4'
+export MEM_PER_CPU='4096'
+export GPUS_PER_TASK='1'
+export GPUS='1'
+export CPUS='4'
+export MEM='16384'
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
@@ -49,20 +63,20 @@ LOGGER_PID="$!"
 sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-chmod -R 700 "$STORAGE_PATH"
-chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-srun --job-name='test' \
-  --export=ALL,'test'='value' \
+/usr/bin/srun --job-name='test' \
+  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
-  sh -c 'echo '\''hello world'\'''
+  /bin/sh -c 'echo '\''hello world'\'''
 kill $LOGGER_PID
 wait $LOGGER_PID
 `,
@@ -72,6 +86,7 @@ wait $LOGGER_PID
 			input: model.Job{
 				Env:           cleanJob.Env,
 				EnableLogging: cleanJob.EnableLogging,
+				Resources:     cleanJob.Resources,
 				Input: &model.TransportData{
 					S3: &model.S3Data{
 						Region:          "us‑east‑2",
@@ -98,6 +113,14 @@ wait $LOGGER_PID
 			expected: `#!/bin/bash -l
 
 set -e
+
+export NTASKS='1'
+export CPUS_PER_TASK='4'
+export MEM_PER_CPU='4096'
+export GPUS_PER_TASK='1'
+export GPUS='1'
+export CPUS='4'
+export MEM='16384'
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
@@ -111,9 +134,9 @@ LOGGER_PID="$!"
 sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-chmod -R 700 "$STORAGE_PATH"
-chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
@@ -134,15 +157,15 @@ ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-srun --job-name='test' \
-  --export=ALL,'test'='value' \
+/usr/bin/srun --job-name='test' \
+  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
-  sh -c 'echo '\''hello world'\'''
+  /bin/sh -c 'echo '\''hello world'\'''
 kill $CONTINUOUS_SYNC_PID
 wait $CONTINUOUS_SYNC_PID
 echo "Output contains:"
@@ -161,6 +184,7 @@ wait $LOGGER_PID
 			input: model.Job{
 				Env:           cleanJob.Env,
 				EnableLogging: cleanJob.EnableLogging,
+				Resources:     cleanJob.Resources,
 				Input: &model.TransportData{
 					S3: &model.S3Data{
 						Region:          "us‑east‑2",
@@ -186,6 +210,14 @@ wait $LOGGER_PID
 			expected: `#!/bin/bash -l
 
 set -e
+
+export NTASKS='1'
+export CPUS_PER_TASK='4'
+export MEM_PER_CPU='4096'
+export GPUS_PER_TASK='1'
+export GPUS='1'
+export CPUS='4'
+export MEM='16384'
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
@@ -199,9 +231,9 @@ LOGGER_PID="$!"
 sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-chmod -R 700 "$STORAGE_PATH"
-chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
@@ -211,15 +243,15 @@ echo "Input contains:"
 find "$STORAGE_PATH/input/"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-srun --job-name='test' \
-  --export=ALL,'test'='value' \
+/usr/bin/srun --job-name='test' \
+  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
-  sh -c 'echo '\''hello world'\'''
+  /bin/sh -c 'echo '\''hello world'\'''
 echo "Output contains:"
 find "$STORAGE_PATH/output/"
 export AWS_ACCESS_KEY_ID='AccessKeyID'
@@ -236,6 +268,7 @@ wait $LOGGER_PID
 			input: model.Job{
 				Env:           cleanJob.Env,
 				EnableLogging: cleanJob.EnableLogging,
+				Resources:     cleanJob.Resources,
 				Input: &model.TransportData{
 					HTTP: &model.HTTPData{
 						URL: "https://test/in",
@@ -251,6 +284,14 @@ wait $LOGGER_PID
 			expected: `#!/bin/bash -l
 
 set -e
+
+export NTASKS='1'
+export CPUS_PER_TASK='4'
+export MEM_PER_CPU='4096'
+export GPUS_PER_TASK='1'
+export GPUS='1'
+export CPUS='4'
+export MEM='16384'
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
@@ -264,9 +305,9 @@ LOGGER_PID="$!"
 sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-chmod -R 700 "$STORAGE_PATH"
-chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 curl -JORSL 'https://test/in' -o "$STORAGE_PATH/input/"
 for filepath in "$STORAGE_PATH/input/"*; do
   tar -xvaf "$filepath" 2>/dev/null && continue
@@ -285,15 +326,15 @@ echo "Input contains:"
 find "$STORAGE_PATH/input/"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-srun --job-name='test' \
-  --export=ALL,'test'='value' \
+/usr/bin/srun --job-name='test' \
+  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
-  sh -c 'echo '\''hello world'\'''
+  /bin/sh -c 'echo '\''hello world'\'''
 echo "Output contains:"
 find "$STORAGE_PATH/output/"
 tar -cvf "$STORAGE_PATH/output.tar" "$STORAGE_PATH/output/"
@@ -306,27 +347,36 @@ wait $LOGGER_PID
 		{
 			input: model.Job{
 				Env:           cleanJob.Env,
+				Resources:     cleanJob.Resources,
 				EnableLogging: utils.Ptr(false),
 				Steps:         cleanJob.Steps,
 			},
 			expected: `#!/bin/bash -l
 
 set -e
+
+export NTASKS='1'
+export CPUS_PER_TASK='4'
+export MEM_PER_CPU='4096'
+export GPUS_PER_TASK='1'
+export GPUS='1'
+export CPUS='4'
+export MEM='16384'
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-chmod -R 700 "$STORAGE_PATH"
-chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-srun --job-name='test' \
-  --export=ALL,'test'='value' \
+/usr/bin/srun --job-name='test' \
+  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
-  sh -c 'echo '\''hello world'\'''
+  /bin/sh -c 'echo '\''hello world'\'''
 `,
 			title: "Positive test with no logs",
 		},

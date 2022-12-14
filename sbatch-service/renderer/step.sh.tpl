@@ -2,8 +2,8 @@
 {{- if .Run.Image -}}
 MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Run.X11 (derefBool .Run.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"
 {{- end }}
-srun --job-name={{ .Name | squote }} \
-  --export=ALL{{ range $env := .Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
+/usr/bin/srun --job-name={{ .Name | squote }} \
+  --export=ALL{{ if and .Run.Image (derefStr .Run.Image ) }},'STORAGE_PATH=/deepsquare'{{ end }}{{ range $env := .Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ .Run.Resources.CpusPerTask }} \
   --mem-per-cpu={{ .Run.Resources.MemPerCPU }} \
   --gpus-per-task={{ .Run.Resources.GpusPerTask }} \
@@ -12,7 +12,7 @@ srun --job-name={{ .Name | squote }} \
   --container-mounts="${MOUNTS}" \
   --container-image={{ .Run.Image | derefStr | squote }} \
 {{- end }}
-  sh -c {{ .Run.Command | squote }}
+  {{ if .Run.Shell }}{{ derefStr .Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Run.Command | squote }}
 {{- else if .For -}}
 doFor() {
 {{- if .For.Range }}

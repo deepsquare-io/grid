@@ -32,7 +32,7 @@ type TransportData struct {
 
 // An environment variable.
 type EnvVar struct {
-	Key   string `json:"key" validate:"valid_envvar_name,ne=PATH"`
+	Key   string `json:"key" validate:"valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"`
 	Value string `json:"value"`
 }
 
@@ -45,6 +45,17 @@ type ForRange struct {
 
 // A Job is a finite sequence of instructions.
 type Job struct {
+	// Allocated resources for the job.
+	//
+	// Each resources is available as environment variables:
+	// - $NTASKS: number of allowed parallel tasks
+	// - $CPUS_PER_TASK: number of CPUs per task
+	// - $MEM_PER_CPU: MB of memory per CPU
+	// - $GPUS_PER_TASK: number of GPUs per task
+	// - $GPUS: total number of GPUS
+	// - $CPUS: total number of CPUS
+	// - $MEM: total number of memory in MB
+	Resources *Resources `json:"resources" validate:"required"`
 	// Environment variables accessible for the entire job.
 	Env []*EnvVar `json:"env"  validate:"dive"`
 	// EnableLogging enables the DeepSquare GRID Logger.
@@ -62,7 +73,7 @@ type Job struct {
 	ContinuousOutputSync *bool `json:"continuousOutputSync"`
 }
 
-// Resources are the allocated resources for a command.
+// Resources are the allocated resources for a command in a job, or a job in a cluster.
 type Resources struct {
 	// Number of tasks which are run in parallel.
 	//
@@ -119,16 +130,31 @@ type StepFor struct {
 // echo "KEY=value" >> "$STORAGE_PATH/env" can be used to share environment variables.
 type StepRun struct {
 	// Allocated resources for the command.
-	Resources *Resources `json:"resources" validate:"dive"`
-	// Environment variables accessible over the command.
-	Env []*EnvVar `json:"env" validate:"dive"`
-	// EnableLogging enables the DeepSquare GRID Logger.
-	X11 *bool `json:"x11"`
+	Resources *Resources `json:"resources" validate:"required"`
 	// Run the command inside a container.
 	//
-	// Format [user:password]@<host>#<image>:<tag>.
+	// Format [<user>@][<registry>#]<image>[:<tag>].
+	// reg_user="[[:alnum:]_.!~*\'()%\;:\&=+$,-@]+"
+	// reg_registry="[^#]+"
+	// reg_image="[[:lower:][:digit:]/._-]+"
+	// reg_tag="[[:alnum:]._:-]+"
+	// reg_url="^docker://((${reg_user})@)?((${reg_registry})#)?(${reg_image})(:(${reg_tag}))?$"
+	//
+	// It is also possible to load a squashfs file by specifying an absolute path.
+	//
 	// If null or empty, run on the host.
 	Image *string `json:"image" validate:"omitempty,valid_container_image_url"`
+	// X11 mounts /tmp/.X11-unix in the container.
+	//
+	// If image is not defined, there is no need to define x11.
+	X11 *bool `json:"x11"`
+	// Environment variables accessible over the command.
+	Env []*EnvVar `json:"env" validate:"dive"`
 	// Command specifies a shell script.
 	Command string `json:"command"`
+	// Shell to use.
+	//
+	// Accepted: /bin/bash, /bin/ash, /bin/sh
+	// Default: /bin/sh
+	Shell *string `json:"shell" validate:"omitempty,oneof=/bin/bash /bin/ash /bin/sh"`
 }

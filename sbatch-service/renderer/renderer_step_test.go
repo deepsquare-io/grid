@@ -46,15 +46,15 @@ func TestRenderStepRun(t *testing.T) {
 		{
 			input: *cleanStepWithRun("hostname"),
 			expected: `MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-srun --job-name='test' \
-  --export=ALL,'test'='value' \
+/usr/bin/srun --job-name='test' \
+  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
-  sh -c 'hostname'`,
+  /bin/sh -c 'hostname'`,
 			title: "Positive test with image",
 		},
 		{
@@ -67,13 +67,13 @@ srun --job-name='test' \
 				},
 			},
 			expected: `
-srun --job-name='test' \
+/usr/bin/srun --job-name='test' \
   --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
-  sh -c 'hostname'`,
+  /bin/sh -c 'hostname'`,
 			title: "Positive test without image",
 		},
 		{
@@ -87,13 +87,13 @@ echo "test"`,
 				},
 			},
 			expected: `
-srun --job-name='test' \
+/usr/bin/srun --job-name='test' \
   --export=ALL,'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
-  sh -c 'hostname
+  /bin/sh -c 'hostname
 echo "test"'`,
 			title: "Positive test with multiline command",
 		},
@@ -172,25 +172,25 @@ func TestRenderStepFor(t *testing.T) {
 			expected: `doFor() {
   export item="$1"
   MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-  srun --job-name='test' \
-    --export=ALL,'test'='value' \
+  /usr/bin/srun --job-name='test' \
+    --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
     --ntasks=1 \
     --container-mounts="${MOUNTS}" \
     --container-image='image' \
-    sh -c 'echo $item'
+    /bin/sh -c 'echo $item'
   MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-  srun --job-name='test' \
-    --export=ALL,'test'='value' \
+  /usr/bin/srun --job-name='test' \
+    --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
     --ntasks=1 \
     --container-mounts="${MOUNTS}" \
     --container-image='image' \
-    sh -c 'echo $item'
+    /bin/sh -c 'echo $item'
 }
 pids=()
 items=('a' 'b' 'c' )
@@ -222,25 +222,25 @@ done`,
 			expected: `doFor() {
   export index="$1"
   MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-  srun --job-name='test' \
-    --export=ALL,'test'='value' \
+  /usr/bin/srun --job-name='test' \
+    --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
     --ntasks=1 \
     --container-mounts="${MOUNTS}" \
     --container-image='image' \
-    sh -c 'echo $index'
+    /bin/sh -c 'echo $index'
   MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-  srun --job-name='test' \
-    --export=ALL,'test'='value' \
+  /usr/bin/srun --job-name='test' \
+    --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
     --cpus-per-task=1 \
     --mem-per-cpu=1 \
     --gpus-per-task=0 \
     --ntasks=1 \
     --container-mounts="${MOUNTS}" \
     --container-image='image' \
-    sh -c 'echo $index'
+    /bin/sh -c 'echo $index'
 }
 pids=()
 for index in $(seq 0 -2 -10); do

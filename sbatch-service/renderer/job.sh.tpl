@@ -2,6 +2,14 @@
 
 set -e
 
+export NTASKS='{{ .Resources.Tasks }}'
+export CPUS_PER_TASK='{{ .Resources.CpusPerTask }}'
+export MEM_PER_CPU='{{ .Resources.MemPerCPU }}'
+export GPUS_PER_TASK='{{ .Resources.GpusPerTask }}'
+export GPUS='{{ mul .Resources.GpusPerTask .Resources.Tasks }}'
+export CPUS='{{ mul .Resources.CpusPerTask .Resources.Tasks }}'
+export MEM='{{ mul .Resources.MemPerCPU .Resources.CpusPerTask .Resources.Tasks }}'
+
 {{- if and .EnableLogging (derefBool .EnableLogging ) }}
 /usr/local/bin/grid-logger-writer \
   --server.tls \
@@ -17,9 +25,9 @@ sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 {{- end }}
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-chmod -R 700 "$STORAGE_PATH"
-chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 
 {{- if and .Input .Input.HTTP }}
 curl -JORSL {{ .Input.HTTP.URL | squote }} -o "$STORAGE_PATH/input/"

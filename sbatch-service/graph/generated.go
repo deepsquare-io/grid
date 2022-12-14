@@ -242,6 +242,22 @@ A Job is a finite sequence of instructions.
 """
 input Job {
   """
+  Allocated resources for the job.
+
+  Each resource is available as environment variables:
+  - $NTASKS: number of allowed parallel tasks
+  - $CPUS_PER_TASK: number of CPUs per task
+  - $MEM_PER_CPU: MB of memory per CPU
+  - $GPUS_PER_TASK: number of GPUs per task
+  - $GPUS: total number of GPUS
+  - $CPUS: total number of CPUS
+  - $MEM: total number of memory in MB
+
+  These variables have no influence on the actual values sent to the DeepSquare metascheduler.
+  They are only used to set useful environment variables.
+  """
+  resources: Resources!
+  """
   Environment variables accessible for the entire job.
   """
   env: [EnvVar!]
@@ -293,7 +309,7 @@ input Step {
 }
 
 """
-Resources are the allocated resources for a command.
+Resources are the allocated resources for a command in a job, or a job in a cluster.
 """
 input Resources {
   """
@@ -344,6 +360,8 @@ input StepRun {
   reg_tag="[[:alnum:]._:-]+"
   reg_url="^docker://((${reg_user})@)?((${reg_registry})#)?(${reg_image})(:(${reg_tag}))?$"
 
+  It is also possible to load a squashfs file by specifying an absolute path.
+
   If null or empty, run on the host.
   """
   image: String
@@ -361,6 +379,13 @@ input StepRun {
   Command specifies a shell script.
   """
   command: String!
+  """
+  Shell to use.
+
+  Accepted: /bin/bash, /bin/ash, /bin/sh
+  Default: /bin/sh
+  """
+  shell: String
 }
 
 """
@@ -2629,13 +2654,21 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"env", "enableLogging", "input", "steps", "output", "continuousOutputSync"}
+	fieldsInOrder := [...]string{"resources", "env", "enableLogging", "input", "steps", "output", "continuousOutputSync"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "resources":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
+			it.Resources, err = ec.unmarshalNResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐResources(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "env":
 			var err error
 
@@ -2913,7 +2946,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "image", "x11", "env", "command"}
+	fieldsInOrder := [...]string{"resources", "image", "x11", "env", "command", "shell"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2957,6 +2990,14 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("command"))
 			it.Command, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "shell":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("shell"))
+			it.Shell, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

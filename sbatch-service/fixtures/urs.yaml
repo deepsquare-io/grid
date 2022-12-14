@@ -1,0 +1,35 @@
+---
+job:
+  enableLogging: true
+  env:
+    - key: DISPLAY
+      value: ':99'
+    - key: XDG_RUNTIME_DIR
+      value: '/tmp'
+  input:
+    http:
+      url: https://test/
+  steps:
+    - name: urs
+      run:
+        x11: true
+        image: '/data/beegfs/localhost+tdp+latest.sqsh'
+        resources:
+          tasks: 1
+          cpusPerTask: 4
+          memPerCpu: 4096
+          gpusPerTask: 1
+        command: |-
+          /unityapp/DeepSquareURSSample.x86_64 \
+            -maxplayers 8 \
+            -webserverurl 'wss://tdp.deepsquare.run' \
+            -renderfps 60 \
+            -streamfps 30 \
+            -sessionpin 123 \
+            -minbitrate 10000 \
+            -maxbitrate 50000 \
+            -adaptativeupscaling \
+            -minimumrenderscale 0.5 \
+            -renderscalestepcount 0.1 \
+            -displayfpscounter \
+            --logFile -
