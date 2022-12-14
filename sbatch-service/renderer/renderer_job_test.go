@@ -77,7 +77,7 @@ wait $LOGGER_PID
 						Region:          "us‑east‑2",
 						BucketURL:       "s3://test",
 						Path:            "/in",
-						AccessKey:       "AccessKey",
+						AccessKeyID:     "AccessKeyID",
 						SecretAccessKey: "SecretAccessKey",
 						EndpointURL:     "https://s3.us‑east‑2.amazonaws.com",
 					},
@@ -88,7 +88,7 @@ wait $LOGGER_PID
 						Region:          "us‑east‑2",
 						BucketURL:       "s3://test",
 						Path:            "/out",
-						AccessKey:       "AccessKey",
+						AccessKeyID:     "AccessKeyID",
 						SecretAccessKey: "SecretAccessKey",
 						EndpointURL:     "https://s3.us‑east‑2.amazonaws.com",
 					},
@@ -114,7 +114,7 @@ export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
 chmod -R 700 "$STORAGE_PATH"
 chown -R "$UID:cluster-users" "$STORAGE_PATH"
-export AWS_ACCESS_KEY_ID='AccessKey'
+export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
@@ -122,7 +122,7 @@ s5cmd sync --source-region 'us‑east‑2' 's3://test''/in' "$STORAGE_PATH/input
 echo "Input contains:"
 find "$STORAGE_PATH/input/"
 ContinuousOutputSync() {
-  export AWS_ACCESS_KEY_ID='AccessKey'
+  export AWS_ACCESS_KEY_ID='AccessKeyID'
   export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
   export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
   while true; do
@@ -147,7 +147,7 @@ kill $CONTINUOUS_SYNC_PID
 wait $CONTINUOUS_SYNC_PID
 echo "Output contains:"
 find "$STORAGE_PATH/output/"
-export AWS_ACCESS_KEY_ID='AccessKey'
+export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
@@ -166,7 +166,7 @@ wait $LOGGER_PID
 						Region:          "us‑east‑2",
 						BucketURL:       "s3://test",
 						Path:            "/in",
-						AccessKey:       "AccessKey",
+						AccessKeyID:     "AccessKeyID",
 						SecretAccessKey: "SecretAccessKey",
 						EndpointURL:     "https://s3.us‑east‑2.amazonaws.com",
 					},
@@ -177,7 +177,7 @@ wait $LOGGER_PID
 						Region:          "us‑east‑2",
 						BucketURL:       "s3://test",
 						Path:            "/out",
-						AccessKey:       "AccessKey",
+						AccessKeyID:     "AccessKeyID",
 						SecretAccessKey: "SecretAccessKey",
 						EndpointURL:     "https://s3.us‑east‑2.amazonaws.com",
 					},
@@ -202,7 +202,7 @@ export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
 chmod -R 700 "$STORAGE_PATH"
 chown -R "$UID:cluster-users" "$STORAGE_PATH"
-export AWS_ACCESS_KEY_ID='AccessKey'
+export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
@@ -222,7 +222,7 @@ srun --job-name='test' \
   sh -c 'echo '\''hello world'\'''
 echo "Output contains:"
 find "$STORAGE_PATH/output/"
-export AWS_ACCESS_KEY_ID='AccessKey'
+export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 

@@ -213,9 +213,9 @@ input S3Data {
   """
   path: String!
   """
-  An access key for the S3 endpoint.
+  An access key ID for the S3 endpoint.
   """
-  accessKey: String!
+  accessKeyId: String!
   """
   A secret access key for the S3 endpoint.
   """
@@ -264,6 +264,8 @@ input Job {
   ContinuousOutputSync will push data during the whole job.
 
   This is useful when it is not desired to lose data when the job is suddenly stopped.
+
+  ContinousOutputSync is not available with HTTP.
   """
   continuousOutputSync: Boolean
 }
@@ -2747,7 +2749,7 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"region", "bucketUrl", "path", "accessKey", "secretAccessKey", "endpointUrl"}
+	fieldsInOrder := [...]string{"region", "bucketUrl", "path", "accessKeyId", "secretAccessKey", "endpointUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2778,11 +2780,11 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 			if err != nil {
 				return it, err
 			}
-		case "accessKey":
+		case "accessKeyId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accessKey"))
-			it.AccessKey, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accessKeyId"))
+			it.AccessKeyID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

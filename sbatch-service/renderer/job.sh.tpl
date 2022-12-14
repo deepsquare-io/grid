@@ -39,7 +39,7 @@ done
 echo "Input contains:"
 find "$STORAGE_PATH/input/"
 {{- else if and .Input .Input.S3 }}
-export AWS_ACCESS_KEY_ID={{ .Input.S3.AccessKey | squote }}
+export AWS_ACCESS_KEY_ID={{ .Input.S3.AccessKeyID | squote }}
 export AWS_SECRET_ACCESS_KEY={{ .Input.S3.SecretAccessKey | squote }}
 export S3_ENDPOINT_URL={{ .Input.S3.EndpointURL | squote }}
 
@@ -52,7 +52,7 @@ find "$STORAGE_PATH/input/"
 echo "Continous output sync is not avaible with HTTP. Will use simple output."
 {{- else if and .Output .Output.S3 .ContinuousOutputSync (derefBool .ContinuousOutputSync) }}
 ContinuousOutputSync() {
-  export AWS_ACCESS_KEY_ID={{ .Output.S3.AccessKey | squote }}
+  export AWS_ACCESS_KEY_ID={{ .Output.S3.AccessKeyID | squote }}
   export AWS_SECRET_ACCESS_KEY={{ .Output.S3.SecretAccessKey | squote }}
   export S3_ENDPOINT_URL={{ .Output.S3.EndpointURL | squote }}
   while true; do
@@ -84,7 +84,7 @@ wait $CONTINUOUS_SYNC_PID
 {{- end }}
 echo "Output contains:"
 find "$STORAGE_PATH/output/"
-export AWS_ACCESS_KEY_ID={{ .Output.S3.AccessKey | squote }}
+export AWS_ACCESS_KEY_ID={{ .Output.S3.AccessKeyID | squote }}
 export AWS_SECRET_ACCESS_KEY={{ .Output.S3.SecretAccessKey | squote }}
 export S3_ENDPOINT_URL={{ .Output.S3.EndpointURL | squote }}
 

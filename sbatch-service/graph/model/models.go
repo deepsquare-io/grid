@@ -15,8 +15,8 @@ type S3Data struct {
 	BucketURL string `json:"bucketUrl" validate:"startswith=s3://,endsnotwith=/"`
 	// An absolute path of the bucket. Must start with "/".
 	Path string `json:"path" validate:"startswith=/"`
-	// An access key for the S3 endpoint.
-	AccessKey string `json:"accessKey"`
+	// An access key ID for the S3 endpoint.
+	AccessKeyID string `json:"accessKeyId"`
 	// A secret access key for the S3 endpoint.
 	SecretAccessKey string `json:"secretAccessKey"`
 	// A S3 Endpoint URL used for authentication. Example: https://s3.us‑east‑2.amazonaws.com
