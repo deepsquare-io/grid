@@ -63,8 +63,21 @@ type Job struct {
 	// EnableLogging enables the DeepSquare GRID Logger.
 	EnableLogging *bool `json:"enableLogging" yaml:"enableLogging"`
 	// Pull data at the start of the job.
+	//
+	// It is recommended to set the mode of the data by filling the `inputMode` field.
 	Input *TransportData `json:"input" yaml:"input"`
-	Steps []*Step        `json:"steps" yaml:"steps" validate:"dive"`
+	// InputMode takes an integer that will be used to change the mode recursively (chmod -R) of the input data.
+	//
+	// The number shouldn't be in octal but in decimal. A mode over 512 is not accepted.
+	//
+	// Common modes:
+	//   - 511 (user:rwx group:rwx world:rwx)
+	//   - 493 (user:rwx group:r-x world:r-x)
+	//   - 448 (user:rwx group:--- world:---)
+	//
+	// If null, the mode won't change and will default to the source.
+	InputMode *int    `json:"inputMode" yaml:"inputMode" validate:"omitempty,lt=512"`
+	Steps     []*Step `json:"steps" yaml:"steps" validate:"dive"`
 	// Push data at the end of the job.
 	//
 	// Continuous sync/push can be enabled using the `continuousOutputSync` flag.

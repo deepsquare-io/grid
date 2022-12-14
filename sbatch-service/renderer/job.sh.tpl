@@ -58,6 +58,9 @@ s5cmd sync --source-region {{ .Input.S3.Region | squote }} {{ .Input.S3.BucketUR
 echo "Input contains:"
 find "$STORAGE_PATH/input/"
 {{- end }}
+{{- if .InputMode }}
+chmod -R {{ .InputMode | derefInt | octal }} "$STORAGE_PATH/input/"
+{{- end }}
 
 {{- if and .Output .Output.HTTP .ContinuousOutputSync (derefBool .ContinuousOutputSync) }}
 echo "Continous output sync is not avaible with HTTP. Will use simple output."

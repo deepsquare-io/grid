@@ -12,6 +12,7 @@ import (
 
 var cleanJob = model.Job{
 	EnableLogging: utils.Ptr(true),
+	InputMode:     utils.Ptr(493),
 	Resources: &model.Resources{
 		Tasks:       1,
 		CpusPerTask: 4,
@@ -70,6 +71,7 @@ export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 loadDeepsquareEnv() {
   cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
+chmod -R 755 "$STORAGE_PATH/input/"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 /usr/bin/srun --job-name='test' \
@@ -91,6 +93,7 @@ wait $LOGGER_PID
 				Env:           cleanJob.Env,
 				EnableLogging: cleanJob.EnableLogging,
 				Resources:     cleanJob.Resources,
+				InputMode:     cleanJob.InputMode,
 				Input: &model.TransportData{
 					S3: &model.S3Data{
 						Region:          "us‑east‑2",
@@ -152,6 +155,7 @@ export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 s5cmd sync --source-region 'us‑east‑2' 's3://test''/in' "$STORAGE_PATH/input/"
 echo "Input contains:"
 find "$STORAGE_PATH/input/"
+chmod -R 755 "$STORAGE_PATH/input/"
 ContinuousOutputSync() {
   export AWS_ACCESS_KEY_ID='AccessKeyID'
   export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
@@ -192,6 +196,7 @@ wait $LOGGER_PID
 			input: model.Job{
 				Env:           cleanJob.Env,
 				EnableLogging: cleanJob.EnableLogging,
+				InputMode:     cleanJob.InputMode,
 				Resources:     cleanJob.Resources,
 				Input: &model.TransportData{
 					S3: &model.S3Data{
@@ -253,6 +258,7 @@ export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 s5cmd sync --source-region 'us‑east‑2' 's3://test''/in' "$STORAGE_PATH/input/"
 echo "Input contains:"
 find "$STORAGE_PATH/input/"
+chmod -R 755 "$STORAGE_PATH/input/"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 /usr/bin/srun --job-name='test' \
@@ -281,6 +287,7 @@ wait $LOGGER_PID
 				Env:           cleanJob.Env,
 				EnableLogging: cleanJob.EnableLogging,
 				Resources:     cleanJob.Resources,
+				InputMode:     cleanJob.InputMode,
 				Input: &model.TransportData{
 					HTTP: &model.HTTPData{
 						URL: "https://test/in",
@@ -340,6 +347,7 @@ for filepath in "$STORAGE_PATH/input/"*; do
 done
 echo "Input contains:"
 find "$STORAGE_PATH/input/"
+chmod -R 755 "$STORAGE_PATH/input/"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 /usr/bin/srun --job-name='test' \

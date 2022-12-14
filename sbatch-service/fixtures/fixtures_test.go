@@ -20,12 +20,12 @@ import (
 var (
 	//go:embed tdp.yaml
 	fixtureTDP string
-	// //go:embed tdp.sh
-	// expectedTDP string
+	//go:embed tdp.txt
+	expectedTDP string
 	//go:embed urs.yaml
 	fixtureURS string
-	// //go:embed urs.sh
-	// expectedURS string
+	//go:embed urs.txt
+	expectedURS string
 	//go:embed blender-batch-job.yaml
 	fixtureBlenderBatchJob string
 	//go:embed blender-batch-job.txt
@@ -60,6 +60,7 @@ func TestRenderTDP(t *testing.T) {
 	out, err := renderer.RenderJob(&j.Job)
 	require.NoError(t, err)
 	fmt.Println(out)
+	require.Equal(t, expectedTDP, out)
 	shellcheck(t, out)
 }
 
@@ -73,6 +74,7 @@ func TestRenderURS(t *testing.T) {
 	out, err := renderer.RenderJob(&j.Job)
 	require.NoError(t, err)
 	fmt.Println(out)
+	require.Equal(t, expectedURS, out)
 	shellcheck(t, out)
 }
 
