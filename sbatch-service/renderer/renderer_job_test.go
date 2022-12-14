@@ -64,12 +64,16 @@ sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/touch "$STORAGE_PATH/env"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+loadDeepsquareEnv() {
+  cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+}
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 /usr/bin/srun --job-name='test' \
-  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -135,8 +139,12 @@ sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/touch "$STORAGE_PATH/env"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+loadDeepsquareEnv() {
+  cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+}
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
@@ -158,7 +166,7 @@ CONTINUOUS_SYNC_PID="$!"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 /usr/bin/srun --job-name='test' \
-  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -232,8 +240,12 @@ sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/touch "$STORAGE_PATH/env"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+loadDeepsquareEnv() {
+  cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+}
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
@@ -244,7 +256,7 @@ find "$STORAGE_PATH/input/"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 /usr/bin/srun --job-name='test' \
-  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -306,8 +318,12 @@ sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/touch "$STORAGE_PATH/env"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+loadDeepsquareEnv() {
+  cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+}
 curl -JORSL 'https://test/in' -o "$STORAGE_PATH/input/"
 for filepath in "$STORAGE_PATH/input/"*; do
   tar -xvaf "$filepath" 2>/dev/null && continue
@@ -327,7 +343,7 @@ find "$STORAGE_PATH/input/"
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 /usr/bin/srun --job-name='test' \
-  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -364,12 +380,16 @@ export CPUS='4'
 export MEM='16384'
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/touch "$STORAGE_PATH/env"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+loadDeepsquareEnv() {
+  cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+}
 export 'key'='test'\''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 /usr/bin/srun --job-name='test' \
-  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \

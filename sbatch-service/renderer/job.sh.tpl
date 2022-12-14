@@ -26,9 +26,12 @@ exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 {{- end }}
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/touch "$STORAGE_PATH/env"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
-
+loadDeepsquareEnv() {
+  cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+}
 {{- if and .Input .Input.HTTP }}
 curl -JORSL {{ .Input.HTTP.URL | squote }} -o "$STORAGE_PATH/input/"
 for filepath in "$STORAGE_PATH/input/"*; do

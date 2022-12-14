@@ -1,0 +1,57 @@
+#!/bin/bash -l
+
+set -e
+
+export NTASKS='1'
+export CPUS_PER_TASK='4'
+export MEM_PER_CPU='4096'
+export GPUS_PER_TASK='1'
+export GPUS='1'
+export CPUS='4'
+export MEM='16384'
+/usr/local/bin/grid-logger-writer \
+  --server.tls \
+  --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
+  --server.tls.server-host-override=grid-logger.deepsquare.run \
+  --server.endpoint=grid-logger.deepsquare.run:443 \
+  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --log-name="$SLURM_JOB_NAME" \
+  --user="$USER" \
+  >/dev/stdout 2>/dev/stderr &
+LOGGER_PID="$!"
+sleep 1
+exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
+/usr/bin/touch "$STORAGE_PATH/env"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+loadDeepsquareEnv() {
+  cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+}
+export 'DISPLAY'=':99'
+export 'XDG_RUNTIME_DIR'='/tmp'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+/usr/bin/srun --job-name='tdp' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare' \
+  --cpus-per-task=4 \
+  --mem-per-cpu=4096 \
+  --gpus-per-task=1 \
+  --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
+  --container-image='/data/beegfs/localhost+tdp+latest.sqsh' \
+  /bin/sh -c '/unityapp/DeepSquareURSSample.x86_64 \
+  -maxplayers 8 \
+  -webserverurl '\''wss://tdp.deepsquare.run'\'' \
+  -renderfps 60 \
+  -streamfps 30 \
+  -sessionpin 123 \
+  -minbitrate 10000 \
+  -maxbitrate 50000 \
+  -adaptativeupscaling \
+  -minimumrenderscale 0.5 \
+  -renderscalestepcount 0.1 \
+  -displayfpscounter \
+  --logFile -'
+kill $LOGGER_PID
+wait $LOGGER_PID

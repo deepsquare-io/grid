@@ -47,7 +47,7 @@ func TestRenderStepRun(t *testing.T) {
 			input: *cleanStepWithRun("hostname"),
 			expected: `MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 /usr/bin/srun --job-name='test' \
-  --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -68,7 +68,7 @@ func TestRenderStepRun(t *testing.T) {
 			},
 			expected: `
 /usr/bin/srun --job-name='test' \
-  --export=ALL,'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -88,7 +88,7 @@ echo "test"`,
 			},
 			expected: `
 /usr/bin/srun --job-name='test' \
-  --export=ALL,'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -170,27 +170,27 @@ func TestRenderStepFor(t *testing.T) {
 				},
 			},
 			expected: `doFor() {
-  export item="$1"
-  MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-  /usr/bin/srun --job-name='test' \
-    --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
-    --cpus-per-task=1 \
-    --mem-per-cpu=1 \
-    --gpus-per-task=0 \
-    --ntasks=1 \
-    --container-mounts="${MOUNTS}" \
-    --container-image='image' \
-    /bin/sh -c 'echo $item'
-  MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-  /usr/bin/srun --job-name='test' \
-    --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
-    --cpus-per-task=1 \
-    --mem-per-cpu=1 \
-    --gpus-per-task=0 \
-    --ntasks=1 \
-    --container-mounts="${MOUNTS}" \
-    --container-image='image' \
-    /bin/sh -c 'echo $item'
+export item="$1"
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+/usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
+  --container-image='image' \
+  /bin/sh -c 'echo $item'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+/usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
+  --container-image='image' \
+  /bin/sh -c 'echo $item'
 }
 pids=()
 items=('a' 'b' 'c' )
@@ -220,27 +220,27 @@ done`,
 				},
 			},
 			expected: `doFor() {
-  export index="$1"
-  MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-  /usr/bin/srun --job-name='test' \
-    --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
-    --cpus-per-task=1 \
-    --mem-per-cpu=1 \
-    --gpus-per-task=0 \
-    --ntasks=1 \
-    --container-mounts="${MOUNTS}" \
-    --container-image='image' \
-    /bin/sh -c 'echo $index'
-  MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-  /usr/bin/srun --job-name='test' \
-    --export=ALL,'STORAGE_PATH=/deepsquare','test'='value' \
-    --cpus-per-task=1 \
-    --mem-per-cpu=1 \
-    --gpus-per-task=0 \
-    --ntasks=1 \
-    --container-mounts="${MOUNTS}" \
-    --container-image='image' \
-    /bin/sh -c 'echo $index'
+export index="$1"
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+/usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
+  --container-image='image' \
+  /bin/sh -c 'echo $index'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+/usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare','test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
+  --container-image='image' \
+  /bin/sh -c 'echo $index'
 }
 pids=()
 for index in $(seq 0 -2 -10); do
