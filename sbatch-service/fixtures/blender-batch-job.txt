@@ -48,7 +48,7 @@ ContinuousOutputSync() {
 ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
 
-/usr/bin/srun --job-name='prepare-scripts' \
+/usr/bin/srun --job-name='compute-frames' \
   --export=ALL,"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
@@ -70,15 +70,8 @@ END
 cat << '\''END'\'' > ./end_frame.py
 import bpy
 print(f"end_frame={bpy.context.scene.frame_end}")
-END'
-
-/usr/bin/srun --job-name='compute-frames' \
-  --export=ALL,"$(loadDeepsquareEnv)" \
-  --cpus-per-task=4 \
-  --mem-per-cpu=4096 \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  /bin/sh -c 'frames_per_task=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./frames_per_task.py | sed -nr '\''s/frames_per_task=(.*)/\1/p'\'')
+END
+frames_per_task=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./frames_per_task.py | sed -nr '\''s/frames_per_task=(.*)/\1/p'\'')
 start_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./start_frame.py | sed -nr '\''s/start_frame=(.*)/\1/p'\'')
 end_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./end_frame.py | sed -nr '\''s/end_frame=(.*)/\1/p'\'')
 echo "START_FRAME=$start_frame" >> "$STORAGE_PATH/env"

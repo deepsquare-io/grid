@@ -24,7 +24,7 @@ job:
       endpointUrl: https://example
   continuousOutputSync: true
   steps:
-    - name: prepare-scripts
+    - name: compute-frames
       run:
         resources:
           tasks: 1
@@ -49,14 +49,6 @@ job:
           import bpy
           print(f"end_frame={bpy.context.scene.frame_end}")
           END
-    - name: compute-frames
-      run:
-        resources:
-          tasks: 1
-          cpusPerTask: 4
-          memPerCpu: 4096
-          gpusPerTask: 0
-        command: |-
           frames_per_task=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./frames_per_task.py | sed -nr 's/frames_per_task=(.*)/\1/p')
           start_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./start_frame.py | sed -nr 's/start_frame=(.*)/\1/p')
           end_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./end_frame.py | sed -nr 's/end_frame=(.*)/\1/p')
