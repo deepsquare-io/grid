@@ -4,7 +4,6 @@ package job_test
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"strconv"
 	"strings"
@@ -18,6 +17,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
@@ -147,7 +147,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 	).Return(fixtureBody, nil)
 	job := eth.JobDefinitionMapToSlurm(fixtureEvent.JobDefinition, fixtureEvent.MaxDurationMinute, fixtureBody)
 	suite.scheduler.On("Submit", mock.Anything, &slurm.SubmitJobRequest{
-		Name:          hex.EncodeToString(fixtureEvent.JobId[:]),
+		Name:          hexutil.Encode(fixtureEvent.JobId[:]),
 		User:          strings.ToLower(fixtureEvent.CustomerAddr.Hex()),
 		JobDefinition: &job,
 	}).Return(strconv.Itoa(fixtureSchedulerJobID), nil)
@@ -289,7 +289,7 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	).Return(fixtureBody, nil)
 	job := eth.JobDefinitionMapToSlurm(fixtureEvent.JobDefinition, fixtureEvent.MaxDurationMinute, fixtureBody)
 	suite.scheduler.On("Submit", mock.Anything, &slurm.SubmitJobRequest{
-		Name:          hex.EncodeToString(fixtureEvent.JobId[:]),
+		Name:          hexutil.Encode(fixtureEvent.JobId[:]),
 		User:          strings.ToLower(fixtureEvent.CustomerAddr.Hex()),
 		JobDefinition: &job,
 	}).Return("0", errors.New("expected error"))

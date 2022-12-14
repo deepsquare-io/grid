@@ -3,6 +3,7 @@ package watcher
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/jobmanager"
 	"github.com/deepsquare-io/the-grid/ldap-connector/ldap"
@@ -64,7 +65,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 }
 
 func (w *Watcher) handleEvent(parent context.Context, event *jobmanager.JobManagerNewJobRequestEvent) error {
-	user := event.CustomerAddr.Hex()
+	user := strings.ToLower(event.CustomerAddr.Hex())
 	if errMsg := validate.LDAPUserIsValid(user); errMsg != "" {
 		logger.I.Error("user is invalid", zap.Error(errors.New(errMsg)))
 		return nil
