@@ -45,14 +45,17 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 			return stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
 		}
 		if err != nil {
+			logger.I.Error("writer closed with error", zap.String("IP", p.Addr.String()), zap.Error(err))
 			return err
 		}
 
 		n, err := s.db.Append(req.GetLogName(), strings.ToLower(req.GetUser()), req.GetData())
 		if err != nil {
+			logger.I.Error("writer failed to write", zap.Any("req", req), zap.String("IP", p.Addr.String()), zap.Error(err))
+			_ = stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
 			return err
 		}
-		logger.I.Debug("write", zap.Int("size", n), zap.Any("req", req))
+		logger.I.Debug("write", zap.Int("size", n))
 	}
 }
 
