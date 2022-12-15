@@ -5,13 +5,14 @@ docker/ @Darkness4
 # Contracts
 smart-contracts/ @Lymnah @Darkness4 @efelem
 protos/ @Darkness4 @efelem @Lymnah
+schemas/ @Darkness4 @valentinpollart
 
 # Customer side
 customer-portal/ @valentinpollart @Lymnah
-customer-api/ @efelem @Darkness4
 cli/ @Darkness4 @Lymnah
 
-# Web3
+# Microservices
+sbatch-services/ @Darkness4
 avalanche-subnet/ @efelem
 oracle-scheduler/ @efelem @Lymnah
 

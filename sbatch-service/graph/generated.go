@@ -267,8 +267,23 @@ input Job {
   enableLogging: Boolean
   """
   Pull data at the start of the job.
+
+  It is recommended to set the mode of the data by filling the ` + "`" + `inputMode` + "`" + ` field.
   """
   input: TransportData
+  """
+  InputMode takes an integer that will be used to change the mode recursively (chmod -R) of the input data.
+
+  The number shouldn't be in octal but in decimal. A mode over 512 is not accepted.
+
+  Common modes:
+  - 511 (user:rwx group:rwx world:rwx)
+  - 493 (user:rwx group:r-x world:r-x)
+  - 448 (user:rwx group:--- world:---)
+
+  If null, the mode won't change and will default to the source.
+  """
+  inputMode: Int
   steps: [Step!]!
   """
   Push data at the end of the job.
@@ -418,7 +433,13 @@ input StepFor {
 ForRange describes the parameter for a range loop.
 """
 input ForRange {
+  """
+  Begin is inclusive.
+  """
   Begin: Int!
+  """
+  End is inclusive.
+  """
   End: Int!
   Increment: Int!
 }
@@ -2654,7 +2675,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "env", "enableLogging", "input", "steps", "output", "continuousOutputSync"}
+	fieldsInOrder := [...]string{"resources", "env", "enableLogging", "input", "inputMode", "steps", "output", "continuousOutputSync"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2690,6 +2711,14 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 			it.Input, err = ec.unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "inputMode":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inputMode"))
+			it.InputMode, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3868,6 +3897,22 @@ func (ec *executionContext) unmarshalOHTTPData2ᚖgithubᚗcomᚋdeepsquareᚑio
 	}
 	res, err := ec.unmarshalInputHTTPData(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
 }
 
 func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx context.Context, v interface{}) (*model.S3Data, error) {

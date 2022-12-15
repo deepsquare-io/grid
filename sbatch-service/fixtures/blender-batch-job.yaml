@@ -1,6 +1,11 @@
 ---
 job:
   enableLogging: true
+  resources:
+    tasks: 2
+    cpusPerTask: 4
+    memPerCpu: 4096
+    gpusPerTask: 1
   input:
     s3:
       region: region
@@ -19,31 +24,6 @@ job:
       endpointUrl: https://example
   continuousOutputSync: true
   steps:
-    - name: prepare-scripts
-      run:
-        resources:
-          tasks: 1
-          cpusPerTask: 4
-          memPerCpu: 4096
-          gpusPerTask: 0
-        command: |-
-          cat << END > ./frames_per_node.py
-          import bpy
-          import math
-          scene = bpy.context.scene
-          frames_per_task = int(math.ceil((scene.frame_end - scene.frame_start + 1)/float($NTASKS)))
-          print(f"frames_per_task={frames_per_task}")
-          END
-
-          cat << 'END' > ./start_frame.py
-          import bpy
-          print(f"start_frame={bpy.context.scene.frame_start}")
-          END
-
-          cat << 'END' > ./end_frame.py
-          import bpy
-          print(f"end_frame={bpy.context.scene.frame_end}")
-          END
     - name: compute-frames
       run:
         resources:
@@ -52,12 +32,29 @@ job:
           memPerCpu: 4096
           gpusPerTask: 0
         command: |-
+          /usr/bin/cat << END > ./frames_per_node.py
+          import bpy
+          import math
+          scene = bpy.context.scene
+          frames_per_task = int(math.ceil((scene.frame_end - scene.frame_start + 1)/float($NTASKS)))
+          print(f"frames_per_task={frames_per_task}")
+          END
+
+          /usr/bin/cat << 'END' > ./start_frame.py
+          import bpy
+          print(f"start_frame={bpy.context.scene.frame_start}")
+          END
+
+          /usr/bin/cat << 'END' > ./end_frame.py
+          import bpy
+          print(f"end_frame={bpy.context.scene.frame_end}")
+          END
           frames_per_task=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./frames_per_task.py | sed -nr 's/frames_per_task=(.*)/\1/p')
           start_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./start_frame.py | sed -nr 's/start_frame=(.*)/\1/p')
           end_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./end_frame.py | sed -nr 's/end_frame=(.*)/\1/p')
-          echo "START_FRAME=$start_frame" >> "$STORAGE_PATH/env"
-          echo "END_FRAME=$end_frame" >> "$STORAGE_PATH"/env"
-          echo "FRAMES_PER_TASK=$frames_per_task" >> "$STORAGE_PATH/env"
+          /usr/bin/echo "START_FRAME=$start_frame" >> "$STORAGE_PATH/env"
+          /usr/bin/echo "END_FRAME=$end_frame" >> "$STORAGE_PATH"/env"
+          /usr/bin/echo "FRAMES_PER_TASK=$frames_per_task" >> "$STORAGE_PATH/env"
     - name: assert-calculus
       run:
         resources:
@@ -67,15 +64,31 @@ job:
           gpusPerTask: 0
         command: |-
           if [ "$FRAMES_PER_TASK" -lt "$NTASKS" ]; then
-            echo "The job has stopped to avoid overconsumption."
-            echo "Please use $FRAMES_PER_TASK instead of $NTASKS tasks."
+            /usr/bin/echo "The job has stopped to avoid overconsumption."
+            /usr/bin/echo "Please use $FRAMES_PER_TASK instead of $NTASKS tasks."
             exit 1
           fi
-    - name: render
-      run:
-        resources:
-          tasks: 4
-          cpusPerTask: 4
-          memPerCpu: 4096
-          gpusPerTask: 1
-        command: ''
+    - name: render-loop
+      for:
+        parallel: true
+        range:
+          begin: 1
+          end: 4
+        steps:
+          - name: render
+            run:
+              resources:
+                tasks: 1
+                cpusPerTask: 4
+                memPerCpu: 4096
+                gpusPerTask: 1
+              shell: /bin/bash
+              command: |-
+                start_frame_i=$(((index-1)*FRAMES_PER_TASK+START_FRAME))
+                end_frame_i=$((index*FRAMES_PER_TASK+START_FRAME-1))
+
+                if [[ index -eq 4 ]]; then
+                  end_frame_i=$END_FRAME
+                fi
+
+                blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" --output-dir "$STORAGE_PATH/outputs/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX &
