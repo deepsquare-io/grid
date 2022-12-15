@@ -78,6 +78,7 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 	logger.I.Info("reader authenticated", zap.String("user", address), zap.Any("req", req))
 
 	logs := make(chan string)
+	defer close(logs)
 	go func() {
 		if err := s.db.ReadAndWatch(ctx, address, req.GetLogName(), logs); err != nil {
 			logger.I.Error("read and watch failed", zap.Error(err))
@@ -113,6 +114,7 @@ func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream
 	}
 
 	lists := make(chan []string)
+	defer close(lists)
 	go func() {
 		if err := s.db.ListAndWatch(ctx, address, lists); err != nil {
 			logger.I.Error("list and watch failed", zap.Error(err))

@@ -68,6 +68,7 @@ func (db *File) ReadAndWatch(
 	if err != nil {
 		return err
 	}
+	defer close(t.Lines)
 	for l := range t.Lines {
 		select {
 		case <-ctx.Done():
@@ -82,6 +83,7 @@ func (db *File) ListAndWatch(
 	address string,
 	out chan<- []string,
 ) error {
+	defer close(out)
 	ticker := time.NewTicker(10 * time.Second)
 
 	logDir := fmt.Sprintf("%s/%s", db.storagePath, address)
