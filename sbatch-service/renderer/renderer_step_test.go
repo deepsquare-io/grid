@@ -45,7 +45,8 @@ func TestRenderStepRun(t *testing.T) {
 	}{
 		{
 			input: *cleanStepWithRun("hostname"),
-			expected: `MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+			expected: `/usr/bin/echo 'Running: ''test'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
   --cpus-per-task=1 \
@@ -66,7 +67,7 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
 					Command:   "hostname",
 				},
 			},
-			expected: `
+			expected: `/usr/bin/echo 'Running: ''test'
 /usr/bin/srun --job-name='test' \
   --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
   --cpus-per-task=1 \
@@ -86,7 +87,7 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
 /usr/bin/echo "test"`,
 				},
 			},
-			expected: `
+			expected: `/usr/bin/echo 'Running: ''test'
 /usr/bin/srun --job-name='test' \
   --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
   --cpus-per-task=1 \
@@ -169,8 +170,10 @@ func TestRenderStepFor(t *testing.T) {
 					},
 				},
 			},
-			expected: `doFor() {
+			expected: `/usr/bin/echo 'Running: ''test'
+doFor() {
 export item="$1"
+/usr/bin/echo 'Running: ''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
@@ -181,6 +184,7 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
   /bin/sh -c '/usr/bin/echo $item'
+/usr/bin/echo 'Running: ''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
@@ -211,7 +215,7 @@ done`,
 					Range: &model.ForRange{
 						Begin:     0,
 						End:       -10,
-						Increment: -2,
+						Increment: utils.Ptr(-2),
 					},
 					Steps: []*model.Step{
 						cleanStepWithRun("/usr/bin/echo $index"),
@@ -219,8 +223,10 @@ done`,
 					},
 				},
 			},
-			expected: `doFor() {
+			expected: `/usr/bin/echo 'Running: ''test'
+doFor() {
 export index="$1"
+/usr/bin/echo 'Running: ''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
@@ -231,6 +237,7 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
   /bin/sh -c '/usr/bin/echo $index'
+/usr/bin/echo 'Running: ''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \

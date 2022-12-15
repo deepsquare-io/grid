@@ -23,6 +23,13 @@ export MEM='{{ mul .Resources.MemPerCPU .Resources.CpusPerTask .Resources.Tasks 
 LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+
+disposeLogs() {
+  sleep 5
+  /usr/bin/kill $LOGGER_PID
+  /usr/bin/wait $LOGGER_PID
+}
+trap disposeLogs EXIT
 {{- end }}
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
@@ -30,7 +37,7 @@ export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  /usr/bin/grep -v '^#' "$STORAGE_PATH/env" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
 {{- if and .Input .Input.HTTP }}
 cd $STORAGE_PATH/input/
@@ -56,7 +63,7 @@ export AWS_ACCESS_KEY_ID={{ .Input.S3.AccessKeyID | squote }}
 export AWS_SECRET_ACCESS_KEY={{ .Input.S3.SecretAccessKey | squote }}
 export S3_ENDPOINT_URL={{ .Input.S3.EndpointURL | squote }}
 
-s5cmd sync --source-region {{ .Input.S3.Region | squote }} {{ .Input.S3.BucketURL | squote }}{{ .Input.S3.Path | squote }} "$STORAGE_PATH/input/"
+s5cmd cp --source-region {{ .Input.S3.Region | squote }} {{ .Input.S3.BucketURL | squote }}{{ .Input.S3.Path | squote }}'*' "$STORAGE_PATH/input/"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
 {{- end }}
@@ -72,7 +79,7 @@ ContinuousOutputSync() {
   export AWS_SECRET_ACCESS_KEY={{ .Output.S3.SecretAccessKey | squote }}
   export S3_ENDPOINT_URL={{ .Output.S3.EndpointURL | squote }}
   while true; do
-    s5cmd sync --destination-region {{ .Output.S3.Region | squote }} "$STORAGE_PATH/outputs/" {{ .Output.S3.BucketURL | squote }}{{ .Output.S3.Path | squote }}
+    s5cmd sync --destination-region {{ .Output.S3.Region | squote }} "$STORAGE_PATH/output/" {{ .Output.S3.BucketURL | squote }}{{ .Output.S3.Path | squote }}
     /usr/bin/sleep 5
   done
 }
@@ -104,10 +111,5 @@ export AWS_ACCESS_KEY_ID={{ .Output.S3.AccessKeyID | squote }}
 export AWS_SECRET_ACCESS_KEY={{ .Output.S3.SecretAccessKey | squote }}
 export S3_ENDPOINT_URL={{ .Output.S3.EndpointURL | squote }}
 
-s5cmd sync --destination-region {{ .Output.S3.Region | squote }} "$STORAGE_PATH/outputs/" {{ .Output.S3.BucketURL | squote }}{{ .Output.S3.Path | squote }}
-{{- end }}
-
-{{- if and .EnableLogging (derefBool .EnableLogging ) }}
-/usr/bin/kill $LOGGER_PID
-/usr/bin/wait $LOGGER_PID
+s5cmd sync --destination-region {{ .Output.S3.Region | squote }} "$STORAGE_PATH/output/" {{ .Output.S3.BucketURL | squote }}{{ .Output.S3.Path | squote }}
 {{- end }}

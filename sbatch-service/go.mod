@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/99designs/gqlgen v0.17.22
 	github.com/Masterminds/sprig/v3 v3.2.3
+	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/joho/godotenv v1.4.0

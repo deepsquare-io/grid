@@ -10,6 +10,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
@@ -131,15 +132,33 @@ var app = &cli.App{
 			},
 		))
 
-		http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-		http.Handle("/query", srv)
-		http.HandleFunc("/health", func(w http.ResponseWriter, req *http.Request) {
+		r := chi.NewRouter()
+
+		r.Handle("/", playground.Handler("GraphQL playground", "/query"))
+		r.Handle("/query", srv)
+		r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write([]byte("ok"))
+		})
+
+		r.HandleFunc("/job/{jobID}", func(w http.ResponseWriter, r *http.Request) {
+			jobID := chi.URLParam(r, "jobID")
+			logger.I.Info("get", zap.String("batchLocationHash", jobID))
+			resp, err := rdb.Get(r.Context(), jobID).Result()
+			if err != nil {
+				logger.I.Error("get failed", zap.Error(err))
+				http.Error(w, http.StatusText(404), 404)
+				return
+			}
+			_, err = w.Write([]byte(resp))
+			if err != nil {
+				logger.I.Error("get failed: write", zap.Error(err))
+				http.Error(w, http.StatusText(500), 500)
+			}
 		})
 
 		logger.I.Info("listening", zap.String("listeningAddress", listenAddress))
 
-		return http.ListenAndServe(listenAddress, nil)
+		return http.ListenAndServe(listenAddress, r)
 	},
 }
 

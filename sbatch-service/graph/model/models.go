@@ -41,8 +41,9 @@ type ForRange struct {
 	// Begin is inclusive.
 	Begin int `json:"begin" yaml:"begin"`
 	// End is inclusive.
-	End       int `json:"end" yaml:"end"`
-	Increment int `json:"increment" yaml:"increment"`
+	End int `json:"end" yaml:"end"`
+	// Increment counter by x count. If null, defaults to 1.
+	Increment *int `json:"increment" yaml:"increment"`
 }
 
 // A Job is a finite sequence of instructions.

@@ -277,9 +277,9 @@ input Job {
   The number shouldn't be in octal but in decimal. A mode over 512 is not accepted.
 
   Common modes:
-  - 511 (user:rwx group:rwx world:rwx)
-  - 493 (user:rwx group:r-x world:r-x)
-  - 448 (user:rwx group:--- world:---)
+    - 511 (user:rwx group:rwx world:rwx)
+    - 493 (user:rwx group:r-x world:r-x)
+    - 448 (user:rwx group:--- world:---)
 
   If null, the mode won't change and will default to the source.
   """
@@ -436,12 +436,15 @@ input ForRange {
   """
   Begin is inclusive.
   """
-  Begin: Int!
+  begin: Int!
   """
   End is inclusive.
   """
-  End: Int!
-  Increment: Int!
+  end: Int!
+  """
+  Increment counter by x count. If null, defaults to 1.
+  """
+  increment: Int
 }
 
 type Mutation {
@@ -2603,34 +2606,34 @@ func (ec *executionContext) unmarshalInputForRange(ctx context.Context, obj inte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"Begin", "End", "Increment"}
+	fieldsInOrder := [...]string{"begin", "end", "increment"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "Begin":
+		case "begin":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Begin"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("begin"))
 			it.Begin, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "End":
+		case "end":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("End"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
 			it.End, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Increment":
+		case "increment":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Increment"))
-			it.Increment, err = ec.unmarshalNInt2int(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("increment"))
+			it.Increment, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}

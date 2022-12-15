@@ -21,19 +21,26 @@ export MEM='32768'
 LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+
+disposeLogs() {
+  sleep 5
+  /usr/bin/kill $LOGGER_PID
+  /usr/bin/wait $LOGGER_PID
+}
+trap disposeLogs EXIT
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
 /usr/bin/touch "$STORAGE_PATH/env"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  /usr/bin/grep -v '^#' "$STORAGE_PATH/env" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
 export AWS_ACCESS_KEY_ID='accessKeyId'
 export AWS_SECRET_ACCESS_KEY='secretAccessKey'
 export S3_ENDPOINT_URL='https://example'
 
-s5cmd sync --source-region 'region' 's3://test''/test' "$STORAGE_PATH/input/"
+s5cmd cp --source-region 'region' 's3://test''/test''*' "$STORAGE_PATH/input/"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
 ContinuousOutputSync() {
@@ -41,20 +48,26 @@ ContinuousOutputSync() {
   export AWS_SECRET_ACCESS_KEY='secretAccessKey'
   export S3_ENDPOINT_URL='https://example'
   while true; do
-    s5cmd sync --destination-region 'region' "$STORAGE_PATH/outputs/" 's3://test''/test'
+    s5cmd sync --destination-region 'region' "$STORAGE_PATH/output/" 's3://test''/test'
     /usr/bin/sleep 5
   done
 }
 ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
-
+/usr/bin/echo 'Running: ''compute-frames'
 /usr/bin/srun --job-name='compute-frames' \
   --export=ALL,"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=0 \
   --ntasks=1 \
-  /bin/sh -c '/usr/bin/cat << END > ./frames_per_node.py
+  /bin/sh -c '. "$LMOD_PKG"/init/sh
+ml purge
+ml stdenv "Blender/3.3.1"
+
+set -ex
+
+/usr/bin/cat << END > ./frames_per_task.py
 import bpy
 import math
 scene = bpy.context.scene
@@ -71,41 +84,51 @@ END
 import bpy
 print(f"end_frame={bpy.context.scene.frame_end}")
 END
-frames_per_task=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./frames_per_task.py | sed -nr '\''s/frames_per_task=(.*)/\1/p'\'')
-start_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./start_frame.py | sed -nr '\''s/start_frame=(.*)/\1/p'\'')
-end_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./end_frame.py | sed -nr '\''s/end_frame=(.*)/\1/p'\'')
+frames_per_task=$(blender -b "$STORAGE_PATH/input/"*.blend -P ./frames_per_task.py | sed -nr '\''s/frames_per_task=(.*)/\1/p'\'')
+start_frame=$(blender -b "$STORAGE_PATH/input/"*.blend -P ./start_frame.py | sed -nr '\''s/start_frame=(.*)/\1/p'\'')
+end_frame=$(blender -b "$STORAGE_PATH/input/"*.blend -P ./end_frame.py | sed -nr '\''s/end_frame=(.*)/\1/p'\'')
 /usr/bin/echo "START_FRAME=$start_frame" >> "$STORAGE_PATH/env"
-/usr/bin/echo "END_FRAME=$end_frame" >> "$STORAGE_PATH"/env"
+/usr/bin/echo "END_FRAME=$end_frame" >> "$STORAGE_PATH/env"
 /usr/bin/echo "FRAMES_PER_TASK=$frames_per_task" >> "$STORAGE_PATH/env"'
-
+/usr/bin/echo 'Running: ''assert-calculus'
 /usr/bin/srun --job-name='assert-calculus' \
   --export=ALL,"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=0 \
   --ntasks=1 \
-  /bin/sh -c 'if [ "$FRAMES_PER_TASK" -lt "$NTASKS" ]; then
+  /bin/sh -c 'set -ex
+if [ "$FRAMES_PER_TASK" -lt "$NTASKS" ]; then
   /usr/bin/echo "The job has stopped to avoid overconsumption."
   /usr/bin/echo "Please use $FRAMES_PER_TASK instead of $NTASKS tasks."
   exit 1
 fi'
+/usr/bin/echo 'Running: ''render-loop'
 doFor() {
 export index="$1"
-
+/usr/bin/echo 'Running: ''render'
 /usr/bin/srun --job-name='render' \
   --export=ALL,"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=1 \
   --ntasks=1 \
-  /bin/bash -c 'start_frame_i=$(((index-1)*FRAMES_PER_TASK+START_FRAME))
+  /bin/bash -c '. "$LMOD_PKG"/init/sh
+ml purge
+ml stdenv "Blender/3.3.1"
+
+set -ex
+
+start_frame_i=$(((index-1)*FRAMES_PER_TASK+START_FRAME))
 end_frame_i=$((index*FRAMES_PER_TASK+START_FRAME-1))
 
 if [[ index -eq 4 ]]; then
   end_frame_i=$END_FRAME
 fi
 
-blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" --output-dir "$STORAGE_PATH/outputs/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX &'
+echo "Rendering $start_frame_i...$end_frame_i"
+
+blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" --output-dir "$STORAGE_PATH/output/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX &'
 }
 pids=()
 for index in $(seq 1 1 4); do
@@ -123,6 +146,4 @@ export AWS_ACCESS_KEY_ID='accessKeyId'
 export AWS_SECRET_ACCESS_KEY='secretAccessKey'
 export S3_ENDPOINT_URL='https://example'
 
-s5cmd sync --destination-region 'region' "$STORAGE_PATH/outputs/" 's3://test''/test'
-/usr/bin/kill $LOGGER_PID
-/usr/bin/wait $LOGGER_PID
+s5cmd sync --destination-region 'region' "$STORAGE_PATH/output/" 's3://test''/test'

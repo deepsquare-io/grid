@@ -21,16 +21,24 @@ export MEM='16384'
 LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+
+disposeLogs() {
+  sleep 5
+  /usr/bin/kill $LOGGER_PID
+  /usr/bin/wait $LOGGER_PID
+}
+trap disposeLogs EXIT
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
 /usr/bin/touch "$STORAGE_PATH/env"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  /usr/bin/grep -v '^#' "$STORAGE_PATH/env" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
 export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'
+/usr/bin/echo 'Running: ''tdp'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='tdp' \
   --export=ALL,"$(loadDeepsquareEnv)" \
@@ -53,5 +61,3 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='tdp' \
   -renderscalestepcount 0.1 \
   -displayfpscounter \
   --logFile -'
-/usr/bin/kill $LOGGER_PID
-/usr/bin/wait $LOGGER_PID

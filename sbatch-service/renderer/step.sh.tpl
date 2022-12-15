@@ -1,5 +1,6 @@
-{{- if .Run -}}
-{{- if .Run.Image -}}
+/usr/bin/echo 'Running: '{{ .Name | squote }}
+{{- if .Run }}
+{{- if .Run.Image }}
 MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Run.X11 (derefBool .Run.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"
 {{- end }}
 {{ if and .Run.Image (derefStr .Run.Image ) }}STORAGE_PATH=/deepsquare {{ end }}/usr/bin/srun --job-name={{ .Name | squote }} \
@@ -13,7 +14,7 @@ MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Run.X11 (derefBool .Run.X11 ) }},
   --container-image={{ .Run.Image | derefStr | squote }} \
 {{- end }}
   {{ if .Run.Shell }}{{ derefStr .Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Run.Command | squote }}
-{{- else if .For -}}
+{{- else if .For }}
 doFor() {
 {{- if .For.Range }}
 export index="$1"
@@ -30,7 +31,7 @@ export item="$1"
 pids=()
 {{- end }}
 {{- if .For.Range }}
-for index in $(seq {{ .For.Range.Begin }} {{ if ne .For.Range.Increment 0 }}{{ .For.Range.Increment }}{{ else }}1{{ end }} {{ .For.Range.End }}); do
+for index in $(seq {{ .For.Range.Begin }} {{ if and .For.Range.Increment (ne (derefInt .For.Range.Increment) 0) }}{{ derefInt .For.Range.Increment }}{{ else }}1{{ end }} {{ .For.Range.End }}); do
   doFor "$index" {{ if .For.Parallel }}&{{ end }}
   {{- if .For.Parallel }}
   pids+=("$!")
