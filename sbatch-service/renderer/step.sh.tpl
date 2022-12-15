@@ -2,8 +2,8 @@
 {{- if .Run.Image -}}
 MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Run.X11 (derefBool .Run.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"
 {{- end }}
-/usr/bin/srun --job-name={{ .Name | squote }} \
-  --export=ALL,"$(loadDeepsquareEnv)"{{ if and .Run.Image (derefStr .Run.Image ) }},'STORAGE_PATH=/deepsquare'{{ end }}{{ range $env := .Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
+{{ if and .Run.Image (derefStr .Run.Image ) }}STORAGE_PATH=/deepsquare {{ end }}/usr/bin/srun --job-name={{ .Name | squote }} \
+  --export=ALL,"$(loadDeepsquareEnv)"{{ range $env := .Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ .Run.Resources.CpusPerTask }} \
   --mem-per-cpu={{ .Run.Resources.MemPerCPU }} \
   --gpus-per-task={{ .Run.Resources.GpusPerTask }} \
@@ -47,7 +47,7 @@ done
 {{- end }}
 {{- if .For.Parallel }}
 for pid in "${pids[@]}"; do
-  wait "$pid"
+  /usr/bin/wait "$pid"
 done
 {{- end }}
 {{- end -}}

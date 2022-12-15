@@ -19,7 +19,7 @@ export MEM='32768'
   --user="$USER" \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
-sleep 1
+/usr/bin/sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
@@ -27,22 +27,22 @@ export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 loadDeepsquareEnv() {
-  cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
 export AWS_ACCESS_KEY_ID='accessKeyId'
 export AWS_SECRET_ACCESS_KEY='secretAccessKey'
 export S3_ENDPOINT_URL='https://example'
 
 s5cmd sync --source-region 'region' 's3://test''/test' "$STORAGE_PATH/input/"
-echo "Input contains:"
-find "$STORAGE_PATH/input/"
+/usr/bin/echo "Input contains:"
+/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
 ContinuousOutputSync() {
   export AWS_ACCESS_KEY_ID='accessKeyId'
   export AWS_SECRET_ACCESS_KEY='secretAccessKey'
   export S3_ENDPOINT_URL='https://example'
   while true; do
     s5cmd sync --destination-region 'region' "$STORAGE_PATH/outputs/" 's3://test''/test'
-    sleep 5
+    /usr/bin/sleep 5
   done
 }
 ContinuousOutputSync &
@@ -54,7 +54,7 @@ CONTINUOUS_SYNC_PID="$!"
   --mem-per-cpu=4096 \
   --gpus-per-task=0 \
   --ntasks=1 \
-  /bin/sh -c 'cat << END > ./frames_per_node.py
+  /bin/sh -c '/usr/bin/cat << END > ./frames_per_node.py
 import bpy
 import math
 scene = bpy.context.scene
@@ -62,21 +62,21 @@ frames_per_task = int(math.ceil((scene.frame_end - scene.frame_start + 1)/float(
 print(f"frames_per_task={frames_per_task}")
 END
 
-cat << '\''END'\'' > ./start_frame.py
+/usr/bin/cat << '\''END'\'' > ./start_frame.py
 import bpy
 print(f"start_frame={bpy.context.scene.frame_start}")
 END
 
-cat << '\''END'\'' > ./end_frame.py
+/usr/bin/cat << '\''END'\'' > ./end_frame.py
 import bpy
 print(f"end_frame={bpy.context.scene.frame_end}")
 END
 frames_per_task=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./frames_per_task.py | sed -nr '\''s/frames_per_task=(.*)/\1/p'\'')
 start_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./start_frame.py | sed -nr '\''s/start_frame=(.*)/\1/p'\'')
 end_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./end_frame.py | sed -nr '\''s/end_frame=(.*)/\1/p'\'')
-echo "START_FRAME=$start_frame" >> "$STORAGE_PATH/env"
-echo "END_FRAME=$end_frame" >> "$STORAGE_PATH"/env"
-echo "FRAMES_PER_TASK=$frames_per_task" >> "$STORAGE_PATH/env"'
+/usr/bin/echo "START_FRAME=$start_frame" >> "$STORAGE_PATH/env"
+/usr/bin/echo "END_FRAME=$end_frame" >> "$STORAGE_PATH"/env"
+/usr/bin/echo "FRAMES_PER_TASK=$frames_per_task" >> "$STORAGE_PATH/env"'
 
 /usr/bin/srun --job-name='assert-calculus' \
   --export=ALL,"$(loadDeepsquareEnv)" \
@@ -85,8 +85,8 @@ echo "FRAMES_PER_TASK=$frames_per_task" >> "$STORAGE_PATH/env"'
   --gpus-per-task=0 \
   --ntasks=1 \
   /bin/sh -c 'if [ "$FRAMES_PER_TASK" -lt "$NTASKS" ]; then
-  echo "The job has stopped to avoid overconsumption."
-  echo "Please use $FRAMES_PER_TASK instead of $NTASKS tasks."
+  /usr/bin/echo "The job has stopped to avoid overconsumption."
+  /usr/bin/echo "Please use $FRAMES_PER_TASK instead of $NTASKS tasks."
   exit 1
 fi'
 doFor() {
@@ -105,7 +105,7 @@ if [[ index -eq 4 ]]; then
   end_frame_i=$END_FRAME
 fi
 
-blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" -o "$STORAGE_PATH/outputs/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX &'
+blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" --output-dir "$STORAGE_PATH/outputs/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX &'
 }
 pids=()
 for index in $(seq 1 1 4); do
@@ -113,16 +113,16 @@ for index in $(seq 1 1 4); do
   pids+=("$!")
 done
 for pid in "${pids[@]}"; do
-  wait "$pid"
+  /usr/bin/wait "$pid"
 done
-kill $CONTINUOUS_SYNC_PID
-wait $CONTINUOUS_SYNC_PID
-echo "Output contains:"
-find "$STORAGE_PATH/output/"
+/usr/bin/kill $CONTINUOUS_SYNC_PID
+/usr/bin/wait $CONTINUOUS_SYNC_PID
+/usr/bin/echo "Output contains:"
+/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
 export AWS_ACCESS_KEY_ID='accessKeyId'
 export AWS_SECRET_ACCESS_KEY='secretAccessKey'
 export S3_ENDPOINT_URL='https://example'
 
 s5cmd sync --destination-region 'region' "$STORAGE_PATH/outputs/" 's3://test''/test'
-kill $LOGGER_PID
-wait $LOGGER_PID
+/usr/bin/kill $LOGGER_PID
+/usr/bin/wait $LOGGER_PID

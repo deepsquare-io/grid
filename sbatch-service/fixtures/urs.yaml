@@ -13,7 +13,8 @@ job:
     gpusPerTask: 1
   input:
     http:
-      url: https://test/
+      url: https://transfer.sh/pEfPqI/DPSBeta.zip
+  inputMode: 493
   steps:
     - name: urs
       run:
@@ -25,7 +26,7 @@ job:
           memPerCpu: 4096
           gpusPerTask: 1
         command: |-
-          /unityapp/DeepSquareURSSample.x86_64 \
+          $STORAGE_PATH/input/DeepSquareURSSample.x86_64 \
             -maxplayers 8 \
             -webserverurl 'wss://tdp.deepsquare.run' \
             -renderfps 60 \

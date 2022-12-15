@@ -19,7 +19,7 @@ export MEM='16384'
   --user="$USER" \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
-sleep 1
+/usr/bin/sleep 1
 exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
@@ -27,36 +27,39 @@ export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
 loadDeepsquareEnv() {
-  cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
-curl -JORSL 'https://test/' -o "$STORAGE_PATH/input/"
+cd $STORAGE_PATH/input/
+/usr/bin/curl -fsORSL 'https://transfer.sh/pEfPqI/DPSBeta.zip'
 for filepath in "$STORAGE_PATH/input/"*; do
-  tar -xvaf "$filepath" 2>/dev/null && continue
+  /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in
-      *bzip2*) bzip2 -dk "$filepath";;
-      *gzip*) gunzip "$filepath";;
+      *bzip2*) bzip2 -fdk "$filepath";;
+      *gzip*) gunzip -df "$filepath";;
       *zip*) ;&
-      *Zip*) unzip "$filepath";;
+      *Zip*) unzip -o "$filepath";;
       *xz*) ;&
-      *XZ*) unxz  "$filepath";;
-      *'7-zip'*) 7z x "$filepath";;
-      *) 1>&2 echo "Unknown archive '$filepath'";;
+      *XZ*) unxz -f "$filepath";;
+      *'7-zip'*) 7z x "$filepath" -aoa;;
+      *) 1>&2 /usr/bin/echo "Unknown archive '$filepath'";;
   esac
 done
-echo "Input contains:"
-find "$STORAGE_PATH/input/"
+cd -
+/usr/bin/echo "Input contains:"
+/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
 export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-/usr/bin/srun --job-name='urs' \
-  --export=ALL,"$(loadDeepsquareEnv)",'STORAGE_PATH=/deepsquare' \
+STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='urs' \
+  --export=ALL,"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=1 \
   --ntasks=1 \
   --container-mounts="${MOUNTS}" \
   --container-image='/data/beegfs/localhost+tdp+latest.sqsh' \
-  /bin/sh -c '/unityapp/DeepSquareURSSample.x86_64 \
+  /bin/sh -c '$STORAGE_PATH/input/DeepSquareURSSample.x86_64 \
   -maxplayers 8 \
   -webserverurl '\''wss://tdp.deepsquare.run'\'' \
   -renderfps 60 \
@@ -69,5 +72,5 @@ MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
   -renderscalestepcount 0.1 \
   -displayfpscounter \
   --logFile -'
-kill $LOGGER_PID
-wait $LOGGER_PID
+/usr/bin/kill $LOGGER_PID
+/usr/bin/wait $LOGGER_PID
