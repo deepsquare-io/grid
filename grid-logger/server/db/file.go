@@ -50,8 +50,6 @@ func (db *File) ReadAndWatch(
 	logName string,
 	out chan<- string,
 ) error {
-	defer close(out)
-
 	if err := os.MkdirAll(fmt.Sprintf("%s/%s", db.storagePath, address), 0o700); err != nil {
 		logger.I.Error("failed to mkdir storage path", zap.Error(err))
 	}
@@ -83,7 +81,6 @@ func (db *File) ListAndWatch(
 	address string,
 	out chan<- []string,
 ) error {
-	defer close(out)
 	ticker := time.NewTicker(10 * time.Second)
 
 	logDir := fmt.Sprintf("%s/%s", db.storagePath, address)
