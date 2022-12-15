@@ -134,27 +134,29 @@ var app = &cli.App{
 
 		r := chi.NewRouter()
 
-		r.Handle("/", playground.Handler("GraphQL playground", "/query"))
-		r.Handle("/query", srv)
+		r.Handle("/", playground.Handler("GraphQL playground", "/graphql"))
+		r.Handle("/graphql", srv)
 		r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write([]byte("ok"))
 		})
 
-		r.HandleFunc("/job/{jobID}", func(w http.ResponseWriter, r *http.Request) {
-			jobID := chi.URLParam(r, "jobID")
-			logger.I.Info("get", zap.String("batchLocationHash", jobID))
-			resp, err := rdb.Get(r.Context(), jobID).Result()
-			if err != nil {
-				logger.I.Error("get failed", zap.Error(err))
-				http.Error(w, http.StatusText(404), 404)
-				return
-			}
-			_, err = w.Write([]byte(resp))
-			if err != nil {
-				logger.I.Error("get failed: write", zap.Error(err))
-				http.Error(w, http.StatusText(500), 500)
-			}
-		})
+		if cCtx.Bool("debug") {
+			r.HandleFunc("/job/{jobID}", func(w http.ResponseWriter, r *http.Request) {
+				jobID := chi.URLParam(r, "jobID")
+				logger.I.Info("get", zap.String("batchLocationHash", jobID))
+				resp, err := rdb.Get(r.Context(), jobID).Result()
+				if err != nil {
+					logger.I.Error("get failed", zap.Error(err))
+					http.Error(w, http.StatusText(404), 404)
+					return
+				}
+				_, err = w.Write([]byte(resp))
+				if err != nil {
+					logger.I.Error("get failed: write", zap.Error(err))
+					http.Error(w, http.StatusText(500), 500)
+				}
+			})
+		}
 
 		logger.I.Info("listening", zap.String("listeningAddress", listenAddress))
 

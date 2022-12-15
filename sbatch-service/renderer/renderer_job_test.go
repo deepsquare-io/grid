@@ -62,12 +62,20 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
 
 disposeLogs() {
-  sleep 5
-  /usr/bin/kill $LOGGER_PID
-  /usr/bin/wait $LOGGER_PID
+  echo cleaning up
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
 }
 trap disposeLogs EXIT
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
@@ -145,12 +153,20 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
 
 disposeLogs() {
-  sleep 5
-  /usr/bin/kill $LOGGER_PID
-  /usr/bin/wait $LOGGER_PID
+  echo cleaning up
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
 }
 trap disposeLogs EXIT
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
@@ -167,7 +183,7 @@ export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
 s5cmd cp --source-region 'us‑east‑2' 's3://test''/in''*' "$STORAGE_PATH/input/"
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to "$STORAGE_PATH/input/" {} \;
 /usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
 ContinuousOutputSync() {
   export AWS_ACCESS_KEY_ID='AccessKeyID'
@@ -192,10 +208,10 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
-/usr/bin/kill $CONTINUOUS_SYNC_PID
-/usr/bin/wait $CONTINUOUS_SYNC_PID
+kill $CONTINUOUS_SYNC_PID || true
+wait $CONTINUOUS_SYNC_PID || true
 /usr/bin/echo "Output contains:"
-/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to "$STORAGE_PATH/output/" {} \;
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
@@ -254,12 +270,20 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
 
 disposeLogs() {
-  sleep 5
-  /usr/bin/kill $LOGGER_PID
-  /usr/bin/wait $LOGGER_PID
+  echo cleaning up
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
 }
 trap disposeLogs EXIT
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
@@ -276,7 +300,7 @@ export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
 s5cmd cp --source-region 'us‑east‑2' 's3://test''/in''*' "$STORAGE_PATH/input/"
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to "$STORAGE_PATH/input/" {} \;
 /usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
 export 'key'='test'\''test'
 /usr/bin/echo 'Running: ''test'
@@ -291,7 +315,7 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --container-image='image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 /usr/bin/echo "Output contains:"
-/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to "$STORAGE_PATH/output/" {} \;
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
@@ -340,12 +364,20 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
 
 disposeLogs() {
-  sleep 5
-  /usr/bin/kill $LOGGER_PID
-  /usr/bin/wait $LOGGER_PID
+  echo cleaning up
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
 }
 trap disposeLogs EXIT
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
@@ -373,7 +405,7 @@ for filepath in "$STORAGE_PATH/input/"*; do
 done
 cd -
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to "$STORAGE_PATH/input/" {} \;
 /usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
 export 'key'='test'\''test'
 /usr/bin/echo 'Running: ''test'
@@ -388,7 +420,7 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
   --container-image='image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 /usr/bin/echo "Output contains:"
-/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to "$STORAGE_PATH/output/" {} \;
 /usr/bin/tar -cvf "$STORAGE_PATH/output.tar" "$STORAGE_PATH/output/"
 /usr/bin/curl --upload-file "$STORAGE_PATH/output.tar" 'https://test/out'
 `,

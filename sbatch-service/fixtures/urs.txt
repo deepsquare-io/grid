@@ -20,12 +20,20 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
 
 disposeLogs() {
-  sleep 5
-  /usr/bin/kill $LOGGER_PID
-  /usr/bin/wait $LOGGER_PID
+  echo cleaning up
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
 }
 trap disposeLogs EXIT
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
@@ -53,7 +61,7 @@ for filepath in "$STORAGE_PATH/input/"*; do
 done
 cd -
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to "$STORAGE_PATH/input/" {} \;
 /usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
 export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'

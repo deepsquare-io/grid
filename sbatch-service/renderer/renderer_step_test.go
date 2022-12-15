@@ -203,7 +203,7 @@ for item in "${items[@]}"; do
   pids+=("$!")
 done
 for pid in "${pids[@]}"; do
-  /usr/bin/wait "$pid"
+  wait "$pid"
 done`,
 			title: "Positive test with items",
 		},
@@ -255,7 +255,7 @@ for index in $(seq 0 -2 -10); do
   pids+=("$!")
 done
 for pid in "${pids[@]}"; do
-  /usr/bin/wait "$pid"
+  wait "$pid"
 done`,
 			title: "Positive test with range",
 		},

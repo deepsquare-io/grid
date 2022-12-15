@@ -48,7 +48,7 @@ done
 {{- end }}
 {{- if .For.Parallel }}
 for pid in "${pids[@]}"; do
-  /usr/bin/wait "$pid"
+  wait "$pid"
 done
 {{- end }}
 {{- end -}}

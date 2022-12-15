@@ -22,12 +22,20 @@ export MEM='{{ mul .Resources.MemPerCPU .Resources.CpusPerTask .Resources.Tasks 
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
 
 disposeLogs() {
-  sleep 5
-  /usr/bin/kill $LOGGER_PID
-  /usr/bin/wait $LOGGER_PID
+  echo cleaning up
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
 }
 trap disposeLogs EXIT
 {{- end }}
@@ -57,7 +65,7 @@ for filepath in "$STORAGE_PATH/input/"*; do
 done
 cd -
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to "$STORAGE_PATH/input/" {} \;
 {{- else if and .Input .Input.S3 }}
 export AWS_ACCESS_KEY_ID={{ .Input.S3.AccessKeyID | squote }}
 export AWS_SECRET_ACCESS_KEY={{ .Input.S3.SecretAccessKey | squote }}
@@ -65,7 +73,7 @@ export S3_ENDPOINT_URL={{ .Input.S3.EndpointURL | squote }}
 
 s5cmd cp --source-region {{ .Input.S3.Region | squote }} {{ .Input.S3.BucketURL | squote }}{{ .Input.S3.Path | squote }}'*' "$STORAGE_PATH/input/"
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to "$STORAGE_PATH/input/" {} \;
 {{- end }}
 {{- if .InputMode }}
 /usr/bin/chmod -R {{ .InputMode | derefInt | octal }} "$STORAGE_PATH/input/"
@@ -97,16 +105,16 @@ export {{ $env.Key | squote }}={{ $env.Value | squote }}
 
 {{- if and .Output .Output.HTTP }}
 /usr/bin/echo "Output contains:"
-/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to "$STORAGE_PATH/output/" {} \;
 /usr/bin/tar -cvf "$STORAGE_PATH/output.tar" "$STORAGE_PATH/output/"
 /usr/bin/curl --upload-file "$STORAGE_PATH/output.tar" {{ .Output.HTTP.URL | squote }}
 {{- else if and .Output .Output.S3 }}
 {{- if and .ContinuousOutputSync (derefBool .ContinuousOutputSync) }}
-/usr/bin/kill $CONTINUOUS_SYNC_PID
-/usr/bin/wait $CONTINUOUS_SYNC_PID
+kill $CONTINUOUS_SYNC_PID || true
+wait $CONTINUOUS_SYNC_PID || true
 {{- end }}
 /usr/bin/echo "Output contains:"
-/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to "$STORAGE_PATH/output/" {} \;
 export AWS_ACCESS_KEY_ID={{ .Output.S3.AccessKeyID | squote }}
 export AWS_SECRET_ACCESS_KEY={{ .Output.S3.SecretAccessKey | squote }}
 export S3_ENDPOINT_URL={{ .Output.S3.EndpointURL | squote }}

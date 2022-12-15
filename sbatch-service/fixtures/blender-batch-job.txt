@@ -20,12 +20,20 @@ export MEM='32768'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
 
 disposeLogs() {
-  sleep 5
-  /usr/bin/kill $LOGGER_PID
-  /usr/bin/wait $LOGGER_PID
+  echo cleaning up
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
 }
 trap disposeLogs EXIT
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
@@ -42,7 +50,7 @@ export S3_ENDPOINT_URL='https://example'
 
 s5cmd cp --source-region 'region' 's3://test''/test''*' "$STORAGE_PATH/input/"
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to "$STORAGE_PATH/input/" {} \;
 ContinuousOutputSync() {
   export AWS_ACCESS_KEY_ID='accessKeyId'
   export AWS_SECRET_ACCESS_KEY='secretAccessKey'
@@ -128,7 +136,7 @@ fi
 
 echo "Rendering $start_frame_i...$end_frame_i"
 
-blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" --output-dir "$STORAGE_PATH/output/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX &'
+blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" -o "$STORAGE_PATH/output/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX'
 }
 pids=()
 for index in $(seq 1 1 4); do
@@ -136,12 +144,12 @@ for index in $(seq 1 1 4); do
   pids+=("$!")
 done
 for pid in "${pids[@]}"; do
-  /usr/bin/wait "$pid"
+  wait "$pid"
 done
-/usr/bin/kill $CONTINUOUS_SYNC_PID
-/usr/bin/wait $CONTINUOUS_SYNC_PID
+kill $CONTINUOUS_SYNC_PID || true
+wait $CONTINUOUS_SYNC_PID || true
 /usr/bin/echo "Output contains:"
-/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to "$STORAGE_PATH/output/" {} \;
 export AWS_ACCESS_KEY_ID='accessKeyId'
 export AWS_SECRET_ACCESS_KEY='secretAccessKey'
 export S3_ENDPOINT_URL='https://example'

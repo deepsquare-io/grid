@@ -106,4 +106,4 @@ job:
 
                 echo "Rendering $start_frame_i...$end_frame_i"
 
-                blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" --output-dir "$STORAGE_PATH/output/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX &
+                blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" -o "$STORAGE_PATH/output/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX

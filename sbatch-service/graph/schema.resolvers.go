@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
@@ -31,12 +32,16 @@ func (r *mutationResolver) Submit(ctx context.Context, job model.Job) (string, e
 
 // Job is the resolver for the job field.
 func (r *queryResolver) Job(ctx context.Context, batchLocationHash string) (string, error) {
-	logger.I.Info("get", zap.String("batchLocationHash", batchLocationHash))
-	resp, err := r.RedisClient.Get(ctx, batchLocationHash).Result()
-	if err != nil {
-		return "", err
+	if r.Debug {
+		logger.I.Info("get", zap.String("batchLocationHash", batchLocationHash))
+		resp, err := r.RedisClient.Get(ctx, batchLocationHash).Result()
+		if err != nil {
+			return "", err
+		}
+		return resp, nil
+	} else {
+		return "", errors.New("debug mode is disabled and is not allowing query from graphql")
 	}
-	return resp, nil
 }
 
 // Mutation returns MutationResolver implementation.
