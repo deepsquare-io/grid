@@ -66,7 +66,11 @@ func (db *File) ReadAndWatch(
 	if err != nil {
 		return err
 	}
-	defer close(t.Lines)
+	defer func() {
+		if err := t.Stop(); err != nil {
+			logger.I.Error("tail failed to close with err", zap.Error(err))
+		}
+	}()
 	for l := range t.Lines {
 		select {
 		case <-ctx.Done():
