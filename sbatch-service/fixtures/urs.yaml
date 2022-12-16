@@ -26,7 +26,7 @@ job:
           memPerCpu: 4096
           gpusPerTask: 1
         command: |-
-          $STORAGE_PATH/input/DeepSquareURSSample.x86_64 \
+          $DEEPSQUARE_INPUT/DeepSquareURSSample.x86_64 \
             -maxplayers 8 \
             -webserverurl 'wss://tdp.deepsquare.run' \
             -renderfps 60 \

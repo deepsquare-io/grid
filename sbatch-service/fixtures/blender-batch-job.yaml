@@ -55,12 +55,12 @@ job:
           import bpy
           print(f"end_frame={bpy.context.scene.frame_end}")
           END
-          frames_per_task=$(blender -b "$STORAGE_PATH/input/"*.blend -P ./frames_per_task.py | sed -nr 's/frames_per_task=(.*)/\1/p')
-          start_frame=$(blender -b "$STORAGE_PATH/input/"*.blend -P ./start_frame.py | sed -nr 's/start_frame=(.*)/\1/p')
-          end_frame=$(blender -b "$STORAGE_PATH/input/"*.blend -P ./end_frame.py | sed -nr 's/end_frame=(.*)/\1/p')
-          /usr/bin/echo "START_FRAME=$start_frame" >> "$STORAGE_PATH/env"
-          /usr/bin/echo "END_FRAME=$end_frame" >> "$STORAGE_PATH/env"
-          /usr/bin/echo "FRAMES_PER_TASK=$frames_per_task" >> "$STORAGE_PATH/env"
+          frames_per_task=$(blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./frames_per_task.py | sed -nr 's/frames_per_task=(.*)/\1/p')
+          start_frame=$(blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./start_frame.py | sed -nr 's/start_frame=(.*)/\1/p')
+          end_frame=$(blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./end_frame.py | sed -nr 's/end_frame=(.*)/\1/p')
+          /usr/bin/echo "START_FRAME=$start_frame" >> "$DEEPSQUARE_ENV"
+          /usr/bin/echo "END_FRAME=$end_frame" >> "$DEEPSQUARE_ENV"
+          /usr/bin/echo "FRAMES_PER_TASK=$frames_per_task" >> "$DEEPSQUARE_ENV"
     - name: assert-calculus
       run:
         resources:
@@ -106,4 +106,4 @@ job:
 
                 echo "Rendering $start_frame_i...$end_frame_i"
 
-                blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" -o "$STORAGE_PATH/output/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX
+                blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" -o "$DEEPSQUARE_OUTPUT/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX

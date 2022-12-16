@@ -58,7 +58,7 @@ type Job struct {
 	// - $GPUS: total number of GPUS
 	// - $CPUS: total number of CPUS
 	// - $MEM: total number of memory in MB
-	Resources *Resources `json:"resources" yaml:"resources" validate:"required"`
+	Resources *JobResources `json:"resources" yaml:"resources" validate:"required"`
 	// Environment variables accessible for the entire job.
 	Env []*EnvVar `json:"env" yaml:"env" validate:"dive"`
 	// EnableLogging enables the DeepSquare GRID Logger.
@@ -86,11 +86,13 @@ type Job struct {
 	// ContinuousOutputSync will push data during the whole job.
 	//
 	// This is useful when it is not desired to lose data when the job is suddenly stopped.
+	//
+	// ContinousOutputSync is not available with HTTP.
 	ContinuousOutputSync *bool `json:"continuousOutputSync" yaml:"continuousOutputSync"`
 }
 
-// Resources are the allocated resources for a command in a job, or a job in a cluster.
-type Resources struct {
+// JobResources are the allocated resources for a command in a job, or a job in a cluster.
+type JobResources struct {
 	// Number of tasks which are run in parallel.
 	//
 	// Can be greater or equal to 1.
@@ -139,14 +141,46 @@ type StepFor struct {
 	Steps []*Step `json:"steps" yaml:"steps" validate:"dive"`
 }
 
+// StepRunResources are the allocated resources for a command in a job.
+type StepRunResources struct {
+	// Number of tasks which are run in parallel.
+	//
+	// Can be greater or equal to 1.
+	//
+	// If null, default to 1.
+	Tasks *int `json:"tasks" yaml:"tasks" validate:"omitempty,gte=1"`
+	// Allocated CPUs per task.
+	//
+	// Can be greater or equal to 1.
+	//
+	// If null, defaults to the job resources.
+	CpusPerTask *int `json:"cpusPerTask" yaml:"cpusPerTask" validate:"omitempty,gte=1"`
+	// Allocated memory (MB) per task.
+	//
+	// Can be greater or equal to 1.
+	//
+	// If null, defaults to the job resources.
+	MemPerCPU *int `json:"memPerCpu" yaml:"memPerCpu" validate:"omitempty,gte=1"`
+	// Allocated GPUs per task.
+	//
+	// Can be greater or equal to 0.
+	//
+	// If null, defaults to the job resources.
+	GpusPerTask *int `json:"gpusPerTask" yaml:"gpusPerTask" validate:"omitempty,gte=0"`
+}
+
 // StepRun is one script executed with the shell.
 //
 // Shared storage is accessible through the $STORAGE_PATH environment variable.
 //
-// echo "KEY=value" >> "$STORAGE_PATH/env" can be used to share environment variables.
+// echo "KEY=value" >> "$DEEPSQUARE_ENV" can be used to share environment variables between steps.
+//
+// $DEEPSQUARE_INPUT is the path that contains imported files.
+//
+// $DEEPSQUARE_OUTPUT is the staging directory for uploading files.
 type StepRun struct {
 	// Allocated resources for the command.
-	Resources *Resources `json:"resources" yaml:"resources" validate:"required"`
+	Resources *StepRunResources `json:"resources" yaml:"resources" validate:"required"`
 	// Run the command inside a container.
 	//
 	// Format [<user>@][<registry>#]<image>[:<tag>].

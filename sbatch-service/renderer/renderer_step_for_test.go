@@ -5,51 +5,57 @@ import (
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/the-grid/sbatch-service/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func cleanStepWithRun(r *model.StepRun) *model.Step {
-	return &model.Step{
-		Name: "test",
-		Run:  r,
+var (
+	cleanStepForItems = model.StepFor{
+		Parallel: true,
+		Items:    []string{"a", "b", "c"},
+		Steps: []*model.Step{
+			{
+				Name: "test",
+				Run:  cleanStepRun("/usr/bin/echo $item"),
+			},
+			{
+				Name: "test",
+				Run:  cleanStepRun("/usr/bin/echo $item"),
+			},
+		},
 	}
-}
-
-func cleanStepWithFor(f *model.StepFor) *model.Step {
-	return &model.Step{
-		Name: "test",
-		For:  f,
+	cleanStepForRange = model.StepFor{
+		Parallel: true,
+		Range: &model.ForRange{
+			Begin:     0,
+			End:       -10,
+			Increment: utils.Ptr(-2),
+		},
+		Steps: []*model.Step{
+			{
+				Name: "test",
+				Run:  cleanStepRun("/usr/bin/echo $index"),
+			},
+			{
+				Name: "test",
+				Run:  cleanStepRun("/usr/bin/echo $index"),
+			},
+		},
 	}
-}
+)
 
-func TestRenderStep(t *testing.T) {
+func TestRenderStepFor(t *testing.T) {
 	tests := []struct {
-		input         model.Step
+		input         model.StepFor
 		isError       bool
 		errorContains []string
 		expected      string
 		title         string
 	}{
 		{
-			input: *cleanStepWithRun(cleanStepRun("hostname")),
-			expected: `/usr/bin/echo 'Running: ''test'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1 \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  --container-mounts="${MOUNTS}" \
-  --container-image='image' \
-  /bin/sh -c 'hostname'`,
-			title: "Positive test with run",
-		},
-		{
-			input: *cleanStepWithFor(&cleanStepForItems),
-			expected: `/usr/bin/echo 'Running: ''test'
-doFor() {
+			input: cleanStepForItems,
+			expected: `doFor() {
 export item="$1"
 /usr/bin/echo 'Running: ''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
@@ -83,21 +89,51 @@ done
 for pid in "${pids[@]}"; do
   wait "$pid"
 done`,
-			title: "Positive test with for",
+			title: "Positive test with items",
 		},
 		{
-			input: model.Step{
-				Name: "test",
-			},
-			expected: "/usr/bin/echo 'Running: ''test'",
-			title:    "Positive test with none",
+			input: cleanStepForRange,
+			expected: `doFor() {
+export index="$1"
+/usr/bin/echo 'Running: ''test'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
+  --container-image='image' \
+  /bin/sh -c '/usr/bin/echo $index'
+/usr/bin/echo 'Running: ''test'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --container-mounts="${MOUNTS}" \
+  --container-image='image' \
+  /bin/sh -c '/usr/bin/echo $index'
+}
+pids=()
+for index in $(seq 0 -2 -10); do
+  doFor "$index" &
+  pids+=("$!")
+done
+for pid in "${pids[@]}"; do
+  wait "$pid"
+done`,
+			title: "Positive test with range",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
 			// Act
-			actual, err := renderer.RenderStep(&cleanJob, &tt.input)
+			actual, err := renderer.RenderStepFor(&cleanJob, &tt.input)
 
 			// Assert
 			if tt.isError {

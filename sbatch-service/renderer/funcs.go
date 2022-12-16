@@ -31,6 +31,8 @@ func funcMap() template.FuncMap {
 	f["derefInt"] = func(i *int) int { return *i }
 	f["octal"] = func(i int) string { return fmt.Sprintf("%o", i) }
 	f["renderStep"] = RenderStep
+	f["renderStepRun"] = RenderStepRun
+	f["renderStepFor"] = RenderStepFor
 	f["squote"] = squote
 	return f
 }

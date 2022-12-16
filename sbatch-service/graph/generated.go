@@ -111,11 +111,12 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputForRange,
 		ec.unmarshalInputHTTPData,
 		ec.unmarshalInputJob,
-		ec.unmarshalInputResources,
+		ec.unmarshalInputJobResources,
 		ec.unmarshalInputS3Data,
 		ec.unmarshalInputStep,
 		ec.unmarshalInputStepFor,
 		ec.unmarshalInputStepRun,
+		ec.unmarshalInputStepRunResources,
 		ec.unmarshalInputTransportData,
 	)
 	first := true
@@ -238,6 +239,36 @@ input TransportData {
 }
 
 """
+JobResources are the allocated resources for a job in a cluster.
+"""
+input JobResources {
+  """
+  Number of tasks which are run in parallel.
+
+  Can be greater or equal to 1.
+  """
+  tasks: Int!
+  """
+  Allocated CPUs per task.
+
+  Can be greater or equal to 1.
+  """
+  cpusPerTask: Int!
+  """
+  Allocated memory (MB) per task.
+
+  Can be greater or equal to 1.
+  """
+  memPerCpu: Int!
+  """
+  Allocated GPUs per task.
+
+  Can be greater or equal to 0.
+  """
+  gpusPerTask: Int!
+}
+
+"""
 A Job is a finite sequence of instructions.
 """
 input Job {
@@ -252,11 +283,8 @@ input Job {
   - $GPUS: total number of GPUS
   - $CPUS: total number of CPUS
   - $MEM: total number of memory in MB
-
-  These variables have no influence on the actual values sent to the DeepSquare metascheduler.
-  They are only used to set useful environment variables.
   """
-  resources: Resources!
+  resources: JobResources!
   """
   Environment variables accessible for the entire job.
   """
@@ -324,33 +352,41 @@ input Step {
 }
 
 """
-Resources are the allocated resources for a command in a job, or a job in a cluster.
+StepRunResources are the allocated resources for a command in a job.
 """
-input Resources {
+input StepRunResources {
   """
   Number of tasks which are run in parallel.
 
   Can be greater or equal to 1.
+
+  If null, default to 1.
   """
-  tasks: Int!
+  tasks: Int
   """
   Allocated CPUs per task.
 
   Can be greater or equal to 1.
+
+  If null, defaults to the job resources.
   """
-  cpusPerTask: Int!
+  cpusPerTask: Int
   """
   Allocated memory (MB) per task.
 
   Can be greater or equal to 1.
+
+  If null, defaults to the job resources.
   """
-  memPerCpu: Int!
+  memPerCpu: Int
   """
   Allocated GPUs per task.
 
   Can be greater or equal to 0.
+
+  If null, defaults to the job resources.
   """
-  gpusPerTask: Int!
+  gpusPerTask: Int
 }
 
 """
@@ -358,13 +394,17 @@ StepRun is one script executed with the shell.
 
 Shared storage is accessible through the $STORAGE_PATH environment variable.
 
-echo "KEY=value" >> "$STORAGE_PATH/env" can be used to share environment variables.
+echo "KEY=value" >> "$DEEPSQUARE_ENV" can be used to share environment variables between steps.
+
+$DEEPSQUARE_INPUT is the path that contains imported files.
+
+$DEEPSQUARE_OUTPUT is the staging directory for uploading files.
 """
 input StepRun {
   """
   Allocated resources for the command.
   """
-  resources: Resources!
+  resources: StepRunResources!
   """
   Run the command inside a container.
 
@@ -412,13 +452,13 @@ input StepFor {
   """
   parallel: Boolean!
   """
-  Item accessible via the {{ .Item }} variable. Index accessible via the {{ .Index }} variable.
+  Item accessible via the {{ .Item }} variable. Index accessible via the $item variable.
 
   Exclusive with "range".
   """
   items: [String!]
   """
-  Index accessible via the {{ .Index }} variable.
+  Index accessible via the $index variable.
 
   Exclusive with "items".
   """
@@ -2689,7 +2729,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
-			it.Resources, err = ec.unmarshalNResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐResources(ctx, v)
+			it.Resources, err = ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2755,8 +2795,8 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputResources(ctx context.Context, obj interface{}) (model.Resources, error) {
-	var it model.Resources
+func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj interface{}) (model.JobResources, error) {
+	var it model.JobResources
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -2989,7 +3029,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
-			it.Resources, err = ec.unmarshalNResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐResources(ctx, v)
+			it.Resources, err = ec.unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3030,6 +3070,58 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("shell"))
 			it.Shell, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, obj interface{}) (model.StepRunResources, error) {
+	var it model.StepRunResources
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"tasks", "cpusPerTask", "memPerCpu", "gpusPerTask"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "tasks":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tasks"))
+			it.Tasks, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "cpusPerTask":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cpusPerTask"))
+			it.CpusPerTask, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "memPerCpu":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memPerCpu"))
+			it.MemPerCPU, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "gpusPerTask":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gpusPerTask"))
+			it.GpusPerTask, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3545,8 +3637,8 @@ func (ec *executionContext) unmarshalNJob2githubᚗcomᚋdeepsquareᚑioᚋthe�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐResources(ctx context.Context, v interface{}) (*model.Resources, error) {
-	res, err := ec.unmarshalInputResources(ctx, v)
+func (ec *executionContext) unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx context.Context, v interface{}) (*model.JobResources, error) {
+	res, err := ec.unmarshalInputJobResources(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -3569,6 +3661,11 @@ func (ec *executionContext) unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑio�
 
 func (ec *executionContext) unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStep(ctx context.Context, v interface{}) (*model.Step, error) {
 	res, err := ec.unmarshalInputStep(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx context.Context, v interface{}) (*model.StepRunResources, error) {
+	res, err := ec.unmarshalInputStepRunResources(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
