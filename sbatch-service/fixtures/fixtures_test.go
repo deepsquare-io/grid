@@ -46,6 +46,9 @@ func shellcheck(t *testing.T, script string) {
 		logger.I.Error(string(out))
 		require.NoError(t, errors.New("shellcheck failed"))
 	}
+	if string(out) != "" {
+		logger.I.Warn(string(out))
+	}
 
 	_ = os.Remove("test.sh")
 }

@@ -58,21 +58,6 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 			input: model.StepRun{
 				Env:       cleanStepRun("").Env,
 				Resources: &cleanStepRunResources,
-				Command:   "hostname",
-			},
-			expected: `/usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1 \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  /bin/sh -c 'hostname'`,
-			title: "Positive test without image",
-		},
-		{
-			input: model.StepRun{
-				Env:       cleanStepRun("").Env,
-				Resources: &cleanStepRunResources,
 				Command: `hostname
 /usr/bin/echo "test"`,
 			},
@@ -85,30 +70,6 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   /bin/sh -c 'hostname
 /usr/bin/echo "test"'`,
 			title: "Positive test with multiline command",
-		},
-		{
-			input: model.StepRun{
-				Resources: &cleanStepRunResources,
-				Image:     utils.Ptr("something???wrong"),
-				Command:   "hostname",
-			},
-			isError:       true,
-			errorContains: []string{"Image", "valid_container_image_url"},
-			title:         "Negative test with invalid image",
-		},
-		{
-			input: model.StepRun{
-				Resources: &model.StepRunResources{
-					Tasks:       utils.Ptr(0),
-					CpusPerTask: utils.Ptr(1),
-					MemPerCPU:   utils.Ptr(1),
-					GpusPerTask: utils.Ptr(0),
-				},
-				Command: "hostname",
-			},
-			isError:       true,
-			errorContains: []string{"Tasks", "gte"},
-			title:         "Negative test with invalid resources",
 		},
 	}
 

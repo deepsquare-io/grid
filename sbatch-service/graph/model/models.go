@@ -2,7 +2,7 @@ package model
 
 // S3Data describes the necessary variables to connect to a HTTP storage.
 type HTTPData struct {
-	URL string `json:"url" yaml:"url"`
+	URL string `json:"url" yaml:"url" validate:"url"`
 }
 
 // S3Data describes the necessary variables to connect to a S3 storage.
@@ -12,7 +12,7 @@ type S3Data struct {
 	// The S3 Bucket URL. Must not end with "/".
 	//
 	// Example: "s3://my-bucket".
-	BucketURL string `json:"bucketUrl" yaml:"bucketUrl" validate:"startswith=s3://,endsnotwith=/"`
+	BucketURL string `json:"bucketUrl" yaml:"bucketUrl" validate:"url,startswith=s3://,endsnotwith=/"`
 	// An absolute path of the bucket. Must start with "/".
 	Path string `json:"path" yaml:"path" validate:"startswith=/"`
 	// An access key ID for the S3 endpoint.
@@ -32,7 +32,7 @@ type TransportData struct {
 
 // An environment variable.
 type EnvVar struct {
-	Key   string `json:"key" yaml:"key" validate:"valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"`
+	Key   string `json:"key" yaml:"key" validate:"required,valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"`
 	Value string `json:"value" yaml:"value"`
 }
 
@@ -60,7 +60,7 @@ type Job struct {
 	// - $MEM: total number of memory in MB
 	Resources *JobResources `json:"resources" yaml:"resources" validate:"required"`
 	// Environment variables accessible for the entire job.
-	Env []*EnvVar `json:"env" yaml:"env" validate:"dive"`
+	Env []*EnvVar `json:"env" yaml:"env" validate:"dive,required"`
 	// EnableLogging enables the DeepSquare GRID Logger.
 	EnableLogging *bool `json:"enableLogging" yaml:"enableLogging"`
 	// Pull data at the start of the job.
@@ -78,7 +78,7 @@ type Job struct {
 	//
 	// If null, the mode won't change and will default to the source.
 	InputMode *int    `json:"inputMode" yaml:"inputMode" validate:"omitempty,lt=512"`
-	Steps     []*Step `json:"steps" yaml:"steps" validate:"dive"`
+	Steps     []*Step `json:"steps" yaml:"steps" validate:"dive,required"`
 	// Push data at the end of the job.
 	//
 	// Continuous sync/push can be enabled using the `continuousOutputSync` flag.
@@ -132,13 +132,13 @@ type StepFor struct {
 	// Item accessible via the "$item" variable.
 	//
 	// Exclusive with "range".
-	Items []string `json:"items" yaml:"items" validate:"dive"`
+	Items []string `json:"items" yaml:"items"`
 	// Index accessible via the "$index" variable.
 	//
 	// Exclusive with "items".
 	Range *ForRange `json:"range" yaml:"range"`
 	// Steps are run sequentially in one iteration.
-	Steps []*Step `json:"steps" yaml:"steps" validate:"dive"`
+	Steps []*Step `json:"steps" yaml:"steps" validate:"dive,required"`
 }
 
 // StepRunResources are the allocated resources for a command in a job.
@@ -188,7 +188,7 @@ type StepRun struct {
 	// reg_registry="[^#]+"
 	// reg_image="[[:lower:][:digit:]/._-]+"
 	// reg_tag="[[:alnum:]._:-]+"
-	// reg_url="^docker://((${reg_user})@)?((${reg_registry})#)?(${reg_image})(:(${reg_tag}))?$"
+	// reg_url="^((${reg_user})@)?((${reg_registry})#)?(${reg_image})(:(${reg_tag}))?$"
 	//
 	// It is also possible to load a squashfs file by specifying an absolute path.
 	//
@@ -199,7 +199,7 @@ type StepRun struct {
 	// If image is not defined, there is no need to define x11.
 	X11 *bool `json:"x11" yaml:"x11"`
 	// Environment variables accessible over the command.
-	Env []*EnvVar `json:"env" yaml:"env" validate:"dive"`
+	Env []*EnvVar `json:"env" yaml:"env" validate:"dive,required"`
 	// Command specifies a shell script.
 	Command string `json:"command" yaml:"command"`
 	// Shell to use.

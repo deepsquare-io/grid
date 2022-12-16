@@ -100,7 +100,7 @@ job:
                 start_frame_i=$(((index-1)*FRAMES_PER_TASK+START_FRAME))
                 end_frame_i=$((index*FRAMES_PER_TASK+START_FRAME-1))
 
-                if [[ index -eq 4 ]]; then
+                if [[ index -eq $NTASKS ]]; then
                   end_frame_i=$END_FRAME
                 fi
 
