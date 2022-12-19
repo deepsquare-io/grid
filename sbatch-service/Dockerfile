@@ -26,7 +26,7 @@ RUN mkdir /app
 RUN addgroup -S app && adduser -S -G app app
 WORKDIR /app
 
-COPY --from=builder /build/app .
+COPY --from=builder /out/app .
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
 RUN chown -R app:app .
