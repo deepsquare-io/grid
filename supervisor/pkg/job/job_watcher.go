@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
@@ -14,6 +13,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 const claimJobMaxTimeout = time.Duration(60 * time.Second)
@@ -50,49 +50,13 @@ func New(
 
 // Watch incoming jobs and handles it.
 func (w *Watcher) Watch(parent context.Context) error {
-	var wg sync.WaitGroup
-	errChan := make(chan error)
+	g, ctx := errgroup.WithContext(parent)
+	g.Go(func() error { return w.WatchClaimNextJob(ctx) })
+	g.Go(func() error { return w.WatchClaimNextCancellingJobEvent(ctx) })
+	g.Go(func() error { return w.ClaimIndefinitely(ctx) })
 
-	wg.Add(1)
-	go func(ctx context.Context, wg *sync.WaitGroup) {
-		err := w.WatchClaimNextJob(ctx)
-		if err != nil {
-			logger.I.Error("WatchClaimNextJob failed", zap.Error(err))
-			errChan <- err
-		}
-		wg.Done()
-	}(parent, &wg)
-
-	wg.Add(1)
-	go func(ctx context.Context, wg *sync.WaitGroup) {
-		err := w.WatchClaimNextCancellingJobEvent(ctx)
-		if err != nil {
-			logger.I.Error("WatchClaimNextCancellingJobEvent failed", zap.Error(err))
-			errChan <- err
-		}
-		wg.Done()
-	}(parent, &wg)
-
-	wg.Add(1)
-	go func(ctx context.Context, wg *sync.WaitGroup) {
-		err := w.ClaimIndefinitely(ctx)
-		if err != nil {
-			logger.I.Error("ClaimIndefinitely failed", zap.Error(err))
-			errChan <- err
-		}
-		wg.Done()
-	}(parent, &wg)
-
-	go func() {
-		wg.Wait()
-		close(errChan)
-	}()
-
-	// Return error on the first error
-	for e := range errChan {
-		if e != nil {
-			return e
-		}
+	if err := g.Wait(); err != nil {
+		return err
 	}
 
 	return nil
