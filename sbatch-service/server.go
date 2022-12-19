@@ -3,18 +3,25 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	sbatchapiv1alpha1 "github.com/deepsquare-io/the-grid/sbatch-service/gen/go/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph"
+	"github.com/deepsquare-io/the-grid/sbatch-service/grpc/sbatch"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -89,11 +96,11 @@ var app = &cli.App{
 	Flags:   flags,
 	Suggest: true,
 	Action: func(cCtx *cli.Context) error {
+		// Redis connection
 		opt, err := redis.ParseURL(redisAddress)
 		if err != nil {
 			return err
 		}
-
 		if redisTLS {
 			var tlsConfig tls.Config
 			if redisTLSInsecure {
@@ -121,9 +128,9 @@ var app = &cli.App{
 			}
 			opt.TLSConfig = &tlsConfig
 		}
-
 		rdb := redis.NewClient(opt)
 
+		// GraphQL server
 		srv := handler.NewDefaultServer(graph.NewExecutableSchema(
 			graph.Config{
 				Resolvers: &graph.Resolver{
@@ -131,15 +138,12 @@ var app = &cli.App{
 				},
 			},
 		))
-
 		r := chi.NewRouter()
-
 		r.Handle("/", playground.Handler("GraphQL playground", "/graphql"))
 		r.Handle("/graphql", srv)
 		r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write([]byte("ok"))
 		})
-
 		if cCtx.Bool("debug") {
 			r.HandleFunc("/job/{jobID}", func(w http.ResponseWriter, r *http.Request) {
 				jobID := chi.URLParam(r, "jobID")
@@ -158,10 +162,35 @@ var app = &cli.App{
 			})
 		}
 
+		// gRPC server
+		g := grpc.NewServer()
+		sbatchapiv1alpha1.RegisterSBatchAPIServer(g, sbatch.NewAPI(rdb))
+
+		rg := mixedHandler(r, g)
+
+		http2Server := &http2.Server{}
+		http1Server := &http.Server{Handler: h2c.NewHandler(rg, http2Server)}
+
+		// Listener
+		lis, err := net.Listen("tcp", listenAddress)
+		if err != nil {
+			return err
+		}
+
 		logger.I.Info("listening", zap.String("listeningAddress", listenAddress))
 
-		return http.ListenAndServe(listenAddress, r)
+		return http1Server.Serve(lis)
 	},
+}
+
+func mixedHandler(httpHand http.Handler, grpcHandler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("content-type"), "application/grpc") {
+			grpcHandler.ServeHTTP(w, r)
+			return
+		}
+		httpHand.ServeHTTP(w, r)
+	})
 }
 
 func main() {
