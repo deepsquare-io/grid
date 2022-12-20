@@ -2,7 +2,7 @@ package sbatch
 
 import (
 	"context"
-	"crypto/tls"
+	cryptotls "crypto/tls"
 	"io"
 	"net/http"
 
@@ -11,15 +11,12 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type API struct {
-	endpoint           string
-	tls                bool
-	insecure           bool
-	caFile             string
-	serverHostOverride string
+	endpoint string
+	creds    credentials.TransportCredentials
+	insecure bool
 }
 
 func NewAPI(
@@ -29,34 +26,42 @@ func NewAPI(
 	caFile string,
 	serverHostOverride string,
 ) *API {
-	return &API{
-		endpoint:           endpoint,
-		tls:                tls,
-		insecure:           insecure,
-		caFile:             caFile,
-		serverHostOverride: serverHostOverride,
-	}
-}
-
-func (d *API) dial() (sbatchv1alpha1.SBatchAPIClient, *grpc.ClientConn, error) {
-	opts := []grpc.DialOption{}
-	if d.tls {
-		if !d.insecure {
-			creds, err := credentials.NewClientTLSFromFile(d.caFile, d.serverHostOverride)
+	var creds credentials.TransportCredentials
+	if tls {
+		if !insecure {
+			c, err := credentials.NewClientTLSFromFile(caFile, serverHostOverride)
 			if err != nil {
 				logger.I.Fatal("Failed to create TLS credentials", zap.Error(err))
 			}
-			opts = append(opts, grpc.WithTransportCredentials(creds))
+			creds = c
 		} else {
-			tlsConfig := &tls.Config{
+			tlsConfig := &cryptotls.Config{
 				InsecureSkipVerify: true,
 			}
-			opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
+			creds = credentials.NewTLS(tlsConfig)
 		}
-	} else {
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
-	conn, err := grpc.Dial(d.serverHostOverride, opts...)
+
+	d := &API{
+		endpoint: endpoint,
+		creds:    creds,
+		insecure: insecure,
+	}
+
+	logger.I.Info("Healthcheck sbatch service")
+	_, conn, err := d.dial()
+	defer func() {
+		_ = conn.Close()
+	}()
+	if err != nil {
+		logger.I.Fatal("sbatch service initial healthcheck failed, exiting...")
+	}
+	return d
+}
+
+func (d *API) dial() (sbatchv1alpha1.SBatchAPIClient, *grpc.ClientConn, error) {
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(d.creds)}
+	conn, err := grpc.Dial(d.endpoint, opts...)
 	if err != nil {
 		return nil, nil, err
 	}
