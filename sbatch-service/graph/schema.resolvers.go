@@ -11,6 +11,7 @@ import (
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
+	"github.com/go-redis/redis/v8"
 	shortuuid "github.com/lithammer/shortuuid/v4"
 	"go.uber.org/zap"
 )
@@ -36,6 +37,9 @@ func (r *queryResolver) Job(ctx context.Context, batchLocationHash string) (stri
 		logger.I.Info("get", zap.String("batchLocationHash", batchLocationHash))
 		resp, err := r.RedisClient.Get(ctx, batchLocationHash).Result()
 		if err != nil {
+			if err == redis.Nil {
+				return "", errors.New("no entry exists under this name")
+			}
 			return "", err
 		}
 		return resp, nil
