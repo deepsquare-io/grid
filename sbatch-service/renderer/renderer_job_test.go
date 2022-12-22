@@ -81,6 +81,7 @@ disposeLogs() {
   echo cleaned
 }
 trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
@@ -105,6 +106,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
+)
 `,
 			title: "Positive test 'hello world'",
 		},
@@ -175,6 +177,7 @@ disposeLogs() {
   echo cleaned
 }
 trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
@@ -205,6 +208,7 @@ ContinuousOutputSync() {
 }
 ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
+(
 export 'key'='test'\''test'
 /usr/bin/echo 'Running: ''test'
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
@@ -217,6 +221,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
+)
 kill $CONTINUOUS_SYNC_PID || true
 wait $CONTINUOUS_SYNC_PID || true
 /usr/bin/echo "Output contains:"
@@ -226,6 +231,7 @@ export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
 s5cmd sync --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
+)
 `,
 			title: "Positive test with S3 input output",
 		},
@@ -295,6 +301,7 @@ disposeLogs() {
   echo cleaned
 }
 trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
@@ -333,6 +340,7 @@ export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
 s5cmd sync --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
+)
 `,
 			title: "Positive test with S3 input output and continuous sync",
 		},
@@ -392,6 +400,7 @@ disposeLogs() {
   echo cleaned
 }
 trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
@@ -438,6 +447,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 /usr/bin/tar -cvf "$DEEPSQUARE_OUTPUT.tar" "$DEEPSQUARE_OUTPUT/"
 /usr/bin/curl --upload-file "$DEEPSQUARE_OUTPUT.tar" 'https://test/out'
+)
 `,
 			title: "Positive test with HTTP input output",
 		},

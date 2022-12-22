@@ -36,6 +36,7 @@ disposeLogs() {
   echo cleaned
 }
 trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
@@ -91,3 +92,4 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   -renderscalestepcount 0.1 \
   -displayfpscounter \
   --logFile -'
+)

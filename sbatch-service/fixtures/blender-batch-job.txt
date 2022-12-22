@@ -36,6 +36,7 @@ disposeLogs() {
   echo cleaned
 }
 trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
@@ -65,6 +66,7 @@ ContinuousOutputSync() {
 }
 ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
+(
 /usr/bin/echo 'Running: ''compute-frames'
 /usr/bin/srun --job-name='compute-frames' \
   --export=ALL,"$(loadDeepsquareEnv)" \
@@ -149,6 +151,7 @@ done
 for pid in "${pids[@]}"; do
   wait "$pid"
 done
+)
 kill $CONTINUOUS_SYNC_PID || true
 wait $CONTINUOUS_SYNC_PID || true
 /usr/bin/echo "Output contains:"
@@ -158,3 +161,4 @@ export AWS_SECRET_ACCESS_KEY='secretAccessKey'
 export S3_ENDPOINT_URL='https://example'
 
 s5cmd sync --destination-region 'region' "$DEEPSQUARE_OUTPUT/" 's3://test''/test'
+)

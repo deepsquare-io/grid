@@ -38,6 +38,7 @@ disposeLogs() {
   echo cleaned
 }
 trap disposeLogs EXIT
+(
 {{- end }}
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
@@ -96,6 +97,7 @@ ContinuousOutputSync() {
 }
 ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
+(
 {{- end }}
 
 {{- range $env := .Job.Env }}
@@ -113,6 +115,7 @@ export {{ $env.Key | squote }}={{ $env.Value | squote }}
 /usr/bin/curl --upload-file "$DEEPSQUARE_OUTPUT.tar" {{ .Job.Output.HTTP.URL | squote }}
 {{- else if and .Job.Output .Job.Output.S3 }}
 {{- if and .Job.ContinuousOutputSync (derefBool .Job.ContinuousOutputSync) }}
+)
 kill $CONTINUOUS_SYNC_PID || true
 wait $CONTINUOUS_SYNC_PID || true
 {{- end }}
@@ -123,4 +126,7 @@ export AWS_SECRET_ACCESS_KEY={{ .Job.Output.S3.SecretAccessKey | squote }}
 export S3_ENDPOINT_URL={{ .Job.Output.S3.EndpointURL | squote }}
 
 s5cmd sync --destination-region {{ .Job.Output.S3.Region | squote }} "$DEEPSQUARE_OUTPUT/" {{ .Job.Output.S3.BucketURL | squote }}{{ .Job.Output.S3.Path | squote }}
+{{- end }}
+{{- if and .Job.EnableLogging (derefBool .Job.EnableLogging ) }}
+)
 {{- end }}
