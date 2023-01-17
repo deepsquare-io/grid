@@ -7,7 +7,11 @@ MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.X11 (derefBool .Step.Run
   --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }} \
   --gpus-per-task={{ default .Step.Run.Resources.GpusPerTask (derefInt .Step.Run.Resources.GpusPerTask) .Job.Resources.GpusPerTask }} \
   --ntasks={{ default .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) 1 }} \
+{{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
+  --cpu-bind=none \
+{{- end }}
 {{- if and .Step.Run.Image (derefStr .Step.Run.Image ) }}
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
   --container-image={{ .Step.Run.Image | derefStr | squote }} \
 {{- end }}

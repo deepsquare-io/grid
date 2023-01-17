@@ -198,6 +198,12 @@ type StepRun struct {
 	//
 	// If image is not defined, there is no need to define x11.
 	X11 *bool `json:"x11" yaml:"x11"`
+	// DisableCPUBinding disables process affinity binding to tasks.
+	//
+	// Can be useful when running MPI jobs.
+	//
+	// If null, defaults to false.
+	DisableCPUBinding *bool `json:"disableCPUBinding" yaml:"disableCPUBinding"`
 	// Environment variables accessible over the command.
 	Env []*EnvVar `json:"env" yaml:"env" validate:"dive,required"`
 	// Command specifies a shell script.

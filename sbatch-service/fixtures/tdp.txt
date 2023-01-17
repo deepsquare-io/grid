@@ -58,6 +58,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --mem-per-cpu=4096 \
   --gpus-per-task=1 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
   --container-image='/data/beegfs/localhost+tdp+latest.sqsh' \
   /bin/sh -c '/unityapp/DeepSquareURSSample.x86_64 \

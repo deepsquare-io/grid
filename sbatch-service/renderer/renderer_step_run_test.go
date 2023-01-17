@@ -49,6 +49,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
   --container-image='image' \
   /bin/sh -c 'hostname'`,
@@ -70,6 +71,23 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   /bin/sh -c 'hostname
 /usr/bin/echo "test"'`,
 			title: "Positive test with multiline command",
+		},
+		{
+			input: model.StepRun{
+				Env:               cleanStepRun("").Env,
+				Resources:         &cleanStepRunResources,
+				Command:           "hostname",
+				DisableCPUBinding: utils.Ptr(true),
+			},
+			expected: `/usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --cpu-bind=none \
+  /bin/sh -c 'hostname'`,
+			title: "Positive test with disable cpu-bind",
 		},
 	}
 

@@ -427,6 +427,14 @@ input StepRun {
   """
   x11: Boolean
   """
+  DisableCPUBinding disables process affinity binding to tasks.
+
+  Can be useful when running MPI jobs.
+
+  If null, defaults to false.
+  """
+  DisableCPUBinding: Boolean
+  """
   Environment variables accessible over the command.
   """
   env: [EnvVar!]
@@ -3018,7 +3026,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "image", "x11", "env", "command", "shell"}
+	fieldsInOrder := [...]string{"resources", "image", "x11", "DisableCPUBinding", "env", "command", "shell"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3046,6 +3054,14 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("x11"))
 			it.X11, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "DisableCPUBinding":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("DisableCPUBinding"))
+			it.DisableCPUBinding, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
