@@ -15,6 +15,7 @@ import (
 	"github.com/deepsquare-io/the-grid/sbatch-service/grpc/sbatch"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
@@ -139,6 +140,13 @@ var app = &cli.App{
 			},
 		))
 		r := chi.NewRouter()
+		r.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   []string{"https://*", "http://*"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Content-Type"},
+			AllowCredentials: false,
+			MaxAge:           300,
+		}))
 		r.Handle("/", playground.Handler("GraphQL playground", "/graphql"))
 		r.Handle("/graphql", srv)
 		r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
