@@ -49,13 +49,12 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 			return err
 		}
 
-		n, err := s.db.Append(req.GetLogName(), strings.ToLower(req.GetUser()), req.GetData())
+		_, err = s.db.Append(req.GetLogName(), strings.ToLower(req.GetUser()), req.GetData())
 		if err != nil {
 			logger.I.Error("writer failed to write", zap.Any("req", req), zap.String("IP", p.Addr.String()), zap.Error(err))
 			_ = stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
 			return err
 		}
-		logger.I.Debug("write", zap.Int("size", n))
 	}
 }
 
@@ -90,10 +89,8 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 			logger.I.Info("reader closed", zap.String("user", address))
 			return nil
 		case log := <-logs:
-			bytes := []byte(log)
-			logger.I.Debug("reader send", zap.Int("size", len(bytes)))
 			if err := stream.Send(&loggerv1alpha1.ReadResponse{
-				Data: bytes,
+				Data: []byte(log),
 			}); err != nil {
 				return err
 			}

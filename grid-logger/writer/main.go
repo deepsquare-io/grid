@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"io"
 	"os"
@@ -139,19 +140,6 @@ var app = &cli.App{
 		} else {
 			opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		}
-		conn, err := grpc.Dial(serverEndpoint, opts...)
-		if err != nil {
-			logger.I.Error("grpc dial failed", zap.Error(err))
-			return err
-		}
-		defer func() {
-			if err := conn.Close(); err != nil {
-				if err != io.EOF {
-					logger.I.Error("grpc close failed", zap.Error(err))
-				}
-			}
-		}()
-		client := loggerv1alpha1.NewLoggerAPIClient(conn)
 
 		// Open pipe
 		_ = os.Remove(pipeFile)
@@ -167,10 +155,18 @@ var app = &cli.App{
 		}
 
 		// Open grpc stream
-		stream, err = client.Write(ctx)
+		stream, conn, err := openGRPCConn(ctx, opts)
 		if err != nil {
-			logger.I.Fatal("grpc open failed", zap.Error(err))
+			logger.I.Error("openGRPCConn failed", zap.Error(err))
+			return err
 		}
+		defer func() {
+			if err := conn.Close(); err != nil {
+				if err != io.EOF {
+					logger.I.Error("grpc close failed", zap.Error(err))
+				}
+			}
+		}()
 
 		logger.I.Info("reading")
 
@@ -200,9 +196,32 @@ var app = &cli.App{
 				User:    user,
 			}); err != nil {
 				logger.I.Error("grpc write failed", zap.Error(err))
+				if err == io.EOF {
+					logger.I.Warn("error is EOF, attempting to reconnect", zap.Error(err))
+					_ = conn.Close()
+					stream, conn, err = openGRPCConn(ctx, opts)
+					if err != nil {
+						logger.I.Fatal("failed to reconnect on EOF error", zap.Error(err))
+					}
+				}
 			}
 		}
 	},
+}
+
+func openGRPCConn(ctx context.Context, opts []grpc.DialOption) (loggerv1alpha1.LoggerAPI_WriteClient, *grpc.ClientConn, error) {
+	conn, err := grpc.Dial(serverEndpoint, opts...)
+	if err != nil {
+		logger.I.Error("grpc dial failed", zap.Error(err))
+		return nil, nil, err
+	}
+	client := loggerv1alpha1.NewLoggerAPIClient(conn)
+	stream, err := client.Write(ctx)
+	if err != nil {
+		logger.I.Error("grpc open failed", zap.Error(err))
+		return nil, nil, err
+	}
+	return stream, conn, nil
 }
 
 func main() {
