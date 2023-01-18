@@ -91,7 +91,7 @@ ContinuousOutputSync() {
   export AWS_SECRET_ACCESS_KEY={{ .Job.Output.S3.SecretAccessKey | squote }}
   export S3_ENDPOINT_URL={{ .Job.Output.S3.EndpointURL | squote }}
   while true; do
-    s5cmd sync --destination-region {{ .Job.Output.S3.Region | squote }} "$DEEPSQUARE_OUTPUT/" {{ .Job.Output.S3.BucketURL | squote }}{{ .Job.Output.S3.Path | squote }}
+    s5cmd sync {{ if and .Job.Output.S3.DeleteSync (derefBool .Job.Output.S3.DeleteSync) }}--delete {{ end }}--destination-region {{ .Job.Output.S3.Region | squote }} "$DEEPSQUARE_OUTPUT/" {{ .Job.Output.S3.BucketURL | squote }}{{ .Job.Output.S3.Path | squote }}
     /usr/bin/sleep 5
   done
 }
@@ -125,7 +125,7 @@ export AWS_ACCESS_KEY_ID={{ .Job.Output.S3.AccessKeyID | squote }}
 export AWS_SECRET_ACCESS_KEY={{ .Job.Output.S3.SecretAccessKey | squote }}
 export S3_ENDPOINT_URL={{ .Job.Output.S3.EndpointURL | squote }}
 
-s5cmd sync --destination-region {{ .Job.Output.S3.Region | squote }} "$DEEPSQUARE_OUTPUT/" {{ .Job.Output.S3.BucketURL | squote }}{{ .Job.Output.S3.Path | squote }}
+s5cmd sync {{ if and .Job.Output.S3.DeleteSync (derefBool .Job.Output.S3.DeleteSync) }}--delete {{ end }}--destination-region {{ .Job.Output.S3.Region | squote }} "$DEEPSQUARE_OUTPUT/" {{ .Job.Output.S3.BucketURL | squote }}{{ .Job.Output.S3.Path | squote }}
 {{- end }}
 {{- if and .Job.EnableLogging (derefBool .Job.EnableLogging ) }}
 )

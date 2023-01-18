@@ -125,6 +125,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 						AccessKeyID:     "AccessKeyID",
 						SecretAccessKey: "SecretAccessKey",
 						EndpointURL:     "https://s3.us‑east‑2.amazonaws.com",
+						DeleteSync:      utils.Ptr(true),
 					},
 				},
 				Steps: cleanJob.Steps,
@@ -136,6 +137,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 						AccessKeyID:     "AccessKeyID",
 						SecretAccessKey: "SecretAccessKey",
 						EndpointURL:     "https://s3.us‑east‑2.amazonaws.com",
+						DeleteSync:      utils.Ptr(true),
 					},
 				},
 				ContinuousOutputSync: utils.Ptr(true),
@@ -203,7 +205,7 @@ ContinuousOutputSync() {
   export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
   export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
   while true; do
-    s5cmd sync --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
+    s5cmd sync --delete --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
     /usr/bin/sleep 5
   done
 }
@@ -232,7 +234,7 @@ export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
-s5cmd sync --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
+s5cmd sync --delete --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
 )
 `,
 			title: "Positive test with S3 input output",

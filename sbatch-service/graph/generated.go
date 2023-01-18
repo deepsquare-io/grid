@@ -225,6 +225,16 @@ input S3Data {
   A S3 Endpoint URL used for authentication. Example: https://s3.us‑east‑2.amazonaws.com
   """
   endpointUrl: String!
+  """
+  DeleteSync removes destination files that doesn't correspond to the source.
+
+  This applies to any type of source to any type of destination (s3 or filesystem).
+
+  See: s5cmd sync --delete.
+
+  If null, defaults to false.
+  """
+  deleteSync: Boolean
 }
 
 input TransportData {
@@ -2862,7 +2872,7 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"region", "bucketUrl", "path", "accessKeyId", "secretAccessKey", "endpointUrl"}
+	fieldsInOrder := [...]string{"region", "bucketUrl", "path", "accessKeyId", "secretAccessKey", "endpointUrl", "deleteSync"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2914,6 +2924,14 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endpointUrl"))
 			it.EndpointURL, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "deleteSync":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deleteSync"))
+			it.DeleteSync, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}

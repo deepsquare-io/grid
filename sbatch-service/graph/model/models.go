@@ -21,6 +21,14 @@ type S3Data struct {
 	SecretAccessKey string `json:"secretAccessKey" yaml:"secretAccessKey"`
 	// A S3 Endpoint URL used for authentication. Example: https://s3.us‑east‑2.amazonaws.com
 	EndpointURL string `json:"endpointUrl" yaml:"endpointUrl" validate:"url"`
+	// DeleteSync removes destination files that doesn't correspond to the source.
+	//
+	// This applies to any type of source to any type of destination (s3 or filesystem).
+	//
+	// See: s5cmd sync --delete.
+	//
+	// If null, defaults to false.
+	DeleteSync *bool `json:"deleteSync" yaml:"deleteSync"`
 }
 
 type TransportData struct {
