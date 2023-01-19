@@ -8,11 +8,15 @@ import (
 	"context"
 	"errors"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
+	"github.com/go-playground/validator/v10"
 	redis "github.com/go-redis/redis/v8"
 	shortuuid "github.com/lithammer/shortuuid/v4"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.uber.org/zap"
 )
 
@@ -20,13 +24,44 @@ import (
 func (r *mutationResolver) Submit(ctx context.Context, job model.Job) (string, error) {
 	script, err := renderer.RenderJob(&job)
 	if err != nil {
-		return "", err
+		if errors, ok := err.(validator.ValidationErrors); ok {
+			for _, err := range errors {
+				graphql.AddError(ctx, &gqlerror.Error{
+					Path:    graphql.GetPath(ctx),
+					Message: validate.Format(err),
+					Extensions: map[string]interface{}{
+						"type":             "validation",
+						"tag":              err.Tag(),
+						"namespace":        err.Namespace(),
+						"field":            err.Field(),
+						"original_message": err.Error(),
+					},
+				})
+			}
+			return "", nil
+		} else {
+			graphql.AddError(ctx, &gqlerror.Error{
+				Path:    graphql.GetPath(ctx),
+				Message: err.Error(),
+				Extensions: map[string]interface{}{
+					"type": "internal",
+				},
+			})
+			return "", nil
+		}
 	}
 	u := shortuuid.New()
 	logger.I.Info("set", zap.String("uuid", u), zap.String("script", script))
 	_, err = r.RedisClient.Set(ctx, u, script, 0).Result()
 	if err != nil {
-		return "", err
+		graphql.AddError(ctx, &gqlerror.Error{
+			Path:    graphql.GetPath(ctx),
+			Message: err.Error(),
+			Extensions: map[string]interface{}{
+				"type": "internal",
+			},
+		})
+		return "", nil
 	}
 	return u, nil
 }
