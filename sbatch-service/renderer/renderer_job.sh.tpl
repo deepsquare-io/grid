@@ -57,13 +57,14 @@ cd $DEEPSQUARE_INPUT/
 for filepath in "$DEEPSQUARE_INPUT/"*; do
   /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in
-      *bzip2*) bzip2 -fdk "$filepath";;
-      *gzip*) gunzip -df "$filepath";;
+      *bzip2*) /usr/bin/bzip2 -fdk "$filepath";;
+      *gzip*) /usr/bin/gunzip -df "$filepath";;
       *zip*) ;&
-      *Zip*) unzip -o "$filepath";;
+      *Zip*) /usr/bin/unzip -o "$filepath";;
+      *RAR*) /usr/bin/unrar x -o+ "$filepath";;
       *xz*) ;&
-      *XZ*) unxz -f "$filepath";;
-      *'7-zip'*) 7z x "$filepath" -aoa;;
+      *XZ*) /usr/bin/unxz -f "$filepath";;
+      *'7-zip'*) /usr/bin/7z x "$filepath" -aoa;;
       *) 1>&2 /usr/bin/echo "Unknown archive '$filepath'";;
   esac
 done
