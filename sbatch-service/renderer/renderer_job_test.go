@@ -197,6 +197,7 @@ export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
 s5cmd cp --source-region 'us‑east‑2' 's3://test''/in''*' "$DEEPSQUARE_INPUT/"
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
@@ -322,6 +323,7 @@ export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
 s5cmd cp --source-region 'us‑east‑2' 's3://test''/in''*' "$DEEPSQUARE_INPUT/"
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
@@ -434,6 +436,7 @@ for filepath in "$DEEPSQUARE_INPUT/"*; do
   esac
 done
 cd -
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"

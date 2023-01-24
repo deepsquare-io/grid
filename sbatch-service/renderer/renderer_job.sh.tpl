@@ -69,6 +69,7 @@ for filepath in "$DEEPSQUARE_INPUT/"*; do
   esac
 done
 cd -
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 {{- else if and .Job.Input .Job.Input.S3 }}
@@ -77,6 +78,7 @@ export AWS_SECRET_ACCESS_KEY={{ .Job.Input.S3.SecretAccessKey | squote }}
 export S3_ENDPOINT_URL={{ .Job.Input.S3.EndpointURL | squote }}
 
 s5cmd cp --source-region {{ .Job.Input.S3.Region | squote }} {{ .Job.Input.S3.BucketURL | squote }}{{ .Job.Input.S3.Path | squote }}'*' "$DEEPSQUARE_INPUT/"
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 {{- end }}

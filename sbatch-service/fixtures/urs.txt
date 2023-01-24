@@ -65,6 +65,7 @@ for filepath in "$DEEPSQUARE_INPUT/"*; do
   esac
 done
 cd -
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
