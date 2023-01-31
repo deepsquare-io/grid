@@ -116,7 +116,7 @@ export {{ $env.Key | squote }}={{ $env.Value | squote }}
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 cd $DEEPSQUARE_OUTPUT/..
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
-/usr/bin/curl --upload-file "$(find output/ -type f | wc -l)" {{ .Job.Output.HTTP.URL | squote }}
+/usr/bin/curl --upload-file "$(find output/ -type f)" {{ .Job.Output.HTTP.URL | squote }}
 else
 /usr/bin/zip -r "output.zip" "output/"
 /usr/bin/curl --upload-file "output.zip" {{ .Job.Output.HTTP.URL | squote }}

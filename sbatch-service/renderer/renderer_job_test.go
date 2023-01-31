@@ -457,7 +457,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 cd $DEEPSQUARE_OUTPUT/..
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
-/usr/bin/curl --upload-file "$(find output/ -type f | wc -l)" 'https://test/out'
+/usr/bin/curl --upload-file "$(find output/ -type f)" 'https://test/out'
 else
 /usr/bin/zip -r "output.zip" "output/"
 /usr/bin/curl --upload-file "output.zip" 'https://test/out'
