@@ -26,7 +26,7 @@ exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
 exec 2>&1
 
 disposeLogs() {
-  echo cleaning up
+  echo ---
   /usr/bin/sleep 15
   exec 1>&3
   exec 2>&4
@@ -64,7 +64,7 @@ for filepath in "$DEEPSQUARE_INPUT/"*; do
       *) 1>&2 /usr/bin/echo "Unknown archive '$filepath'";;
   esac
 done
-cd -
+cd $STORAGE_PATH
 /usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;

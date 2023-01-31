@@ -71,7 +71,7 @@ exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
 exec 2>&1
 
 disposeLogs() {
-  echo cleaning up
+  echo ---
   /usr/bin/sleep 15
   exec 1>&3
   exec 2>&4
@@ -170,7 +170,7 @@ exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
 exec 2>&1
 
 disposeLogs() {
-  echo cleaning up
+  echo ---
   /usr/bin/sleep 15
   exec 1>&3
   exec 2>&4
@@ -296,7 +296,7 @@ exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
 exec 2>&1
 
 disposeLogs() {
-  echo cleaning up
+  echo ---
   /usr/bin/sleep 15
   exec 1>&3
   exec 2>&4
@@ -397,7 +397,7 @@ exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
 exec 2>&1
 
 disposeLogs() {
-  echo cleaning up
+  echo ---
   /usr/bin/sleep 15
   exec 1>&3
   exec 2>&4
@@ -435,7 +435,7 @@ for filepath in "$DEEPSQUARE_INPUT/"*; do
       *) 1>&2 /usr/bin/echo "Unknown archive '$filepath'";;
   esac
 done
-cd -
+cd $STORAGE_PATH
 /usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
@@ -456,6 +456,8 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 cd $DEEPSQUARE_OUTPUT/..
+/usr/bin/echo "##############################################################"
+/usr/bin/echo
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
 /usr/bin/curl --upload-file "$(find output/ -type f)" 'https://test/out'
 else
@@ -463,7 +465,9 @@ else
 /usr/bin/curl --upload-file "output.zip" 'https://test/out'
 fi
 /usr/bin/echo
-cd -
+/usr/bin/echo
+/usr/bin/echo "##############################################################"
+cd $STORAGE_PATH
 )
 `,
 			title: "Positive test with HTTP input output",

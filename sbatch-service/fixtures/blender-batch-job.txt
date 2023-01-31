@@ -26,7 +26,7 @@ exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
 exec 2>&1
 
 disposeLogs() {
-  echo cleaning up
+  echo ---
   /usr/bin/sleep 15
   exec 1>&3
   exec 2>&4

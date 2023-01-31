@@ -28,7 +28,7 @@ exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
 exec 2>&1
 
 disposeLogs() {
-  echo cleaning up
+  echo ---
   /usr/bin/sleep 15
   exec 1>&3
   exec 2>&4
@@ -68,7 +68,7 @@ for filepath in "$DEEPSQUARE_INPUT/"*; do
       *) 1>&2 /usr/bin/echo "Unknown archive '$filepath'";;
   esac
 done
-cd -
+cd $STORAGE_PATH
 /usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
@@ -115,6 +115,8 @@ export {{ $env.Key | squote }}={{ $env.Value | squote }}
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 cd $DEEPSQUARE_OUTPUT/..
+/usr/bin/echo "##############################################################"
+/usr/bin/echo
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
 /usr/bin/curl --upload-file "$(find output/ -type f)" {{ .Job.Output.HTTP.URL | squote }}
 else
@@ -122,7 +124,9 @@ else
 /usr/bin/curl --upload-file "output.zip" {{ .Job.Output.HTTP.URL | squote }}
 fi
 /usr/bin/echo
-cd -
+/usr/bin/echo
+/usr/bin/echo "##############################################################"
+cd $STORAGE_PATH
 {{- else if and .Job.Output .Job.Output.S3 }}
 {{- if and .Job.ContinuousOutputSync (derefBool .Job.ContinuousOutputSync) }}
 )
