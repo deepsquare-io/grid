@@ -455,8 +455,15 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
-/usr/bin/tar -cvf "$DEEPSQUARE_OUTPUT.tar" "$DEEPSQUARE_OUTPUT/"
-/usr/bin/curl --upload-file "$DEEPSQUARE_OUTPUT.tar" 'https://test/out'
+cd $DEEPSQUARE_OUTPUT/..
+if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
+/usr/bin/curl --upload-file "$(find output/ -type f | wc -l)" 'https://test/out'
+else
+/usr/bin/zip -r "output.zip" "output/"
+/usr/bin/curl --upload-file "output.zip" 'https://test/out'
+fi
+/usr/bin/echo
+cd -
 )
 `,
 			title: "Positive test with HTTP input output",
