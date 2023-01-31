@@ -114,8 +114,15 @@ export {{ $env.Key | squote }}={{ $env.Value | squote }}
 {{- if and .Job.Output .Job.Output.HTTP }}
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
-/usr/bin/tar -cvf "$DEEPSQUARE_OUTPUT.tar" "$DEEPSQUARE_OUTPUT/"
-/usr/bin/curl --upload-file "$DEEPSQUARE_OUTPUT.tar" {{ .Job.Output.HTTP.URL | squote }}
+cd $DEEPSQUARE_OUTPUT/..
+if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
+/usr/bin/curl --upload-file "$(find output/ -type f | wc -l)" {{ .Job.Output.HTTP.URL | squote }}
+else
+/usr/bin/zip -r "output.zip" "output/"
+/usr/bin/curl --upload-file "output.zip" {{ .Job.Output.HTTP.URL | squote }}
+fi
+/usr/bin/echo
+cd -
 {{- else if and .Job.Output .Job.Output.S3 }}
 {{- if and .Job.ContinuousOutputSync (derefBool .Job.ContinuousOutputSync) }}
 )
