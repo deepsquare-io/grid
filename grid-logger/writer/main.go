@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
@@ -196,14 +197,13 @@ var app = &cli.App{
 				User:    user,
 			}); err != nil {
 				logger.I.Error("grpc write failed", zap.Error(err))
-				if err == io.EOF {
-					logger.I.Warn("error is EOF, attempting to reconnect", zap.Error(err))
-					_ = conn.Close()
-					stream, conn, err = openGRPCConn(ctx, opts)
-					if err != nil {
-						logger.I.Fatal("failed to reconnect on EOF error", zap.Error(err))
-					}
+				_ = conn.Close()
+				time.Sleep(time.Second)
+				stream, conn, err = openGRPCConn(ctx, opts)
+				if err != nil {
+					logger.I.Fatal("failed to reconnect on EOF error", zap.Error(err))
 				}
+				logger.I.Info("successfully reconnected")
 			}
 		}
 	},

@@ -86,9 +86,13 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 	for {
 		select {
 		case <-ctx.Done():
-			logger.I.Info("reader closed", zap.String("user", address))
+			logger.I.Info("reader closed", zap.String("user", address), zap.Error(ctx.Err()))
 			return nil
-		case log := <-logs:
+		case log, ok := <-logs:
+			if !ok {
+				logger.I.Error("logs closed (read and watch the database might have closed)", zap.String("user", address), zap.Error(ctx.Err()))
+				return nil
+			}
 			if err := stream.Send(&loggerv1alpha1.ReadResponse{
 				Data: []byte(log),
 			}); err != nil {
@@ -122,7 +126,11 @@ func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream
 		select {
 		case <-ctx.Done():
 			return nil
-		case list := <-lists:
+		case list, ok := <-lists:
+			if !ok {
+				logger.I.Error("logs closed (read and watch the database might have closed)", zap.String("user", address), zap.Error(ctx.Err()))
+				return nil
+			}
 			if err := stream.Send(&loggerv1alpha1.WatchListResponse{
 				LogNames: list,
 			}); err != nil {

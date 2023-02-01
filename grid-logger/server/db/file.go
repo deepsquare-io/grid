@@ -71,15 +71,19 @@ func (db *File) ReadAndWatch(
 			logger.I.Error("tail failed to close with err", zap.Error(err))
 		}
 	}()
-	for l := range t.Lines {
+	for {
 		select {
+		case l, ok := <-t.Lines:
+			if !ok {
+				return nil
+			}
+			out <- l.Text
 		case <-ctx.Done():
 			return nil
-		case out <- l.Text:
 		}
 	}
-	return nil
 }
+
 func (db *File) ListAndWatch(
 	ctx context.Context,
 	address string,
