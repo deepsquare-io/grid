@@ -82,7 +82,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env "$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --nv \
   'docker://registry/image' \
   /bin/sh -c 'hostname'`,
@@ -107,7 +107,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env "$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --nv \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
@@ -131,7 +131,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env "$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --nv \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
