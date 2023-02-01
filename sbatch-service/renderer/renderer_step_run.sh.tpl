@@ -9,7 +9,7 @@ export APPTAINER_DOCKER_PASSWORD={{ derefStr .Step.Run.Container.Password | squo
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \
-  --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }} \
+  --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }}M \
   --gpus-per-task={{ default .Step.Run.Resources.GpusPerTask (derefInt .Step.Run.Resources.GpusPerTask) .Job.Resources.GpusPerTask }} \
   --ntasks={{ default .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) 1 }} \
 {{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
@@ -32,7 +32,7 @@ MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \
-  --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }} \
+  --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }}M \
   --gpus-per-task={{ default .Step.Run.Resources.GpusPerTask (derefInt .Step.Run.Resources.GpusPerTask) .Job.Resources.GpusPerTask }} \
   --ntasks={{ default .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) 1 }} \
 {{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
@@ -47,7 +47,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \
-  --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }} \
+  --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }}M \
   --gpus-per-task={{ default .Step.Run.Resources.GpusPerTask (derefInt .Step.Run.Resources.GpusPerTask) .Job.Resources.GpusPerTask }} \
   --ntasks={{ default .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) 1 }} \
 {{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
