@@ -51,9 +51,9 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/mkdir -p "$SLURM_JOB_NAME/"
 cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | while IFS= read -r envvar; do
+  while IFS= read -r envvar; do
     printf ',%s' "$envvar"
-  done
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 {{- if and .Job.Input .Job.Input.HTTP }}
 cd $DEEPSQUARE_INPUT/
