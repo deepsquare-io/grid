@@ -121,7 +121,7 @@ cd $DEEPSQUARE_OUTPUT/..
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
 /usr/bin/curl -sS --upload-file "$(find output/ -type f)" {{ .Job.Output.HTTP.URL | squote }}
 else
-/usr/bin/zip -r "output.zip" "output/"
+/usr/bin/zip -q -r "output.zip" "output/"
 /usr/bin/curl -sS --upload-file "output.zip" {{ .Job.Output.HTTP.URL | squote }}
 fi
 /usr/bin/echo
