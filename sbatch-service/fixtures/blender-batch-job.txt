@@ -48,9 +48,9 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/mkdir -p "$SLURM_JOB_NAME/"
 cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | while IFS= read -r envvar; do
+  while IFS= read -r envvar; do
     printf ',%s' "$envvar"
-  done
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 export AWS_ACCESS_KEY_ID='accessKeyId'
 export AWS_SECRET_ACCESS_KEY='secretAccessKey'
