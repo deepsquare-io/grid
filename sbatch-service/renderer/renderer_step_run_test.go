@@ -20,14 +20,19 @@ var cleanStepRunResources = model.StepRunResources{
 func cleanStepRun(command string) *model.StepRun {
 	return &model.StepRun{
 		Resources: &cleanStepRunResources,
-		X11:       utils.Ptr(true),
+		Container: &model.ContainerRun{
+			Image:    "image",
+			Registry: utils.Ptr("registry"),
+			Username: utils.Ptr("username"),
+			Password: utils.Ptr("password"),
+			X11:      utils.Ptr(true),
+		},
 		Env: []*model.EnvVar{
 			{
 				Key:   "test",
 				Value: "value",
 			},
 		},
-		Image:   utils.Ptr("image"),
 		Command: command,
 	}
 }
@@ -42,18 +47,95 @@ func TestRenderStepRun(t *testing.T) {
 	}{
 		{
 			input: *cleanStepRun("hostname"),
-			expected: `MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with image",
+		},
+		{
+			input: func() model.StepRun {
+				r := *cleanStepRun("hostname")
+				r.Container.Apptainer = utils.Ptr(true)
+				return r
+			}(),
+			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+export APPTAINER_DOCKER_USERNAME='username'
+export APPTAINER_DOCKER_PASSWORD='password'
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /usr/bin/apptainer exec \
+  --env "$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --nv \
+  'docker://registry/image' \
+  /bin/sh -c 'hostname'`,
+			title: "Positive test with apptainer image",
+		},
+		{
+			input: func() model.StepRun {
+				r := *cleanStepRun("hostname")
+				r.Container.Apptainer = utils.Ptr(true)
+				r.Container.Image = "/test/my.sqshfs"
+				return r
+			}(),
+			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+export APPTAINER_DOCKER_USERNAME='username'
+export APPTAINER_DOCKER_PASSWORD='password'
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /usr/bin/apptainer exec \
+  --env "$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --nv \
+  "$STORAGE_PATH"'/test/my.sqshfs' \
+  /bin/sh -c 'hostname'`,
+			title: "Positive test with apptainer absolute path image",
+		},
+		{
+			input: func() model.StepRun {
+				r := *cleanStepRun("hostname")
+				r.Container.DeepsquareHosted = utils.Ptr(true)
+				return r
+			}(),
+			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+export APPTAINER_DOCKER_USERNAME='username'
+export APPTAINER_DOCKER_PASSWORD='password'
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1 \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /usr/bin/apptainer exec \
+  --env "$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --nv \
+  '/opt/software/registry/image' \
+  /bin/sh -c 'hostname'`,
+			title: "Positive test with deepsquare-hosted image",
 		},
 		{
 			input: model.StepRun{
@@ -63,7 +145,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/echo "test"`,
 			},
 			expected: `/usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -80,7 +162,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				DisableCPUBinding: utils.Ptr(true),
 			},
 			expected: `/usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -105,7 +187,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, actual)
-				shellcheck(t, actual)
+				require.NoError(t, renderer.Shellcheck(actual))
 			}
 		})
 	}

@@ -45,6 +45,8 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
   /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
@@ -69,17 +71,20 @@ ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
 (
 /usr/bin/echo 'Running: ''compute-frames'
-/usr/bin/srun --job-name='compute-frames' \
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='compute-frames' \
   --export=ALL,"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=0 \
   --ntasks=1 \
-  /bin/sh -c '. "$LMOD_PKG"/init/sh
-ml purge
-ml stdenv "Blender/3.3.1"
-
-set -ex
+  --gpu-bind=none \
+  /usr/bin/apptainer exec \
+  --env "$(loadDeepsquareEnv)" \
+  --nv \
+  '/opt/software/registry-1.docker.io/linuxserver/blender:3.4.1' \
+  /bin/sh -c 'set -e
 
 /usr/bin/cat << END > ./frames_per_task.py
 import bpy
@@ -98,9 +103,9 @@ END
 import bpy
 print(f"end_frame={bpy.context.scene.frame_end}")
 END
-frames_per_task=$(blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./frames_per_task.py | sed -nr '\''s/frames_per_task=(.*)/\1/p'\'')
-start_frame=$(blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./start_frame.py | sed -nr '\''s/start_frame=(.*)/\1/p'\'')
-end_frame=$(blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./end_frame.py | sed -nr '\''s/end_frame=(.*)/\1/p'\'')
+frames_per_task=$(/usr/bin/blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./frames_per_task.py | sed -nr '\''s/frames_per_task=(.*)/\1/p'\'')
+start_frame=$(/usr/bin/blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./start_frame.py | sed -nr '\''s/start_frame=(.*)/\1/p'\'')
+end_frame=$(/usr/bin/blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./end_frame.py | sed -nr '\''s/end_frame=(.*)/\1/p'\'')
 /usr/bin/echo "START_FRAME=$start_frame" >> "$DEEPSQUARE_ENV"
 /usr/bin/echo "END_FRAME=$end_frame" >> "$DEEPSQUARE_ENV"
 /usr/bin/echo "FRAMES_PER_TASK=$frames_per_task" >> "$DEEPSQUARE_ENV"'
@@ -111,7 +116,7 @@ end_frame=$(blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./end_frame.py | sed -nr '
   --mem-per-cpu=4096 \
   --gpus-per-task=0 \
   --ntasks=1 \
-  /bin/sh -c 'set -ex
+  /bin/sh -c 'set -e
 if [ "$FRAMES_PER_TASK" -lt "$NTASKS" ]; then
   /usr/bin/echo "The job has stopped to avoid overconsumption."
   /usr/bin/echo "Please use $FRAMES_PER_TASK instead of $NTASKS tasks."
@@ -121,17 +126,20 @@ fi'
 doFor() {
 export index="$1"
 /usr/bin/echo 'Running: ''render'
-/usr/bin/srun --job-name='render' \
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='render' \
   --export=ALL,"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=1 \
   --ntasks=1 \
-  /bin/bash -c '. "$LMOD_PKG"/init/sh
-ml purge
-ml stdenv "Blender/3.3.1"
-
-set -ex
+  --gpu-bind=none \
+  /usr/bin/apptainer exec \
+  --env "$(loadDeepsquareEnv)" \
+  --nv \
+  '/opt/software/registry-1.docker.io/linuxserver/blender:3.4.1' \
+  /bin/bash -c 'set -e
 
 start_frame_i=$(((index-1)*FRAMES_PER_TASK+START_FRAME))
 end_frame_i=$((index*FRAMES_PER_TASK+START_FRAME-1))
@@ -142,7 +150,7 @@ fi
 
 echo "Rendering $start_frame_i...$end_frame_i"
 
-blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" -o "$DEEPSQUARE_OUTPUT/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX'
+/usr/bin/blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" -o "$DEEPSQUARE_OUTPUT/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX'
 }
 pids=()
 for index in $(seq 1 1 4); do

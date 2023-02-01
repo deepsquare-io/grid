@@ -177,6 +177,46 @@ type StepRunResources struct {
 	GpusPerTask *int `json:"gpusPerTask" yaml:"gpusPerTask" validate:"omitempty,gte=0"`
 }
 
+type ContainerRun struct {
+	// Run the command inside a container with Pyxis.
+	//
+	// Format: image:tag. Registry and authentication is not allowed on this field.
+	//
+	// If the default container runtime is used:
+	//
+	//   - Use an absolute path to load a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT
+	//
+	// If apptainer=true:
+	//
+	//   - Use an absolute path to load a sif file or a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT
+	//
+	// Examples:
+	//
+	//   - library/ubuntu:latest
+	//   - /my.squashfs
+	Image string `json:"image" yaml:"image" validate:"valid_container_image_url"`
+	// Username of a basic authentication.
+	Username *string `json:"username" yaml:"username"`
+	// Password of a basic authentication.
+	Password *string `json:"password" yaml:"password"`
+	// Container registry host.
+	//
+	// Defaults to registry-1.docker.io
+	Registry *string `json:"registry" yaml:"registry" validate:"omitempty,hostname"`
+	// Run with Apptainer as Container runtime instead of Pyxis.
+	//
+	// By running with apptainer, you get access Deepsquare-hosted images.
+	//
+	// Defaults to false.
+	Apptainer *bool `json:"apptainer" yaml:"apptainer"`
+	// Use DeepSquare-hosted images.
+	//
+	// By setting to true, apptainer will be set to true.
+	DeepsquareHosted *bool `json:"deepsquareHosted" yaml:"deepsquareHosted"`
+	// X11 mounts /tmp/.X11-unix in the container.
+	X11 *bool `json:"x11" yaml:"x11"`
+}
+
 // StepRun is one script executed with the shell.
 //
 // Shared storage is accessible through the $STORAGE_PATH environment variable.
@@ -189,29 +229,16 @@ type StepRunResources struct {
 type StepRun struct {
 	// Allocated resources for the command.
 	Resources *StepRunResources `json:"resources" yaml:"resources" validate:"required"`
-	// Run the command inside a container.
+	// Container definition.
 	//
-	// Format [<user>@][<registry>#]<image>[:<tag>].
-	// reg_user="[[:alnum:]_.!~*\'()%\;:\&=+$,-@]+"
-	// reg_registry="[^#]+"
-	// reg_image="[[:lower:][:digit:]/._-]+"
-	// reg_tag="[[:alnum:]._:-]+"
-	// reg_url="^((${reg_user})@)?((${reg_registry})#)?(${reg_image})(:(${reg_tag}))?$"
-	//
-	// It is also possible to load a squashfs file by specifying an absolute path.
-	//
-	// If null or empty, run on the host.
-	Image *string `json:"image" yaml:"image" validate:"omitempty,valid_container_image_url"`
-	// X11 mounts /tmp/.X11-unix in the container.
-	//
-	// If image is not defined, there is no need to define x11.
-	X11 *bool `json:"x11" yaml:"x11"`
+	// If null, run on the host.
+	Container *ContainerRun `json:"container" yaml:"container"`
 	// DisableCPUBinding disables process affinity binding to tasks.
 	//
 	// Can be useful when running MPI jobs.
 	//
 	// If null, defaults to false.
-	DisableCPUBinding *bool `json:"disableCPUBinding" yaml:"disableCPUBinding"`
+	DisableCPUBinding *bool `json:"disableCpuBinding" yaml:"disableCpuBinding"`
 	// Environment variables accessible over the command.
 	Env []*EnvVar `json:"env" yaml:"env" validate:"dive,required"`
 	// Command specifies a shell script.

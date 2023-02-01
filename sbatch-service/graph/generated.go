@@ -107,6 +107,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputContainerRun,
 		ec.unmarshalInputEnvVar,
 		ec.unmarshalInputForRange,
 		ec.unmarshalInputHTTPData,
@@ -399,6 +400,58 @@ input StepRunResources {
   gpusPerTask: Int
 }
 
+input ContainerRun {
+  """
+  Run the command inside a container with Pyxis.
+
+  Format: image:tag. Registry and authentication is not allowed on this field.
+
+  If the default container runtime is used:
+
+    - Use an absolute path to load a squashfs file. You can use DEEPSQUARE_INPUT to load an image from the job input.
+
+  If apptainer=true:
+
+    - Use an absolute path to load a sif file or a squashfs file. You can use DEEPSQUARE_INPUT to load an image from the job input.
+
+  Examples:
+
+    - library/ubuntu:latest
+    - DEEPSQUARE_INPUT/my.squashfs
+  """
+  image: String!
+  """
+  Username of a basic authentication.
+  """
+  username: String
+  """
+  Password of a basic authentication.
+  """
+  password: String
+  """
+  Container registry host.
+
+  Defaults to registry-1.docker.io
+  """
+  registry: String
+  """
+  Run with Apptainer as Container runtime instead of Pyxis.
+
+  By running with apptainer, you get access Deepsquare-hosted images.
+
+  Defaults to false.
+  """
+  apptainer: Boolean
+  """
+  Use DeepSquare-hosted images.
+  """
+  deepsquareHosted: Boolean
+  """
+  X11 mounts /tmp/.X11-unix in the container.
+  """
+  x11: Boolean
+}
+
 """
 StepRun is one script executed with the shell.
 
@@ -416,26 +469,11 @@ input StepRun {
   """
   resources: StepRunResources!
   """
-  Run the command inside a container.
+  Container definition.
 
-  Format [<user>@][<registry>#]<image>[:<tag>].
-  reg_user="[[:alnum:]_.!~*\'()%\;:\&=+$,-@]+"
-  reg_registry="[^#]+"
-  reg_image="[[:lower:][:digit:]/._-]+"
-  reg_tag="[[:alnum:]._:-]+"
-  reg_url="^docker://((${reg_user})@)?((${reg_registry})#)?(${reg_image})(:(${reg_tag}))?$"
-
-  It is also possible to load a squashfs file by specifying an absolute path.
-
-  If null or empty, run on the host.
+  If null, run on the host.
   """
-  image: String
-  """
-  X11 mounts /tmp/.X11-unix in the container.
-
-  If image is not defined, there is no need to define x11.
-  """
-  x11: Boolean
+  container: ContainerRun
   """
   DisableCPUBinding disables process affinity binding to tasks.
 
@@ -443,7 +481,7 @@ input StepRun {
 
   If null, defaults to false.
   """
-  DisableCPUBinding: Boolean
+  disableCpuBinding: Boolean
   """
   Environment variables accessible over the command.
   """
@@ -2621,6 +2659,82 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj interface{}) (model.ContainerRun, error) {
+	var it model.ContainerRun
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"image", "username", "password", "registry", "apptainer", "deepsquareHosted", "x11"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "image":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
+			it.Image, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "username":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			it.Username, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "registry":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("registry"))
+			it.Registry, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "apptainer":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apptainer"))
+			it.Apptainer, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "deepsquareHosted":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deepsquareHosted"))
+			it.DeepsquareHosted, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "x11":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("x11"))
+			it.X11, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEnvVar(ctx context.Context, obj interface{}) (model.EnvVar, error) {
 	var it model.EnvVar
 	asMap := map[string]interface{}{}
@@ -3044,7 +3158,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "image", "x11", "DisableCPUBinding", "env", "command", "shell"}
+	fieldsInOrder := [...]string{"resources", "container", "disableCpuBinding", "env", "command", "shell"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3059,26 +3173,18 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			if err != nil {
 				return it, err
 			}
-		case "image":
+		case "container":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
-			it.Image, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("container"))
+			it.Container, err = ec.unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "x11":
+		case "disableCpuBinding":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("x11"))
-			it.X11, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "DisableCPUBinding":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("DisableCPUBinding"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableCpuBinding"))
 			it.DisableCPUBinding, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
@@ -3995,6 +4101,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx context.Context, v interface{}) (*model.ContainerRun, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputContainerRun(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx context.Context, v interface{}) ([]*model.EnvVar, error) {

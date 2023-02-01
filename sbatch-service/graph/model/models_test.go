@@ -402,14 +402,88 @@ func TestValidateStepRunResources(t *testing.T) {
 	}
 }
 
+var cleanContainerRunWith = model.ContainerRun{
+	Image:    "image:latest",
+	Username: utils.Ptr("username"),
+	Password: utils.Ptr("password"),
+	Registry: utils.Ptr("registry"),
+	X11:      utils.Ptr(true),
+}
+
+func TestValidateContainerRun(t *testing.T) {
+	tests := []struct {
+		input         model.ContainerRun
+		isError       bool
+		errorContains []string
+		title         string
+	}{
+		{
+			input: cleanContainerRunWith,
+			title: "Positive test",
+		},
+		{
+			input: model.ContainerRun{
+				Image: "image:latest",
+			},
+			title: "Positive test: omitempty",
+		},
+		{
+			input: func() model.ContainerRun {
+				r := cleanContainerRunWith
+				r.Image = "a,ze"
+				return r
+			}(),
+			isError:       true,
+			errorContains: []string{"Image", "valid_container_image_url"},
+			title:         "Negative test: bad image",
+		},
+		{
+			input: func() model.ContainerRun {
+				r := cleanContainerRunWith
+				r.Image = "aze:0&az"
+				return r
+			}(),
+			isError:       true,
+			errorContains: []string{"Image", "valid_container_image_url"},
+			title:         "Negative test: bad image (bad tag)",
+		},
+		{
+			input: func() model.ContainerRun {
+				r := cleanContainerRunWith
+				r.Registry = utils.Ptr("aze:0&az")
+				return r
+			}(),
+			isError:       true,
+			errorContains: []string{"Registry", "hostname"},
+			title:         "Negative test: bad hostname",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.title, func(t *testing.T) {
+			// Act
+			err := validate.I.Struct(tt.input)
+
+			// Assert
+			if tt.isError {
+				assert.Error(t, err)
+				for _, contain := range tt.errorContains {
+					assert.ErrorContains(t, err, contain)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func cleanStepRunWith(
 	res *model.StepRunResources,
 	env *model.EnvVar,
 ) *model.StepRun {
 	return &model.StepRun{
-		Image:     utils.Ptr("docker.io#bash:latest"),
+
 		Resources: res,
-		X11:       utils.Ptr(true),
 		Env:       []*model.EnvVar{env},
 		Command:   "hostname",
 		Shell:     utils.Ptr("/bin/bash"),
@@ -432,26 +506,6 @@ func TestValidateStepRun(t *testing.T) {
 				Resources: &cleanStepRunResources,
 			},
 			title: "Positive test: omitempty",
-		},
-		{
-			input: func() model.StepRun {
-				r := cleanStepRunWith(&cleanStepRunResources, &cleanEnvVar)
-				r.Image = utils.Ptr("a,ze")
-				return *r
-			}(),
-			isError:       true,
-			errorContains: []string{"Image", "valid_container_image_url"},
-			title:         "Negative test: bad image",
-		},
-		{
-			input: func() model.StepRun {
-				r := cleanStepRunWith(&cleanStepRunResources, &cleanEnvVar)
-				r.Image = utils.Ptr("aze:0&az")
-				return *r
-			}(),
-			isError:       true,
-			errorContains: []string{"Image", "valid_container_image_url"},
-			title:         "Negative test: bad image (bad tag)",
 		},
 		{
 			input: func() model.StepRun {

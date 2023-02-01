@@ -7,19 +7,15 @@ import (
 )
 
 const (
-	regexUser     = `[[:alnum:]_.!~*\'()%\;:\&=+$,-@]+`
-	regexRegistry = `[^#]+`
-	regexImage    = `[[:lower:][:digit:]/._-]+`
-	regexTag      = `[[:alnum:]._:-]+`
+	regexImage = `[[:lower:][:digit:]/._-]+`
+	regexTag   = `[[:alnum:]._:-]+`
 )
 
 var (
 	// regexContainerURL is a matcher from https://github.com/NVIDIA/enroot/blob/master/src/docker.sh
 	regexContainerURL = regexp.MustCompilePOSIX(
 		fmt.Sprintf(
-			"^((%s)@)?((%s)#)?(%s)(:(%s))?$",
-			regexUser,
-			regexRegistry,
+			"^(%s)(:(%s))?$",
 			regexImage,
 			regexTag,
 		),

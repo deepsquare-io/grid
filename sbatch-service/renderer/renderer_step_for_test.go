@@ -58,28 +58,36 @@ func TestRenderStepFor(t *testing.T) {
 			expected: `doFor() {
 export item="$1"
 /usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo $item'
 /usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo $item'
 }
 pids=()
@@ -98,28 +106,36 @@ done`,
 			expected: `doFor() {
 export index="$1"
 /usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo $index'
 /usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo $index'
 }
 pids=()
@@ -148,7 +164,7 @@ done`,
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, actual)
-				shellcheck(t, actual)
+				require.NoError(t, renderer.Shellcheck(actual))
 			}
 		})
 	}

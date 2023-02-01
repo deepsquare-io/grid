@@ -45,6 +45,8 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
   /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
@@ -72,16 +74,19 @@ cd $STORAGE_PATH
 export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'
 /usr/bin/echo 'Running: ''urs'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+# shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='urs' \
-  --export=ALL,"$(loadDeepsquareEnv)" \
+  --export=ALL,"$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=1 \
   --ntasks=1 \
   --gpu-bind=none \
-  --container-mounts="${MOUNTS}" \
-  --container-image='/data/beegfs/localhost+tdp+latest.sqsh' \
+  /usr/bin/apptainer exec \
+  --env "$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
+  --nv \
+  '/opt/software/registry-1.deepsquare.run/library/tdp:latest' \
   /bin/sh -c '$DEEPSQUARE_INPUT/DeepSquareURSSample.x86_64 \
   -maxplayers 8 \
   -webserverurl '\''wss://tdp.deepsquare.run'\'' \

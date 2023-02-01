@@ -26,6 +26,8 @@ func Format(err validator.FieldError) string {
 		return fmt.Sprintf("'%s' is not a valid container image url (error: '%s')", err.Field(), err.Tag())
 	case "oneof":
 		return fmt.Sprintf("'%s' must be one of '%s' (error: '%s')", err.Field(), err.Value(), err.Tag())
+	case "hostname":
+		return fmt.Sprintf("'%s' is not a valid hostname (error: '%s')", err.Field(), err.Tag())
 	}
 	return err.Error()
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
 	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
-	"github.com/go-playground/validator/v10"
+	validator "github.com/go-playground/validator/v10"
 	redis "github.com/go-redis/redis/v8"
 	shortuuid "github.com/lithammer/shortuuid/v4"
 	"github.com/vektah/gqlparser/v2/gqlerror"

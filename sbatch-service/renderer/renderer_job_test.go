@@ -90,22 +90,28 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
   /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'key'='test'\''test'
 /usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 )
 `,
@@ -189,6 +195,8 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
   /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
@@ -215,16 +223,20 @@ CONTINUOUS_SYNC_PID="$!"
 (
 export 'key'='test'\''test'
 /usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 )
 kill $CONTINUOUS_SYNC_PID || true
@@ -315,6 +327,8 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
   /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
@@ -329,16 +343,20 @@ s5cmd cp --source-region 'us‑east‑2' 's3://test''/in''*' "$DEEPSQUARE_INPUT/
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'key'='test'\''test'
 /usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
@@ -416,6 +434,8 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
   /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
@@ -442,16 +462,20 @@ cd $STORAGE_PATH
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'key'='test'\''test'
 /usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
@@ -499,21 +523,27 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
   /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
 }
 export 'key'='test'\''test'
 /usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 `,
 			title: "Positive test with no logs",
@@ -560,7 +590,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, actual)
-				shellcheck(t, actual)
+				require.NoError(t, renderer.Shellcheck(actual))
 			}
 		})
 	}
