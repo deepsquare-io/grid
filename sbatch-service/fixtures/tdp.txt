@@ -48,7 +48,9 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/mkdir -p "$SLURM_JOB_NAME/"
 cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
+  /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done
 }
 export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'
@@ -56,14 +58,14 @@ export 'XDG_RUNTIME_DIR'='/tmp'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='tdp' \
-  --export=ALL,"$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
+  --export=ALL"$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=1 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/tdp:latest' \
   /bin/sh -c '/unityapp/DeepSquareURSSample.x86_64 \

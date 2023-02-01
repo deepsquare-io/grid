@@ -7,7 +7,7 @@ export APPTAINER_DOCKER_PASSWORD={{ derefStr .Step.Run.Container.Password | squo
 {{- end }}
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name={{ .Step.Name | squote }} \
-  --export=ALL,"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
+  --export=ALL"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \
   --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }} \
   --gpus-per-task={{ default .Step.Run.Resources.GpusPerTask (derefInt .Step.Run.Resources.GpusPerTask) .Job.Resources.GpusPerTask }} \
@@ -17,7 +17,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 {{- end }}
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --nv \
   {{ if and (hasPrefix "/" .Step.Run.Container.Image) (not (and .Step.Run.Container.DeepsquareHosted (derefBool .Step.Run.Container.DeepsquareHosted))) }}"$STORAGE_PATH"{{ end }}{{ formatImageURL .Step.Run.Container.Registry .Step.Run.Container.Image .Step.Run.Container.Apptainer .Step.Run.Container.DeepsquareHosted | squote }} \
   {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Step.Run.Command | squote -}}
@@ -30,7 +30,7 @@ EOFnetrc
 {{- end }}
 MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name={{ .Step.Name | squote }} \
-  --export=ALL,"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
+  --export=ALL"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \
   --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }} \
   --gpus-per-task={{ default .Step.Run.Resources.GpusPerTask (derefInt .Step.Run.Resources.GpusPerTask) .Job.Resources.GpusPerTask }} \
@@ -45,7 +45,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 {{- end -}}
 {{- else -}}
 /usr/bin/srun --job-name={{ .Step.Name | squote }} \
-  --export=ALL,"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
+  --export=ALL"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \
   --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }} \
   --gpus-per-task={{ default .Step.Run.Resources.GpusPerTask (derefInt .Step.Run.Resources.GpusPerTask) .Job.Resources.GpusPerTask }} \

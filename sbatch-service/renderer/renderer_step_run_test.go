@@ -53,7 +53,7 @@ machine "registry" login "username" password "password"
 EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -75,14 +75,14 @@ export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --nv \
   'docker://registry/image' \
   /bin/sh -c 'hostname'`,
@@ -100,14 +100,14 @@ export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --nv \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
@@ -124,14 +124,14 @@ export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --nv \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
@@ -145,7 +145,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/echo "test"`,
 			},
 			expected: `/usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \
@@ -162,7 +162,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				DisableCPUBinding: utils.Ptr(true),
 			},
 			expected: `/usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
   --mem-per-cpu=1 \
   --gpus-per-task=0 \

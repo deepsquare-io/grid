@@ -48,7 +48,9 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/mkdir -p "$SLURM_JOB_NAME/"
 cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
+  /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done
 }
 export AWS_ACCESS_KEY_ID='accessKeyId'
 export AWS_SECRET_ACCESS_KEY='secretAccessKey'
@@ -77,14 +79,14 @@ export 'IS_ANIME'='false'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='compute-frames' \
-  --export=ALL,"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --export=ALL"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
   --cpus-per-task=8 \
   --mem-per-cpu=8000 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
@@ -132,14 +134,14 @@ export index="$1"
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='upscale' \
-  --export=ALL,"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --export=ALL"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
   --cpus-per-task=8 \
   --mem-per-cpu=8000 \
   --gpus-per-task=1 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
@@ -159,14 +161,14 @@ done
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='re-encode-video' \
-  --export=ALL,"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --export=ALL"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
   --cpus-per-task=8 \
   --mem-per-cpu=8000 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/sh -c 'set -ex

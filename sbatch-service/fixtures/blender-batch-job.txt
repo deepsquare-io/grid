@@ -48,7 +48,9 @@ export DEEPSQUARE_ENV="$STORAGE_PATH/env"
 /usr/bin/mkdir -p "$SLURM_JOB_NAME/"
 cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | tr '\n' ','
+  /usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=' | /usr/bin/sed -Ez '$ s/\n+$//' | while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done
 }
 export AWS_ACCESS_KEY_ID='accessKeyId'
 export AWS_SECRET_ACCESS_KEY='secretAccessKey'
@@ -74,14 +76,14 @@ CONTINUOUS_SYNC_PID="$!"
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='compute-frames' \
-  --export=ALL,"$(loadDeepsquareEnv)" \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)" \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)" \
   --nv \
   '/opt/software/registry-1.docker.io/linuxserver/blender:3.4.1' \
   /bin/sh -c 'set -e
@@ -111,7 +113,7 @@ end_frame=$(/usr/bin/blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./end_frame.py | 
 /usr/bin/echo "FRAMES_PER_TASK=$frames_per_task" >> "$DEEPSQUARE_ENV"'
 /usr/bin/echo 'Running: ''assert-calculus'
 /usr/bin/srun --job-name='assert-calculus' \
-  --export=ALL,"$(loadDeepsquareEnv)" \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=0 \
@@ -129,14 +131,14 @@ export index="$1"
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='render' \
-  --export=ALL,"$(loadDeepsquareEnv)" \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096 \
   --gpus-per-task=1 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE,"$(loadDeepsquareEnv)" \
+  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)" \
   --nv \
   '/opt/software/registry-1.docker.io/linuxserver/blender:3.4.1' \
   /bin/bash -c 'set -e
