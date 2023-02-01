@@ -117,6 +117,7 @@ export {{ $env.Key | squote }}={{ $env.Value | squote }}
 cd $DEEPSQUARE_OUTPUT/..
 /usr/bin/echo "##############################################################"
 /usr/bin/echo
+/usr/bin/echo "Click on this link to download your results:"
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
 /usr/bin/curl -sS --upload-file "$(find output/ -type f)" {{ .Job.Output.HTTP.URL | squote }}
 else

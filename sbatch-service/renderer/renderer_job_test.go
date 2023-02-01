@@ -458,6 +458,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 cd $DEEPSQUARE_OUTPUT/..
 /usr/bin/echo "##############################################################"
 /usr/bin/echo
+/usr/bin/echo "Click on this link to download your results:"
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
 /usr/bin/curl -sS --upload-file "$(find output/ -type f)" 'https://test/out'
 else
