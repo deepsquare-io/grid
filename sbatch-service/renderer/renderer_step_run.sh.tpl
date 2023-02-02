@@ -1,6 +1,6 @@
 {{- if .Step.Run.Container -}}
 {{- if or (and .Step.Run.Container.Apptainer (derefBool .Step.Run.Container.Apptainer)) (and .Step.Run.Container.DeepsquareHosted (derefBool .Step.Run.Container.DeepsquareHosted)) -}}
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
 {{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password }}
 export APPTAINER_DOCKER_USERNAME={{ derefStr .Step.Run.Container.Username | squote }}
 export APPTAINER_DOCKER_PASSWORD={{ derefStr .Step.Run.Container.Password | squote }}
@@ -28,7 +28,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 machine {{ derefStr .Step.Run.Container.Registry | quoteEscape }} login {{ derefStr .Step.Run.Container.Username | quoteEscape }} password {{ derefStr .Step.Run.Container.Password | quoteEscape }}
 EOFnetrc
 {{- end }}
-MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"
+MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \

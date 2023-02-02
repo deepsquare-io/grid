@@ -408,6 +408,13 @@ var cleanContainerRunWith = model.ContainerRun{
 	Password: utils.Ptr("password"),
 	Registry: utils.Ptr("registry"),
 	X11:      utils.Ptr(true),
+	Mounts: []*model.Mount{
+		{
+			HostDir:      "/host",
+			ContainerDir: "/container",
+			Options:      "ro",
+		},
+	},
 }
 
 func TestValidateContainerRun(t *testing.T) {
@@ -456,6 +463,48 @@ func TestValidateContainerRun(t *testing.T) {
 			isError:       true,
 			errorContains: []string{"Registry", "hostname"},
 			title:         "Negative test: bad hostname",
+		},
+		{
+			input: func() model.ContainerRun {
+				r := cleanContainerRunWith
+				r.Mounts = append(r.Mounts, &model.Mount{
+					HostDir:      "aze",
+					ContainerDir: "/aze",
+					Options:      "ro",
+				})
+				return r
+			}(),
+			isError:       true,
+			errorContains: []string{"HostDir", "startswith"},
+			title:         "Negative test: mounts HostDir bad path",
+		},
+		{
+			input: func() model.ContainerRun {
+				r := cleanContainerRunWith
+				r.Mounts = append(r.Mounts, &model.Mount{
+					HostDir:      "/aze",
+					ContainerDir: "aze",
+					Options:      "ro",
+				})
+				return r
+			}(),
+			isError:       true,
+			errorContains: []string{"ContainerDir", "startswith"},
+			title:         "Negative test: mounts ContainerDir bad path",
+		},
+		{
+			input: func() model.ContainerRun {
+				r := cleanContainerRunWith
+				r.Mounts = append(r.Mounts, &model.Mount{
+					HostDir:      "/aze",
+					ContainerDir: "/aze",
+					Options:      "aze",
+				})
+				return r
+			}(),
+			isError:       true,
+			errorContains: []string{"Options", "oneof"},
+			title:         "Negative test: mount bad options",
 		},
 	}
 

@@ -78,7 +78,7 @@ export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='compute-frames' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
-  --mem-per-cpu=4096 \
+  --mem-per-cpu=4096M \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
@@ -115,7 +115,7 @@ end_frame=$(/usr/bin/blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./end_frame.py | 
 /usr/bin/srun --job-name='assert-calculus' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
-  --mem-per-cpu=4096 \
+  --mem-per-cpu=4096M \
   --gpus-per-task=0 \
   --ntasks=1 \
   /bin/sh -c 'set -e
@@ -133,7 +133,7 @@ export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='render' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
-  --mem-per-cpu=4096 \
+  --mem-per-cpu=4096M \
   --gpus-per-task=1 \
   --ntasks=1 \
   --gpu-bind=none \

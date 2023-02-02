@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
-	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -113,6 +112,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputHTTPData,
 		ec.unmarshalInputJob,
 		ec.unmarshalInputJobResources,
+		ec.unmarshalInputMount,
 		ec.unmarshalInputS3Data,
 		ec.unmarshalInputStep,
 		ec.unmarshalInputStepFor,
@@ -400,6 +400,15 @@ input StepRunResources {
   gpusPerTask: Int
 }
 
+"""
+Mount decribes a Bind Mount.
+"""
+input Mount {
+  hostDir: String!
+  containerDir: String!
+  options: String!
+}
+
 input ContainerRun {
   """
   Run the command inside a container with Pyxis.
@@ -408,18 +417,22 @@ input ContainerRun {
 
   If the default container runtime is used:
 
-    - Use an absolute path to load a squashfs file. You can use DEEPSQUARE_INPUT to load an image from the job input.
+    - Use an absolute path to load a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT
 
   If apptainer=true:
 
-    - Use an absolute path to load a sif file or a squashfs file. You can use DEEPSQUARE_INPUT to load an image from the job input.
+    - Use an absolute path to load a sif file or a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT
 
   Examples:
 
     - library/ubuntu:latest
-    - DEEPSQUARE_INPUT/my.squashfs
+    - /my.squashfs
   """
   image: String!
+  """
+  Mount decribes a Bind Mount.
+  """
+  mounts: [Mount!]
   """
   Username of a basic authentication.
   """
@@ -444,6 +457,8 @@ input ContainerRun {
   apptainer: Boolean
   """
   Use DeepSquare-hosted images.
+
+  By setting to true, apptainer will be set to true.
   """
   deepsquareHosted: Boolean
   """
@@ -665,7 +680,6 @@ func (ec *executionContext) _Mutation_submit(ctx context.Context, field graphql.
 	})
 	if err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
@@ -720,7 +734,6 @@ func (ec *executionContext) _Query_job(ctx context.Context, field graphql.Collec
 	})
 	if err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
@@ -775,7 +788,6 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 	})
 	if err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
 	}
 	if resTmp == nil {
 		return graphql.Null
@@ -849,7 +861,6 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	})
 	if err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
 	}
 	if resTmp == nil {
 		return graphql.Null
@@ -2666,7 +2677,7 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"image", "username", "password", "registry", "apptainer", "deepsquareHosted", "x11"}
+	fieldsInOrder := [...]string{"image", "mounts", "username", "password", "registry", "apptainer", "deepsquareHosted", "x11"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2678,6 +2689,14 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
 			it.Image, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "mounts":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mounts"))
+			it.Mounts, err = ec.unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2970,6 +2989,50 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gpusPerTask"))
 			it.GpusPerTask, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputMount(ctx context.Context, obj interface{}) (model.Mount, error) {
+	var it model.Mount
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"hostDir", "containerDir", "options"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "hostDir":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hostDir"))
+			it.HostDir, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "containerDir":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("containerDir"))
+			it.ContainerDir, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "options":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("options"))
+			it.Options, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3324,7 +3387,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	})
 
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
 	for i, field := range fields {
 		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
 			Object: field.Name,
@@ -3340,17 +3402,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_submit(ctx, field)
 			})
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
 	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
 	return out
 }
 
@@ -3363,7 +3419,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	})
 
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
 	for i, field := range fields {
 		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
 			Object: field.Name,
@@ -3383,9 +3438,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_job(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			}
 
@@ -3413,9 +3465,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		}
 	}
 	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
 	return out
 }
 
@@ -3779,6 +3828,11 @@ func (ec *executionContext) unmarshalNJob2githubᚗcomᚋdeepsquareᚑioᚋthe�
 
 func (ec *executionContext) unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx context.Context, v interface{}) (*model.JobResources, error) {
 	res, err := ec.unmarshalInputJobResources(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx context.Context, v interface{}) (*model.Mount, error) {
+	res, err := ec.unmarshalInputMount(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -4161,6 +4215,26 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx context.Context, v interface{}) ([]*model.Mount, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.Mount, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx context.Context, v interface{}) (*model.S3Data, error) {

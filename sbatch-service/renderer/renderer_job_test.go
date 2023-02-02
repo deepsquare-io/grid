@@ -104,11 +104,11 @@ export 'key'='test'\''test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
@@ -231,11 +231,11 @@ export 'key'='test'\''test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
@@ -353,11 +353,11 @@ export 'key'='test'\''test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
@@ -474,11 +474,11 @@ export 'key'='test'\''test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
@@ -544,11 +544,11 @@ export 'key'='test'\''test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \

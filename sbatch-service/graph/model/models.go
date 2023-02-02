@@ -177,6 +177,16 @@ type StepRunResources struct {
 	GpusPerTask *int `json:"gpusPerTask" yaml:"gpusPerTask" validate:"omitempty,gte=0"`
 }
 
+// Mount decribes a Bind Mount.
+type Mount struct {
+	HostDir      string `json:"hostDir" yaml:"hostDir" validate:"startswith=/"`
+	ContainerDir string `json:"containerDir" yaml:"containerDir" validate:"startswith=/"`
+	// Options modifies the mount options.
+	//
+	// Accepted: ro, rw
+	Options string `json:"options" yaml:"options" validate:"omitempty,oneof=rw ro"`
+}
+
 type ContainerRun struct {
 	// Run the command inside a container with Pyxis.
 	//
@@ -195,6 +205,8 @@ type ContainerRun struct {
 	//   - library/ubuntu:latest
 	//   - /my.squashfs
 	Image string `json:"image" yaml:"image" validate:"valid_container_image_url"`
+	// Mount decribes a Bind Mount.
+	Mounts []*Mount `json:"mounts" yaml:"mounts" validate:"dive"`
 	// Username of a basic authentication.
 	Username *string `json:"username" yaml:"username"`
 	// Password of a basic authentication.

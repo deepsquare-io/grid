@@ -60,7 +60,7 @@ export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-uni
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='tdp' \
   --export=ALL"$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
   --cpus-per-task=4 \
-  --mem-per-cpu=4096 \
+  --mem-per-cpu=4096M \
   --gpus-per-task=1 \
   --ntasks=1 \
   --gpu-bind=none \
