@@ -448,7 +448,7 @@ loadDeepsquareEnv() {
   done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 cd $DEEPSQUARE_INPUT/
-/usr/bin/curl -fsORSL 'https://test/in'
+/usr/bin/wget -q  'https://test/in'
 for filepath in "$DEEPSQUARE_INPUT/"*; do
   /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in
@@ -488,14 +488,15 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 cd $DEEPSQUARE_OUTPUT/..
+function urldecode() { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
 /usr/bin/echo "##############################################################"
 /usr/bin/echo
 /usr/bin/echo "Click on this link to download your results:"
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
-/usr/bin/curl -sS --upload-file "$(find output/ -type f)" 'https://test/out'
+/usr/bin/echo "$(urldecode "$(/usr/bin/curl -sS --upload-file "$(find output/ -type f)" 'https://test/out' )")"
 else
 /usr/bin/zip -q -r "output.zip" "output/"
-/usr/bin/curl -sS --upload-file "output.zip" 'https://test/out'
+/usr/bin/echo "$(urldecode "$(/usr/bin/curl -sS --upload-file "output.zip" 'https://test/out' )")"
 fi
 /usr/bin/echo
 /usr/bin/echo

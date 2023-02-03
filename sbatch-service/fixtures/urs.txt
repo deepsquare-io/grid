@@ -53,7 +53,7 @@ loadDeepsquareEnv() {
   done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 cd $DEEPSQUARE_INPUT/
-/usr/bin/curl -fsORSL 'https://transfer.sh/pEfPqI/DPSBeta.zip'
+/usr/bin/wget -q  'https://transfer.sh/pEfPqI/DPSBeta.zip'
 for filepath in "$DEEPSQUARE_INPUT/"*; do
   /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in

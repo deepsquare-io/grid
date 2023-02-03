@@ -124,10 +124,10 @@ function urldecode() { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
 /usr/bin/echo
 /usr/bin/echo "Click on this link to download your results:"
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
-echo $(urldecode $(/usr/bin/curl -sS --upload-file "$(find output/ -type f)" {{ .Job.Output.HTTP.URL | squote }} ))
+/usr/bin/echo "$(urldecode "$(/usr/bin/curl -sS --upload-file "$(find output/ -type f)" {{ .Job.Output.HTTP.URL | squote }} )")"
 else
 /usr/bin/zip -q -r "output.zip" "output/"
-echo $(urldecode $(/usr/bin/curl -sS --upload-file "output.zip" {{ .Job.Output.HTTP.URL | squote }} ))
+/usr/bin/echo "$(urldecode "$(/usr/bin/curl -sS --upload-file "output.zip" {{ .Job.Output.HTTP.URL | squote }} )")"
 fi
 /usr/bin/echo
 /usr/bin/echo
