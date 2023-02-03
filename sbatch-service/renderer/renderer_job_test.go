@@ -448,7 +448,7 @@ loadDeepsquareEnv() {
   done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 cd $DEEPSQUARE_INPUT/
-/usr/bin/wget -q  'https://test/in'
+/usr/bin/wget -q 'https://test/in'
 for filepath in "$DEEPSQUARE_INPUT/"*; do
   /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in
