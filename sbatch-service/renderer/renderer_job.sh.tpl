@@ -57,7 +57,7 @@ loadDeepsquareEnv() {
 }
 {{- if and .Job.Input .Job.Input.HTTP }}
 cd $DEEPSQUARE_INPUT/
-/usr/bin/curl -fsORSL {{ .Job.Input.HTTP.URL | squote }}
+/usr/bin/wget -q {{ .Job.Input.HTTP.URL | squote }}
 for filepath in "$DEEPSQUARE_INPUT/"*; do
   /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in
@@ -119,14 +119,15 @@ export {{ $env.Key | squote }}={{ $env.Value | squote }}
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 cd $DEEPSQUARE_OUTPUT/..
+function urldecode() { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
 /usr/bin/echo "##############################################################"
 /usr/bin/echo
 /usr/bin/echo "Click on this link to download your results:"
 if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
-/usr/bin/curl -sS --upload-file "$(find output/ -type f)" {{ .Job.Output.HTTP.URL | squote }}
+echo $(urldecode $(/usr/bin/curl -sS --upload-file "$(find output/ -type f)" {{ .Job.Output.HTTP.URL | squote }} ))
 else
 /usr/bin/zip -q -r "output.zip" "output/"
-/usr/bin/curl -sS --upload-file "output.zip" {{ .Job.Output.HTTP.URL | squote }}
+echo $(urldecode $(/usr/bin/curl -sS --upload-file "output.zip" {{ .Job.Output.HTTP.URL | squote }} ))
 fi
 /usr/bin/echo
 /usr/bin/echo
