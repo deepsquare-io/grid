@@ -78,8 +78,13 @@ job:
           for i in $(seq 1 "$NTASKS"); do
             cd "${STORAGE_PATH}/input_frames/"
             mkdir -p "${STORAGE_PATH}/input_frames/batch-${i}"
-            images=()
-            mv $(find . -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n 's!: image/[^:]*$!!p' | head -${framesPerTask}) "${STORAGE_PATH}/input_frames/batch-${i}/"
+            if "${IS_VIDEO}"; then
+              mv $(find . -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n 's!: image/[^:]*$!!p' | head -${framesPerTask}) "${STORAGE_PATH}/input_frames/batch-${i}/"
+            else
+              find . -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n 's!: image/[^:]*$!!p' | head -${framesPerTask} | while IFS= read -r file; do
+                mv "$file" "${STORAGE_PATH}/input_frames/batch-${i}/"
+              done
+            fi
             cd -
           done
     - name: upscaling-loop
