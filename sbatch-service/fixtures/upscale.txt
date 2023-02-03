@@ -86,7 +86,6 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
@@ -146,7 +145,6 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
@@ -173,7 +171,6 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/sh -c 'set -ex

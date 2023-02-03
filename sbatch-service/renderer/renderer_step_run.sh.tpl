@@ -17,7 +17,6 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 {{- end }}
   --gpu-bind=none \
   /usr/bin/apptainer exec \
-  --env MANAGED_BY=DEEPSQUARE"$(loadDeepsquareEnv)"{{- range $env := .Job.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{- end }}{{ range $env := .Step.Run.Env }},{{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} \
   --nv \
   {{ if and (hasPrefix "/" .Step.Run.Container.Image) (not (and .Step.Run.Container.DeepsquareHosted (derefBool .Step.Run.Container.DeepsquareHosted))) }}"$STORAGE_PATH"{{ end }}{{ formatImageURL .Step.Run.Container.Registry .Step.Run.Container.Image .Step.Run.Container.Apptainer .Step.Run.Container.DeepsquareHosted | squote }} \
   {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Step.Run.Command | squote -}}
