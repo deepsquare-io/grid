@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/golang:1.19.5 as builder
+FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/golang:1.20.0 as builder
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
@@ -15,7 +15,7 @@ FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/alpine as certs
 RUN apk update && apk add ca-certificates
 
 # ---
-FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/busybox:1.36.0
+FROM registry-1.docker.io/library/busybox:1.36.0
 
 ARG TARGETOS TARGETARCH
 ENV TINI_VERSION v0.19.0
