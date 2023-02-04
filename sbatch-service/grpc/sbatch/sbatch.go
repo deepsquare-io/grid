@@ -5,7 +5,7 @@ import (
 
 	sbatchapiv1alpha1 "github.com/deepsquare-io/the-grid/sbatch-service/gen/go/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

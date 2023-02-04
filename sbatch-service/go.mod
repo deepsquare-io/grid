@@ -8,9 +8,9 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/cors v1.2.1
 	github.com/go-playground/validator/v10 v10.11.2
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/joho/godotenv v1.5.0
 	github.com/lithammer/shortuuid/v4 v4.0.0
+	github.com/redis/go-redis/v9 v9.0.2
 	github.com/stretchr/testify v1.8.1
 	github.com/urfave/cli/v2 v2.24.3
 	github.com/vektah/gqlparser/v2 v2.5.1

@@ -14,8 +14,8 @@ import (
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
 	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
 	validator "github.com/go-playground/validator/v10"
-	redis "github.com/go-redis/redis/v8"
 	shortuuid "github.com/lithammer/shortuuid/v4"
+	redis "github.com/redis/go-redis/v9"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.uber.org/zap"
 )
