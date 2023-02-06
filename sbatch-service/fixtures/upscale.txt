@@ -85,8 +85,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /usr/bin/apptainer exec \
-  --silent \
+  /usr/bin/apptainer --silent exec \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
@@ -145,8 +144,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=1 \
   --ntasks=1 \
   --gpu-bind=none \
-  /usr/bin/apptainer exec \
-  --silent \
+  /usr/bin/apptainer --silent exec \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
@@ -172,8 +170,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /usr/bin/apptainer exec \
-  --silent \
+  /usr/bin/apptainer --silent exec \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/sh -c 'set -ex
