@@ -88,8 +88,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /usr/bin/apptainer exec \
-  --silent \
+  /usr/bin/apptainer --silent exec \
   --nv \
   'docker://registry/image' \
   /bin/sh -c 'hostname'`,
@@ -113,8 +112,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /usr/bin/apptainer exec \
-  --silent \
+  /usr/bin/apptainer --silent exec \
   --nv \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
@@ -137,8 +135,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /usr/bin/apptainer exec \
-  --silent \
+  /usr/bin/apptainer --silent exec \
   --nv \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
