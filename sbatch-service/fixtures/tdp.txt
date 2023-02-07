@@ -20,26 +20,53 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
+
+disposeLogs() {
+  echo ---
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
+}
+trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-/usr/bin/touch "$STORAGE_PATH/env"
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='tdp' \
-  --export=ALL,"$(loadDeepsquareEnv)" \
+/usr/bin/echo 'Running: ''tdp'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='tdp' \
+  --export=ALL"$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
   --cpus-per-task=4 \
-  --mem-per-cpu=4096 \
+  --mem-per-cpu=4096M \
   --gpus-per-task=1 \
   --ntasks=1 \
-  --container-mounts="${MOUNTS}" \
-  --container-image='/data/beegfs/localhost+tdp+latest.sqsh' \
+  --gpu-bind=none \
+  /usr/bin/apptainer --silent exec \
+  --nv \
+  '/opt/software/registry-1.deepsquare.run/library/tdp:latest' \
   /bin/sh -c '/unityapp/DeepSquareURSSample.x86_64 \
   -maxplayers 8 \
   -webserverurl '\''wss://tdp.deepsquare.run'\'' \
@@ -53,5 +80,4 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='tdp' \
   -renderscalestepcount 0.1 \
   -displayfpscounter \
   --logFile -'
-/usr/bin/kill $LOGGER_PID
-/usr/bin/wait $LOGGER_PID
+)

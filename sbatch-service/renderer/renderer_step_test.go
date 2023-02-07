@@ -5,37 +5,25 @@ import (
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
-	"github.com/deepsquare-io/the-grid/sbatch-service/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var cleanResources = model.Resources{
-	Tasks:       1,
-	CpusPerTask: 1,
-	MemPerCPU:   1,
-	GpusPerTask: 0,
-}
-
-func cleanStepWithRun(command string) *model.Step {
+func cleanStepWithRun(r *model.StepRun) *model.Step {
 	return &model.Step{
 		Name: "test",
-		Run: &model.StepRun{
-			Resources: &cleanResources,
-			X11:       utils.Ptr(true),
-			Env: []*model.EnvVar{
-				{
-					Key:   "test",
-					Value: "value",
-				},
-			},
-			Image:   utils.Ptr("image"),
-			Command: command,
-		},
+		Run:  r,
 	}
 }
 
-func TestRenderStepRun(t *testing.T) {
+func cleanStepWithFor(f *model.StepFor) *model.Step {
+	return &model.Step{
+		Name: "test",
+		For:  f,
+	}
+}
+
+func TestRenderStep(t *testing.T) {
 	tests := []struct {
 		input         model.Step
 		isError       bool
@@ -44,152 +32,61 @@ func TestRenderStepRun(t *testing.T) {
 		title         string
 	}{
 		{
-			input: *cleanStepWithRun("hostname"),
-			expected: `MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+			input: *cleanStepWithRun(cleanStepRun("hostname")),
+			expected: `/usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c 'hostname'`,
-			title: "Positive test with image",
+			title: "Positive test with run",
 		},
 		{
-			input: model.Step{
-				Name: "test",
-				Run: &model.StepRun{
-					Env:       cleanStepWithRun("").Run.Env,
-					Resources: &cleanResources,
-					Command:   "hostname",
-				},
-			},
-			expected: `
-/usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1 \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  /bin/sh -c 'hostname'`,
-			title: "Positive test without image",
-		},
-		{
-			input: model.Step{
-				Name: "test",
-				Run: &model.StepRun{
-					Env:       cleanStepWithRun("").Run.Env,
-					Resources: &cleanResources,
-					Command: `hostname
-/usr/bin/echo "test"`,
-				},
-			},
-			expected: `
-/usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1 \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  /bin/sh -c 'hostname
-/usr/bin/echo "test"'`,
-			title: "Positive test with multiline command",
-		},
-		{
-			input: model.Step{
-				Name: "test",
-				Run: &model.StepRun{
-					Resources: &cleanResources,
-					Image:     utils.Ptr("something???wrong"),
-					Command:   "hostname",
-				},
-			},
-			isError:       true,
-			errorContains: []string{"Image", "valid_container_image_url"},
-			title:         "Negative test with invalid image",
-		},
-		{
-			input: model.Step{
-				Name: "test",
-				Run: &model.StepRun{
-					Resources: &model.Resources{
-						Tasks:       0,
-						CpusPerTask: 1,
-						MemPerCPU:   1,
-						GpusPerTask: 0,
-					},
-					Command: "hostname",
-				},
-			},
-			isError:       true,
-			errorContains: []string{"Tasks", "gte"},
-			title:         "Negative test with invalid resources",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.title, func(t *testing.T) {
-			// Act
-			actual, err := renderer.RenderStep(&tt.input)
-
-			// Assert
-			if tt.isError {
-				assert.Error(t, err)
-				for _, contain := range tt.errorContains {
-					assert.ErrorContains(t, err, contain)
-				}
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tt.expected, actual)
-				shellcheck(t, actual)
-			}
-		})
-	}
-}
-
-func TestRenderStepFor(t *testing.T) {
-	tests := []struct {
-		input         model.Step
-		isError       bool
-		errorContains []string
-		expected      string
-		title         string
-	}{
-		{
-			input: model.Step{
-				Name: "test",
-				For: &model.StepFor{
-					Parallel: true,
-					Items:    []string{"a", "b", "c"},
-					Steps: []*model.Step{
-						cleanStepWithRun("/usr/bin/echo $item"),
-						cleanStepWithRun("/usr/bin/echo $item"),
-					},
-				},
-			},
-			expected: `doFor() {
+			input: *cleanStepWithFor(&cleanStepForItems),
+			expected: `/usr/bin/echo 'Running: ''test'
+doFor() {
 export item="$1"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+/usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo $item'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+/usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo $item'
 }
 pids=()
@@ -199,65 +96,23 @@ for item in "${items[@]}"; do
   pids+=("$!")
 done
 for pid in "${pids[@]}"; do
-  /usr/bin/wait "$pid"
+  wait "$pid"
 done`,
-			title: "Positive test with items",
+			title: "Positive test with for",
 		},
 		{
 			input: model.Step{
 				Name: "test",
-				For: &model.StepFor{
-					Parallel: true,
-					Range: &model.ForRange{
-						Begin:     0,
-						End:       -10,
-						Increment: -2,
-					},
-					Steps: []*model.Step{
-						cleanStepWithRun("/usr/bin/echo $index"),
-						cleanStepWithRun("/usr/bin/echo $index"),
-					},
-				},
 			},
-			expected: `doFor() {
-export index="$1"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1 \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  --container-mounts="${MOUNTS}" \
-  --container-image='image' \
-  /bin/sh -c '/usr/bin/echo $index'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1 \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  --container-mounts="${MOUNTS}" \
-  --container-image='image' \
-  /bin/sh -c '/usr/bin/echo $index'
-}
-pids=()
-for index in $(seq 0 -2 -10); do
-  doFor "$index" &
-  pids+=("$!")
-done
-for pid in "${pids[@]}"; do
-  /usr/bin/wait "$pid"
-done`,
-			title: "Positive test with range",
+			expected: "/usr/bin/echo 'Running: ''test'",
+			title:    "Positive test with none",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
 			// Act
-			actual, err := renderer.RenderStep(&tt.input)
+			actual, err := renderer.RenderStep(&cleanJob, &tt.input)
 
 			// Assert
 			if tt.isError {
@@ -268,7 +123,7 @@ done`,
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, actual)
-				shellcheck(t, actual)
+				require.NoError(t, renderer.Shellcheck(actual))
 			}
 		})
 	}

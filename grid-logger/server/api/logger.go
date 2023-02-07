@@ -45,14 +45,16 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 			return stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
 		}
 		if err != nil {
+			logger.I.Error("writer closed with error", zap.String("IP", p.Addr.String()), zap.Error(err))
 			return err
 		}
 
-		n, err := s.db.Append(req.GetLogName(), strings.ToLower(req.GetUser()), req.GetData())
+		_, err = s.db.Append(req.GetLogName(), strings.ToLower(req.GetUser()), req.GetData())
 		if err != nil {
+			logger.I.Error("writer failed to write", zap.Any("req", req), zap.String("IP", p.Addr.String()), zap.Error(err))
+			_ = stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
 			return err
 		}
-		logger.I.Debug("write", zap.Int("size", n), zap.Any("req", req))
 	}
 }
 
@@ -75,6 +77,7 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 	logger.I.Info("reader authenticated", zap.String("user", address), zap.Any("req", req))
 
 	logs := make(chan string)
+	defer close(logs)
 	go func() {
 		if err := s.db.ReadAndWatch(ctx, address, req.GetLogName(), logs); err != nil {
 			logger.I.Error("read and watch failed", zap.Error(err))
@@ -83,13 +86,15 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 	for {
 		select {
 		case <-ctx.Done():
-			logger.I.Info("reader closed", zap.String("user", address))
+			logger.I.Info("reader closed", zap.String("user", address), zap.Error(ctx.Err()))
 			return nil
-		case log := <-logs:
-			bytes := []byte(log)
-			logger.I.Debug("reader send", zap.Int("size", len(bytes)))
+		case log, ok := <-logs:
+			if !ok {
+				logger.I.Error("logs closed (read and watch the database might have closed)", zap.String("user", address), zap.Error(ctx.Err()))
+				return nil
+			}
 			if err := stream.Send(&loggerv1alpha1.ReadResponse{
-				Data: bytes,
+				Data: []byte(log),
 			}); err != nil {
 				return err
 			}
@@ -110,6 +115,7 @@ func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream
 	}
 
 	lists := make(chan []string)
+	defer close(lists)
 	go func() {
 		if err := s.db.ListAndWatch(ctx, address, lists); err != nil {
 			logger.I.Error("list and watch failed", zap.Error(err))
@@ -120,7 +126,11 @@ func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream
 		select {
 		case <-ctx.Done():
 			return nil
-		case list := <-lists:
+		case list, ok := <-lists:
+			if !ok {
+				logger.I.Error("logs closed (read and watch the database might have closed)", zap.String("user", address), zap.Error(ctx.Err()))
+				return nil
+			}
 			if err := stream.Send(&loggerv1alpha1.WatchListResponse{
 				LogNames: list,
 			}); err != nil {

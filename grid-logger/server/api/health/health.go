@@ -29,7 +29,6 @@ func (h *health) Watch(
 ) error {
 	ctx := stream.Context()
 	ticker := time.NewTicker(10 * time.Second)
-	done := make(chan bool)
 
 	go func(ctx context.Context) {
 		for {
@@ -40,7 +39,7 @@ func (h *health) Watch(
 			}
 
 			select {
-			case <-done:
+			case <-ctx.Done():
 				return
 			case <-ticker.C:
 			}

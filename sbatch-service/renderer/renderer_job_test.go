@@ -13,7 +13,7 @@ import (
 var cleanJob = model.Job{
 	EnableLogging: utils.Ptr(true),
 	InputMode:     utils.Ptr(493),
-	Resources: &model.Resources{
+	Resources: &model.JobResources{
 		Tasks:       1,
 		CpusPerTask: 4,
 		MemPerCPU:   4096,
@@ -26,7 +26,10 @@ var cleanJob = model.Job{
 		},
 	},
 	Steps: []*model.Step{
-		cleanStepWithRun("/usr/bin/echo 'hello world'"),
+		{
+			Name: "test",
+			Run:  cleanStepRun("/usr/bin/echo 'hello world'"),
+		},
 	},
 }
 
@@ -62,29 +65,57 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
+
+disposeLogs() {
+  echo ---
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
+}
+trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-/usr/bin/touch "$STORAGE_PATH/env"
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
-/usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
+/usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'key'='test'\''test'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+/usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
-/usr/bin/kill $LOGGER_PID
-/usr/bin/wait $LOGGER_PID
+)
 `,
 			title: "Positive test 'hello world'",
 		},
@@ -102,6 +133,7 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
 						AccessKeyID:     "AccessKeyID",
 						SecretAccessKey: "SecretAccessKey",
 						EndpointURL:     "https://s3.us‑east‑2.amazonaws.com",
+						DeleteSync:      utils.Ptr(true),
 					},
 				},
 				Steps: cleanJob.Steps,
@@ -113,6 +145,7 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
 						AccessKeyID:     "AccessKeyID",
 						SecretAccessKey: "SecretAccessKey",
 						EndpointURL:     "https://s3.us‑east‑2.amazonaws.com",
+						DeleteSync:      utils.Ptr(true),
 					},
 				},
 				ContinuousOutputSync: utils.Ptr(true),
@@ -139,56 +172,87 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
+
+disposeLogs() {
+  echo ---
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
+}
+trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-/usr/bin/touch "$STORAGE_PATH/env"
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
-s5cmd sync --source-region 'us‑east‑2' 's3://test''/in' "$STORAGE_PATH/input/"
+s5cmd cp --source-region 'us‑east‑2' 's3://test''/in''*' "$DEEPSQUARE_INPUT/"
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
-/usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
+/usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
+/usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 ContinuousOutputSync() {
   export AWS_ACCESS_KEY_ID='AccessKeyID'
   export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
   export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
   while true; do
-    s5cmd sync --destination-region 'us‑east‑2' "$STORAGE_PATH/outputs/" 's3://test''/out'
+    s5cmd sync --delete --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
     /usr/bin/sleep 5
   done
 }
 ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
+(
 export 'key'='test'\''test'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+/usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
-/usr/bin/kill $CONTINUOUS_SYNC_PID
-/usr/bin/wait $CONTINUOUS_SYNC_PID
+)
+kill $CONTINUOUS_SYNC_PID || true
+wait $CONTINUOUS_SYNC_PID || true
 /usr/bin/echo "Output contains:"
-/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
-s5cmd sync --destination-region 'us‑east‑2' "$STORAGE_PATH/outputs/" 's3://test''/out'
-/usr/bin/kill $LOGGER_PID
-/usr/bin/wait $LOGGER_PID
+s5cmd sync --delete --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
+)
 `,
 			title: "Positive test with S3 input output",
 		},
@@ -242,43 +306,72 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
+
+disposeLogs() {
+  echo ---
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
+}
+trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-/usr/bin/touch "$STORAGE_PATH/env"
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
-s5cmd sync --source-region 'us‑east‑2' 's3://test''/in' "$STORAGE_PATH/input/"
+s5cmd cp --source-region 'us‑east‑2' 's3://test''/in''*' "$DEEPSQUARE_INPUT/"
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
-/usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
+/usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
+/usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'key'='test'\''test'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+/usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 /usr/bin/echo "Output contains:"
-/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
+/usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 export AWS_ACCESS_KEY_ID='AccessKeyID'
 export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
 export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
-s5cmd sync --destination-region 'us‑east‑2' "$STORAGE_PATH/outputs/" 's3://test''/out'
-/usr/bin/kill $LOGGER_PID
-/usr/bin/wait $LOGGER_PID
+s5cmd sync --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
+)
 `,
 			title: "Positive test with S3 input output and continuous sync",
 		},
@@ -322,51 +415,94 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
+
+disposeLogs() {
+  echo ---
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
+}
+trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-/usr/bin/touch "$STORAGE_PATH/env"
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
-cd $STORAGE_PATH/input/
-/usr/bin/curl -fsORSL 'https://test/in'
-for filepath in "$STORAGE_PATH/input/"*; do
+cd $DEEPSQUARE_INPUT/
+/usr/bin/wget -q 'https://test/in'
+for filepath in "$DEEPSQUARE_INPUT/"*; do
   /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in
-      *bzip2*) bzip2 -fdk "$filepath";;
-      *gzip*) gunzip -df "$filepath";;
+      *bzip2*) /usr/bin/bzip2 -fdk "$filepath";;
+      *gzip*) /usr/bin/gunzip -df "$filepath";;
       *zip*) ;&
-      *Zip*) unzip -o "$filepath";;
+      *Zip*) /usr/bin/unzip -o "$filepath";;
+      *RAR*) /usr/bin/unrar x -o+ "$filepath";;
       *xz*) ;&
-      *XZ*) unxz -f "$filepath";;
-      *'7-zip'*) 7z x "$filepath" -aoa;;
+      *XZ*) /usr/bin/unxz -f "$filepath";;
+      *'7-zip'*) /usr/bin/7z x "$filepath" -aoa;;
       *) 1>&2 /usr/bin/echo "Unknown archive '$filepath'";;
   esac
 done
-cd -
+cd $STORAGE_PATH
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
-/usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
+/usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
+/usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'key'='test'\''test'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+/usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 /usr/bin/echo "Output contains:"
-/usr/bin/find "$STORAGE_PATH/output/" -exec realpath --relative-to $STORAGE_PATH {} \;
-/usr/bin/tar -cvf "$STORAGE_PATH/output.tar" "$STORAGE_PATH/output/"
-/usr/bin/curl --upload-file "$STORAGE_PATH/output.tar" 'https://test/out'
-/usr/bin/kill $LOGGER_PID
-/usr/bin/wait $LOGGER_PID
+/usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
+cd $DEEPSQUARE_OUTPUT/..
+function urldecode() { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
+/usr/bin/echo "##############################################################"
+/usr/bin/echo
+/usr/bin/echo "Click on this link to download your results:"
+if [ "$(find output/ -type f | wc -l)" -eq 1 ]; then
+/usr/bin/echo "$(urldecode "$(/usr/bin/curl -sS --upload-file "$(find output/ -type f)" 'https://test/out' )")"
+else
+/usr/bin/zip -q -r "output.zip" "output/"
+/usr/bin/echo "$(urldecode "$(/usr/bin/curl -sS --upload-file "output.zip" 'https://test/out' )")"
+fi
+/usr/bin/echo
+/usr/bin/echo
+/usr/bin/echo "##############################################################"
+cd $STORAGE_PATH
+)
 `,
 			title: "Positive test with HTTP input output",
 		},
@@ -389,23 +525,36 @@ export GPUS='1'
 export CPUS='4'
 export MEM='16384'
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-/usr/bin/touch "$STORAGE_PATH/env"
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 export 'key'='test'\''test'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
-  --export=ALL,"$(loadDeepsquareEnv)",'test'='value' \
+/usr/bin/echo 'Running: ''test'
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
   --cpus-per-task=1 \
-  --mem-per-cpu=1 \
+  --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --gpu-bind=none \
   --container-mounts="${MOUNTS}" \
-  --container-image='image' \
+  --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '\''hello world'\'''
 `,
 			title: "Positive test with no logs",
@@ -452,7 +601,7 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='test' \
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, actual)
-				shellcheck(t, actual)
+				require.NoError(t, renderer.Shellcheck(actual))
 			}
 		})
 	}

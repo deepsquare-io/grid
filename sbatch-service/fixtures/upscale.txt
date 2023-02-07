@@ -1,0 +1,192 @@
+#!/bin/bash -l
+
+set -e
+
+export NTASKS='4'
+export CPUS_PER_TASK='8'
+export MEM_PER_CPU='8000'
+export GPUS_PER_TASK='1'
+export GPUS='4'
+export CPUS='32'
+export MEM='256000'
+/usr/local/bin/grid-logger-writer \
+  --server.tls \
+  --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
+  --server.tls.server-host-override=grid-logger.deepsquare.run \
+  --server.endpoint=grid-logger.deepsquare.run:443 \
+  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --log-name="$SLURM_JOB_NAME" \
+  --user="$USER" \
+  >/dev/stdout 2>/dev/stderr &
+LOGGER_PID="$!"
+/usr/bin/sleep 1
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
+
+disposeLogs() {
+  echo ---
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
+}
+trap disposeLogs EXIT
+(
+export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/touch "$DEEPSQUARE_ENV"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
+loadDeepsquareEnv() {
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
+}
+export AWS_ACCESS_KEY_ID='accessKeyId'
+export AWS_SECRET_ACCESS_KEY='secretAccessKey'
+export S3_ENDPOINT_URL='https://example'
+
+s5cmd cp --source-region 'region' 's3://test''/test''*' "$DEEPSQUARE_INPUT/"
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
+/usr/bin/echo "Input contains:"
+/usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
+ContinuousOutputSync() {
+  export AWS_ACCESS_KEY_ID='accessKeyId'
+  export AWS_SECRET_ACCESS_KEY='secretAccessKey'
+  export S3_ENDPOINT_URL='https://example'
+  while true; do
+    s5cmd sync --destination-region 'region' "$DEEPSQUARE_OUTPUT/" 's3://test''/test'
+    /usr/bin/sleep 5
+  done
+}
+ContinuousOutputSync &
+CONTINUOUS_SYNC_PID="$!"
+(
+export 'IS_VIDEO'='false'
+export 'IS_FACE'='false'
+export 'IS_ANIME'='false'
+/usr/bin/echo 'Running: ''compute-frames'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='compute-frames' \
+  --export=ALL"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --cpus-per-task=8 \
+  --mem-per-cpu=8000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /usr/bin/apptainer --silent exec \
+  --nv \
+  '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
+  /bin/bash -c 'set -ex
+
+rm -rf "${STORAGE_PATH}/input_frames/"
+rm -rf "${STORAGE_PATH}/input_video/"
+mkdir -p "${STORAGE_PATH}/input_frames/"
+mkdir -p "${STORAGE_PATH}/output_frames/"
+videosFound="$(find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: video/[^:]*$!!p'\'' | wc -l)"
+imagesFound="$(find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: image/[^:]*$!!p'\'' | wc -l)"
+
+if "${IS_VIDEO}"; then
+  if [[ ${videosFound} -ge "1" ]]; then
+      mkdir -p "${STORAGE_PATH}/input_video/"
+      #Only consider the first video on the list
+      videoSourceFile="$(find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: video/[^:]*$!!p'\'' | head -1)"
+      source_fps="$(ffmpeg -i "${videoSourceFile}" 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p")"
+      #Only take the first 5 minutes
+      ffmpeg -ss 00:00 -accurate_seek -t 05:00 -i "${videoSourceFile}" -c:v libx264 -crf "${source_fps}" -c:a aac "${STORAGE_PATH}/input_video/input_video_trimmed.mp4"
+      #Extract all the frames
+      ffmpeg -i "${STORAGE_PATH}/input_video/input_video_trimmed.mp4" -qscale:v 1 -qmin 1 -qmax 1 -vsync 0 "${STORAGE_PATH}/input_frames/frame%08d.png"
+  else
+      echo "No input video found, exiting" && exit 1
+  fi
+else
+  if [[ ${imagesFound} -ge "1" ]]; then
+      find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: image/[^:]*$!!p'\'' | xargs -I{} cp "{}" "${STORAGE_PATH}/input_frames/" || (echo "Zero picture found" && exit 1)
+  else
+      echo "No input picture found, exiting" && exit 1
+  fi
+fi
+totalFrames=$(find "${STORAGE_PATH}/input_frames/" -type f | wc -l)
+framesPerTask=$(( (totalFrames + NTASKS -1) /NTASKS))
+for i in $(seq 1 "$NTASKS"); do
+  cd "${STORAGE_PATH}/input_frames/"
+  mkdir -p "${STORAGE_PATH}/input_frames/batch-${i}"
+  if "${IS_VIDEO}"; then
+    mv $(find . -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: image/[^:]*$!!p'\'' | head -${framesPerTask}) "${STORAGE_PATH}/input_frames/batch-${i}/"
+  else
+    find . -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: image/[^:]*$!!p'\'' | head -${framesPerTask} | while IFS= read -r file; do
+      mv "$file" "${STORAGE_PATH}/input_frames/batch-${i}/"
+    done
+  fi
+  cd -
+done'
+/usr/bin/echo 'Running: ''upscaling-loop'
+doFor() {
+export index="$1"
+/usr/bin/echo 'Running: ''upscale'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='upscale' \
+  --export=ALL"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --cpus-per-task=8 \
+  --mem-per-cpu=8000M \
+  --gpus-per-task=1 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /usr/bin/apptainer --silent exec \
+  --nv \
+  '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
+  /bin/bash -c 'set -ex
+
+echo "Upscaling batch ${index}"
+/bin/bash /opt/Real-ESRGAN/upscale.sh "${STORAGE_PATH}/input_frames/batch-${index}"'
+}
+pids=()
+for index in $(seq 1 1 4); do
+  doFor "$index" &
+  pids+=("$!")
+done
+for pid in "${pids[@]}"; do
+  wait "$pid"
+done
+/usr/bin/echo 'Running: ''re-encode-video'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='re-encode-video' \
+  --export=ALL"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --cpus-per-task=8 \
+  --mem-per-cpu=8000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /usr/bin/apptainer --silent exec \
+  --nv \
+  '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
+  /bin/sh -c 'set -ex
+
+if "${IS_VIDEO}"; then
+  source_fps="$(ffmpeg -i "${STORAGE_PATH}/input_video/input_video_trimmed.mp4" 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p")"
+  ffmpeg -r "${source_fps}" -i "${STORAGE_PATH}/output_frames/frame%08d_out.png" -i "${STORAGE_PATH}/input_video/input_video_trimmed.mp4" -map 0:v:0 -map 1:a:0 -c:a copy -c:v libx264 -r "${source_fps}" -pix_fmt yuv420p "${DEEPSQUARE_OUTPUT}/result.mp4"
+fi'
+)
+kill $CONTINUOUS_SYNC_PID || true
+wait $CONTINUOUS_SYNC_PID || true
+/usr/bin/echo "Output contains:"
+/usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
+export AWS_ACCESS_KEY_ID='accessKeyId'
+export AWS_SECRET_ACCESS_KEY='secretAccessKey'
+export S3_ENDPOINT_URL='https://example'
+
+s5cmd sync --destination-region 'region' "$DEEPSQUARE_OUTPUT/" 's3://test''/test'
+)

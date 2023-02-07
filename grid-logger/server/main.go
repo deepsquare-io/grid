@@ -10,6 +10,7 @@ import (
 	"github.com/deepsquare-io/the-grid/grid-logger/server/api"
 	"github.com/deepsquare-io/the-grid/grid-logger/server/api/health"
 	"github.com/deepsquare-io/the-grid/grid-logger/server/db"
+	"github.com/deepsquare-io/the-grid/grid-logger/server/debug"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -70,6 +71,7 @@ var flags = []cli.Flag{
 		Action: func(ctx *cli.Context, s bool) error {
 			if s {
 				logger.EnableDebug()
+				go debug.WatchGoRoutines(ctx.Context)
 			}
 			return nil
 		},

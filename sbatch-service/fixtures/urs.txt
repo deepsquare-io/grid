@@ -20,46 +20,75 @@ export MEM='16384'
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
-exec &>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 2>&1
+
+disposeLogs() {
+  echo ---
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
+}
+trap disposeLogs EXIT
+(
 export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$STORAGE_PATH/output/" "$STORAGE_PATH/input/"
-/usr/bin/touch "$STORAGE_PATH/env"
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
+/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
+cd "$SLURM_JOB_NAME/"
 loadDeepsquareEnv() {
-  /usr/bin/cat "$STORAGE_PATH/env" | grep -v '^#' | grep '=' | sed -Ez '$ s/\n+$//' | tr '\n' ','
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
-cd $STORAGE_PATH/input/
-/usr/bin/curl -fsORSL 'https://transfer.sh/pEfPqI/DPSBeta.zip'
-for filepath in "$STORAGE_PATH/input/"*; do
+cd $DEEPSQUARE_INPUT/
+/usr/bin/wget -q 'https://transfer.sh/pEfPqI/DPSBeta.zip'
+for filepath in "$DEEPSQUARE_INPUT/"*; do
   /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in
-      *bzip2*) bzip2 -fdk "$filepath";;
-      *gzip*) gunzip -df "$filepath";;
+      *bzip2*) /usr/bin/bzip2 -fdk "$filepath";;
+      *gzip*) /usr/bin/gunzip -df "$filepath";;
       *zip*) ;&
-      *Zip*) unzip -o "$filepath";;
+      *Zip*) /usr/bin/unzip -o "$filepath";;
+      *RAR*) /usr/bin/unrar x -o+ "$filepath";;
       *xz*) ;&
-      *XZ*) unxz -f "$filepath";;
-      *'7-zip'*) 7z x "$filepath" -aoa;;
+      *XZ*) /usr/bin/unxz -f "$filepath";;
+      *'7-zip'*) /usr/bin/7z x "$filepath" -aoa;;
       *) 1>&2 /usr/bin/echo "Unknown archive '$filepath'";;
   esac
 done
-cd -
+cd $STORAGE_PATH
+/usr/bin/chmod -R 700 "$DEEPSQUARE_INPUT/" || echo "chmod failed, but we are ignoring it"
 /usr/bin/echo "Input contains:"
-/usr/bin/find "$STORAGE_PATH/input/" -exec realpath --relative-to $STORAGE_PATH {} \;
-/usr/bin/chmod -R 755 "$STORAGE_PATH/input/"
+/usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
+/usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='urs' \
-  --export=ALL,"$(loadDeepsquareEnv)" \
+/usr/bin/echo 'Running: ''urs'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+# shellcheck disable=SC2097,SC2098
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='urs' \
+  --export=ALL"$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
   --cpus-per-task=4 \
-  --mem-per-cpu=4096 \
+  --mem-per-cpu=4096M \
   --gpus-per-task=1 \
   --ntasks=1 \
-  --container-mounts="${MOUNTS}" \
-  --container-image='/data/beegfs/localhost+tdp+latest.sqsh' \
-  /bin/sh -c '$STORAGE_PATH/input/DeepSquareURSSample.x86_64 \
+  --gpu-bind=none \
+  /usr/bin/apptainer --silent exec \
+  --nv \
+  '/opt/software/registry-1.deepsquare.run/library/tdp:latest' \
+  /bin/sh -c '$DEEPSQUARE_INPUT/DeepSquareURSSample.x86_64 \
   -maxplayers 8 \
   -webserverurl '\''wss://tdp.deepsquare.run'\'' \
   -renderfps 60 \
@@ -72,5 +101,4 @@ STORAGE_PATH=/deepsquare /usr/bin/srun --job-name='urs' \
   -renderscalestepcount 0.1 \
   -displayfpscounter \
   --logFile -'
-/usr/bin/kill $LOGGER_PID
-/usr/bin/wait $LOGGER_PID
+)

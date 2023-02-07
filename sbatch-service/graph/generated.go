@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
-	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -107,15 +106,18 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputContainerRun,
 		ec.unmarshalInputEnvVar,
 		ec.unmarshalInputForRange,
 		ec.unmarshalInputHTTPData,
 		ec.unmarshalInputJob,
-		ec.unmarshalInputResources,
+		ec.unmarshalInputJobResources,
+		ec.unmarshalInputMount,
 		ec.unmarshalInputS3Data,
 		ec.unmarshalInputStep,
 		ec.unmarshalInputStepFor,
 		ec.unmarshalInputStepRun,
+		ec.unmarshalInputStepRunResources,
 		ec.unmarshalInputTransportData,
 	)
 	first := true
@@ -224,6 +226,16 @@ input S3Data {
   A S3 Endpoint URL used for authentication. Example: https://s3.us‑east‑2.amazonaws.com
   """
   endpointUrl: String!
+  """
+  DeleteSync removes destination files that doesn't correspond to the source.
+
+  This applies to any type of source to any type of destination (s3 or filesystem).
+
+  See: s5cmd sync --delete.
+
+  If null, defaults to false.
+  """
+  deleteSync: Boolean
 }
 
 input TransportData {
@@ -235,6 +247,36 @@ input TransportData {
   Use s3 to sync a file or directory.
   """
   s3: S3Data
+}
+
+"""
+JobResources are the allocated resources for a job in a cluster.
+"""
+input JobResources {
+  """
+  Number of tasks which are run in parallel.
+
+  Can be greater or equal to 1.
+  """
+  tasks: Int!
+  """
+  Allocated CPUs per task.
+
+  Can be greater or equal to 1.
+  """
+  cpusPerTask: Int!
+  """
+  Allocated memory (MB) per task.
+
+  Can be greater or equal to 1.
+  """
+  memPerCpu: Int!
+  """
+  Allocated GPUs per task.
+
+  Can be greater or equal to 0.
+  """
+  gpusPerTask: Int!
 }
 
 """
@@ -252,11 +294,8 @@ input Job {
   - $GPUS: total number of GPUS
   - $CPUS: total number of CPUS
   - $MEM: total number of memory in MB
-
-  These variables have no influence on the actual values sent to the DeepSquare metascheduler.
-  They are only used to set useful environment variables.
   """
-  resources: Resources!
+  resources: JobResources!
   """
   Environment variables accessible for the entire job.
   """
@@ -277,9 +316,9 @@ input Job {
   The number shouldn't be in octal but in decimal. A mode over 512 is not accepted.
 
   Common modes:
-  - 511 (user:rwx group:rwx world:rwx)
-  - 493 (user:rwx group:r-x world:r-x)
-  - 448 (user:rwx group:--- world:---)
+    - 511 (user:rwx group:rwx world:rwx)
+    - 493 (user:rwx group:r-x world:r-x)
+    - 448 (user:rwx group:--- world:---)
 
   If null, the mode won't change and will default to the source.
   """
@@ -324,33 +363,108 @@ input Step {
 }
 
 """
-Resources are the allocated resources for a command in a job, or a job in a cluster.
+StepRunResources are the allocated resources for a command in a job.
 """
-input Resources {
+input StepRunResources {
   """
   Number of tasks which are run in parallel.
 
   Can be greater or equal to 1.
+
+  If null, default to 1.
   """
-  tasks: Int!
+  tasks: Int
   """
   Allocated CPUs per task.
 
   Can be greater or equal to 1.
+
+  If null, defaults to the job resources.
   """
-  cpusPerTask: Int!
+  cpusPerTask: Int
   """
   Allocated memory (MB) per task.
 
   Can be greater or equal to 1.
+
+  If null, defaults to the job resources.
   """
-  memPerCpu: Int!
+  memPerCpu: Int
   """
   Allocated GPUs per task.
 
   Can be greater or equal to 0.
+
+  If null, defaults to the job resources.
   """
-  gpusPerTask: Int!
+  gpusPerTask: Int
+}
+
+"""
+Mount decribes a Bind Mount.
+"""
+input Mount {
+  hostDir: String!
+  containerDir: String!
+  options: String!
+}
+
+input ContainerRun {
+  """
+  Run the command inside a container with Pyxis.
+
+  Format: image:tag. Registry and authentication is not allowed on this field.
+
+  If the default container runtime is used:
+
+    - Use an absolute path to load a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT
+
+  If apptainer=true:
+
+    - Use an absolute path to load a sif file or a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT
+
+  Examples:
+
+    - library/ubuntu:latest
+    - /my.squashfs
+  """
+  image: String!
+  """
+  Mount decribes a Bind Mount.
+  """
+  mounts: [Mount!]
+  """
+  Username of a basic authentication.
+  """
+  username: String
+  """
+  Password of a basic authentication.
+  """
+  password: String
+  """
+  Container registry host.
+
+  Defaults to registry-1.docker.io
+  """
+  registry: String
+  """
+  Run with Apptainer as Container runtime instead of Pyxis.
+
+  By running with apptainer, you get access Deepsquare-hosted images.
+
+  Defaults to false.
+  """
+  apptainer: Boolean
+  """
+  Use DeepSquare-hosted images.
+
+  By setting to true, apptainer will be set to true.
+  """
+  deepsquareHosted: Boolean
+  """
+  X11 mounts /tmp/.X11-unix in the container.
+  """
+  x11: Boolean
 }
 
 """
@@ -358,34 +472,31 @@ StepRun is one script executed with the shell.
 
 Shared storage is accessible through the $STORAGE_PATH environment variable.
 
-echo "KEY=value" >> "$STORAGE_PATH/env" can be used to share environment variables.
+echo "KEY=value" >> "$DEEPSQUARE_ENV" can be used to share environment variables between steps.
+
+$DEEPSQUARE_INPUT is the path that contains imported files.
+
+$DEEPSQUARE_OUTPUT is the staging directory for uploading files.
 """
 input StepRun {
   """
   Allocated resources for the command.
   """
-  resources: Resources!
+  resources: StepRunResources!
   """
-  Run the command inside a container.
+  Container definition.
 
-  Format [<user>@][<registry>#]<image>[:<tag>].
-  reg_user="[[:alnum:]_.!~*\'()%\;:\&=+$,-@]+"
-  reg_registry="[^#]+"
-  reg_image="[[:lower:][:digit:]/._-]+"
-  reg_tag="[[:alnum:]._:-]+"
-  reg_url="^docker://((${reg_user})@)?((${reg_registry})#)?(${reg_image})(:(${reg_tag}))?$"
-
-  It is also possible to load a squashfs file by specifying an absolute path.
-
-  If null or empty, run on the host.
+  If null, run on the host.
   """
-  image: String
+  container: ContainerRun
   """
-  X11 mounts /tmp/.X11-unix in the container.
+  DisableCPUBinding disables process affinity binding to tasks.
 
-  If image is not defined, there is no need to define x11.
+  Can be useful when running MPI jobs.
+
+  If null, defaults to false.
   """
-  x11: Boolean
+  disableCpuBinding: Boolean
   """
   Environment variables accessible over the command.
   """
@@ -412,13 +523,13 @@ input StepFor {
   """
   parallel: Boolean!
   """
-  Item accessible via the {{ .Item }} variable. Index accessible via the {{ .Index }} variable.
+  Item accessible via the {{ .Item }} variable. Index accessible via the $item variable.
 
   Exclusive with "range".
   """
   items: [String!]
   """
-  Index accessible via the {{ .Index }} variable.
+  Index accessible via the $index variable.
 
   Exclusive with "items".
   """
@@ -436,12 +547,15 @@ input ForRange {
   """
   Begin is inclusive.
   """
-  Begin: Int!
+  begin: Int!
   """
   End is inclusive.
   """
-  End: Int!
-  Increment: Int!
+  end: Int!
+  """
+  Increment counter by x count. If null, defaults to 1.
+  """
+  increment: Int
 }
 
 type Mutation {
@@ -566,7 +680,6 @@ func (ec *executionContext) _Mutation_submit(ctx context.Context, field graphql.
 	})
 	if err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
@@ -621,7 +734,6 @@ func (ec *executionContext) _Query_job(ctx context.Context, field graphql.Collec
 	})
 	if err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
@@ -676,7 +788,6 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 	})
 	if err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
 	}
 	if resTmp == nil {
 		return graphql.Null
@@ -750,7 +861,6 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	})
 	if err != nil {
 		ec.Error(ctx, err)
-		return graphql.Null
 	}
 	if resTmp == nil {
 		return graphql.Null
@@ -2560,6 +2670,90 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj interface{}) (model.ContainerRun, error) {
+	var it model.ContainerRun
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"image", "mounts", "username", "password", "registry", "apptainer", "deepsquareHosted", "x11"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "image":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
+			it.Image, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "mounts":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mounts"))
+			it.Mounts, err = ec.unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "username":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			it.Username, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "registry":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("registry"))
+			it.Registry, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "apptainer":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apptainer"))
+			it.Apptainer, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "deepsquareHosted":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deepsquareHosted"))
+			it.DeepsquareHosted, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "x11":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("x11"))
+			it.X11, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputEnvVar(ctx context.Context, obj interface{}) (model.EnvVar, error) {
 	var it model.EnvVar
 	asMap := map[string]interface{}{}
@@ -2603,34 +2797,34 @@ func (ec *executionContext) unmarshalInputForRange(ctx context.Context, obj inte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"Begin", "End", "Increment"}
+	fieldsInOrder := [...]string{"begin", "end", "increment"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "Begin":
+		case "begin":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Begin"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("begin"))
 			it.Begin, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "End":
+		case "end":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("End"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
 			it.End, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "Increment":
+		case "increment":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("Increment"))
-			it.Increment, err = ec.unmarshalNInt2int(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("increment"))
+			it.Increment, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2686,7 +2880,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
-			it.Resources, err = ec.unmarshalNResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐResources(ctx, v)
+			it.Resources, err = ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2752,8 +2946,8 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputResources(ctx context.Context, obj interface{}) (model.Resources, error) {
-	var it model.Resources
+func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj interface{}) (model.JobResources, error) {
+	var it model.JobResources
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -2804,6 +2998,50 @@ func (ec *executionContext) unmarshalInputResources(ctx context.Context, obj int
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputMount(ctx context.Context, obj interface{}) (model.Mount, error) {
+	var it model.Mount
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"hostDir", "containerDir", "options"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "hostDir":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hostDir"))
+			it.HostDir, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "containerDir":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("containerDir"))
+			it.ContainerDir, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "options":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("options"))
+			it.Options, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interface{}) (model.S3Data, error) {
 	var it model.S3Data
 	asMap := map[string]interface{}{}
@@ -2811,7 +3049,7 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"region", "bucketUrl", "path", "accessKeyId", "secretAccessKey", "endpointUrl"}
+	fieldsInOrder := [...]string{"region", "bucketUrl", "path", "accessKeyId", "secretAccessKey", "endpointUrl", "deleteSync"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2863,6 +3101,14 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endpointUrl"))
 			it.EndpointURL, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "deleteSync":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deleteSync"))
+			it.DeleteSync, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2975,7 +3221,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "image", "x11", "env", "command", "shell"}
+	fieldsInOrder := [...]string{"resources", "container", "disableCpuBinding", "env", "command", "shell"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -2986,23 +3232,23 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
-			it.Resources, err = ec.unmarshalNResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐResources(ctx, v)
+			it.Resources, err = ec.unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "image":
+		case "container":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
-			it.Image, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("container"))
+			it.Container, err = ec.unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx, v)
 			if err != nil {
 				return it, err
 			}
-		case "x11":
+		case "disableCpuBinding":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("x11"))
-			it.X11, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableCpuBinding"))
+			it.DisableCPUBinding, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3027,6 +3273,58 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("shell"))
 			it.Shell, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, obj interface{}) (model.StepRunResources, error) {
+	var it model.StepRunResources
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"tasks", "cpusPerTask", "memPerCpu", "gpusPerTask"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "tasks":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tasks"))
+			it.Tasks, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "cpusPerTask":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cpusPerTask"))
+			it.CpusPerTask, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "memPerCpu":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memPerCpu"))
+			it.MemPerCPU, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "gpusPerTask":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gpusPerTask"))
+			it.GpusPerTask, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3089,7 +3387,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	})
 
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
 	for i, field := range fields {
 		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
 			Object: field.Name,
@@ -3105,17 +3402,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_submit(ctx, field)
 			})
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
 	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
 	return out
 }
 
@@ -3128,7 +3419,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	})
 
 	out := graphql.NewFieldSet(fields)
-	var invalids uint32
 	for i, field := range fields {
 		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
 			Object: field.Name,
@@ -3148,9 +3438,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_job(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			}
 
@@ -3178,9 +3465,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		}
 	}
 	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
 	return out
 }
 
@@ -3542,8 +3826,13 @@ func (ec *executionContext) unmarshalNJob2githubᚗcomᚋdeepsquareᚑioᚋthe�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐResources(ctx context.Context, v interface{}) (*model.Resources, error) {
-	res, err := ec.unmarshalInputResources(ctx, v)
+func (ec *executionContext) unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx context.Context, v interface{}) (*model.JobResources, error) {
+	res, err := ec.unmarshalInputJobResources(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx context.Context, v interface{}) (*model.Mount, error) {
+	res, err := ec.unmarshalInputMount(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -3566,6 +3855,11 @@ func (ec *executionContext) unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑio�
 
 func (ec *executionContext) unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStep(ctx context.Context, v interface{}) (*model.Step, error) {
 	res, err := ec.unmarshalInputStep(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx context.Context, v interface{}) (*model.StepRunResources, error) {
+	res, err := ec.unmarshalInputStepRunResources(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -3863,6 +4157,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx context.Context, v interface{}) (*model.ContainerRun, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputContainerRun(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx context.Context, v interface{}) ([]*model.EnvVar, error) {
 	if v == nil {
 		return nil, nil
@@ -3913,6 +4215,26 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx context.Context, v interface{}) ([]*model.Mount, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.Mount, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx context.Context, v interface{}) (*model.S3Data, error) {

@@ -9,7 +9,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/sbatchapi"
+	pkgsbatch "github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
@@ -27,11 +27,11 @@ var (
 	keyFile  string
 	certFile string
 
-	customerEndpoint           string
-	customerTLS                bool
-	customerTLSInsecure        bool
-	customerCAFile             string
-	customerServerHostOverride string
+	sbatchEndpoint             string
+	sbatchTLS                  bool
+	sbatchTLSInsecure          bool
+	sbatchCAFile               string
+	sbatchServerHostOverride   string
 	ethEndpointRPC             string
 	ethEndpointWS              string
 	ethHexPK                   string
@@ -96,39 +96,39 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"METASCHEDULER_ENDPOINT_WS"},
 	},
 	&cli.StringFlag{
-		Name:        "customer.endpoint",
+		Name:        "sbatch.endpoint",
 		Value:       "127.0.0.1:443",
-		Usage:       "Oracle gRPC endpoint.",
-		Destination: &customerEndpoint,
-		EnvVars:     []string{"CUSTOMER_ENDPOINT"},
+		Usage:       "SBatch API gRPC endpoint.",
+		Destination: &sbatchEndpoint,
+		EnvVars:     []string{"SBATCH_ENDPOINT"},
 	},
 	&cli.BoolFlag{
-		Name:        "customer.tls",
+		Name:        "sbatch.tls",
 		Value:       true,
-		Usage:       "Enable TLS for the Customer API.",
-		Destination: &customerTLS,
-		EnvVars:     []string{"CUSTOMER_TLS_ENABLE"},
+		Usage:       "Enable TLS for the SBatch API.",
+		Destination: &sbatchTLS,
+		EnvVars:     []string{"SBATCH_TLS_ENABLE"},
 	},
 	&cli.BoolFlag{
-		Name:        "customer.tls.insecure",
+		Name:        "sbatch.tls.insecure",
 		Value:       false,
-		Usage:       "Skip TLS verification. By enabling it, customer.tls.ca and customer.tls.server-host-override are ignored.",
-		Destination: &customerTLSInsecure,
-		EnvVars:     []string{"CUSTOMER_TLS_INSECURE"},
+		Usage:       "Skip TLS verification. By enabling it, sbatch.tls.ca and sbatch.tls.server-host-override are ignored.",
+		Destination: &sbatchTLSInsecure,
+		EnvVars:     []string{"SBATCH_TLS_INSECURE"},
 	},
 	&cli.StringFlag{
-		Name:        "customer.tls.ca",
+		Name:        "sbatch.tls.ca",
 		Value:       "",
 		Usage:       "Path to CA certificate for TLS verification.",
-		Destination: &customerCAFile,
-		EnvVars:     []string{"CUSTOMER_CA"},
+		Destination: &sbatchCAFile,
+		EnvVars:     []string{"SBATCH_CA"},
 	},
 	&cli.StringFlag{
-		Name:        "customer.tls.server-host-override",
-		Value:       "customer.deepsquare.io",
+		Name:        "sbatch.tls.server-host-override",
+		Value:       "sbatch.deepsquare.io",
 		Usage:       "The server name used to verify the hostname returned by the TLS handshake.",
-		Destination: &customerServerHostOverride,
-		EnvVars:     []string{"CUSTOMER_SERVER_HOST_OVERRIDE"},
+		Destination: &sbatchServerHostOverride,
+		EnvVars:     []string{"SBATCH_SERVER_HOST_OVERRIDE"},
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
@@ -226,14 +226,20 @@ var flags = []cli.Flag{
 // Container stores the instances for dependency injection.
 type Container struct {
 	server     *server.Server
-	customer   *sbatchapi.FakeDataSource
+	sbatchAPI  *pkgsbatch.API
 	eth        *eth.DataSource
 	slurm      *slurm.Service
 	jobWatcher *job.Watcher
 }
 
 func Init() *Container {
-	customer := &sbatchapi.FakeDataSource{}
+	sbatchAPI := pkgsbatch.NewAPI(
+		sbatchEndpoint,
+		sbatchTLS,
+		sbatchTLSInsecure,
+		sbatchCAFile,
+		sbatchServerHostOverride,
+	)
 	ethClientRPC, err := ethclient.Dial(ethEndpointRPC)
 	if err != nil {
 		logger.I.Fatal("ethclientRPC dial failed", zap.Error(err))
@@ -275,7 +281,7 @@ func Init() *Container {
 	watcher := job.New(
 		ethDataSource,
 		slurmJobService,
-		customer,
+		sbatchAPI,
 		time.Duration(5*time.Second),
 	)
 	server := server.New(
@@ -288,7 +294,7 @@ func Init() *Container {
 	)
 
 	return &Container{
-		customer:   customer,
+		sbatchAPI:  sbatchAPI,
 		eth:        ethDataSource,
 		slurm:      slurmJobService,
 		jobWatcher: watcher,

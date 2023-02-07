@@ -17,12 +17,16 @@ func TestContainerURLValidator(t *testing.T) {
 			expected: true,
 		},
 		{
-			input:    "registry-1.docker.io#image/test",
+			input:    "/image/test",
 			expected: true,
 		},
 		{
+			input:    "registry-1.docker.io#image/test",
+			expected: false,
+		},
+		{
 			input:    "user@registry-1.docker.io#image/test",
-			expected: true,
+			expected: false,
 		},
 		{
 			input:    "user#registry-1.docker.io@image/test",

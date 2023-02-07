@@ -14,8 +14,12 @@ job:
   steps:
     - name: tdp
       run:
-        x11: true
-        image: '/data/beegfs/localhost+tdp+latest.sqsh'
+        container:
+          x11: true
+          deepsquareHosted: true
+          apptainer: true
+          registry: registry-1.deepsquare.run
+          image: 'library/tdp:latest'
         resources:
           tasks: 1
           cpusPerTask: 4

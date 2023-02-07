@@ -50,8 +50,6 @@ func (db *File) ReadAndWatch(
 	logName string,
 	out chan<- string,
 ) error {
-	defer close(out)
-
 	if err := os.MkdirAll(fmt.Sprintf("%s/%s", db.storagePath, address), 0o700); err != nil {
 		logger.I.Error("failed to mkdir storage path", zap.Error(err))
 	}
@@ -68,15 +66,24 @@ func (db *File) ReadAndWatch(
 	if err != nil {
 		return err
 	}
-	for l := range t.Lines {
+	defer func() {
+		if err := t.Stop(); err != nil {
+			logger.I.Error("tail failed to close with err", zap.Error(err))
+		}
+	}()
+	for {
 		select {
+		case l, ok := <-t.Lines:
+			if !ok {
+				return nil
+			}
+			out <- l.Text
 		case <-ctx.Done():
 			return nil
-		case out <- l.Text:
 		}
 	}
-	return nil
 }
+
 func (db *File) ListAndWatch(
 	ctx context.Context,
 	address string,

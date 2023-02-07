@@ -1,0 +1,74 @@
+job:
+  enableLogging: true
+  resources:
+    tasks: 1 # TO TEMPLATE: NTASKS
+    cpusPerTask: 8
+    memPerCpu: 8000
+    gpusPerTask: 1
+  env:
+    - key: STEPS
+      value: '150' # TO TEMPLATE: default 150
+    - key: HEIGHT
+      value: '768' # TO TEMPLATE: default 768
+    - key: WIDTH
+      value: '768' # TO TEMPLATE: default 768
+    - key: MODEL
+      value: '' # TO TEMPLATE: either: (label: "Stable Diffusion v2.1", value: "sd-2-1") OR (label: "Waifu Diffusion v1.4", value: "wd-1-4")
+    - key: ITER
+      value: '4' # Hard-coded
+    - key: SAMPLES
+      value: '3' # Hard-coded
+    - key: PROMPT
+      value: '' # TO TEMPLATE: prompt
+  output:
+    s3:
+      region: region
+      bucketUrl: s3://test
+      path: '/test'
+      accessKeyId: accessKeyId
+      secretAccessKey: secretAccessKey
+      endpointUrl: https://example
+  continuousOutputSync: true
+  steps:
+    - name: generate-image
+      run:
+        container:
+          deepsquareHosted: true
+          apptainer: true
+          registry: registry-1.deepsquare.run
+          image: library/stable-diffusion:latest
+          mounts:
+            - hostDir: /tmp/cache
+              containerDir: /cache
+              options: rw
+            - hostDir: /opt/models/stable-diffusion
+              containerDir: /models
+              option: ro
+        resources:
+          tasks: 1
+          cpusPerTask: 8 # TO TEMPLATE
+          memPerCpu: 8000 # TO TEMPLATE
+          gpusPerTask: 0 # TO TEMPLATE
+        env:
+          - key: TORCH_HOME
+            value: /cache
+        shell: /bin/bash
+        command: |-
+          set -ex
+
+          params=(
+            "--ckpt" "/models/$MODEL/model.ckpt"
+            "--outdir" "$DEEPSQUARE_OUTPUT"
+            "--H" "$HEIGHT"
+            "--W" "$WIDTH"
+            "--steps" "$STEPS"
+            "--n_iter" "$ITER"
+            "--n_samples" "$SAMPLES"
+            "--seed" "$(od -A n -t d -N 1 /dev/urandom)"
+            "--prompt" "$PROMPT"
+          )
+          if [ -f "/models/$MODEL/model.yaml" ]; then
+            params+=("--config" "/models/$MODEL/model.yaml")
+          fi
+
+          python /stablediffusion/scripts/txt2img.py "${params[@]}"

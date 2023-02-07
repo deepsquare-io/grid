@@ -2,7 +2,7 @@ package model
 
 // S3Data describes the necessary variables to connect to a HTTP storage.
 type HTTPData struct {
-	URL string `json:"url" yaml:"url"`
+	URL string `json:"url" yaml:"url" validate:"url"`
 }
 
 // S3Data describes the necessary variables to connect to a S3 storage.
@@ -12,7 +12,7 @@ type S3Data struct {
 	// The S3 Bucket URL. Must not end with "/".
 	//
 	// Example: "s3://my-bucket".
-	BucketURL string `json:"bucketUrl" yaml:"bucketUrl" validate:"startswith=s3://,endsnotwith=/"`
+	BucketURL string `json:"bucketUrl" yaml:"bucketUrl" validate:"url,startswith=s3://,endsnotwith=/"`
 	// An absolute path of the bucket. Must start with "/".
 	Path string `json:"path" yaml:"path" validate:"startswith=/"`
 	// An access key ID for the S3 endpoint.
@@ -21,6 +21,14 @@ type S3Data struct {
 	SecretAccessKey string `json:"secretAccessKey" yaml:"secretAccessKey"`
 	// A S3 Endpoint URL used for authentication. Example: https://s3.us‑east‑2.amazonaws.com
 	EndpointURL string `json:"endpointUrl" yaml:"endpointUrl" validate:"url"`
+	// DeleteSync removes destination files that doesn't correspond to the source.
+	//
+	// This applies to any type of source to any type of destination (s3 or filesystem).
+	//
+	// See: s5cmd sync --delete.
+	//
+	// If null, defaults to false.
+	DeleteSync *bool `json:"deleteSync" yaml:"deleteSync"`
 }
 
 type TransportData struct {
@@ -32,7 +40,7 @@ type TransportData struct {
 
 // An environment variable.
 type EnvVar struct {
-	Key   string `json:"key" yaml:"key" validate:"valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"`
+	Key   string `json:"key" yaml:"key" validate:"required,valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"`
 	Value string `json:"value" yaml:"value"`
 }
 
@@ -41,8 +49,9 @@ type ForRange struct {
 	// Begin is inclusive.
 	Begin int `json:"begin" yaml:"begin"`
 	// End is inclusive.
-	End       int `json:"end" yaml:"end"`
-	Increment int `json:"increment" yaml:"increment"`
+	End int `json:"end" yaml:"end"`
+	// Increment counter by x count. If null, defaults to 1.
+	Increment *int `json:"increment" yaml:"increment"`
 }
 
 // A Job is a finite sequence of instructions.
@@ -57,9 +66,9 @@ type Job struct {
 	// - $GPUS: total number of GPUS
 	// - $CPUS: total number of CPUS
 	// - $MEM: total number of memory in MB
-	Resources *Resources `json:"resources" yaml:"resources" validate:"required"`
+	Resources *JobResources `json:"resources" yaml:"resources" validate:"required"`
 	// Environment variables accessible for the entire job.
-	Env []*EnvVar `json:"env" yaml:"env" validate:"dive"`
+	Env []*EnvVar `json:"env" yaml:"env" validate:"dive,required"`
 	// EnableLogging enables the DeepSquare GRID Logger.
 	EnableLogging *bool `json:"enableLogging" yaml:"enableLogging"`
 	// Pull data at the start of the job.
@@ -77,7 +86,7 @@ type Job struct {
 	//
 	// If null, the mode won't change and will default to the source.
 	InputMode *int    `json:"inputMode" yaml:"inputMode" validate:"omitempty,lt=512"`
-	Steps     []*Step `json:"steps" yaml:"steps" validate:"dive"`
+	Steps     []*Step `json:"steps" yaml:"steps" validate:"dive,required"`
 	// Push data at the end of the job.
 	//
 	// Continuous sync/push can be enabled using the `continuousOutputSync` flag.
@@ -85,11 +94,13 @@ type Job struct {
 	// ContinuousOutputSync will push data during the whole job.
 	//
 	// This is useful when it is not desired to lose data when the job is suddenly stopped.
+	//
+	// ContinousOutputSync is not available with HTTP.
 	ContinuousOutputSync *bool `json:"continuousOutputSync" yaml:"continuousOutputSync"`
 }
 
-// Resources are the allocated resources for a command in a job, or a job in a cluster.
-type Resources struct {
+// JobResources are the allocated resources for a command in a job, or a job in a cluster.
+type JobResources struct {
 	// Number of tasks which are run in parallel.
 	//
 	// Can be greater or equal to 1.
@@ -129,42 +140,119 @@ type StepFor struct {
 	// Item accessible via the "$item" variable.
 	//
 	// Exclusive with "range".
-	Items []string `json:"items" yaml:"items" validate:"dive"`
+	Items []string `json:"items" yaml:"items"`
 	// Index accessible via the "$index" variable.
 	//
 	// Exclusive with "items".
 	Range *ForRange `json:"range" yaml:"range"`
 	// Steps are run sequentially in one iteration.
-	Steps []*Step `json:"steps" yaml:"steps" validate:"dive"`
+	Steps []*Step `json:"steps" yaml:"steps" validate:"dive,required"`
+}
+
+// StepRunResources are the allocated resources for a command in a job.
+type StepRunResources struct {
+	// Number of tasks which are run in parallel.
+	//
+	// Can be greater or equal to 1.
+	//
+	// If null, default to 1.
+	Tasks *int `json:"tasks" yaml:"tasks" validate:"omitempty,gte=1"`
+	// Allocated CPUs per task.
+	//
+	// Can be greater or equal to 1.
+	//
+	// If null, defaults to the job resources.
+	CpusPerTask *int `json:"cpusPerTask" yaml:"cpusPerTask" validate:"omitempty,gte=1"`
+	// Allocated memory (MB) per task.
+	//
+	// Can be greater or equal to 1.
+	//
+	// If null, defaults to the job resources.
+	MemPerCPU *int `json:"memPerCpu" yaml:"memPerCpu" validate:"omitempty,gte=1"`
+	// Allocated GPUs per task.
+	//
+	// Can be greater or equal to 0.
+	//
+	// If null, defaults to the job resources.
+	GpusPerTask *int `json:"gpusPerTask" yaml:"gpusPerTask" validate:"omitempty,gte=0"`
+}
+
+// Mount decribes a Bind Mount.
+type Mount struct {
+	HostDir      string `json:"hostDir" yaml:"hostDir" validate:"startswith=/"`
+	ContainerDir string `json:"containerDir" yaml:"containerDir" validate:"startswith=/"`
+	// Options modifies the mount options.
+	//
+	// Accepted: ro, rw
+	Options string `json:"options" yaml:"options" validate:"omitempty,oneof=rw ro"`
+}
+
+type ContainerRun struct {
+	// Run the command inside a container with Pyxis.
+	//
+	// Format: image:tag. Registry and authentication is not allowed on this field.
+	//
+	// If the default container runtime is used:
+	//
+	//   - Use an absolute path to load a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT
+	//
+	// If apptainer=true:
+	//
+	//   - Use an absolute path to load a sif file or a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT
+	//
+	// Examples:
+	//
+	//   - library/ubuntu:latest
+	//   - /my.squashfs
+	Image string `json:"image" yaml:"image" validate:"valid_container_image_url"`
+	// Mount decribes a Bind Mount.
+	Mounts []*Mount `json:"mounts" yaml:"mounts" validate:"dive"`
+	// Username of a basic authentication.
+	Username *string `json:"username" yaml:"username"`
+	// Password of a basic authentication.
+	Password *string `json:"password" yaml:"password"`
+	// Container registry host.
+	//
+	// Defaults to registry-1.docker.io
+	Registry *string `json:"registry" yaml:"registry" validate:"omitempty,hostname"`
+	// Run with Apptainer as Container runtime instead of Pyxis.
+	//
+	// By running with apptainer, you get access Deepsquare-hosted images.
+	//
+	// Defaults to false.
+	Apptainer *bool `json:"apptainer" yaml:"apptainer"`
+	// Use DeepSquare-hosted images.
+	//
+	// By setting to true, apptainer will be set to true.
+	DeepsquareHosted *bool `json:"deepsquareHosted" yaml:"deepsquareHosted"`
+	// X11 mounts /tmp/.X11-unix in the container.
+	X11 *bool `json:"x11" yaml:"x11"`
 }
 
 // StepRun is one script executed with the shell.
 //
 // Shared storage is accessible through the $STORAGE_PATH environment variable.
 //
-// echo "KEY=value" >> "$STORAGE_PATH/env" can be used to share environment variables.
+// echo "KEY=value" >> "$DEEPSQUARE_ENV" can be used to share environment variables between steps.
+//
+// $DEEPSQUARE_INPUT is the path that contains imported files.
+//
+// $DEEPSQUARE_OUTPUT is the staging directory for uploading files.
 type StepRun struct {
 	// Allocated resources for the command.
-	Resources *Resources `json:"resources" yaml:"resources" validate:"required"`
-	// Run the command inside a container.
+	Resources *StepRunResources `json:"resources" yaml:"resources" validate:"required"`
+	// Container definition.
 	//
-	// Format [<user>@][<registry>#]<image>[:<tag>].
-	// reg_user="[[:alnum:]_.!~*\'()%\;:\&=+$,-@]+"
-	// reg_registry="[^#]+"
-	// reg_image="[[:lower:][:digit:]/._-]+"
-	// reg_tag="[[:alnum:]._:-]+"
-	// reg_url="^docker://((${reg_user})@)?((${reg_registry})#)?(${reg_image})(:(${reg_tag}))?$"
+	// If null, run on the host.
+	Container *ContainerRun `json:"container" yaml:"container"`
+	// DisableCPUBinding disables process affinity binding to tasks.
 	//
-	// It is also possible to load a squashfs file by specifying an absolute path.
+	// Can be useful when running MPI jobs.
 	//
-	// If null or empty, run on the host.
-	Image *string `json:"image" yaml:"image" validate:"omitempty,valid_container_image_url"`
-	// X11 mounts /tmp/.X11-unix in the container.
-	//
-	// If image is not defined, there is no need to define x11.
-	X11 *bool `json:"x11" yaml:"x11"`
+	// If null, defaults to false.
+	DisableCPUBinding *bool `json:"disableCpuBinding" yaml:"disableCpuBinding"`
 	// Environment variables accessible over the command.
-	Env []*EnvVar `json:"env" yaml:"env" validate:"dive"`
+	Env []*EnvVar `json:"env" yaml:"env" validate:"dive,required"`
 	// Command specifies a shell script.
 	Command string `json:"command" yaml:"command"`
 	// Shell to use.

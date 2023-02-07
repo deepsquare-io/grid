@@ -1,19 +1,14 @@
 package fixtures_test
 
 import (
-	"errors"
 	"fmt"
-	"os"
-	"os/exec"
 	"testing"
 
 	_ "embed"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
-	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
@@ -30,25 +25,11 @@ var (
 	fixtureBlenderBatchJob string
 	//go:embed blender-batch-job.txt
 	expectedBlenderBatchJob string
+	//go:embed upscale.yaml
+	fixtureUpscale string
+	//go:embed upscale.txt
+	expectedUpscale string
 )
-
-func shellcheck(t *testing.T, script string) {
-	_, err := exec.LookPath("shellcheck")
-	if err != nil {
-		logger.I.Warn("shellcheck is disabled, test is not complete")
-		return
-	}
-	if err := os.WriteFile("test.sh", []byte(script), 0o777); err != nil {
-		logger.I.Panic("failed to write", zap.Error(err))
-	}
-	out, err := exec.Command("shellcheck", "-S", "warning", "-s", "bash", "test.sh").CombinedOutput()
-	if err != nil {
-		logger.I.Error(string(out))
-		require.NoError(t, errors.New("shellcheck failed"))
-	}
-
-	_ = os.Remove("test.sh")
-}
 
 func TestRenderTDP(t *testing.T) {
 	j := struct {
@@ -61,7 +42,7 @@ func TestRenderTDP(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println(out)
 	require.Equal(t, expectedTDP, out)
-	shellcheck(t, out)
+	require.NoError(t, renderer.Shellcheck(out))
 }
 
 func TestRenderURS(t *testing.T) {
@@ -75,7 +56,7 @@ func TestRenderURS(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println(out)
 	require.Equal(t, expectedURS, out)
-	shellcheck(t, out)
+	require.NoError(t, renderer.Shellcheck(out))
 }
 
 func TestRenderBlenderBatchJob(t *testing.T) {
@@ -89,5 +70,19 @@ func TestRenderBlenderBatchJob(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println(out)
 	require.Equal(t, expectedBlenderBatchJob, out)
-	shellcheck(t, out)
+	require.NoError(t, renderer.Shellcheck(out))
+}
+
+func TestUpscaleJob(t *testing.T) {
+	j := struct {
+		Job model.Job
+	}{}
+	err := yaml.Unmarshal([]byte(fixtureUpscale), &j)
+	require.NoError(t, err)
+
+	out, err := renderer.RenderJob(&j.Job)
+	require.NoError(t, err)
+	fmt.Println(out)
+	require.Equal(t, expectedUpscale, out)
+	require.NoError(t, renderer.Shellcheck(out))
 }

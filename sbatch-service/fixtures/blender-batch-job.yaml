@@ -31,8 +31,15 @@ job:
           cpusPerTask: 4
           memPerCpu: 4096
           gpusPerTask: 0
+        container:
+          deepsquareHosted: true
+          apptainer: true
+          image: 'linuxserver/blender:3.4.1'
+          registry: registry-1.docker.io
         command: |-
-          /usr/bin/cat << END > ./frames_per_node.py
+          set -e
+
+          /usr/bin/cat << END > ./frames_per_task.py
           import bpy
           import math
           scene = bpy.context.scene
@@ -49,12 +56,12 @@ job:
           import bpy
           print(f"end_frame={bpy.context.scene.frame_end}")
           END
-          frames_per_task=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./frames_per_task.py | sed -nr 's/frames_per_task=(.*)/\1/p')
-          start_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./start_frame.py | sed -nr 's/start_frame=(.*)/\1/p')
-          end_frame=$(blender -b "$STORAGE_PATH/inputs/"*.blend -P ./end_frame.py | sed -nr 's/end_frame=(.*)/\1/p')
-          /usr/bin/echo "START_FRAME=$start_frame" >> "$STORAGE_PATH/env"
-          /usr/bin/echo "END_FRAME=$end_frame" >> "$STORAGE_PATH"/env"
-          /usr/bin/echo "FRAMES_PER_TASK=$frames_per_task" >> "$STORAGE_PATH/env"
+          frames_per_task=$(/usr/bin/blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./frames_per_task.py | sed -nr 's/frames_per_task=(.*)/\1/p')
+          start_frame=$(/usr/bin/blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./start_frame.py | sed -nr 's/start_frame=(.*)/\1/p')
+          end_frame=$(/usr/bin/blender -b "$DEEPSQUARE_INPUT/"*.blend -P ./end_frame.py | sed -nr 's/end_frame=(.*)/\1/p')
+          /usr/bin/echo "START_FRAME=$start_frame" >> "$DEEPSQUARE_ENV"
+          /usr/bin/echo "END_FRAME=$end_frame" >> "$DEEPSQUARE_ENV"
+          /usr/bin/echo "FRAMES_PER_TASK=$frames_per_task" >> "$DEEPSQUARE_ENV"
     - name: assert-calculus
       run:
         resources:
@@ -63,6 +70,7 @@ job:
           memPerCpu: 4096
           gpusPerTask: 0
         command: |-
+          set -e
           if [ "$FRAMES_PER_TASK" -lt "$NTASKS" ]; then
             /usr/bin/echo "The job has stopped to avoid overconsumption."
             /usr/bin/echo "Please use $FRAMES_PER_TASK instead of $NTASKS tasks."
@@ -82,13 +90,22 @@ job:
                 cpusPerTask: 4
                 memPerCpu: 4096
                 gpusPerTask: 1
+              container:
+                deepsquareHosted: true
+                apptainer: true
+                image: 'linuxserver/blender:3.4.1'
+                registry: registry-1.docker.io
               shell: /bin/bash
               command: |-
+                set -e
+
                 start_frame_i=$(((index-1)*FRAMES_PER_TASK+START_FRAME))
                 end_frame_i=$((index*FRAMES_PER_TASK+START_FRAME-1))
 
-                if [[ index -eq 4 ]]; then
+                if [[ index -eq $NTASKS ]]; then
                   end_frame_i=$END_FRAME
                 fi
 
-                blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" --output-dir "$STORAGE_PATH/outputs/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX &
+                echo "Rendering $start_frame_i...$end_frame_i"
+
+                /usr/bin/blender -E "CYCLES" -b "$STORAGE_PATH"/input/*.blend -F "OPEN_EXR" -o "$DEEPSQUARE_OUTPUT/frame_#####" -s "$start_frame_i" -e "$end_frame_i" -a -- --cycles-print-stats --cycles-device OPTIX
