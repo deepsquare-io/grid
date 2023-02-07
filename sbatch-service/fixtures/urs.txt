@@ -79,7 +79,7 @@ export 'XDG_RUNTIME_DIR'='/tmp'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='urs' \
-  --export=ALL"$(loadDeepsquareEnv)",'DISPLAY'=':99','XDG_RUNTIME_DIR'='/tmp' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \
   --gpus-per-task=1 \

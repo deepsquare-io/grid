@@ -59,8 +59,8 @@ func TestRenderStepRun(t *testing.T) {
 machine "registry" login "username" password "password"
 EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' 'test'='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -81,8 +81,8 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
 # shellcheck disable=SC2097,SC2098
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' 'test'='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -105,8 +105,8 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
 # shellcheck disable=SC2097,SC2098
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' 'test'='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -128,8 +128,8 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
 # shellcheck disable=SC2097,SC2098
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' 'test'='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -148,8 +148,8 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				Command: `hostname
 /usr/bin/echo "test"`,
 			},
-			expected: `/usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+			expected: `'test'='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -165,8 +165,8 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				Command:           "hostname",
 				DisableCPUBinding: utils.Ptr(true),
 			},
-			expected: `/usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+			expected: `'test'='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
