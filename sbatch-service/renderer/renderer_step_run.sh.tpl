@@ -6,7 +6,7 @@ export APPTAINER_DOCKER_USERNAME={{ derefStr .Step.Run.Container.Username | squo
 export APPTAINER_DOCKER_PASSWORD={{ derefStr .Step.Run.Container.Password | squote }}
 {{- end }}
 # shellcheck disable=SC2097,SC2098
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env'{{ range $env := .Step.Run.Env }} {{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun --job-name={{ .Step.Name | squote }} \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env'{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \
   --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }}M \
@@ -28,7 +28,7 @@ machine {{ derefStr .Step.Run.Container.Registry | quoteEscape }} login {{ deref
 EOFnetrc
 {{- end }}
 MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env'{{ range $env := .Step.Run.Env }} {{ $env.Key | squote }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun --job-name={{ .Step.Name | squote }} \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env'{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \
   --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }}M \
@@ -43,7 +43,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Step.Run.Command | squote -}}
 {{- end -}}
 {{- else -}}
-{{ range $env := .Step.Run.Env }}{{ $env.Key | squote }}={{ $env.Value | squote }} {{ end }}/usr/bin/srun --job-name={{ .Step.Name | squote }} \
+{{ range $env := .Step.Run.Env }}{{ $env.Key }}={{ $env.Value | squote }} {{ end }}/usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task={{ default .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) .Job.Resources.CpusPerTask }} \
   --mem-per-cpu={{ default .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) .Job.Resources.MemPerCPU }}M \
