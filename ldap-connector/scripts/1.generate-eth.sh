@@ -8,10 +8,10 @@ CONTRACTSPATH="${SCRIPTPATH}/../../smart-contracts"
 
 cd "${CONTRACTSPATH}"
 
-mkdir -p "${PROJECTPATH}/gen/go/contracts/jobmanager"
-solc ./contracts/JobManager.sol \
+mkdir -p "${PROJECTPATH}/gen/go/contracts/metascheduler"
+solc ./contracts/Metascheduler.sol \
   --base-path . \
   --include-path "node_modules/" \
-  --combined-json abi,bin | abigen --pkg jobmanager \
+  --combined-json abi,bin | abigen --pkg metascheduler \
   --combined-json - \
-  --out "${PROJECTPATH}/gen/go/contracts/jobmanager/jobmanager.go"
+  --out "${PROJECTPATH}/gen/go/contracts/metascheduler/metascheduler.go"
