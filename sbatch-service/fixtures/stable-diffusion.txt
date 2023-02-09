@@ -63,8 +63,8 @@ export 'PROMPT'=''
 /usr/bin/echo 'Running: ''generate-image'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw",'/data/beegfs/cache/persistent':'/cache':'rw','/opt/models/stable-diffusion':'/models':'ro'
 # shellcheck disable=SC2097,SC2098
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='generate-image' \
-  --export=ALL"$(loadDeepsquareEnv)",'STEPS'='150','HEIGHT'='768','WIDTH'='768','MODEL'='','ITER'='4','SAMPLES'='3','PROMPT'='','HF_HOME'='/cache' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' HF_HOME='/cache' /usr/bin/srun --job-name='generate-image' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
   --mem-per-cpu=8000M \
   --gpus-per-task=1 \
