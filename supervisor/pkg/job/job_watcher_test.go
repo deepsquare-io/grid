@@ -314,7 +314,7 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 
 func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEvent() {
 	// Arrange
-	status := eth.JobStatusCancelling
+	status := eth.JobStatusRunning
 	sub := mocks.NewSubscription(suite.T())
 	suite.metaQueue.On("WatchClaimNextCancellingJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)

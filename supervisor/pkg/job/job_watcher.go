@@ -249,10 +249,10 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 
 		status, err = w.metaQueue.GetJobStatus(ctx, event.JobId)
 		if err != nil {
-			logger.I.Error("GetJobStatus failed, considering as Cancelling", zap.Error(err))
-			status = eth.JobStatusCancelling
+			logger.I.Error("GetJobStatus failed, considering as Cancelled", zap.Error(err))
+			status = eth.JobStatusCancelled
 		}
-		if status == eth.JobStatusCancelling {
+		if status != eth.JobStatusCancelled {
 			return errors.New("failed to cancel job")
 		}
 		return nil
