@@ -20,7 +20,7 @@ type JobMetaQueue interface {
 	// WatchClaimNextJobEvent observes the incoming ClaimNextJobEvents.
 	WatchClaimNextJobEvent(
 		ctx context.Context,
-		sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent,
+		sink chan<- *metascheduler.MetaSchedulerClaimJobEvent,
 	) (event.Subscription, error)
 	// WatchJobCanceledEvent observes the incoming WatchJobCanceledEvents.
 	WatchClaimNextCancellingJobEvent(

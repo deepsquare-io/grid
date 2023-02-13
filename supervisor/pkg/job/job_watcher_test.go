@@ -24,7 +24,7 @@ import (
 
 var (
 	fixtureSchedulerJobID = 1
-	fixtureEvent          = &metascheduler.MetaSchedulerClaimNextJobEvent{
+	fixtureEvent          = &metascheduler.MetaSchedulerClaimJobEvent{
 		CustomerAddr:      common.HexToAddress("01"),
 		ProviderAddr:      common.HexToAddress("02"),
 		JobId:             [32]byte{1},
@@ -134,7 +134,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 	// Arrange
 	sub := mocks.NewSubscription(suite.T())
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
+		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimJobEvent)
 		go func() {
 			sink <- fixtureEvent
 		}()
@@ -174,7 +174,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobIgnoresEvent() {
 	// Arrange
 	sub := mocks.NewSubscription(suite.T())
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
+		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimJobEvent)
 		go func() {
 			sink <- fixtureEvent
 		}()
@@ -206,7 +206,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
 	sub := mocks.NewSubscription(suite.T())
 	suite.metaQueue.On("GetProviderAddress").Return(fixtureEvent.ProviderAddr)
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
+		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimJobEvent)
 		go func() {
 			sink <- &badFixtureEvent
 		}()
@@ -238,7 +238,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 	sub := mocks.NewSubscription(suite.T())
 	suite.metaQueue.On("GetProviderAddress").Return(fixtureEvent.ProviderAddr)
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
+		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimJobEvent)
 		go func() {
 			sink <- fixtureEvent
 		}()
@@ -275,7 +275,7 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	sub := mocks.NewSubscription(suite.T())
 	suite.metaQueue.On("GetProviderAddress").Return(fixtureEvent.ProviderAddr)
 	suite.metaQueue.On("WatchClaimNextJobEvent", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimNextJobEvent)
+		sink := args.Get(1).(chan<- *metascheduler.MetaSchedulerClaimJobEvent)
 		go func() {
 			sink <- fixtureEvent
 		}()

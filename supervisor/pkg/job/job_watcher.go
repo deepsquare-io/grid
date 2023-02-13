@@ -116,7 +116,7 @@ func (w *Watcher) ClaimIndefinitely(parent context.Context) error {
 }
 
 func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
-	events := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
+	events := make(chan *metascheduler.MetaSchedulerClaimJobEvent)
 	sub, err := w.metaQueue.WatchClaimNextJobEvent(parent, events)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
 	}
 }
 
-func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.MetaSchedulerClaimNextJobEvent) error {
+func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.MetaSchedulerClaimJobEvent) error {
 	if event == nil {
 		logger.I.Warn(
 			"job is nil, we didn't find a job",

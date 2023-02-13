@@ -216,10 +216,10 @@ func (suite *DataSourceTestSuite) TestRefuseJob() {
 
 func (suite *DataSourceTestSuite) TestWatchClaimNextJobEvent() {
 	// Arrange
-	sink := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
+	sink := make(chan *metascheduler.MetaSchedulerClaimJobEvent)
 	sub := mocks.NewSubscription(suite.T())
 	suite.msWS.On(
-		"WatchClaimNextJobEvent",
+		"WatchClaimJobEvent",
 		mock.Anything,
 		mock.Anything,
 	).Return(sub, nil)
@@ -275,7 +275,21 @@ func (suite *DataSourceTestSuite) TestClaimCancelling() {
 func (suite *DataSourceTestSuite) TestGetJobStatus() {
 	// Arrange
 	fixtureStatus := eth.JobStatusRunning
-	suite.msRPC.On("GetJobStatus", mock.Anything, jobID).Return(uint8(fixtureStatus), nil)
+	suite.msRPC.On("Jobs", mock.Anything, jobID).Return(struct {
+		JobId            [32]byte
+		Status           uint8
+		CustomerAddr     common.Address
+		ProviderAddr     common.Address
+		Definition       metascheduler.JobDefinition
+		Valid            bool
+		Cost             metascheduler.JobCost
+		Time             metascheduler.JobTime
+		JobName          [32]byte
+		HasCancelRequest bool
+	}{
+		JobId:  jobID,
+		Status: uint8(fixtureStatus),
+	}, nil)
 	// Act
 	status, err := suite.impl.GetJobStatus(context.Background(), jobID)
 	// Assert
