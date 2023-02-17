@@ -14,8 +14,8 @@ export MEM='{{ mul .Job.Resources.MemPerCPU .Job.Resources.CpusPerTask .Job.Reso
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
-  --server.tls.server-host-override=grid-logger.deepsquare.run \
-  --server.endpoint=grid-logger.deepsquare.run:443 \
+  --server.tls.server-host-override='{{ .Logger.Endpoint }}' \
+  --server.endpoint='{{ .Logger.Endpoint }}:{{ .Logger.Port }}' \
   --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \

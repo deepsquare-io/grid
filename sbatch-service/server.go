@@ -14,6 +14,7 @@ import (
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph"
 	"github.com/deepsquare-io/the-grid/sbatch-service/grpc/sbatch"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
+	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
@@ -33,6 +34,8 @@ var (
 	redisTLSInsecure  bool
 	redisCAFile       string
 	redisHostOverride string
+
+	loggerEndpoint string
 )
 
 var flags = []cli.Flag{
@@ -77,6 +80,13 @@ var flags = []cli.Flag{
 		Usage:       "The server name used to verify the hostname returned by the TLS handshake.",
 		Destination: &redisHostOverride,
 		EnvVars:     []string{"REDIS_HOST_OVERRIDE"},
+	},
+	&cli.StringFlag{
+		Name:        "logger.endpoint",
+		Value:       "",
+		Usage:       "The grid logger URL endpoint. (ex: logger.example.com:443)",
+		Destination: &loggerEndpoint,
+		EnvVars:     []string{"LOGGER_ENDPOINT"},
 	},
 	&cli.BoolFlag{
 		Name:    "debug",
@@ -131,12 +141,12 @@ var app = &cli.App{
 		}
 		rdb := redis.NewClient(opt)
 
+		jobRenderer := renderer.NewJobRenderer(loggerEndpoint)
+
 		// GraphQL server
 		srv := handler.NewDefaultServer(graph.NewExecutableSchema(
 			graph.Config{
-				Resolvers: &graph.Resolver{
-					RedisClient: rdb,
-				},
+				Resolvers: graph.NewResolver(rdb, jobRenderer),
 			},
 		))
 		r := chi.NewRouter()

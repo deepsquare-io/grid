@@ -33,6 +33,8 @@ var (
 	fixtureStableDiffusion string
 	//go:embed stable-diffusion.txt
 	expecteStableDiffusion string
+
+	r = renderer.NewJobRenderer("logger.example.com:443")
 )
 
 func TestRenderTDP(t *testing.T) {
@@ -42,7 +44,7 @@ func TestRenderTDP(t *testing.T) {
 	err := yaml.Unmarshal([]byte(fixtureTDP), &j)
 	require.NoError(t, err)
 
-	out, err := renderer.RenderJob(&j.Job)
+	out, err := r.RenderJob(&j.Job)
 	require.NoError(t, err)
 	fmt.Println(out)
 	require.Equal(t, expectedTDP, out)
@@ -56,7 +58,7 @@ func TestRenderURS(t *testing.T) {
 	err := yaml.Unmarshal([]byte(fixtureURS), &j)
 	require.NoError(t, err)
 
-	out, err := renderer.RenderJob(&j.Job)
+	out, err := r.RenderJob(&j.Job)
 	require.NoError(t, err)
 	fmt.Println(out)
 	require.Equal(t, expectedURS, out)
@@ -70,7 +72,7 @@ func TestRenderBlenderBatchJob(t *testing.T) {
 	err := yaml.Unmarshal([]byte(fixtureBlenderBatchJob), &j)
 	require.NoError(t, err)
 
-	out, err := renderer.RenderJob(&j.Job)
+	out, err := r.RenderJob(&j.Job)
 	require.NoError(t, err)
 	fmt.Println(out)
 	require.Equal(t, expectedBlenderBatchJob, out)
@@ -84,7 +86,7 @@ func TestUpscaleJob(t *testing.T) {
 	err := yaml.Unmarshal([]byte(fixtureUpscale), &j)
 	require.NoError(t, err)
 
-	out, err := renderer.RenderJob(&j.Job)
+	out, err := r.RenderJob(&j.Job)
 	require.NoError(t, err)
 	fmt.Println(out)
 	require.Equal(t, expectedUpscale, out)
@@ -98,7 +100,7 @@ func TestStableDiffusionJob(t *testing.T) {
 	err := yaml.Unmarshal([]byte(fixtureStableDiffusion), &j)
 	require.NoError(t, err)
 
-	out, err := renderer.RenderJob(&j.Job)
+	out, err := r.RenderJob(&j.Job)
 	require.NoError(t, err)
 	fmt.Println(out)
 	require.Equal(t, expecteStableDiffusion, out)
