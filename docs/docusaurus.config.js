@@ -6,7 +6,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/palenight');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'The Grid',
+  title: 'DeepSquare',
   tagline: 'The decentralized High Performance Computing Ecosystem',
   url: 'https://docs.deepsquare.run',
   baseUrl: '/',
@@ -14,7 +14,7 @@ const config = {
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/logo.png',
   organizationName: 'DeepSquare',
-  projectName: 'The Grid',
+  projectName: 'DeepSquare',
   trailingSlash: false,
 
   presets: [
@@ -50,9 +50,9 @@ const config = {
         },
       },
       navbar: {
-        title: 'The Grid Documentation',
+        title: 'DeepSquare Documentation',
         logo: {
-          alt: 'The Grid Logo',
+          alt: 'DeepSquare logo',
           src: 'img/logo.png',
         },
         items: [
@@ -64,7 +64,7 @@ const config = {
         ],
       },
       footer: {
-        copyright: `<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> © ${new Date().getFullYear()} The Grid Documentation, <a href="https://deepsquare.io">DeepSquare</a>. Built with Docusaurus.`,
+        copyright: `<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> © ${new Date().getFullYear()} <a href="https://deepsquare.io">DeepSquare</a> documentation. Built with Docusaurus.`,
       },
       prism: {
         theme: lightCodeTheme,
