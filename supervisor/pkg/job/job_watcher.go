@@ -116,7 +116,7 @@ func (w *Watcher) ClaimIndefinitely(parent context.Context) error {
 }
 
 func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
-	events := make(chan *metascheduler.MetaSchedulerClaimNextJobEvent)
+	events := make(chan *metascheduler.MetaSchedulerClaimJobEvent)
 	sub, err := w.metaQueue.WatchClaimNextJobEvent(parent, events)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
 	}
 }
 
-func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.MetaSchedulerClaimNextJobEvent) error {
+func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.MetaSchedulerClaimJobEvent) error {
 	if event == nil {
 		logger.I.Warn(
 			"job is nil, we didn't find a job",
@@ -249,10 +249,10 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 
 		status, err = w.metaQueue.GetJobStatus(ctx, event.JobId)
 		if err != nil {
-			logger.I.Error("GetJobStatus failed, considering as Cancelling", zap.Error(err))
-			status = eth.JobStatusCancelling
+			logger.I.Error("GetJobStatus failed, considering as Cancelled", zap.Error(err))
+			status = eth.JobStatusCancelled
 		}
-		if status == eth.JobStatusCancelling {
+		if status != eth.JobStatusCancelled {
 			return errors.New("failed to cancel job")
 		}
 		return nil

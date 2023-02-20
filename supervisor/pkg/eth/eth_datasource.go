@@ -200,9 +200,9 @@ func (s *DataSource) RefuseJob(
 // WatchClaimNextJobEvent observes the incoming ClaimNextJobEvents.
 func (s *DataSource) WatchClaimNextJobEvent(
 	ctx context.Context,
-	sink chan<- *metascheduler.MetaSchedulerClaimNextJobEvent,
+	sink chan<- *metascheduler.MetaSchedulerClaimJobEvent,
 ) (event.Subscription, error) {
-	return s.metaschedulerWS.WatchClaimNextJobEvent(&bind.WatchOpts{
+	return s.metaschedulerWS.WatchClaimJobEvent(&bind.WatchOpts{
 		Context: ctx,
 	}, sink)
 }
@@ -219,13 +219,13 @@ func (s *DataSource) WatchClaimNextCancellingJobEvent(
 
 // GetJobStatus fetches the job status.
 func (s *DataSource) GetJobStatus(ctx context.Context, jobID [32]byte) (JobStatus, error) {
-	status, err := s.metaschedulerRPC.GetJobStatus(&bind.CallOpts{
+	status, err := s.metaschedulerRPC.Jobs(&bind.CallOpts{
 		Context: ctx,
 	}, jobID)
 	if err != nil {
 		return 0, err
 	}
-	return JobStatus(status), nil
+	return JobStatus(status.Status), nil
 }
 
 // ClaimCancelling a cancelling call.

@@ -57,8 +57,8 @@ export MEM='16384'
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
-  --server.tls.server-host-override=grid-logger.deepsquare.run \
-  --server.endpoint=grid-logger.deepsquare.run:443 \
+  --server.tls.server-host-override='logger.example.com' \
+  --server.endpoint='logger.example.com:443' \
   --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
@@ -105,8 +105,8 @@ export 'key'='test'\''test'
 machine "registry" login "username" password "password"
 EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -164,8 +164,8 @@ export MEM='16384'
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
-  --server.tls.server-host-override=grid-logger.deepsquare.run \
-  --server.endpoint=grid-logger.deepsquare.run:443 \
+  --server.tls.server-host-override='logger.example.com' \
+  --server.endpoint='logger.example.com:443' \
   --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
@@ -232,8 +232,8 @@ export 'key'='test'\''test'
 machine "registry" login "username" password "password"
 EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -298,8 +298,8 @@ export MEM='16384'
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
-  --server.tls.server-host-override=grid-logger.deepsquare.run \
-  --server.endpoint=grid-logger.deepsquare.run:443 \
+  --server.tls.server-host-override='logger.example.com' \
+  --server.endpoint='logger.example.com:443' \
   --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
@@ -354,8 +354,8 @@ export 'key'='test'\''test'
 machine "registry" login "username" password "password"
 EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -407,8 +407,8 @@ export MEM='16384'
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
-  --server.tls.server-host-override=grid-logger.deepsquare.run \
-  --server.endpoint=grid-logger.deepsquare.run:443 \
+  --server.tls.server-host-override='logger.example.com' \
+  --server.endpoint='logger.example.com:443' \
   --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
@@ -475,8 +475,8 @@ export 'key'='test'\''test'
 machine "registry" login "username" password "password"
 EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -546,8 +546,8 @@ export 'key'='test'\''test'
 machine "registry" login "username" password "password"
 EOFnetrc
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)",'key'='test'\''test','test'='value' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
@@ -589,8 +589,11 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
+			// Arrange
+			r := renderer.NewJobRenderer("logger.example.com:443")
+
 			// Act
-			actual, err := renderer.RenderJob(&tt.input)
+			actual, err := r.RenderJob(&tt.input)
 
 			// Assert
 			if tt.isError {

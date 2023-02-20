@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/jobmanager"
+	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/ldap-connector/ldap"
 	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
 	"github.com/deepsquare-io/the-grid/ldap-connector/validate"
@@ -14,30 +14,30 @@ import (
 )
 
 type Watcher struct {
-	jobManager *jobmanager.JobManager
-	ldap       *ldap.DataSource
+	metascheduler *metascheduler.MetaScheduler
+	ldap          *ldap.DataSource
 }
 
 func New(
-	jobManager *jobmanager.JobManager,
+	metascheduler *metascheduler.MetaScheduler,
 	ldap *ldap.DataSource,
 ) *Watcher {
-	if jobManager == nil {
-		logger.I.Panic("jobManager is nil")
+	if metascheduler == nil {
+		logger.I.Panic("metascheduler is nil")
 	}
 	if ldap == nil {
 		logger.I.Panic("ldap is nil")
 	}
 	return &Watcher{
-		jobManager: jobManager,
-		ldap:       ldap,
+		metascheduler: metascheduler,
+		ldap:          ldap,
 	}
 }
 
 func (w *Watcher) Watch(parent context.Context) error {
-	events := make(chan *jobmanager.JobManagerNewJobRequestEvent)
+	events := make(chan *metascheduler.MetaSchedulerNewJobRequestEvent)
 
-	sub, err := w.jobManager.WatchNewJobRequestEvent(&bind.WatchOpts{
+	sub, err := w.metascheduler.WatchNewJobRequestEvent(&bind.WatchOpts{
 		Context: parent,
 	}, events)
 	if err != nil {
@@ -64,7 +64,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 	}
 }
 
-func (w *Watcher) handleEvent(parent context.Context, event *jobmanager.JobManagerNewJobRequestEvent) error {
+func (w *Watcher) handleEvent(parent context.Context, event *metascheduler.MetaSchedulerNewJobRequestEvent) error {
 	user := strings.ToLower(event.CustomerAddr.Hex())
 	if errMsg := validate.LDAPUserIsValid(user); errMsg != "" {
 		logger.I.Error("user is invalid", zap.Error(errors.New(errMsg)))

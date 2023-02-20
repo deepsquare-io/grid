@@ -43,7 +43,7 @@ var gRPCToEthJobStatus = map[supervisorv1alpha1.JobStatus]eth.JobStatus{
 	supervisorv1alpha1.JobStatus_JOB_STATUS_META_SCHEDULED: eth.JobStatusMetaScheduled,
 	supervisorv1alpha1.JobStatus_JOB_STATUS_SCHEDULED:      eth.JobStatusScheduled,
 	supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING:        eth.JobStatusRunning,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLING:     eth.JobStatusCancelling,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLING:     eth.JobStatusUnknown,
 	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLED:      eth.JobStatusCancelled,
 	supervisorv1alpha1.JobStatus_JOB_STATUS_FINISHED:       eth.JobStatusFinished,
 	supervisorv1alpha1.JobStatus_JOB_STATUS_FAILED:         eth.JobStatusFailed,
@@ -62,6 +62,19 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 	copy(jobNameFixedLength[:], jobName)
 
 	if status, ok := gRPCToEthJobStatus[req.Status]; ok {
+		// Ignore unknown status transition, this is for backward compatilibility
+		if status == eth.JobStatusUnknown {
+			logger.I.Warn(
+				"status unknown (if the status is deprecated, ignore this warning)",
+				zap.Error(err),
+				zap.String("status", req.Status.String()),
+				zap.String("name", string(jobName)),
+				zap.Uint64("duration", req.Duration/60),
+			)
+			return &supervisorv1alpha1.SetJobStatusResponse{}, nil
+		}
+
+		// Do set job status
 		if err = try.Do(func() error {
 			return s.jobHandler.SetJobStatus(
 				ctx,

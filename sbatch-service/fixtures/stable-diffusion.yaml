@@ -21,13 +21,8 @@ job:
     - key: PROMPT
       value: '' # TO TEMPLATE: prompt
   output:
-    s3:
-      region: region
-      bucketUrl: s3://test
-      path: '/test'
-      accessKeyId: accessKeyId
-      secretAccessKey: secretAccessKey
-      endpointUrl: https://example
+    http:
+      url: https://transfer.deepsquare.run/
   continuousOutputSync: true
   steps:
     - name: generate-image
@@ -38,23 +33,23 @@ job:
           registry: registry-1.deepsquare.run
           image: library/stable-diffusion:latest
           mounts:
-            - hostDir: /tmp/cache
+            - hostDir: /data/beegfs/cache/persistent
               containerDir: /cache
               options: rw
             - hostDir: /opt/models/stable-diffusion
               containerDir: /models
-              option: ro
+              options: ro
         resources:
           tasks: 1
           cpusPerTask: 8 # TO TEMPLATE
           memPerCpu: 8000 # TO TEMPLATE
-          gpusPerTask: 0 # TO TEMPLATE
+          gpusPerTask: 1 # TO TEMPLATE
         env:
-          - key: TORCH_HOME
+          - key: HF_HOME
             value: /cache
         shell: /bin/bash
         command: |-
-          set -ex
+          set -e
 
           params=(
             "--ckpt" "/models/$MODEL/model.ckpt"
@@ -63,12 +58,23 @@ job:
             "--W" "$WIDTH"
             "--steps" "$STEPS"
             "--n_iter" "$ITER"
+            "--device" "cuda"
             "--n_samples" "$SAMPLES"
-            "--seed" "$(od -A n -t d -N 1 /dev/urandom)"
+            "--seed" "$(od -N 4 -t uL -An /dev/urandom | tr -d " ")"
             "--prompt" "$PROMPT"
           )
-          if [ -f "/models/$MODEL/model.yaml" ]; then
-            params+=("--config" "/models/$MODEL/model.yaml")
+          if [ -f "/models/$MODEL/config.yaml" ]; then
+            params+=("--config" "/models/$MODEL/config.yaml")
           fi
 
-          python /stablediffusion/scripts/txt2img.py "${params[@]}"
+          python /stablediffusion/scripts/txt2img.py "\${params[@]}"
+
+          echo "##############################################################"
+          echo
+          echo "Click on this link to preview your results:"
+          find "$DEEPSQUARE_OUTPUT" -name "grid*.png" -exec sh -c 'file="{}"; curl -sS --upload-file "$file" https://transfer.deepsquare.run/; rm "$file"' \\;
+          echo
+          echo
+          echo "##############################################################"
+
+          chmod -R 777 /cache/* 2>/dev/null || true

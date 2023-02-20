@@ -12,8 +12,8 @@ export MEM='256000'
 /usr/local/bin/grid-logger-writer \
   --server.tls \
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
-  --server.tls.server-host-override=grid-logger.deepsquare.run \
-  --server.endpoint=grid-logger.deepsquare.run:443 \
+  --server.tls.server-host-override='logger.example.com' \
+  --server.endpoint='logger.example.com:443' \
   --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
@@ -79,7 +79,7 @@ export 'IS_ANIME'='false'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='compute-frames' \
-  --export=ALL"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
   --mem-per-cpu=8000M \
   --gpus-per-task=0 \
@@ -138,7 +138,7 @@ export index="$1"
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='upscale' \
-  --export=ALL"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
   --mem-per-cpu=8000M \
   --gpus-per-task=1 \
@@ -164,7 +164,7 @@ done
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='re-encode-video' \
-  --export=ALL"$(loadDeepsquareEnv)",'IS_VIDEO'='false','IS_FACE'='false','IS_ANIME'='false' \
+  --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
   --mem-per-cpu=8000M \
   --gpus-per-task=0 \

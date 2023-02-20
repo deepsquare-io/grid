@@ -11,7 +11,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
-	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
 	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
 	validator "github.com/go-playground/validator/v10"
 	shortuuid "github.com/lithammer/shortuuid/v4"
@@ -22,7 +21,7 @@ import (
 
 // Submit is the resolver for the submit field.
 func (r *mutationResolver) Submit(ctx context.Context, job model.Job) (string, error) {
-	script, err := renderer.RenderJob(&job)
+	script, err := r.JobRenderer.RenderJob(&job)
 	if err != nil {
 		if errors, ok := err.(validator.ValidationErrors); ok {
 			for _, err := range errors {

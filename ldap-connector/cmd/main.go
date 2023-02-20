@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/deepsquare-io/the-grid/ldap-connector/config"
-	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/jobmanager"
+	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/ldap-connector/ldap"
 	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
 	"github.com/deepsquare-io/the-grid/ldap-connector/watcher"
@@ -102,7 +102,7 @@ var app = &cli.App{
 		if err != nil {
 			logger.I.Fatal("ethClientWS dial failed", zap.Error(err))
 		}
-		contract, err := jobmanager.NewJobManager(common.HexToAddress(jobManagerSmartContract), ethClientWS)
+		contract, err := metascheduler.NewMetaScheduler(common.HexToAddress(jobManagerSmartContract), ethClientWS)
 		if err != nil {
 			logger.I.Fatal("metaschedulerWS dial failed", zap.Error(err))
 		}
