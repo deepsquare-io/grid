@@ -3,6 +3,7 @@ package jobapi
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
@@ -76,12 +77,27 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 
 		// Do set job status
 		if err = try.Do(func() error {
-			return s.jobHandler.SetJobStatus(
+			err := s.jobHandler.SetJobStatus(
 				ctx,
 				jobNameFixedLength,
 				status,
 				req.Duration/60,
 			)
+
+			// TODO: use proper error handling
+			if strings.Contains(err.Error(), "Cannot change status to itself") {
+				logger.I.Warn(
+					"Cannot change status to itself",
+					zap.Error(err),
+					zap.String("status", req.Status.String()),
+					zap.String("name", string(jobName)),
+					zap.Uint64("duration", req.Duration/60),
+				)
+				return nil
+			}
+
+			return err
+
 		}, 3, 3*time.Second); err != nil {
 			logger.I.Error(
 				"SetJobStatus failed",
