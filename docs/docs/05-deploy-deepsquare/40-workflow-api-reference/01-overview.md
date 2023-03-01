@@ -1,6 +1,7 @@
 # Workflow files
+
 To run your workload on deepsquare, you have to provide a yaml workflow file.
-It is a convenient way to define your workload in a human readable format. This workflow file will later be sent to a service which will translate it into a Slurm compatible job definition.  
+It is a convenient way to define your workload in a human readable format. This workflow file will later be sent to a service which will translate it into a Slurm compatible job definition.
 A workflow file can contain multiple steps, some of which can be configured to run in parallel, on a different set of nodes/resources and each of them can run in different container images if needed.
 
 Here is an example of the workflow file used to create the upscaling app currently available on DeepSquare:
