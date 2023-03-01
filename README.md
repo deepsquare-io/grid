@@ -6,18 +6,18 @@ A decentralized network of compute resources.
 
 ```mermaid
 flowchart TD
-  cli --> smart-contracts
-  customer-portal --> smart-contracts
-  smart-contracts --> ldap-connector
-  smart-contracts --> meta-scheduler
-  smart-contracts --> oracle-scheduler
-  smart-contracts --> supervisor
+  grid-logger --> protos/loggerapis --> customer-portal
+  sbatch-service --> protos/sbatchapis --> supervisor
+  sbatch-service --> schemas/sbatchapi --> customer-portal
   supervisor --> protos/supervisorapis
   protos/supervisorapis --> provider-job-completion-plugin
   protos/supervisorapis --> provider-spank-plugin
   protos/supervisorapis --> provider-ssh-authorized-keys-plugin
-  customer-api --> protos/customerapis
-  protos/customerapis --> supervisor
+  smart-contracts --> ldap-connector
+  smart-contracts --> meta-scheduler
+  smart-contracts --> oracle-scheduler
+  smart-contracts --> customer-portal
+  smart-contracts --> supervisor
 ```
 
 ## What is the DeepSquare Grid
