@@ -7,6 +7,7 @@ package graph
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
@@ -51,7 +52,7 @@ func (r *mutationResolver) Submit(ctx context.Context, job model.Job) (string, e
 	}
 	u := shortuuid.New()
 	logger.I.Info("set", zap.String("uuid", u), zap.String("script", script))
-	_, err = r.RedisClient.Set(ctx, u, script, 0).Result()
+	_, err = r.RedisClient.Set(ctx, u, script, 1*time.Hour).Result()
 	if err != nil {
 		graphql.AddError(ctx, &gqlerror.Error{
 			Path:    graphql.GetPath(ctx),
