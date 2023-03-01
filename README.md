@@ -32,12 +32,12 @@ flowchart LR
 
     subgraph CLIs
       grid-logger-writer
+      provider-ssh-authorized-keys
     end
 
     subgraph Slurm plugins
       provider-job-completion-plugin
       provider-spank-plugin
-      provider-ssh-authorized-keys-plugin
     end
   end
 
@@ -62,9 +62,9 @@ flowchart LR
   protos/sbatchapis --> sbatch-service
   protos/sbatchapis --> supervisor
   protos/supervisorapis --> supervisor
+  protos/supervisorapis --> provider-ssh-authorized-keys
   protos/supervisorapis --> provider-job-completion-plugin
   protos/supervisorapis --> provider-spank-plugin
-  protos/supervisorapis --> provider-ssh-authorized-keys-plugin
   smart-contracts --> customer-portal
   smart-contracts --> meta-scheduler
   smart-contracts --> oracle-scheduler
