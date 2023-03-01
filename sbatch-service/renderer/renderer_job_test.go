@@ -59,7 +59,7 @@ export MEM='16384'
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
   --server.tls.server-host-override='logger.example.com' \
   --server.endpoint='logger.example.com:443' \
-  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
   >/dev/stdout 2>/dev/stderr &
@@ -67,7 +67,7 @@ LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec 3>&1
 exec 4>&2
-exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
 
 disposeLogs() {
@@ -80,25 +80,38 @@ disposeLogs() {
   wait $LOGGER_PID || true
   echo cleaned
 }
-trap disposeLogs EXIT
+trap disposeLogs EXIT INT TERM
+# SCOPE: LOGS
 (
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
-/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
-/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
-cd "$SLURM_JOB_NAME/"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
 loadDeepsquareEnv() {
   while IFS= read -r envvar; do
     printf ',%s' "$envvar"
   done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
-export 'key'='test'\''test'
+export 'key'='test'"'"'test'
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -112,10 +125,12 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
+  --no-container-remap-root \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
-  /bin/sh -c '/usr/bin/echo '\''hello world'\'''
+  /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 )
+# END SCOPE: LOGS
 `,
 			title: "Positive test 'hello world'",
 		},
@@ -166,7 +181,7 @@ export MEM='16384'
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
   --server.tls.server-host-override='logger.example.com' \
   --server.endpoint='logger.example.com:443' \
-  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
   >/dev/stdout 2>/dev/stderr &
@@ -174,7 +189,7 @@ LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec 3>&1
 exec 4>&2
-exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
 
 disposeLogs() {
@@ -187,18 +202,31 @@ disposeLogs() {
   wait $LOGGER_PID || true
   echo cleaned
 }
-trap disposeLogs EXIT
+trap disposeLogs EXIT INT TERM
+# SCOPE: LOGS
 (
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
-/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
-/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
-cd "$SLURM_JOB_NAME/"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
 loadDeepsquareEnv() {
   while IFS= read -r envvar; do
     printf ',%s' "$envvar"
@@ -217,6 +245,7 @@ ContinuousOutputSync() {
   export AWS_ACCESS_KEY_ID='AccessKeyID'
   export AWS_SECRET_ACCESS_KEY='SecretAccessKey'
   export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
+  set +e
   while true; do
     s5cmd sync --delete --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
     /usr/bin/sleep 5
@@ -224,8 +253,9 @@ ContinuousOutputSync() {
 }
 ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
+# SCOPE: CONTINUOUS SYNC
 (
-export 'key'='test'\''test'
+export 'key'='test'"'"'test'
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -239,10 +269,12 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
+  --no-container-remap-root \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
-  /bin/sh -c '/usr/bin/echo '\''hello world'\'''
+  /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 )
+# END SCOPE: CONTINUOUS SYNC
 kill $CONTINUOUS_SYNC_PID || true
 wait $CONTINUOUS_SYNC_PID || true
 /usr/bin/echo "Output contains:"
@@ -253,6 +285,7 @@ export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
 s5cmd sync --delete --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
 )
+# END SCOPE: LOGS
 `,
 			title: "Positive test with S3 input output",
 		},
@@ -300,7 +333,7 @@ export MEM='16384'
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
   --server.tls.server-host-override='logger.example.com' \
   --server.endpoint='logger.example.com:443' \
-  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
   >/dev/stdout 2>/dev/stderr &
@@ -308,7 +341,7 @@ LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec 3>&1
 exec 4>&2
-exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
 
 disposeLogs() {
@@ -321,18 +354,31 @@ disposeLogs() {
   wait $LOGGER_PID || true
   echo cleaned
 }
-trap disposeLogs EXIT
+trap disposeLogs EXIT INT TERM
+# SCOPE: LOGS
 (
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
-/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
-/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
-cd "$SLURM_JOB_NAME/"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
 loadDeepsquareEnv() {
   while IFS= read -r envvar; do
     printf ',%s' "$envvar"
@@ -347,7 +393,7 @@ s5cmd cp --source-region 'us‑east‑2' 's3://test''/in''*' "$DEEPSQUARE_INPUT/
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
-export 'key'='test'\''test'
+export 'key'='test'"'"'test'
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -361,9 +407,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
+  --no-container-remap-root \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
-  /bin/sh -c '/usr/bin/echo '\''hello world'\'''
+  /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 export AWS_ACCESS_KEY_ID='AccessKeyID'
@@ -372,6 +419,7 @@ export S3_ENDPOINT_URL='https://s3.us‑east‑2.amazonaws.com'
 
 s5cmd sync --destination-region 'us‑east‑2' "$DEEPSQUARE_OUTPUT/" 's3://test''/out'
 )
+# END SCOPE: LOGS
 `,
 			title: "Positive test with S3 input output and continuous sync",
 		},
@@ -409,7 +457,7 @@ export MEM='16384'
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
   --server.tls.server-host-override='logger.example.com' \
   --server.endpoint='logger.example.com:443' \
-  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
   >/dev/stdout 2>/dev/stderr &
@@ -417,7 +465,7 @@ LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec 3>&1
 exec 4>&2
-exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
 
 disposeLogs() {
@@ -430,18 +478,31 @@ disposeLogs() {
   wait $LOGGER_PID || true
   echo cleaned
 }
-trap disposeLogs EXIT
+trap disposeLogs EXIT INT TERM
+# SCOPE: LOGS
 (
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
-/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
-/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
-cd "$SLURM_JOB_NAME/"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
 loadDeepsquareEnv() {
   while IFS= read -r envvar; do
     printf ',%s' "$envvar"
@@ -468,7 +529,7 @@ cd $STORAGE_PATH
 /usr/bin/echo "Input contains:"
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
-export 'key'='test'\''test'
+export 'key'='test'"'"'test'
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -482,9 +543,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
+  --no-container-remap-root \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
-  /bin/sh -c '/usr/bin/echo '\''hello world'\'''
+  /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 cd $DEEPSQUARE_OUTPUT/..
@@ -503,6 +565,7 @@ fi
 /usr/bin/echo "##############################################################"
 cd $STORAGE_PATH
 )
+# END SCOPE: LOGS
 `,
 			title: "Positive test with HTTP input output",
 		},
@@ -524,22 +587,34 @@ export GPUS_PER_TASK='1'
 export GPUS='1'
 export CPUS='4'
 export MEM='16384'
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
-/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
-/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
-cd "$SLURM_JOB_NAME/"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
 loadDeepsquareEnv() {
   while IFS= read -r envvar; do
     printf ',%s' "$envvar"
   done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
-export 'key'='test'\''test'
+export 'key'='test'"'"'test'
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -553,9 +628,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
+  --no-container-remap-root \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
-  /bin/sh -c '/usr/bin/echo '\''hello world'\'''
+  /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 `,
 			title: "Positive test with no logs",
 		},

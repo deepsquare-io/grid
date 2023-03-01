@@ -32,7 +32,11 @@ var (
 	//go:embed stable-diffusion.yaml
 	fixtureStableDiffusion string
 	//go:embed stable-diffusion.txt
-	expecteStableDiffusion string
+	expectedStableDiffusion string
+	//go:embed minecraft.yaml
+	fixtureMinecraft string
+	//go:embed minecraft.txt
+	expectedMinecraft string
 
 	r = renderer.NewJobRenderer("logger.example.com:443")
 )
@@ -103,6 +107,20 @@ func TestStableDiffusionJob(t *testing.T) {
 	out, err := r.RenderJob(&j.Job)
 	require.NoError(t, err)
 	fmt.Println(out)
-	require.Equal(t, expecteStableDiffusion, out)
+	require.Equal(t, expectedStableDiffusion, out)
+	require.NoError(t, renderer.Shellcheck(out))
+}
+
+func TestMinecraftJob(t *testing.T) {
+	j := struct {
+		Job model.Job
+	}{}
+	err := yaml.Unmarshal([]byte(fixtureMinecraft), &j)
+	require.NoError(t, err)
+
+	out, err := r.RenderJob(&j.Job)
+	require.NoError(t, err)
+	fmt.Println(out)
+	require.Equal(t, expectedMinecraft, out)
 	require.NoError(t, renderer.Shellcheck(out))
 }

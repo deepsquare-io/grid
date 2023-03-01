@@ -598,6 +598,26 @@ func TestValidateStepRun(t *testing.T) {
 			errorContains: []string{"Resources"},
 			title:         "Negative test: Resources validation error",
 		},
+		{
+			input: func() model.StepRun {
+				r := cleanStepRunWith(&cleanStepRunResources, &cleanEnvVar)
+				r.Network = utils.Ptr("other")
+				return *r
+			}(),
+			isError:       true,
+			errorContains: []string{"Network", "oneof"},
+			title:         "Negative test: Network validation error",
+		},
+		{
+			input: func() model.StepRun {
+				r := cleanStepRunWith(&cleanStepRunResources, &cleanEnvVar)
+				r.DNS = []string{"notanip"}
+				return *r
+			}(),
+			isError:       true,
+			errorContains: []string{"DNS", "ip"},
+			title:         "Negative test: DNS validation error",
+		},
 	}
 
 	for _, tt := range tests {
@@ -975,6 +995,146 @@ func TestValidateJob(t *testing.T) {
 			isError:       true,
 			errorContains: []string{"Steps"},
 			title:         "Negative test: step validation errors",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.title, func(t *testing.T) {
+			// Act
+			err := validate.I.Struct(tt.input)
+
+			// Assert
+			if tt.isError {
+				assert.Error(t, err)
+				for _, contain := range tt.errorContains {
+					assert.ErrorContains(t, err, contain)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+var cleanWireguardPeer = model.WireguardPeer{
+	PublicKey:           "pub",
+	AllowedIPs:          []string{"0.0.0.0/0", "172.10.0.0/32"},
+	PreSharedKey:        utils.Ptr("sha"),
+	Endpoint:            utils.Ptr("10.0.0.0:30"),
+	PersistentKeepalive: utils.Ptr(20),
+}
+
+func TestValidateWireguardPeer(t *testing.T) {
+	tests := []struct {
+		input         model.WireguardPeer
+		isError       bool
+		errorContains []string
+		title         string
+	}{
+		{
+			input: cleanWireguardPeer,
+			title: "Positive test",
+		},
+		{
+			input: func() model.WireguardPeer {
+				w := cleanWireguardPeer
+				w.Endpoint = nil
+				return w
+			}(),
+			title: "Positive test: Endpoint allow empty",
+		},
+		{
+			input: func() model.WireguardPeer {
+				w := cleanWireguardPeer
+				w.AllowedIPs = []string{"a"}
+				return w
+			}(),
+			title:         "Negative test: AllowedIPs is not a cidr",
+			isError:       true,
+			errorContains: []string{"AllowedIPs", "cidr"},
+		},
+		{
+			input: func() model.WireguardPeer {
+				w := cleanWireguardPeer
+				w.Endpoint = utils.Ptr("a")
+				return w
+			}(),
+			title:         "Negative test: Endpoint is not an hostname_port",
+			isError:       true,
+			errorContains: []string{"Endpoint", "hostname_port"},
+		},
+		{
+			input: func() model.WireguardPeer {
+				w := cleanWireguardPeer
+				w.Endpoint = utils.Ptr("a")
+				return w
+			}(),
+			title:         "Negative test: Endpoint is not an hostname_port",
+			isError:       true,
+			errorContains: []string{"Endpoint", "hostname_port"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.title, func(t *testing.T) {
+			// Act
+			err := validate.I.Struct(tt.input)
+
+			// Assert
+			if tt.isError {
+				assert.Error(t, err)
+				for _, contain := range tt.errorContains {
+					assert.ErrorContains(t, err, contain)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+var cleanWireguard = model.Wireguard{
+	Address:    []string{"10.0.0.1/32", "11.0.0.1/24"},
+	PrivateKey: "abc",
+	Peers: []*model.WireguardPeer{
+		&cleanWireguardPeer,
+	},
+}
+
+func TestValidateWireguard(t *testing.T) {
+	tests := []struct {
+		input         model.Wireguard
+		isError       bool
+		errorContains []string
+		title         string
+	}{
+		{
+			input: cleanWireguard,
+			title: "Positive test",
+		},
+		{
+			input: func() model.Wireguard {
+				w := cleanWireguard
+				w.Address = []string{"a"}
+				return w
+			}(),
+			title:         "Negative test: Address is not an cidr",
+			isError:       true,
+			errorContains: []string{"Address", "cidr"},
+		},
+		{
+			input: func() model.Wireguard {
+				w := cleanWireguard
+				p := cleanWireguardPeer
+				p.Endpoint = utils.Ptr("err")
+				w.Peers = []*model.WireguardPeer{
+					&p,
+				}
+				return w
+			}(),
+			title:         "Negative test: Dive peers",
+			isError:       true,
+			errorContains: []string{"Peers"},
 		},
 	}
 

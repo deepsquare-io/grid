@@ -10,6 +10,10 @@ func Format(err validator.FieldError) string {
 	switch err.Tag() {
 	case "url":
 		return fmt.Sprintf("'%s' is not a valid URL (error: '%s')", err.Field(), err.Tag())
+	case "ip":
+		return fmt.Sprintf("'%s' is not a valid IP (error: '%s')", err.Field(), err.Tag())
+	case "cidr":
+		return fmt.Sprintf("'%s' is not a valid CIDR (error: '%s')", err.Field(), err.Tag())
 	case "startswith":
 		return fmt.Sprintf("'%s' must start with '%s' (error: '%s')", err.Field(), err.Value(), err.Tag())
 	case "endsnotwith":

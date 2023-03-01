@@ -46,6 +46,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
+  --no-container-remap-root \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c 'hostname'`,
@@ -69,6 +70,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
+  --no-container-remap-root \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo $item'
@@ -85,6 +87,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
+  --no-container-remap-root \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo $item'

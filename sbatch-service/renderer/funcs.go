@@ -2,6 +2,7 @@ package renderer
 
 import (
 	"fmt"
+	"net"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -15,10 +16,26 @@ func squote(str ...interface{}) string {
 		if s != nil {
 			switch s := s.(type) {
 			case string:
-				s = strings.ReplaceAll(s, "'", "'\\''")
+				s = strings.ReplaceAll(s, "'", "'\"'\"'")
 				out = append(out, fmt.Sprintf("'%v'", s))
 			default:
 				out = append(out, fmt.Sprintf("'%v'", s))
+			}
+		}
+	}
+	return strings.Join(out, " ")
+}
+
+func escapeSQuote(str ...interface{}) string {
+	out := make([]string, 0, len(str))
+	for _, s := range str {
+		if s != nil {
+			switch s := s.(type) {
+			case string:
+				s = strings.ReplaceAll(s, "'", "'\"'\"'")
+				out = append(out, s)
+			default:
+				out = append(out, fmt.Sprintf("%v", s))
 			}
 		}
 	}
@@ -78,9 +95,24 @@ func funcMap() template.FuncMap {
 	f["renderStep"] = RenderStep
 	f["renderStepRun"] = RenderStepRun
 	f["renderStepFor"] = RenderStepFor
+	f["renderWireguard"] = RenderWireguard
+	f["renderApptainerCommand"] = RenderApptainerCommand
+	f["renderSlirp4NetNS"] = RenderSlirp4NetNS
+	f["renderEnrootCommand"] = RenderEnrootCommand
 	f["squote"] = squote
+	f["escapeSQuote"] = escapeSQuote
 	f["quoteEscape"] = quoteEscape
 	f["formatImageURL"] = FormatImageURL
+	f["isCIDRv4"] = func(i string) bool {
+		ip, _, err := net.ParseCIDR(i)
+
+		return err == nil && ip.To4() != nil
+	}
+	f["isCIDRv6"] = func(i string) bool {
+		ip, _, err := net.ParseCIDR(i)
+
+		return err == nil && ip.To4() == nil
+	}
 	return f
 }
 
