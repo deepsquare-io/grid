@@ -551,9 +551,7 @@ func TestValidateStepRun(t *testing.T) {
 			title: "Positive test",
 		},
 		{
-			input: model.StepRun{
-				Resources: &cleanStepRunResources,
-			},
+			input: model.StepRun{},
 			title: "Positive test: omitempty",
 		},
 		{
