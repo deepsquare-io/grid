@@ -1,7 +1,6 @@
 package renderer_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
@@ -124,6 +123,31 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 		{
 			input: func() model.StepRun {
 				r := *cleanStepRun("hostname")
+				r.WorkDir = utils.Ptr("/home")
+				return r
+			}(),
+			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
+/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
+machine "registry" login "username" password "password"
+EOFnetrc
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  --no-container-remap-root \
+  --container-mounts="${MOUNTS}" \
+  --container-workdir='/home' \
+  --container-image='registry#image' \
+  /bin/sh -c 'hostname'`,
+			title: "Positive test with pyxis workdir",
+		},
+		{
+			input: func() model.StepRun {
+				r := *cleanStepRun("hostname")
 				r.Container.Apptainer = utils.Ptr(true)
 				r.Container.Image = "/test/my.sqshfs"
 				return r
@@ -186,6 +210,22 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   /bin/sh -c 'hostname
 /usr/bin/echo "test"'`,
 			title: "Positive test with multiline command",
+		},
+		{
+			input: model.StepRun{
+				Env:       cleanStepRun("").Env,
+				Resources: &cleanStepRunResources,
+				WorkDir:   utils.Ptr("/dir"),
+				Command:   `hostname`,
+			},
+			expected: `test='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  /bin/sh -c 'cd '"'"'/dir'"'"' || { echo "change dir to working directory failed"; exit 1; };''hostname'`,
+			title: "Positive test with workdir",
 		},
 		{
 			input: model.StepRun{
@@ -646,24 +686,26 @@ wait_for_network_device $$ tap0
 
 environ() {
   # Keep all the environment from the host
-  env
+  /usr/bin/env
 
-  cat "${ENROOT_ROOTFS}/etc/environment"
+  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
 
-  echo "STORAGE_PATH=/deepsquare"
-  echo "DEEPSQUARE_INPUT=/deepsquare/input"
-  echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
 }
 
 mounts() {
-  echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
-  echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  echo '"'"'"'"'"'"'"'"'/host /container bind,ro'"'"'"'"'"'"'"'"'
+  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
+  /usr/bin/echo '"'"'"'"'"'"'"'"'/host /container bind,ro'"'"'"'"'"'"'"'"'
 }
 
 hooks() {
-  echo '"'"'"'"'"'"'"'"'exec "$@"'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+  /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+  exec "$@"
+  EOFrclocal
 }
 EOFenroot
 /usr/bin/enroot start \
@@ -692,7 +734,6 @@ wait $child
 		t.Run(tt.title, func(t *testing.T) {
 			// Act
 			actual, err := renderer.RenderStepRun(&cleanJob, cleanStepWithRun(&tt.input))
-			fmt.Println(actual)
 
 			// Assert
 			if tt.isError {

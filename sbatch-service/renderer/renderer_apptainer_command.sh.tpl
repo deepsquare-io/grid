@@ -1,6 +1,9 @@
 /usr/bin/apptainer --silent exec \
   --disable-cache \
   --nv \
+{{- if and .Run.WorkDir (derefStr .Run.WorkDir) }}
+  --pwd {{ derefStr .Run.WorkDir | squote }} \
+{{- end }}
 {{- if and .Run.MapRoot (derefBool .Run.MapRoot ) }}
   --fakeroot \
 {{- end }}

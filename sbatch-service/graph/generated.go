@@ -572,29 +572,13 @@ $DEEPSQUARE_OUTPUT is the staging directory for uploading files.
 """
 input StepRun {
   """
-  Allocated resources for the command.
-  """
-  resources: StepRunResources!
-  """
-  Container definition.
-
-  If null, run on the host.
-  """
-  container: ContainerRun
-  """
-  DisableCPUBinding disables process affinity binding to tasks.
-
-  Can be useful when running MPI jobs.
-
-  If null, defaults to false.
-  """
-  disableCpuBinding: Boolean
-  """
-  Environment variables accessible over the command.
-  """
-  env: [EnvVar!]
-  """
   Command specifies a shell script.
+
+  If container is used, command automatically overwrite the ENTRYPOINT and CMD. If you want to execute the entrypoint, it MUST be re-specified.
+
+  You can install and use skopeo to inspect an image without having to pull it.
+
+  Example: skopeo inspect --config docker://curlimages/curl:latest will gives "/entrypoint.sh" as ENTRYPOINT and "curl" as CMD. Therefore command="/entrypoint.sh curl".
   """
   command: String!
   """
@@ -604,6 +588,16 @@ input StepRun {
   Default: /bin/sh
   """
   shell: String
+  """
+  Allocated resources for the command.
+  """
+  resources: StepRunResources!
+  """
+  Container definition.
+
+  If null, run on the host.
+  """
+  container: ContainerRun
   """
   Type of core networking functionality.
 
@@ -621,18 +615,6 @@ input StepRun {
   """
   dns: [String!]
   """
-  Remap UID to root.
-
-  If the "default" (enroot/pyxis) container runtime is used, it will use the ` + "`" + `--root` + "`" + ` (--container-remap-root for Pyxis) flags.
-
-  If the "apptainer" container runtime is used, the ` + "`" + `--fakeroot` + "`" + ` flag will be passed.
-
-  If no container runtime is used, ` + "`" + `unshared --user --map-root-user --mount` + "`" + ` will be used and a user namespace will be created.
-
-  If null, default to false.
-  """
-  mapRoot: Boolean
-  """
   Add custom network interfaces.
 
   ONLY enabled if network is "slirp4netns".
@@ -644,6 +626,44 @@ input StepRun {
   The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
   """
   customNetworkInterfaces: [NetworkInterface!]
+  """
+  Environment variables accessible over the command.
+  """
+  env: [EnvVar!]
+  """
+  Remap UID to root. Does not grant elevated system permissions, despite appearances.
+
+  If the "default" (Pyxis) container runtime is used, it will use the ` + "`" + `--container-remap-root` + "`" + ` flags.
+
+  If the "apptainer" container runtime is used, the ` + "`" + `--fakeroot` + "`" + ` flag will be passed.
+
+  If no container runtime is used, ` + "`" + `unshare --user --map-root-user --mount` + "`" + ` will be used and a user namespace will be created.
+
+  It is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).
+
+  If null, default to false.
+  """
+  mapRoot: Boolean
+  """
+  Working directory.
+
+  If the "default" (Pyxis) container runtime is used, it will use the ` + "`" + `--container-workdir` + "`" + ` flag.
+
+  If the "apptainer" container runtime is used, the ` + "`" + `--pwd` + "`" + ` flag will be passed.
+
+  If no container runtime is used, ` + "`" + `cd` + "`" + ` will be executed first.
+
+  If null, default to use $STORAGE_PATH as working directory.
+  """
+  workDir: String
+  """
+  DisableCPUBinding disables process affinity binding to tasks.
+
+  Can be useful when running MPI jobs.
+
+  If null, defaults to false.
+  """
+  disableCpuBinding: Boolean
 }
 
 """
@@ -3381,45 +3401,13 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "container", "disableCpuBinding", "env", "command", "shell", "network", "dns", "mapRoot", "customNetworkInterfaces"}
+	fieldsInOrder := [...]string{"command", "shell", "resources", "container", "network", "dns", "customNetworkInterfaces", "env", "mapRoot", "workDir", "disableCpuBinding"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "resources":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
-			it.Resources, err = ec.unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "container":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("container"))
-			it.Container, err = ec.unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "disableCpuBinding":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableCpuBinding"))
-			it.DisableCPUBinding, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "env":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("env"))
-			it.Env, err = ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "command":
 			var err error
 
@@ -3433,6 +3421,22 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("shell"))
 			it.Shell, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "resources":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
+			it.Resources, err = ec.unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "container":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("container"))
+			it.Container, err = ec.unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3452,6 +3456,22 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			if err != nil {
 				return it, err
 			}
+		case "customNetworkInterfaces":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customNetworkInterfaces"))
+			it.CustomNetworkInterfaces, err = ec.unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterfaceᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "env":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("env"))
+			it.Env, err = ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "mapRoot":
 			var err error
 
@@ -3460,11 +3480,19 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			if err != nil {
 				return it, err
 			}
-		case "customNetworkInterfaces":
+		case "workDir":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customNetworkInterfaces"))
-			it.CustomNetworkInterfaces, err = ec.unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterfaceᚄ(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workDir"))
+			it.WorkDir, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "disableCpuBinding":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableCpuBinding"))
+			it.DisableCPUBinding, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}

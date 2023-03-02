@@ -280,6 +280,16 @@ type StepRun struct {
 	//
 	// If null, default to false.
 	MapRoot *bool `json:"mapRoot" yaml:"mapRoot"`
+	// Working directory inside a step.
+	//
+	// If the "default" (Pyxis) container runtime is used, it will use the `--container-workdir` flag.
+	//
+	// If the "apptainer" container runtime is used, the `--pwd` flag will be passed.
+	//
+	// If no container runtime is used, `cd` will be executed on the first line.
+	//
+	// If null, default to use $STORAGE_PATH as working directory.
+	WorkDir *string `json:"workDir" yaml:"workDir" validate:"omitempty,startswith=/"`
 	// Add custom network interfaces.
 	//
 	// ONLY enabled if network is "slirp4netns".

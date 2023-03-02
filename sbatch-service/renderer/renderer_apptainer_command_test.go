@@ -95,6 +95,20 @@ func TestRenderApptainer(t *testing.T) {
   /bin/sh -c 'hostname'`,
 			title: "Positive test with deepsquare-hosted image",
 		},
+		{
+			input: func() model.StepRun {
+				r := *cleanApptainerStepRun("hostname")
+				r.WorkDir = utils.Ptr("/dir")
+				return r
+			}(),
+			expected: `/usr/bin/apptainer --silent exec \
+  --disable-cache \
+  --nv \
+  --pwd '/dir' \
+  'docker://registry/image' \
+  /bin/sh -c 'hostname'`,
+			title: "Positive test with workdir",
+		},
 	}
 
 	for _, tt := range tests {

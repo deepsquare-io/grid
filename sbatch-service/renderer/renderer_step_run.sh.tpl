@@ -67,6 +67,9 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
 {{- end }}
   --container-mounts="${MOUNTS}" \
+{{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) }}
+  --container-workdir={{ derefStr .Step.Run.WorkDir | squote }} \
+{{- end }}
   --container-image={{ formatImageURL .Step.Run.Container.Registry .Step.Run.Container.Image .Step.Run.Container.Apptainer .Step.Run.Container.DeepsquareHosted | squote }} \
   {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Step.Run.Command | squote -}}
 {{- end -}}
@@ -84,5 +87,8 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 {{- if and .Step.Run.MapRoot (derefBool .Step.Run.MapRoot ) }}
   /usr/bin/unshare --user --map-root-user --mount \
 {{- end }}
-  {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS .Step.Run.Command .Step.Run.Shell | squote -}}{{ else }}{{ .Step.Run.Command | squote -}}{{ end }}
+  {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS .Step.Run.Command .Step.Run.Shell | squote -}}{{ else }}
+{{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) -}}
+  'cd {{ derefStr .Step.Run.WorkDir | squote | escapeSQuote }} || { echo "change dir to working directory failed"; exit 1; };'{{ end -}}
+  {{ .Step.Run.Command | squote -}}{{ end }}
 {{- end -}}
