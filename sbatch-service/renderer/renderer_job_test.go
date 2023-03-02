@@ -70,6 +70,8 @@ exec 4>&2
 exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
 
+/usr/bin/echo "--- Job has started ---"
+
 disposeLogs() {
   echo ---
   /usr/bin/sleep 15
@@ -191,6 +193,8 @@ exec 3>&1
 exec 4>&2
 exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
+
+/usr/bin/echo "--- Job has started ---"
 
 disposeLogs() {
   echo ---
@@ -344,6 +348,8 @@ exec 4>&2
 exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
 
+/usr/bin/echo "--- Job has started ---"
+
 disposeLogs() {
   echo ---
   /usr/bin/sleep 15
@@ -467,6 +473,8 @@ exec 3>&1
 exec 4>&2
 exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
+
+/usr/bin/echo "--- Job has started ---"
 
 disposeLogs() {
   echo ---
