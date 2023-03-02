@@ -83,17 +83,18 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 				status,
 				req.Duration/60,
 			)
-
-			// TODO: use proper error handling
-			if strings.Contains(err.Error(), "Cannot change status to itself") {
-				logger.I.Warn(
-					"Cannot change status to itself",
-					zap.Error(err),
-					zap.String("status", req.Status.String()),
-					zap.String("name", string(jobName)),
-					zap.Uint64("duration", req.Duration/60),
-				)
-				return nil
+			if err != nil {
+				// TODO: use proper error handling
+				if strings.Contains(err.Error(), "Cannot change status to itself") {
+					logger.I.Warn(
+						"Cannot change status to itself",
+						zap.Error(err),
+						zap.String("status", req.Status.String()),
+						zap.String("name", string(jobName)),
+						zap.Uint64("duration", req.Duration/60),
+					)
+					return nil
+				}
 			}
 
 			return err
