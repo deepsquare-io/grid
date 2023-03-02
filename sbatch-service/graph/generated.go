@@ -591,7 +591,7 @@ input StepRun {
   """
   Allocated resources for the command.
   """
-  resources: StepRunResources!
+  resources: StepRunResources
   """
   Container definition.
 
@@ -3428,7 +3428,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
-			it.Resources, err = ec.unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
+			it.Resources, err = ec.unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4187,11 +4187,6 @@ func (ec *executionContext) unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋt
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx context.Context, v interface{}) (*model.StepRunResources, error) {
-	res, err := ec.unmarshalInputStepRunResources(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4617,6 +4612,14 @@ func (ec *executionContext) unmarshalOStepRun2ᚖgithubᚗcomᚋdeepsquareᚑio�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputStepRun(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx context.Context, v interface{}) (*model.StepRunResources, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputStepRunResources(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

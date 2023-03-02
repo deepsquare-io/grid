@@ -240,7 +240,7 @@ type ContainerRun struct {
 // $DEEPSQUARE_OUTPUT is the staging directory for uploading files.
 type StepRun struct {
 	// Allocated resources for the command.
-	Resources *StepRunResources `json:"resources" yaml:"resources" validate:"required"`
+	Resources *StepRunResources `json:"resources" yaml:"resources"`
 	// Container definition.
 	//
 	// If null, run on the host.

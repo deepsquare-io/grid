@@ -668,7 +668,9 @@ func TestValidateStep(t *testing.T) {
 		},
 		{
 			input: *cleanStepWith(
-				&model.StepRun{},
+				&model.StepRun{
+					WorkDir: utils.Ptr("aaa"),
+				},
 				nil,
 			),
 			isError:       true,
@@ -679,7 +681,9 @@ func TestValidateStep(t *testing.T) {
 			input: *cleanStepWith(
 				nil,
 				cleanStepForWith(&cleanForRange, cleanStepWith(
-					&model.StepRun{},
+					&model.StepRun{
+						WorkDir: utils.Ptr("aaa"),
+					},
 					nil,
 				)),
 			),
@@ -748,7 +752,9 @@ func TestValidateStepFor(t *testing.T) {
 		},
 		{
 			input: *cleanStepForWith(&cleanForRange, cleanStepWith(
-				&model.StepRun{},
+				&model.StepRun{
+					WorkDir: utils.Ptr("aaa"),
+				},
 				nil,
 			)),
 			isError:       true,
@@ -976,9 +982,9 @@ func TestValidateJob(t *testing.T) {
 			input: *cleanJobWith(
 				&cleanJobResources,
 				&cleanEnvVar,
-				&model.TransportData{HTTP: &model.HTTPData{URL: "not a url"}},
+				cleanTransportDataWithHTTP(cleanHTTPData),
 				nil,
-				&model.TransportData{HTTP: &model.HTTPData{URL: "not a url"}},
+				cleanTransportDataWithHTTP(cleanHTTPData),
 			),
 			isError:       true,
 			errorContains: []string{"Steps", "required"},
@@ -988,9 +994,11 @@ func TestValidateJob(t *testing.T) {
 			input: *cleanJobWith(
 				&cleanJobResources,
 				&cleanEnvVar,
-				&model.TransportData{HTTP: &model.HTTPData{URL: "not a url"}},
-				&model.Step{Run: &model.StepRun{}},
-				&model.TransportData{HTTP: &model.HTTPData{URL: "not a url"}},
+				cleanTransportDataWithHTTP(cleanHTTPData),
+				&model.Step{Run: &model.StepRun{
+					WorkDir: utils.Ptr("aaz"),
+				}},
+				cleanTransportDataWithHTTP(cleanHTTPData),
 			),
 			isError:       true,
 			errorContains: []string{"Steps"},
