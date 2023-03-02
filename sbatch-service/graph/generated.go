@@ -556,7 +556,7 @@ input NetworkInterface {
   """
   Use the wireguard transport.
   """
-  wireguard: Wireguard!
+  wireguard: Wireguard
 }
 
 """
@@ -3212,7 +3212,7 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wireguard"))
-			it.Wireguard, err = ec.unmarshalNWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx, v)
+			it.Wireguard, err = ec.unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4202,11 +4202,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx context.Context, v interface{}) (*model.Wireguard, error) {
-	res, err := ec.unmarshalInputWireguard(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNWireguardPeer2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeer(ctx context.Context, v interface{}) (*model.WireguardPeer, error) {
 	res, err := ec.unmarshalInputWireguardPeer(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -4682,6 +4677,14 @@ func (ec *executionContext) unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquare
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputTransportData(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx context.Context, v interface{}) (*model.Wireguard, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputWireguard(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
