@@ -84,8 +84,7 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 				req.Duration/60,
 			)
 			if err != nil {
-				// TODO: use proper error handling
-				if strings.Contains(err.Error(), "Cannot change status to itself") {
+				if strings.Contains(err.Error(), "Cannot change status to itself") || strings.Contains(err.Error(), "trans0") {
 					logger.I.Warn(
 						"Cannot change status to itself",
 						zap.Error(err),
@@ -94,6 +93,30 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 						zap.Uint64("duration", req.Duration/60),
 					)
 					return nil
+				}
+				if strings.Contains(err.Error(), "Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only") || strings.Contains(err.Error(), "trans3") {
+					logger.I.Warn(
+						"Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only. Trying to put in RUNNING first.",
+						zap.Error(err),
+						zap.String("status", req.Status.String()),
+						zap.String("name", string(jobName)),
+						zap.Uint64("duration", req.Duration/60),
+					)
+					if err := s.jobHandler.SetJobStatus(
+						ctx,
+						jobNameFixedLength,
+						eth.JobStatusRunning,
+						req.Duration/60,
+					); err != nil {
+						logger.I.Error(
+							"Failed to put the job in RUNNING",
+							zap.Error(err),
+							zap.String("status", req.Status.String()),
+							zap.String("name", string(jobName)),
+							zap.Uint64("duration", req.Duration/60),
+						)
+						return err
+					}
 				}
 			}
 
