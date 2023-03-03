@@ -71,7 +71,8 @@ func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (string, er
   --mem-per-cpu=%dM \
   --comment="from supervisor" \
   --gpus-per-task=%d \
-  --output=/opt/jobs-logs/%s.log << '%s'
+  --output=/dev/null \
+  --error=/dev/null << '%s'
 #!/bin/bash -l
 true
 %s
@@ -83,7 +84,6 @@ true
 		req.CPUsPerTask,
 		req.MemoryPerCPU,
 		req.GPUsPerTask,
-		req.Name,
 		eof,
 		req.Body,
 		eof,
