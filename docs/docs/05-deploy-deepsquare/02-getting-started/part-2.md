@@ -6,7 +6,7 @@ title: 'Part 2: Writing a workflow file'
 
 You containerized the MPI example application. In this part, you will now run it on the DeepSquare GRID.
 
-A workflow file is a JSON file that describes the resources allocation and the suite of instructions.
+A workflow file is a JSON file that describes the resources allocation and the suite of instructions necessary to run your application.
 
 ## Understanding the workflow format
 
@@ -42,48 +42,29 @@ We can map easily the "podman run" arguments to the workflow file. We have:
 
 ```json
 {
-  "resources": {
-    "tasks": 32,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "env": [
-    {
-      "key": "OMPI_MCA_btl_vader_single_copy_mechanism",
-      "value": "none"
+  "job": {
+    "resources": {
+      "tasks": 1,
+      "gpusPerTask": 0,
+      "cpusPerTask": 16,
+      "memPerCpu": 1024
     },
-    {
-      "key": "OMPI_MCA_pml",
-      "value": "ob1"
-    },
-    {
-      "key": "OMPI_MCA_btl",
-      "value": "vader,tcp,self"
-    },
-    {
-      "key": "OMPI_MCA_btl_tcp_if_include",
-      "value": "ib0"
-    }
-  ],
-  "steps": [
-    {
-      "name": "run the circle program",
-      "run": {
-        "workDir": "/project",
-        "resources": {
-          "tasks": 32
-        },
-        "command": "./main",
-        "container": {
-          "image": "deepsquare-io/mpi-example:latest",
-          "registry": "ghcr.io",
-          "apptainer": true
+    "enableLogging": true,
+    "steps": [
+      {
+        "name": "run the circle program",
+        "run": {
+          "command": "mpirun -np 16 ./main",
+          "workDir": "/app",
+          "container": {
+            "image": "deepsquare-io/mpi-example:latest",
+            "registry": "ghcr.io",
+            "apptainer": true
+          }
         }
       }
-    }
-  ]
+    ]
+  }
 }
 ```
 
@@ -91,4 +72,10 @@ We specify the resource allocation using the `resources` block and use these res
 
 By enabling `enableLogging`, you authorize the application to send logs to the DeepSquare logging system, which you can read on the [DeepSquare GRID Portal](https://app.deepsquare.run).
 
-Because MPI is already integrated with SLURM, it is not necessary to run `mpirun`.
+## Next steps
+
+You've learned how to launch workloads on the DeepSquare grid! We've done a simple fire-and-forget, but you may want to persist some data.
+
+Data scientists often train their machine learning neural network models on HPCs and need to input training data and output model control points.
+
+So you will learn how to send a dataset and get results.

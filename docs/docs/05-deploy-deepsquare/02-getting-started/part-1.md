@@ -117,10 +117,10 @@ The container image is built on top of overlay filesystems.
 
 The image has a _base_ image indicated by a `FROM` instruction. Layers can be added using Docker instructions defined in the [Dockerfile reference](https://docs.docker.com/engine/reference/builder/#format).
 
-Instead of starting from `scratch`, we will use the `mfisherman/openmpi:4.1.4` as our base image.
+Instead of starting from `scratch`, we will use the `ghcr.io/deepsquare-io/openmpi:devel` as our base image.
 
 ```dockerfile title="Dockerfile"
-FROM mfisherman/openmpi:4.1.4
+FROM ghcr.io/deepsquare-io/openmpi:devel
 COPY main.c .
 RUN mpicc -Wall -Wextra main.c -o main
 ```
@@ -129,7 +129,7 @@ Build the image using:
 
 ```shell title="user@~/example/"
 # podman build -t <tag> <context>
-podman build -t mpi-circle:latest .
+podman build -t localhost/mpi-circle:latest .
 ```
 
 ## Testing locally
@@ -139,7 +139,7 @@ You can test the MPI application locally using:
 ```shell title="user@~/example/"
 # podman run --rm(delete container when done) <tag> <args>
 # Arguments: mpirun -np <number of processes> <executable>
-podman run --rm mpi-circle:latest mpirun -np 4 main
+podman run --rm localhost/mpi-circle:latest mpirun -np 4 main
 ```
 
 Which should give something like this:
@@ -222,21 +222,18 @@ skopeo inspect --config docker://ghcr.io/deepsquare-io/mpi-example:latest
 
 ```shell title="skopeo inspect --config docker://ghcr.io/deepsquare-io/mpi-example:latest"
 {
-    "created": "2023-03-02T13:52:25.664339168Z",
+    "created": "2023-03-03T13:29:50.795015312Z",
     "architecture": "amd64",
     "os": "linux",
     "config": {
-        "User": "mpi",
         "Env": [
             "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-            "USER=mpi",
-            "USER_HOME=/home/mpi",
-            "WORKDIR=/project"
+            "CFLAGS=-O3 -flto",
+            "CXXFLAGS=-O3 -flto"
         ],
         "Cmd": [
-            "/bin/sh"
+            "/bin/bash"
         ],
-        "WorkingDir": "/project",
         "Labels": {
             "io.buildah.version": "1.29.0"
         }
@@ -244,22 +241,34 @@ skopeo inspect --config docker://ghcr.io/deepsquare-io/mpi-example:latest
     "rootfs": {
         "type": "layers",
         "diff_ids": [
-            "sha256:24302eb7d9085da80f016e7e4ae55417e412fb7e0a8021e95e3b60c67cde557d",
+            "sha256:1d90ccbaa27de4c4a317d5cde657a653b72678d8fc815b669514a6f26a081ffd",
             # ...
-            "sha256:d707591002d8da4be4a8089da74d39ee2e5fa64698ecd95fd30819feeb700f63"
+            "sha256:5c6c568eca03691fc6c308b83c39eec940a05017e3eed1ef2e7e9a64eca88bff",
+            "sha256:7db1f20d29abcf3760b043afe36af4f1efe3925100b9db8539428868a01f56a3"
         ]
     },
     "history": [
         {
-            "created": "2022-05-23T19:19:30.413290187Z",
-            "created_by": "/bin/sh -c #(nop) ADD file:8e81116368669ed3dd361bc898d61bff249f524139a239fdaf3ec46869a39921 in / "
+            "created": "2023-02-20T19:21:14.683611105Z",
+            "created_by": "/bin/sh -c #(nop) ADD file:d511fb4604410f5ccb4804cc7d40512ecd13b8e3e9494c873da424cabbb80020 in / "
         },
         # ...
         {
-            "created": "2023-03-02T13:52:25.665399182Z",
+            "created": "2023-03-03T13:29:50.43538223Z",
+            "created_by": "/bin/sh -c #(nop) COPY file:1869eee0b16c5f9b95d9a84e7f5e40ce5010c9c9395a700151f8217f42f6590c in . ",
+            "comment": "FROM 20252f3746b4"
+        },
+        {
+            "created": "2023-03-03T13:29:50.795587473Z",
             "created_by": "/bin/sh -c mpicc -Wall -Wextra main.c -o main",
-            "comment": "FROM a8de959c9a8c"
+            "comment": "FROM 87f9bb706013"
         }
     ]
 }
 ```
+
+## Next steps
+
+You learned how to containerise your application into a container image and publish it.
+
+Next, you're going to run it on the DeepSquare GRID, the decentralized HPC cloud.
