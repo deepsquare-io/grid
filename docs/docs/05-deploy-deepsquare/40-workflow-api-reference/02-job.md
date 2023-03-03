@@ -782,6 +782,19 @@ If null, defaults to false.
 
 </td>
 </tr>
+<tr>
+<td colspan="2" valign="top"><strong>mpi</strong></td>
+<td valign="top"><a href="#string">String</a></td>
+<td>
+
+MPI selection.
+
+Must be one of: none, pmix_v4, pmi2.
+
+If null, will default to infrastructure provider settings (which may not be what you want).
+
+</td>
+</tr>
 </tbody>
 </table>
 

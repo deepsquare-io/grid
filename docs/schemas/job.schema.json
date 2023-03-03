@@ -1112,6 +1112,18 @@
             "defaultValue": null,
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "mpi",
+            "description": "MPI selection.\n\nMust be one of: none, pmix_v4, pmi2.\n\nIf null, will default to infrastructure provider settings (which may not be what you want).",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "interfaces": null,

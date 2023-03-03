@@ -28,6 +28,9 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 {{- else }}
   --ntasks=1 \
 {{- end }}
+{{- if and .Step.Run.Mpi (derefStr .Step.Run.Mpi) }}
+  --mpi={{ derefStr .Step.Run.Mpi }} \
+{{- end }}
 {{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
   --cpu-bind=none \
 {{- end }}
@@ -62,6 +65,9 @@ EOFnetrc
   --ntasks={{ derefInt .Step.Run.Resources.Tasks }} \
 {{- else }}
   --ntasks=1 \
+{{- end }}
+{{- if and .Step.Run.Mpi (derefStr .Step.Run.Mpi) }}
+  --mpi={{ derefStr .Step.Run.Mpi }} \
 {{- end }}
 {{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
   --cpu-bind=none \
@@ -105,6 +111,9 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 {{- else }}
   --ntasks=1 \
 {{- end }}
+{{- if and .Step.Run.Mpi (derefStr .Step.Run.Mpi) }}
+  --mpi={{ derefStr .Step.Run.Mpi }} \
+{{- end }}
 {{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
   --cpu-bind=none \
 {{- end }}
@@ -144,6 +153,9 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks={{ derefInt .Step.Run.Resources.Tasks }} \
 {{- else }}
   --ntasks=1 \
+{{- end }}
+{{- if and .Step.Run.Mpi (derefStr .Step.Run.Mpi) }}
+  --mpi={{ derefStr .Step.Run.Mpi }} \
 {{- end }}
 {{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
   --cpu-bind=none \

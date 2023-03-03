@@ -664,6 +664,14 @@ input StepRun {
   If null, defaults to false.
   """
   disableCpuBinding: Boolean
+  """
+  MPI selection.
+
+  Must be one of: none, pmix_v4, pmi2
+
+  If null, will default to infrastructure provider settings (which may not be what you want).
+  """
+  mpi: String
 }
 
 """
@@ -3401,7 +3409,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"command", "shell", "resources", "container", "network", "dns", "customNetworkInterfaces", "env", "mapRoot", "workDir", "disableCpuBinding"}
+	fieldsInOrder := [...]string{"command", "shell", "resources", "container", "network", "dns", "customNetworkInterfaces", "env", "mapRoot", "workDir", "disableCpuBinding", "mpi"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3493,6 +3501,14 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableCpuBinding"))
 			it.DisableCPUBinding, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "mpi":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mpi"))
+			it.Mpi, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

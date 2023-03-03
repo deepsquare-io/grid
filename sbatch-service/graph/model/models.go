@@ -300,6 +300,14 @@ type StepRun struct {
 	//
 	// The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
 	CustomNetworkInterfaces []*NetworkInterface `json:"customNetworkInterfaces" yaml:"customNetworkInterfaces" validate:"dive"`
+	// MPI selection.
+	//
+	// Must be one of: none, pmix_v4, pmi2.
+	//
+	// We recommend pmix_v4.
+	//
+	// If null, will default to infrastructure provider settings (which may not be what you want).
+	Mpi *string `json:"mpi" yaml:"mpi" validate:"omitempty,oneof=none pmix_v4 pmi2"`
 }
 
 // Connect a network interface on a StepRun.

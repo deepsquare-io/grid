@@ -531,7 +531,18 @@ func cleanStepRunWith(
 	env *model.EnvVar,
 ) *model.StepRun {
 	return &model.StepRun{
-
+		Container:         &cleanContainerRunWith,
+		DisableCPUBinding: utils.Ptr(true),
+		Network:           utils.Ptr("slirp4netns"),
+		DNS:               []string{"1.1.1.1"},
+		MapRoot:           utils.Ptr(true),
+		WorkDir:           utils.Ptr("/dir"),
+		CustomNetworkInterfaces: []*model.NetworkInterface{
+			{
+				Wireguard: &cleanWireguard,
+			},
+		},
+		Mpi:       utils.Ptr("pmix_v4"),
 		Resources: res,
 		Env:       []*model.EnvVar{env},
 		Command:   "hostname",
@@ -615,6 +626,16 @@ func TestValidateStepRun(t *testing.T) {
 			isError:       true,
 			errorContains: []string{"DNS", "ip"},
 			title:         "Negative test: DNS validation error",
+		},
+		{
+			input: func() model.StepRun {
+				r := cleanStepRunWith(&cleanStepRunResources, &cleanEnvVar)
+				r.Mpi = utils.Ptr("error")
+				return *r
+			}(),
+			isError:       true,
+			errorContains: []string{"Mpi", "oneof"},
+			title:         "Negative test: MPI validation error",
 		},
 	}
 

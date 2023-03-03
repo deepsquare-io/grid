@@ -266,6 +266,23 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				Env:       cleanStepRun("").Env,
 				Resources: &cleanStepRunResources,
 				Command:   "hostname",
+				Mpi:       utils.Ptr("none"),
+			},
+			expected: `test='value' /usr/bin/srun --job-name='test' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --mpi=none \
+  /bin/sh -c 'hostname'`,
+			title: "Positive test with mpi",
+		},
+		{
+			input: model.StepRun{
+				Env:       cleanStepRun("").Env,
+				Resources: &cleanStepRunResources,
+				Command:   "hostname",
 				Network:   utils.Ptr("slirp4netns"),
 				DNS:       []string{"1.1.1.1"},
 				CustomNetworkInterfaces: []*model.NetworkInterface{
