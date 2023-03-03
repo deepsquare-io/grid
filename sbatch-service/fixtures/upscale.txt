@@ -45,18 +45,12 @@ export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
-if [ -z ${ENROOT_RUNTIME_PATH+x} ]; then
-  echo "ENROOT_RUNTIME_PATH is unset! Provider is non conform! Please report to DeepSquare"
-  exit 1
-fi
-if [ -z ${ENROOT_CACHE_PATH+x} ]; then
-  echo "ENROOT_CACHE_PATH is unset! Provider is non conform! Please report to DeepSquare"
-  exit 1
-fi
-if [ -z ${ENROOT_DATA_PATH+x} ]; then
-  echo "ENROOT_DATA_PATH is unset! Provider is non conform! Please report to DeepSquare"
-  exit 1
-fi
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
