@@ -55,11 +55,11 @@ We can map easily the "podman run" arguments to the workflow file. We have:
       "run": {
         "command": "mpirun -np 16 ./main",
         "workDir": "/app",
+        "mpi": "none",
         "container": {
           "image": "deepsquare-io/mpi-example:latest",
           "registry": "ghcr.io",
-          "apptainer": true,
-          "mpi": "none"
+          "apptainer": true
         }
       }
     }
