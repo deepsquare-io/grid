@@ -24,9 +24,26 @@ TODO
 
 ```
 
-## Setup an S3 quickly
+## Setup an S3
 
-TODO
+Using S3 is the standard for data storage, especially for control files. S3 is an [object storage](https://aws.amazon.com/what-is/object-storage/), which is a technology for storing data in an unstructured format, and therefore allows the storage to scale up by storing data on multiple devices.
+
+If you wish to self-host your own S3 server, we recommend [Garage](https://garagehq.deuxfleurs.fr) (small to medium scale) or [MinIO](https://min.io) (medium to large scale).
+
+If you don't want to bother setting up your own storage, you can use [Exoscale Simple Object Storage](https://www.exoscale.com/object-storage/) (~0.0198 per GB/month) or [Google Cloud Storage](https://cloud.google.com/storage) (~0.023 per GB/month).
+
+If you successfully deployed your S3 server and created your bucket, you should fetch the API access keys to the S3 storage.
+
+| Key               | Description                                           | Example                                                      |
+| ----------------- | ----------------------------------------------------- | ------------------------------------------------------------ |
+| Region            | The region of the S3 object storage.                  | us‑east‑2                                                    |
+| Endpoint URL      | The URL to the S3 API, which should start with https. | [https://s3.us‑east‑2.amazonaws.com](https://s3.us‑east‑2.amazonaws.com) |
+| Bucket URL        | The S3 bucket URL used to fetch data.                 | s3://my-bucket                                               |
+| Path              | The path relative to the bucket root.                 | /my-directory                                                |
+| Access Key ID     | The access key ID of the API access.                  | Varies with the host: starts with AKIA (amazon) or EXO (exoscale) |
+| Secret Access Key | The password of the API access.                       | ***                                                          |
+
+
 
 ## Writing the workflow file
 
@@ -35,8 +52,8 @@ TODO
   "resources": {
     "tasks": 1,
     "gpusPerTask": 2,
-    "cpusPerTask": 2,
-    "memPerCpu": 1024
+    "cpusPerTask": 8,
+    "memPerCpu": 2048
   },
   "enableLogging": true,
   "input": {

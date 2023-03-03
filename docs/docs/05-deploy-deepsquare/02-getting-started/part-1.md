@@ -1,8 +1,8 @@
 ---
-title: 'Part 1: Containerize an application'
+title: 'Part 1: Containerizing an application'
 ---
 
-# Containerize an application
+# Containerizing an application
 
 The container act as a runtime environment for the application.
 
