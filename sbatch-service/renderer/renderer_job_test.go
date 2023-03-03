@@ -96,6 +96,7 @@ ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
 export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
@@ -220,6 +221,7 @@ ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
 export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
@@ -374,6 +376,7 @@ ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
 export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
@@ -500,6 +503,7 @@ ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
 export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
@@ -606,6 +610,7 @@ ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
 export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
