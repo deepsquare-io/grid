@@ -7,7 +7,7 @@ require (
 	github.com/go-ldap/ldap/v3 v3.4.4
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/joho/godotenv v1.5.1
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/urfave/cli/v2 v2.24.4
 	go.uber.org/zap v1.24.0
 	gopkg.in/yaml.v3 v3.0.1
