@@ -127,11 +127,9 @@ var app = &cli.App{
 			mu.Lock()
 			if stream != nil {
 				_ = stream.CloseSend()
-				stream = nil
 			}
 			if conn != nil {
 				_ = conn.Close()
-				conn = nil
 			}
 			mu.Unlock()
 
