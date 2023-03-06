@@ -123,6 +123,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 {{- else }}
   --no-container-remap-root \
 {{- end }}
+  --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
 {{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) }}
   --container-workdir={{ derefStr .Step.Run.WorkDir | squote }} \

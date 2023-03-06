@@ -88,6 +88,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   '/opt/software/registry-1.deepsquare.run/library/stable-diffusion:latest' \
   /bin/bash -c 'set -e

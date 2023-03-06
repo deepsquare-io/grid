@@ -50,6 +50,7 @@ func TestRenderApptainer(t *testing.T) {
 			input: *cleanApptainerStepRun("hostname"),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   'docker://registry/image' \
   /bin/sh -c 'hostname'`,
@@ -63,6 +64,7 @@ func TestRenderApptainer(t *testing.T) {
 			}(),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   --fakeroot \
   'docker://registry/image' \
@@ -77,6 +79,7 @@ func TestRenderApptainer(t *testing.T) {
 			}(),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
@@ -90,6 +93,7 @@ func TestRenderApptainer(t *testing.T) {
 			}(),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
@@ -103,6 +107,7 @@ func TestRenderApptainer(t *testing.T) {
 			}(),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   --pwd '/dir' \
   'docker://registry/image' \

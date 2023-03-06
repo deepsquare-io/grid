@@ -129,6 +129,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
@@ -276,6 +277,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
@@ -417,6 +419,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
@@ -556,6 +559,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
@@ -642,6 +646,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''

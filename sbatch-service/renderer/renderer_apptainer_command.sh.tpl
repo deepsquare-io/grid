@@ -1,5 +1,6 @@
 /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
 {{- if and .Run.WorkDir (derefStr .Run.WorkDir) }}
   --pwd {{ derefStr .Run.WorkDir | squote }} \

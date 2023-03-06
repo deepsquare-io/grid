@@ -67,6 +67,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c 'hostname'`,
@@ -91,6 +92,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   'docker://registry/image' \
   /bin/sh -c 'hostname'`,
@@ -115,6 +117,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   --container-remap-root \
+  --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-image='registry#image' \
   /bin/sh -c 'hostname'`,
@@ -139,6 +142,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-workdir='/home' \
   --container-image='registry#image' \
@@ -165,6 +169,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
@@ -189,6 +194,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
@@ -544,6 +550,7 @@ wait_for_network_device $$ tap0
 
 '"'"''"'"'/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --no-home \
   --nv \
   '"'"'"'"'"'"'"'"'docker://registry/image'"'"'"'"'"'"'"'"' \
   /bin/sh -c '"'"'"'"'"'"'"'"'hostname'"'"'"'"'"'"'"'"''"'"' &
