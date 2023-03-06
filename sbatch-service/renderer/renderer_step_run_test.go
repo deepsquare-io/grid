@@ -101,7 +101,9 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 export APPTAINER_DOCKER_PASSWORD='password'
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
+/usr/bin/echo "Importing image..."
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry/image'
+/usr/bin/echo "Image successfully imported!"
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
@@ -497,7 +499,9 @@ wait $child
 export APPTAINER_DOCKER_PASSWORD='password'
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
+/usr/bin/echo "Importing image..."
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry/image'
+/usr/bin/echo "Image successfully imported!"
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \

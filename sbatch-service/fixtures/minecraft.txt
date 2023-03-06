@@ -70,7 +70,9 @@ CONTINUOUS_SYNC_PID="$!"
 /usr/bin/echo 'Running: ''start-minecraft'
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
+/usr/bin/echo "Importing image..."
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry-1.docker.io/marctv/minecraft-papermc-server:1.19'
+/usr/bin/echo "Image successfully imported!"
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' EULA='true' MEMORYSIZE='8G' /usr/bin/srun --job-name='start-minecraft' \

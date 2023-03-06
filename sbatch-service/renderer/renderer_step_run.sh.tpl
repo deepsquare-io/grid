@@ -8,7 +8,9 @@ export APPTAINER_DOCKER_PASSWORD={{ derefStr .Step.Run.Container.Password | squo
 {{- if not (or (isAbs $image) (and .Step.Run.Container.DeepsquareHosted (derefBool .Step.Run.Container.DeepsquareHosted))) -}}
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
+/usr/bin/echo "Importing image..."
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" {{ $image | squote }}
+/usr/bin/echo "Image successfully imported!"
 {{ end -}}
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
 # shellcheck disable=SC2097,SC2098,SC1078
