@@ -123,6 +123,8 @@ var app = &cli.App{
 		signal.Notify(c, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 		go func() {
 			<-c
+			logger.I.Info("gracefully exiting...")
+			time.Sleep(15 * time.Second)
 			logger.I.Info("cleaning up")
 			mu.Lock()
 			if stream != nil {
