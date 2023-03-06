@@ -68,8 +68,11 @@ CONTINUOUS_SYNC_PID="$!"
   --ntasks=1 \
   /bin/sh -c 'mv $DEEPSQUARE_INPUT/* $DEEPSQUARE_OUTPUT/'
 /usr/bin/echo 'Running: ''start-minecraft'
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
+export IMAGE_PATH
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry-1.docker.io/marctv/minecraft-papermc-server:1.19'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
-# shellcheck disable=SC2097,SC2098
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' EULA='true' MEMORYSIZE='8G' /usr/bin/srun --job-name='start-minecraft' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
@@ -113,7 +116,7 @@ wait_for_network_namespace() {
     if nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done
@@ -154,7 +157,7 @@ wait_for_network_device() {
     if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done
@@ -184,7 +187,8 @@ wait_for_network_device $$ tap0
   --disable-cache \
   --no-home \
   --nv \
-  '"'"'"'"'"'"'"'"'docker://registry-1.docker.io/marctv/minecraft-papermc-server:1.19'"'"'"'"'"'"'"'"' \
+  --writable-tmpfs \
+  "$IMAGE_PATH" \
   /bin/sh -c '"'"'"'"'"'"'"'"'cd $DEEPSQUARE_OUTPUT
 sed -i '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'s/eula=false/eula=true/g'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"' eula.txt
 /usr/bin/java -jar -Xms$MEMORYSIZE -Xmx$MEMORYSIZE -XX:-UseContainerSupport /opt/minecraft/paperspigot.jar nogui'"'"'"'"'"'"'"'"''"'"' &

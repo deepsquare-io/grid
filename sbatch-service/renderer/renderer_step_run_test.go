@@ -58,7 +58,25 @@ func TestRenderStepRun(t *testing.T) {
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -69,7 +87,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
-  --container-image='registry#image' \
+  --container-image="$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with image",
 		},
@@ -79,10 +97,13 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				r.Container.Apptainer = utils.Ptr(true)
 				return r
 			}(),
-			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-export APPTAINER_DOCKER_USERNAME='username'
+			expected: `export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
-# shellcheck disable=SC2097,SC2098
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
+export IMAGE_PATH
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry/image'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -94,7 +115,8 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
-  'docker://registry/image' \
+  --writable-tmpfs \
+  "$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer image",
 		},
@@ -108,7 +130,25 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -119,7 +159,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
-  --container-image='registry#image' \
+  --container-image="$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with pyxis maproot",
 		},
@@ -133,7 +173,25 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -145,7 +203,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-workdir='/home' \
-  --container-image='registry#image' \
+  --container-image="$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with pyxis workdir",
 		},
@@ -156,10 +214,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				r.Container.Image = "/test/my.sqshfs"
 				return r
 			}(),
-			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-export APPTAINER_DOCKER_USERNAME='username'
+			expected: `export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
-# shellcheck disable=SC2097,SC2098
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -171,6 +229,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --writable-tmpfs \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer absolute path image",
@@ -181,10 +240,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				r.Container.DeepsquareHosted = utils.Ptr(true)
 				return r
 			}(),
-			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-export APPTAINER_DOCKER_USERNAME='username'
+			expected: `export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
-# shellcheck disable=SC2097,SC2098
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -196,6 +255,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --writable-tmpfs \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with deepsquare-hosted image",
@@ -337,7 +397,7 @@ wait_for_network_namespace() {
     if nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done
@@ -378,7 +438,7 @@ wait_for_network_device() {
     if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done
@@ -433,10 +493,13 @@ wait $child
 					&cleanWireguardNIC,
 				},
 			},
-			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-export APPTAINER_DOCKER_USERNAME='username'
+			expected: `export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
-# shellcheck disable=SC2097,SC2098
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
+export IMAGE_PATH
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry/image'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -480,7 +543,7 @@ wait_for_network_namespace() {
     if nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done
@@ -521,7 +584,7 @@ wait_for_network_device() {
     if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done
@@ -552,7 +615,8 @@ wait_for_network_device $$ tap0
   --disable-cache \
   --no-home \
   --nv \
-  '"'"'"'"'"'"'"'"'docker://registry/image'"'"'"'"'"'"'"'"' \
+  --writable-tmpfs \
+  "$IMAGE_PATH" \
   /bin/sh -c '"'"'"'"'"'"'"'"'hostname'"'"'"'"'"'"'"'"''"'"' &
 child=$!
 
@@ -585,6 +649,24 @@ wait $child
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+# shellcheck disable=SC2097,SC2098,SC1078
 /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -592,9 +674,7 @@ EOFnetrc
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c '/usr/bin/enroot import -o "/tmp/$SLURM_JOB_ID.sqsh" -- "docker://"'"'"'registry#image'"'"'
-/usr/bin/enroot create --name "container-$SLURM_JOB_ID" -- "/tmp/$SLURM_JOB_ID.sqsh"
-/usr/bin/rm -f "/tmp/$SLURM_JOB_ID.sqsh"
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID" -- "$IMAGE_PATH"
 enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID"
 }
@@ -635,7 +715,7 @@ wait_for_network_namespace() {
     if nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done
@@ -676,7 +756,7 @@ wait_for_network_device() {
     if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done

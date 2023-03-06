@@ -72,7 +72,7 @@ export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'
 /usr/bin/echo 'Running: ''tdp'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-# shellcheck disable=SC2097,SC2098
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='tdp' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
@@ -84,6 +84,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --writable-tmpfs \
   '/opt/software/registry-1.deepsquare.run/library/tdp:latest' \
   /bin/sh -c '/unityapp/DeepSquareURSSample.x86_64 \
   -maxplayers 8 \

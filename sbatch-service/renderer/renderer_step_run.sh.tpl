@@ -1,11 +1,17 @@
 {{- if .Step.Run.Container -}}
+{{- $image := formatImageURL .Step.Run.Container.Registry .Step.Run.Container.Image .Step.Run.Container.Apptainer .Step.Run.Container.DeepsquareHosted -}}
 {{- if or (and .Step.Run.Container.Apptainer (derefBool .Step.Run.Container.Apptainer)) (and .Step.Run.Container.DeepsquareHosted (derefBool .Step.Run.Container.DeepsquareHosted)) -}}
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
-{{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password }}
+{{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password -}}
 export APPTAINER_DOCKER_USERNAME={{ derefStr .Step.Run.Container.Username | squote }}
 export APPTAINER_DOCKER_PASSWORD={{ derefStr .Step.Run.Container.Password | squote }}
-{{- end }}
-# shellcheck disable=SC2097,SC2098
+{{ end -}}
+{{- if not (or (isAbs $image) (and .Step.Run.Container.DeepsquareHosted (derefBool .Step.Run.Container.DeepsquareHosted))) -}}
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
+export IMAGE_PATH
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" {{ $image | squote }}
+{{ end -}}
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env'{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)" \
 {{- if and .Step.Run.Resources .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) }}
@@ -43,7 +49,27 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 machine {{ derefStr .Step.Run.Container.Registry | quoteEscape }} login {{ derefStr .Step.Run.Container.Username | quoteEscape }} password {{ derefStr .Step.Run.Container.Password | quoteEscape }}
 EOFnetrc
 {{- end }}
+{{ if not (isAbs $image) -}}
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- {{ $image | squote }}
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+{{- end }}
 {{- if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}
+# shellcheck disable=SC2097,SC2098,SC1078
 /usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)" \
 {{- if and .Step.Run.Resources .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) }}
@@ -74,13 +100,10 @@ EOFnetrc
 {{- end }}
   --gpu-bind=none \
   /bin/sh -c '
-{{- $image := formatImageURL .Step.Run.Container.Registry .Step.Run.Container.Image .Step.Run.Container.Apptainer .Step.Run.Container.DeepsquareHosted -}}
 {{- if isAbs $image -}}
-/usr/bin/enroot create --name "container-$SLURM_JOB_ID" -- "/tmp/$SLURM_JOB_ID.sqsh"
+/usr/bin/enroot create --name "container-$SLURM_JOB_ID" -- "$STORAGE_PATH"{{ $image | squote }}
 {{- else -}}
-/usr/bin/enroot import -o "/tmp/$SLURM_JOB_ID.sqsh" -- "docker://"{{ $image | squote | escapeSQuote }}
-/usr/bin/enroot create --name "container-$SLURM_JOB_ID" -- "/tmp/$SLURM_JOB_ID.sqsh"
-/usr/bin/rm -f "/tmp/$SLURM_JOB_ID.sqsh"
+/usr/bin/enroot create --name "container-$SLURM_JOB_ID" -- "$IMAGE_PATH"
 {{- end }}
 enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID"
@@ -89,6 +112,7 @@ trap enrootClean EXIT INT TERM
 '{{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS (renderEnrootCommand .Step.Run) .Step.Run.Shell | squote -}}
 {{- else }}
 MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env'{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun --job-name={{ .Step.Name | squote }} \
   --export=ALL"$(loadDeepsquareEnv)" \
 {{- if and .Step.Run.Resources .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) }}
@@ -128,7 +152,11 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 {{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) }}
   --container-workdir={{ derefStr .Step.Run.WorkDir | squote }} \
 {{- end }}
-  --container-image={{ formatImageURL .Step.Run.Container.Registry .Step.Run.Container.Image .Step.Run.Container.Apptainer .Step.Run.Container.DeepsquareHosted | squote }} \
+{{- if isAbs $image -}}
+  --container-image="$STORAGE_PATH"{{ $image | squote }} \
+{{- else }}
+  --container-image="$IMAGE_PATH" \
+{{- end }}
   {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Step.Run.Command | squote -}}
 {{- end -}}
 {{- end }}

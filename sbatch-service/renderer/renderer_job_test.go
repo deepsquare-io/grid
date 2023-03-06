@@ -120,7 +120,25 @@ export 'key'='test'"'"'test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -131,7 +149,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
-  --container-image='registry#image' \
+  --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 )
 # END SCOPE: LOGS
@@ -268,7 +286,25 @@ export 'key'='test'"'"'test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -279,7 +315,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
-  --container-image='registry#image' \
+  --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 )
 # END SCOPE: CONTINUOUS SYNC
@@ -410,7 +446,25 @@ export 'key'='test'"'"'test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -421,7 +475,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
-  --container-image='registry#image' \
+  --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
@@ -550,7 +604,25 @@ export 'key'='test'"'"'test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -561,7 +633,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
-  --container-image='registry#image' \
+  --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
@@ -637,7 +709,25 @@ export 'key'='test'"'"'test'
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine "registry" login "username" password "password"
 EOFnetrc
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+tries=1; while [ "$tries" -lt 10 ]; do
+	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+		break
+	fi
+	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+	/usr/bin/sleep 10
+	tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+	/usr/bin/echo "Image import failure (corrupted image). Please try again."
+	exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
@@ -648,7 +738,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
-  --container-image='registry#image' \
+  --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 `,
 			title: "Positive test with no logs",

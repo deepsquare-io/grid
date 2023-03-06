@@ -75,7 +75,7 @@ wait_for_network_namespace() {
     if nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done
@@ -116,7 +116,7 @@ wait_for_network_device() {
     if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
-      sleep 0.5
+      /usr/bin/sleep 0.5
     fi
     COUNTER=$(( COUNTER+1 ))
   done

@@ -81,9 +81,9 @@ func FormatImageURL(registry *string, image string, apptainer *bool, deepsquareH
 
 	// Is enroot
 	if registry != nil && *registry != "" {
-		return fmt.Sprintf("%s#%s", *registry, image)
+		return fmt.Sprintf("docker://%s#%s", *registry, image)
 	}
-	return image
+	return fmt.Sprintf("docker://%s", image)
 }
 
 func funcMap() template.FuncMap {

@@ -95,7 +95,7 @@ export 'IS_FACE'='false'
 export 'IS_ANIME'='false'
 /usr/bin/echo 'Running: ''compute-frames'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
-# shellcheck disable=SC2097,SC2098
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='compute-frames' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
@@ -107,6 +107,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --writable-tmpfs \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
 
@@ -156,7 +157,7 @@ doFor() {
 export index="$1"
 /usr/bin/echo 'Running: ''upscale'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
-# shellcheck disable=SC2097,SC2098
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='upscale' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
@@ -168,6 +169,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --writable-tmpfs \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
 
@@ -184,7 +186,7 @@ for pid in "${pids[@]}"; do
 done
 /usr/bin/echo 'Running: ''re-encode-video'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
-# shellcheck disable=SC2097,SC2098
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='re-encode-video' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
@@ -196,6 +198,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --writable-tmpfs \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/sh -c 'set -ex
 
