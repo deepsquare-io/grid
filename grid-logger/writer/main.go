@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -103,6 +104,12 @@ var flags = []cli.Flag{
 	},
 }
 
+var (
+	stream loggerv1alpha1.LoggerAPI_WriteClient
+	conn   *grpc.ClientConn
+	mu     sync.Mutex
+)
+
 var app = &cli.App{
 	Name:    "grid-logger-writer",
 	Usage:   "Send logs from pipe",
@@ -114,11 +121,20 @@ var app = &cli.App{
 		// Trap cleanup
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-		var stream loggerv1alpha1.LoggerAPI_WriteClient
 		go func() {
 			<-c
 			logger.I.Info("cleaning up")
-			_ = stream.CloseSend()
+			mu.Lock()
+			if stream != nil {
+				_ = stream.CloseSend()
+				stream = nil
+			}
+			if conn != nil {
+				_ = conn.Close()
+				conn = nil
+			}
+			mu.Unlock()
+
 			_ = os.Remove(pipeFile)
 			os.Exit(0)
 		}()
@@ -156,17 +172,21 @@ var app = &cli.App{
 		}
 
 		// Open grpc stream
-		stream, conn, err := openGRPCConn(ctx, opts)
+		mu.Lock()
+		stream, conn, err = openGRPCConn(ctx, opts)
+		mu.Unlock()
 		if err != nil {
 			logger.I.Error("openGRPCConn failed", zap.Error(err))
 			return err
 		}
 		defer func() {
+			mu.Lock()
 			if err := conn.Close(); err != nil {
 				if err != io.EOF {
 					logger.I.Error("grpc close failed", zap.Error(err))
 				}
 			}
+			mu.Unlock()
 		}()
 
 		logger.I.Info("reading")
@@ -175,7 +195,9 @@ var app = &cli.App{
 		for {
 			line, err := reader.ReadBytes('\n')
 			if err == io.EOF {
+				mu.Lock()
 				_, err := stream.CloseAndRecv()
+				mu.Unlock()
 				if err != nil {
 					logger.I.Error("grpc close failed", zap.Error(err))
 					return err
@@ -191,15 +213,23 @@ var app = &cli.App{
 				"pipe recv",
 				zap.String("data", string(line)),
 			)
-			if err := stream.Send(&loggerv1alpha1.WriteRequest{
+			mu.Lock()
+			err = stream.Send(&loggerv1alpha1.WriteRequest{
 				LogName: logName,
 				Data:    line,
 				User:    user,
-			}); err != nil {
+			})
+			mu.Unlock()
+
+			if err != nil {
 				logger.I.Error("grpc write failed", zap.Error(err))
+				mu.Lock()
 				_ = conn.Close()
+				mu.Unlock()
 				time.Sleep(time.Second)
+				mu.Lock()
 				stream, conn, err = openGRPCConn(ctx, opts)
+				mu.Unlock()
 				if err != nil {
 					logger.I.Fatal("failed to reconnect on EOF error", zap.Error(err))
 				}
