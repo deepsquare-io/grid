@@ -3,7 +3,6 @@
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
 {{- if and .Run.WorkDir (derefStr .Run.WorkDir) }}
   --pwd {{ derefStr .Run.WorkDir | squote }} \
 {{- end }}

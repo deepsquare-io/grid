@@ -117,7 +117,6 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   "$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer image",
@@ -231,7 +230,6 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer absolute path image",
@@ -257,7 +255,6 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with deepsquare-hosted image",
@@ -619,7 +616,6 @@ wait_for_network_device $$ tap0
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   "$IMAGE_PATH" \
   /bin/sh -c '"'"'"'"'"'"'"'"'hostname'"'"'"'"'"'"'"'"''"'"' &
 child=$!

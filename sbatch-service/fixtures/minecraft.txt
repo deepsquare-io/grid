@@ -189,7 +189,6 @@ wait_for_network_device $$ tap0
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   "$IMAGE_PATH" \
   /bin/sh -c '"'"'"'"'"'"'"'"'cd $DEEPSQUARE_OUTPUT
 sed -i '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'s/eula=false/eula=true/g'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"' eula.txt

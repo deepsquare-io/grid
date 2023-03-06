@@ -52,7 +52,6 @@ func TestRenderApptainer(t *testing.T) {
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   "$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer image",
@@ -67,7 +66,6 @@ func TestRenderApptainer(t *testing.T) {
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   --fakeroot \
   "$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
@@ -83,7 +81,6 @@ func TestRenderApptainer(t *testing.T) {
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer absolute path image",
@@ -98,7 +95,6 @@ func TestRenderApptainer(t *testing.T) {
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with deepsquare-hosted image",
@@ -113,7 +109,6 @@ func TestRenderApptainer(t *testing.T) {
   --disable-cache \
   --no-home \
   --nv \
-  --writable-tmpfs \
   --pwd '/dir' \
   "$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
