@@ -659,7 +659,7 @@
         "inputFields": [
           {
             "name": "image",
-            "description": "Run the command inside a container with Pyxis.\n\nFormat: image:tag. Registry and authentication is not allowed on this field.\n\nIf the default container runtime is used:\n\n  - Use an absolute path to load a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT\n\nIf apptainer=true:\n\n  - Use an absolute path to load a sif file or a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT\n\nExamples:\n\n  - library/ubuntu:latest\n  - /my.squashfs",
+            "description": "Run the command inside a container with Enroot.\n\nFormat: image:tag. Registry and authentication is not allowed on this field.\n\nIf the default container runtime is used:\n\n  - Use an absolute path to load a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT\n\nIf apptainer=true:\n\n  - Use an absolute path to load a sif file or a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT\n\nExamples:\n\n  - library/ubuntu:latest\n  - /my.squashfs",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -731,7 +731,7 @@
           },
           {
             "name": "apptainer",
-            "description": "Run with Apptainer as Container runtime instead of Pyxis.\n\nBy running with apptainer, you get access Deepsquare-hosted images.\n\nDefaults to false.",
+            "description": "Run with Apptainer as Container runtime instead of Enroot.\n\nBy running with apptainer, you get access Deepsquare-hosted images.\n\nWhen running Apptainer, the container file system is read-only.\n\nDefaults to false.",
             "type": {
               "kind": "SCALAR",
               "name": "Boolean",
@@ -1079,7 +1079,7 @@
           },
           {
             "name": "mapRoot",
-            "description": "Remap UID to root. Does not grant elevated system permissions, despite appearances.\n\nIf the \"default\" (Pyxis) container runtime is used, it will use the `--container-remap-root` flags.\n\nIf the \"apptainer\" container runtime is used, the `--fakeroot` flag will be passed.\n\nIf no container runtime is used, `unshare --user --map-root-user --mount` will be used and a user namespace will be created.\n\nIt is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).\n\nIf null, default to false.",
+            "description": "Remap UID to root. Does not grant elevated system permissions, despite appearances.\n\nIf the \"default\" (Enroot) container runtime is used, it will use the `--container-remap-root` flags.\n\nIf the \"apptainer\" container runtime is used, the `--fakeroot` flag will be passed.\n\nIf no container runtime is used, `unshare --user --map-root-user --mount` will be used and a user namespace will be created.\n\nIt is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).\n\nIf null, default to false.",
             "type": {
               "kind": "SCALAR",
               "name": "Boolean",
@@ -1091,7 +1091,7 @@
           },
           {
             "name": "workDir",
-            "description": "Working directory.\n\nIf the \"default\" (Pyxis) container runtime is used, it will use the `--container-workdir` flag.\n\nIf the \"apptainer\" container runtime is used, the `--pwd` flag will be passed.\n\nIf no container runtime is used, `cd` will be executed first.\n\nIf null, default to use $STORAGE_PATH as working directory.",
+            "description": "Working directory.\n\nIf the \"default\" (Enroot) container runtime is used, it will use the `--container-workdir` flag.\n\nIf the \"apptainer\" container runtime is used, the `--pwd` flag will be passed.\n\nIf no container runtime is used, `cd` will be executed first.\n\nIf null, default to use $STORAGE_PATH as working directory.",
             "type": {
               "kind": "SCALAR",
               "name": "String",

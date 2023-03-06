@@ -740,7 +740,7 @@ Environment variables accessible over the command.
 
 Remap UID to root. Does not grant elevated system permissions, despite appearances.
 
-If the "default" (Pyxis) container runtime is used, it will use the `--container-remap-root` flags.
+If the "default" (Enroot) container runtime is used, it will use the `--container-remap-root` flags.
 
 If the "apptainer" container runtime is used, the `--fakeroot` flag will be passed.
 
@@ -759,7 +759,7 @@ If null, default to false.
 
 Working directory.
 
-If the "default" (Pyxis) container runtime is used, it will use the `--container-workdir` flag.
+If the "default" (Enroot) container runtime is used, it will use the `--container-workdir` flag.
 
 If the "apptainer" container runtime is used, the `--pwd` flag will be passed.
 
@@ -1012,7 +1012,7 @@ If null, defaults to the job resources.
 <td valign="top"><a href="#string">String</a>!</td>
 <td>
 
-Run the command inside a container with Pyxis.
+Run the command inside a container with Enroot.
 
 Format: image:tag. Registry and authentication is not allowed on this field.
 
@@ -1074,9 +1074,11 @@ Defaults to registry-1.docker.io
 <td valign="top"><a href="#boolean">Boolean</a></td>
 <td>
 
-Run with Apptainer as Container runtime instead of Pyxis.
+Run with Apptainer as Container runtime instead of Enroot.
 
 By running with apptainer, you get access Deepsquare-hosted images.
+
+When running Apptainer, the container file system is read-only.
 
 Defaults to false.
 
