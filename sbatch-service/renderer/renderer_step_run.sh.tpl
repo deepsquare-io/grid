@@ -153,6 +153,8 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-mounts="${MOUNTS}" \
 {{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) }}
   --container-workdir={{ derefStr .Step.Run.WorkDir | squote }} \
+{{- else }}
+  --container-workdir=/deepsquare \
 {{- end }}
 {{- if isAbs $image -}}
   --container-image="$STORAGE_PATH"{{ $image | squote }} \

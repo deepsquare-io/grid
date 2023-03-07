@@ -67,6 +67,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
+  --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with run",
@@ -110,6 +111,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
+  --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo $item'
 /usr/bin/echo 'Running: ''test'
@@ -146,6 +148,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
+  --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo $item'
 }

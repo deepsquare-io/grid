@@ -5,6 +5,8 @@
   --nv \
 {{- if and .Run.WorkDir (derefStr .Run.WorkDir) }}
   --pwd {{ derefStr .Run.WorkDir | squote }} \
+{{- else }}
+  --pwd "/deepsquare" \
 {{- end }}
 {{- if and .Run.MapRoot (derefBool .Run.MapRoot ) }}
   --fakeroot \

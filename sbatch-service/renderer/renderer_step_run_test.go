@@ -87,6 +87,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --no-container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
+  --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with image",
@@ -117,6 +118,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --pwd "/deepsquare" \
   "$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer image",
@@ -160,6 +162,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-remap-root \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
+  --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with pyxis maproot",
@@ -230,6 +233,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --pwd "/deepsquare" \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer absolute path image",
@@ -255,6 +259,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --pwd "/deepsquare" \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with deepsquare-hosted image",
@@ -616,6 +621,7 @@ wait_for_network_device $$ tap0
   --disable-cache \
   --no-home \
   --nv \
+  --pwd "/deepsquare" \
   "$IMAGE_PATH" \
   /bin/sh -c '"'"'"'"'"'"'"'"'hostname'"'"'"'"'"'"'"'"''"'"' &
 child=$!
@@ -808,6 +814,7 @@ mounts() {
 
 hooks() {
   /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+  cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
   exec "$@"
   EOFrclocal
 }

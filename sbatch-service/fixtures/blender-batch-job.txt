@@ -104,6 +104,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --pwd "/deepsquare" \
   '/opt/software/registry-1.docker.io/linuxserver/blender:3.4.1' \
   /bin/sh -c 'set -e
 
@@ -160,6 +161,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --disable-cache \
   --no-home \
   --nv \
+  --pwd "/deepsquare" \
   '/opt/software/registry-1.docker.io/linuxserver/blender:3.4.1' \
   /bin/bash -c 'set -e
 
