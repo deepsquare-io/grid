@@ -1,6 +1,6 @@
 # Core concepts
 
-## Job meta-scheduling
+## Meta-scheduling
 
 Meta-scheduling to be a technique for coordinating and optimizing the scheduling of jobs or tasks across multiple distributed computing resources, such as clusters or grids.
 
