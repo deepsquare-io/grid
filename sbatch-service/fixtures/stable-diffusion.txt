@@ -123,7 +123,7 @@ echo "##############################################################"
 chmod -R 777 /cache/* 2>/dev/null || true'
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
-cd $DEEPSQUARE_OUTPUT/..
+cd $STORAGE_PATH
 function urldecode() { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
 /usr/bin/echo "##############################################################"
 /usr/bin/echo
@@ -137,6 +137,5 @@ fi
 /usr/bin/echo
 /usr/bin/echo
 /usr/bin/echo "##############################################################"
-cd $STORAGE_PATH
 )
 # END SCOPE: LOGS

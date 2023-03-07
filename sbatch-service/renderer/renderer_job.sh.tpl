@@ -136,7 +136,7 @@ export {{ $env.Key | squote }}={{ $env.Value | squote }}
 {{- if and .Job.Output .Job.Output.HTTP }}
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
-cd $DEEPSQUARE_OUTPUT/..
+cd $STORAGE_PATH
 function urldecode() { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
 /usr/bin/echo "##############################################################"
 /usr/bin/echo
@@ -150,7 +150,6 @@ fi
 /usr/bin/echo
 /usr/bin/echo
 /usr/bin/echo "##############################################################"
-cd $STORAGE_PATH
 {{- else if and .Job.Output .Job.Output.S3 }}
 {{- if and .Job.ContinuousOutputSync (derefBool .Job.ContinuousOutputSync) }}
 )

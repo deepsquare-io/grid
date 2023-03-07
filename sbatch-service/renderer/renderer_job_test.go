@@ -641,7 +641,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
-cd $DEEPSQUARE_OUTPUT/..
+cd $STORAGE_PATH
 function urldecode() { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
 /usr/bin/echo "##############################################################"
 /usr/bin/echo
@@ -655,7 +655,6 @@ fi
 /usr/bin/echo
 /usr/bin/echo
 /usr/bin/echo "##############################################################"
-cd $STORAGE_PATH
 )
 # END SCOPE: LOGS
 `,
