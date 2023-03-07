@@ -18,10 +18,32 @@ As part of the DeepSquare ecosystem, infrastructure providers may be subject to 
 
 By joining the DeepSquare grid as infrastructure providers, organizations can benefit from increased exposure to potential customers and revenue streams, as well as access to a wider network of computing resources and expertise. At the same time, they play a critical role in supporting the ongoing development and growth of the DeepSquare ecosystem, helping to drive innovation and advance the state of distributed computing.
 
-## HPC features
+## High Performance Computing
 
-Lorem ipsum dolor sit amet, te possit salutatus vis, sit cu utinam efficiendi cotidieque, pri aliquam singulis instructior ad. Eum corpora assentior no, id sea volutpat scribentur necessitatibus. Moderatius constituam ne est. Debet abhorreant instructior pri at, saepe appellantur id duo, ad euripidis argumentum sed. Invidunt consequuntur per ne, utroque conclusionemque an cum, duo ei eloquentiam definitionem. Cu his dicam splendide honestatis, mel voluptua senserit scripserit te, sed no debitis pericula pertinacia.
+High Performance Computing (HPC) is a type of computing that uses advanced hardware and software technologies to perform complex and computationally-intensive tasks. HPC systems typically consist of clusters of interconnected servers or supercomputers that work together to execute large-scale simulations, data analyses, or other computational workloads.
+
+HPC is often used in scientific research, engineering, finance, and other fields where large amounts of data need to be processed quickly and accurately. Examples of HPC applications include weather forecasting, drug discovery, aerospace engineering, and financial risk analysis.
+
+HPC systems typically require specialized hardware components, such as high-speed interconnects, parallel processors, and large amounts of memory and storage. They also rely on sophisticated software tools and frameworks to manage and coordinate the distribution of computational workloads across the cluster.
+
+In recent years, the use of cloud-based HPC services has become increasingly popular, allowing organizations to access high-performance computing resources on demand without having to invest in expensive hardware or maintain their own data centers. These cloud-based services often provide flexible pricing models based on usage, making it easier for organizations to scale their HPC capabilities up or down as needed.
+
+Overall, HPC is an important and rapidly evolving field that enables researchers, scientists, and businesses to tackle some of the world's most complex and challenging computational problems.
 
 ## Economy of compute
 
-Lorem ipsum dolor sit amet, te possit salutatus vis, sit cu utinam efficiendi cotidieque, pri aliquam singulis instructior ad. Eum corpora assentior no, id sea volutpat scribentur necessitatibus. Moderatius constituam ne est. Debet abhorreant instructior pri at, saepe appellantur id duo, ad euripidis argumentum sed. Invidunt consequuntur per ne, utroque conclusionemque an cum, duo ei eloquentiam definitionem. Cu his dicam splendide honestatis, mel voluptua senserit scripserit te, sed no debitis pericula pertinacia.
+"Economy of compute" refers to the idea of optimizing the use of computing resources to achieve the maximum amount of computational work per unit of energy, time, or cost. In other words, it's about finding ways to get the most value out of the computing resources you have available.
+
+There are many factors that can affect the economy of compute, such as the efficiency of hardware and software components, the complexity of algorithms and data structures, and the way that computational workloads are distributed across a cluster or network.
+
+Some common strategies for improving the economy of compute include:
+
+* Parallelization: Breaking up a large computational task into smaller, more manageable pieces that can be executed simultaneously across multiple processors or nodes.
+
+* Optimization: Tweaking the algorithms, data structures, or code of a computational task to make it run faster or more efficiently.
+
+* Resource allocation: Allocating computing resources in a way that maximizes their utilization and minimizes idle time or wasted energy.
+
+* Cloud computing: Using cloud-based services to access computing resources on demand, allowing organizations to pay only for the resources they need and scale up or down as required.
+
+By optimizing the economy of compute, organizations can achieve significant cost savings, improve the speed and efficiency of their computational workloads, and reduce their environmental footprint by minimizing energy usage. This is particularly important in today's data-driven economy, where the demand for computing resources is rapidly growing and the cost of energy is a major concern.
