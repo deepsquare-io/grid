@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -17,8 +16,10 @@ import (
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -107,7 +108,6 @@ var flags = []cli.Flag{
 var (
 	stream loggerv1alpha1.LoggerAPI_WriteClient
 	conn   *grpc.ClientConn
-	mu     sync.Mutex
 )
 
 var app = &cli.App{
@@ -115,29 +115,12 @@ var app = &cli.App{
 	Usage:   "Send logs from pipe",
 	Flags:   flags,
 	Suggest: true,
-	Action: func(cCtx *cli.Context) error {
+	Action: func(cCtx *cli.Context) (err error) {
 		ctx := cCtx.Context
 
 		// Trap cleanup
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-		go func() {
-			<-c
-			logger.I.Info("gracefully exiting...")
-			time.Sleep(15 * time.Second)
-			logger.I.Info("cleaning up")
-			mu.Lock()
-			if stream != nil {
-				_ = stream.CloseSend()
-			}
-			if conn != nil {
-				_ = conn.Close()
-			}
-			mu.Unlock()
-
-			_ = os.Remove(pipeFile)
-			os.Exit(0)
-		}()
+		cleanChan := make(chan os.Signal, 1)
+		signal.Notify(cleanChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 		// Dial server
 		opts := []grpc.DialOption{}
@@ -165,75 +148,100 @@ var app = &cli.App{
 			return err
 		}
 
+		// Open grpc stream
+		stream, conn, err = openGRPCConn(ctx, opts)
+		if err != nil {
+			logger.I.Error("openGRPCConn failed", zap.Error(err))
+			return err
+		}
+
+		readerChan := make(chan []byte)
+		readerErrChan := make(chan error)
 		pipe, err := os.OpenFile(pipeFile, os.O_RDWR, os.ModeNamedPipe)
 		if err != nil {
 			logger.I.Error("pipe open failed", zap.Error(err))
 			return err
 		}
 
-		// Open grpc stream
-		mu.Lock()
-		stream, conn, err = openGRPCConn(ctx, opts)
-		mu.Unlock()
-		if err != nil {
-			logger.I.Error("openGRPCConn failed", zap.Error(err))
-			return err
-		}
-		defer func() {
-			mu.Lock()
-			if err := conn.Close(); err != nil {
-				if err != io.EOF {
-					logger.I.Error("grpc close failed", zap.Error(err))
+		// Pipe reading thread
+		go func(ctx context.Context) {
+			logger.I.Info("reading")
+			reader := bufio.NewReader(pipe)
+			for {
+				line, err := reader.ReadBytes('\n')
+				if err != nil {
+					readerErrChan <- err
+					logger.I.Error("reader thread receive a reading error, exiting...", zap.Error(err))
+					return
+				}
+				readerChan <- line
+				if ctx.Err() != nil {
+					logger.I.Warn("reader thread receive a context error, exiting...", zap.Error(err))
+					return
 				}
 			}
-			mu.Unlock()
-		}()
+		}(ctx)
 
-		logger.I.Info("reading")
-
-		reader := bufio.NewReader(pipe)
+		// gRPC sending thread
 		for {
-			line, err := reader.ReadBytes('\n')
-			if err == io.EOF {
-				mu.Lock()
-				_, err := stream.CloseAndRecv()
-				mu.Unlock()
-				if err != nil {
-					logger.I.Error("grpc close failed", zap.Error(err))
+			select {
+			case <-ctx.Done():
+				if err := ctx.Err(); err != nil {
+					logger.I.Error("context closed", zap.Error(err))
 					return err
 				}
-				logger.I.Info("pipe EOF, exiting...")
-				return nil
-			}
-			if err != nil {
-				logger.I.Error("pipe read failed", zap.Error(err))
-				return err
-			}
-			logger.I.Debug(
-				"pipe recv",
-				zap.String("data", string(line)),
-			)
-			mu.Lock()
-			err = stream.Send(&loggerv1alpha1.WriteRequest{
-				LogName: logName,
-				Data:    line,
-				User:    user,
-			})
-			mu.Unlock()
-
-			if err != nil {
-				logger.I.Error("grpc write failed", zap.Error(err))
-				mu.Lock()
-				_ = conn.Close()
-				mu.Unlock()
-				time.Sleep(time.Second)
-				mu.Lock()
-				stream, conn, err = openGRPCConn(ctx, opts)
-				mu.Unlock()
+			case line := <-readerChan:
+				err = stream.Send(&loggerv1alpha1.WriteRequest{
+					LogName: logName,
+					Data:    line,
+					User:    user,
+				})
+				// Connection lost retry
 				if err != nil {
-					logger.I.Fatal("failed to reconnect on EOF error", zap.Error(err))
+					logger.I.Error("grpc write failed", zap.Error(err))
+					_ = conn.Close()
+					time.Sleep(time.Second)
+					stream, conn, err = openGRPCConn(ctx, opts)
+					if err != nil {
+						logger.I.Error("failed to reconnect on EOF error", zap.Error(err))
+						return err
+					}
+					logger.I.Info("successfully reconnected")
 				}
-				logger.I.Info("successfully reconnected")
+			case err := <-readerErrChan:
+				if err == io.EOF {
+					err := stream.CloseSend()
+					status, ok := status.FromError(err)
+					if ok {
+						if ok && status.Code() == codes.Canceled {
+							logger.I.Info("gRPC channel already closing", zap.Error(err))
+							return nil
+						}
+					}
+					if err != nil && err != io.EOF {
+						logger.I.Error("gRPC close failed", zap.Error(err))
+						return err
+					}
+					logger.I.Info("pipe EOF, exiting...")
+					return nil
+				}
+				if err != nil {
+					logger.I.Error("pipe read failed", zap.Error(err))
+					return err
+				}
+			// Graceful exit
+			case <-cleanChan:
+				logger.I.Info("gracefully exiting...")
+				if stream != nil {
+					_ = stream.CloseSend()
+				}
+				if conn != nil {
+					_ = conn.Close()
+				}
+				_ = pipe.Close()
+
+				_ = os.Remove(pipeFile)
+				return nil
 			}
 		}
 	},
