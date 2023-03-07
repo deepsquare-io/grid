@@ -10,6 +10,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/deepsquare-io/the-grid/sbatch-service/cmd"
 	sbatchapiv1alpha1 "github.com/deepsquare-io/the-grid/sbatch-service/gen/go/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph"
 	"github.com/deepsquare-io/the-grid/sbatch-service/grpc/sbatch"
@@ -106,6 +107,9 @@ var app = &cli.App{
 	Usage:   "sbatch script hosting service",
 	Flags:   flags,
 	Suggest: true,
+	Commands: []*cli.Command{
+		&cmd.RenderCmd,
+	},
 	Action: func(cCtx *cli.Context) error {
 		// Redis connection
 		opt, err := redis.ParseURL(redisAddress)

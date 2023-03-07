@@ -1,0 +1,29 @@
+{
+  "job": {
+    "resources": {
+      "tasks": 32,
+      "gpusPerTask": 0,
+      "cpusPerTask": 1,
+      "memPerCpu": 1024
+    },
+    "enableLogging": false,
+    "steps": [
+      {
+        "name": "run the circle program",
+        "run": {
+          "command": "./main",
+          "workDir": "/app",
+          "resources": {
+            "tasks": 32
+          },
+          "mpi": "pmix_v4",
+          "container": {
+            "image": "deepsquare-io/mpi-example:latest",
+            "registry": "ghcr.io",
+            "apptainer": true
+          }
+        }
+      }
+    ]
+  }
+}

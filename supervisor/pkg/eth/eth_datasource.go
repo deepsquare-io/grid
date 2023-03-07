@@ -17,6 +17,7 @@ import (
 // DataSource handles communications with the smart contract.
 type DataSource struct {
 	authenticator    EthereumAuthenticator
+	deployBackend    bind.DeployBackend
 	metaschedulerRPC MetaSchedulerRPC
 	metaschedulerWS  MetaSchedulerWS
 	pk               *ecdsa.PrivateKey
@@ -25,12 +26,16 @@ type DataSource struct {
 
 func New(
 	a EthereumAuthenticator,
+	deployBackend bind.DeployBackend,
 	msRPC MetaSchedulerRPC,
 	msWS MetaSchedulerWS,
 	pk *ecdsa.PrivateKey,
 ) *DataSource {
 	if a == nil {
 		logger.I.Fatal("EthereumAuthenticator is nil")
+	}
+	if deployBackend == nil {
+		logger.I.Fatal("DeployBackend is nil")
 	}
 	if msRPC == nil {
 		logger.I.Fatal("MetaSchedulerRPC is nil")
@@ -42,6 +47,7 @@ func New(
 	fromAddress := crypto.PubkeyToAddress(pk.PublicKey)
 	return &DataSource{
 		authenticator:    a,
+		deployBackend:    deployBackend,
 		metaschedulerRPC: msRPC,
 		metaschedulerWS:  msWS,
 		pk:               pk,
@@ -165,6 +171,11 @@ func (s *DataSource) SetJobStatus(
 		jobDurationMinute,
 	)
 	if err != nil {
+		return err
+	}
+	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
+	if err != nil {
+		logger.Error("failed to wait mined", zap.Error(err))
 		return err
 	}
 	logger.Debug(

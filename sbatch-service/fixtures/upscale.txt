@@ -14,7 +14,7 @@ export MEM='256000'
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
   --server.tls.server-host-override='logger.example.com' \
   --server.endpoint='logger.example.com:443' \
-  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
   >/dev/stdout 2>/dev/stderr &
@@ -22,8 +22,10 @@ LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec 3>&1
 exec 4>&2
-exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
+
+/usr/bin/echo "--- Job has started ---"
 
 disposeLogs() {
   echo ---
@@ -35,18 +37,32 @@ disposeLogs() {
   wait $LOGGER_PID || true
   echo cleaned
 }
-trap disposeLogs EXIT
+trap disposeLogs EXIT INT TERM
+# SCOPE: LOGS
 (
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
-/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
-/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
-cd "$SLURM_JOB_NAME/"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
 loadDeepsquareEnv() {
   while IFS= read -r envvar; do
     printf ',%s' "$envvar"
@@ -64,6 +80,7 @@ ContinuousOutputSync() {
   export AWS_ACCESS_KEY_ID='accessKeyId'
   export AWS_SECRET_ACCESS_KEY='secretAccessKey'
   export S3_ENDPOINT_URL='https://example'
+  set +e
   while true; do
     s5cmd sync --destination-region 'region' "$DEEPSQUARE_OUTPUT/" 's3://test''/test'
     /usr/bin/sleep 5
@@ -71,13 +88,14 @@ ContinuousOutputSync() {
 }
 ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
+# SCOPE: CONTINUOUS SYNC
 (
 export 'IS_VIDEO'='false'
 export 'IS_FACE'='false'
 export 'IS_ANIME'='false'
 /usr/bin/echo 'Running: ''compute-frames'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
-# shellcheck disable=SC2097,SC2098
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='compute-frames' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
@@ -86,7 +104,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
+  --disable-cache \
+  --no-home \
   --nv \
+  --pwd "/deepsquare" \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
 
@@ -94,14 +115,14 @@ rm -rf "${STORAGE_PATH}/input_frames/"
 rm -rf "${STORAGE_PATH}/input_video/"
 mkdir -p "${STORAGE_PATH}/input_frames/"
 mkdir -p "${STORAGE_PATH}/output_frames/"
-videosFound="$(find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: video/[^:]*$!!p'\'' | wc -l)"
-imagesFound="$(find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: image/[^:]*$!!p'\'' | wc -l)"
+videosFound="$(find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '"'"'s!: video/[^:]*$!!p'"'"' | wc -l)"
+imagesFound="$(find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '"'"'s!: image/[^:]*$!!p'"'"' | wc -l)"
 
 if "${IS_VIDEO}"; then
   if [[ ${videosFound} -ge "1" ]]; then
       mkdir -p "${STORAGE_PATH}/input_video/"
       #Only consider the first video on the list
-      videoSourceFile="$(find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: video/[^:]*$!!p'\'' | head -1)"
+      videoSourceFile="$(find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '"'"'s!: video/[^:]*$!!p'"'"' | head -1)"
       source_fps="$(ffmpeg -i "${videoSourceFile}" 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p")"
       #Only take the first 5 minutes
       ffmpeg -ss 00:00 -accurate_seek -t 05:00 -i "${videoSourceFile}" -c:v libx264 -crf "${source_fps}" -c:a aac "${STORAGE_PATH}/input_video/input_video_trimmed.mp4"
@@ -112,7 +133,7 @@ if "${IS_VIDEO}"; then
   fi
 else
   if [[ ${imagesFound} -ge "1" ]]; then
-      find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: image/[^:]*$!!p'\'' | xargs -I{} cp "{}" "${STORAGE_PATH}/input_frames/" || (echo "Zero picture found" && exit 1)
+      find "${DEEPSQUARE_INPUT}" -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '"'"'s!: image/[^:]*$!!p'"'"' | xargs -I{} cp "{}" "${STORAGE_PATH}/input_frames/" || (echo "Zero picture found" && exit 1)
   else
       echo "No input picture found, exiting" && exit 1
   fi
@@ -123,9 +144,9 @@ for i in $(seq 1 "$NTASKS"); do
   cd "${STORAGE_PATH}/input_frames/"
   mkdir -p "${STORAGE_PATH}/input_frames/batch-${i}"
   if "${IS_VIDEO}"; then
-    mv $(find . -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: image/[^:]*$!!p'\'' | head -${framesPerTask}) "${STORAGE_PATH}/input_frames/batch-${i}/"
+    mv $(find . -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '"'"'s!: image/[^:]*$!!p'"'"' | head -${framesPerTask}) "${STORAGE_PATH}/input_frames/batch-${i}/"
   else
-    find . -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '\''s!: image/[^:]*$!!p'\'' | head -${framesPerTask} | while IFS= read -r file; do
+    find . -maxdepth 1 -type f -exec file -N -i -- {} + | sed -n '"'"'s!: image/[^:]*$!!p'"'"' | head -${framesPerTask} | while IFS= read -r file; do
       mv "$file" "${STORAGE_PATH}/input_frames/batch-${i}/"
     done
   fi
@@ -136,7 +157,7 @@ doFor() {
 export index="$1"
 /usr/bin/echo 'Running: ''upscale'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
-# shellcheck disable=SC2097,SC2098
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='upscale' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
@@ -145,7 +166,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
+  --disable-cache \
+  --no-home \
   --nv \
+  --pwd "/deepsquare" \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
 
@@ -162,7 +186,7 @@ for pid in "${pids[@]}"; do
 done
 /usr/bin/echo 'Running: ''re-encode-video'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
-# shellcheck disable=SC2097,SC2098
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='re-encode-video' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=8 \
@@ -171,7 +195,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
+  --disable-cache \
+  --no-home \
   --nv \
+  --pwd "/deepsquare" \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/sh -c 'set -ex
 
@@ -180,6 +207,7 @@ if "${IS_VIDEO}"; then
   ffmpeg -r "${source_fps}" -i "${STORAGE_PATH}/output_frames/frame%08d_out.png" -i "${STORAGE_PATH}/input_video/input_video_trimmed.mp4" -map 0:v:0 -map 1:a:0 -c:a copy -c:v libx264 -r "${source_fps}" -pix_fmt yuv420p "${DEEPSQUARE_OUTPUT}/result.mp4"
 fi'
 )
+# END SCOPE: CONTINUOUS SYNC
 kill $CONTINUOUS_SYNC_PID || true
 wait $CONTINUOUS_SYNC_PID || true
 /usr/bin/echo "Output contains:"
@@ -190,3 +218,4 @@ export S3_ENDPOINT_URL='https://example'
 
 s5cmd sync --destination-region 'region' "$DEEPSQUARE_OUTPUT/" 's3://test''/test'
 )
+# END SCOPE: LOGS

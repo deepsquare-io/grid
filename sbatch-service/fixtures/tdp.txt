@@ -14,7 +14,7 @@ export MEM='16384'
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
   --server.tls.server-host-override='logger.example.com' \
   --server.endpoint='logger.example.com:443' \
-  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
   >/dev/stdout 2>/dev/stderr &
@@ -22,8 +22,10 @@ LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec 3>&1
 exec 4>&2
-exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
+
+/usr/bin/echo "--- Job has started ---"
 
 disposeLogs() {
   echo ---
@@ -35,18 +37,32 @@ disposeLogs() {
   wait $LOGGER_PID || true
   echo cleaned
 }
-trap disposeLogs EXIT
+trap disposeLogs EXIT INT TERM
+# SCOPE: LOGS
 (
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
-/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
-/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
-cd "$SLURM_JOB_NAME/"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
 loadDeepsquareEnv() {
   while IFS= read -r envvar; do
     printf ',%s' "$envvar"
@@ -56,7 +72,7 @@ export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'
 /usr/bin/echo 'Running: ''tdp'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
-# shellcheck disable=SC2097,SC2098
+# shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' /usr/bin/srun --job-name='tdp' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
@@ -65,11 +81,14 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
+  --disable-cache \
+  --no-home \
   --nv \
+  --pwd "/deepsquare" \
   '/opt/software/registry-1.deepsquare.run/library/tdp:latest' \
   /bin/sh -c '/unityapp/DeepSquareURSSample.x86_64 \
   -maxplayers 8 \
-  -webserverurl '\''wss://tdp.deepsquare.run'\'' \
+  -webserverurl '"'"'wss://tdp.deepsquare.run'"'"' \
   -renderfps 60 \
   -streamfps 30 \
   -sessionpin 123 \
@@ -81,3 +100,4 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   -displayfpscounter \
   --logFile -'
 )
+# END SCOPE: LOGS

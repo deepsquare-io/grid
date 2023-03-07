@@ -240,7 +240,7 @@ type ContainerRun struct {
 // $DEEPSQUARE_OUTPUT is the staging directory for uploading files.
 type StepRun struct {
 	// Allocated resources for the command.
-	Resources *StepRunResources `json:"resources" yaml:"resources" validate:"required"`
+	Resources *StepRunResources `json:"resources" yaml:"resources"`
 	// Container definition.
 	//
 	// If null, run on the host.
@@ -260,4 +260,112 @@ type StepRun struct {
 	// Accepted: /bin/bash, /bin/ash, /bin/sh
 	// Default: /bin/sh
 	Shell *string `json:"shell" yaml:"shell" validate:"omitempty,oneof=/bin/bash /bin/ash /bin/sh"`
+	// Type of core networking functionality.
+	//
+	// Either: "host" (default) or "slirp4netns" (rootless network namespace).
+	Network *string `json:"network" yaml:"network" validate:"omitempty,oneof=host slirp4netns"`
+	// Configuration for the DNS in "slirp4netns" mode.
+	//
+	// ONLY enabled if network is "slirp4netns".
+	//
+	// A comma-separated list of DNS IP.
+	DNS []string `json:"dns" yaml:"dns" validate:"dive,ip"`
+	// Remap UID to root.
+	//
+	// If the "default" (enroot/pyxis) container runtime is used, it will use the `--root` (--container-remap-root for Pyxis) flags.
+	//
+	// If the "apptainer" container runtime is used, the `--fakeroot` flag will be passed.
+	//
+	// If no container runtime is used, `unshared --user --map-root-user --mount` will be used and a user namespace will be created.
+	//
+	// If null, default to false.
+	MapRoot *bool `json:"mapRoot" yaml:"mapRoot"`
+	// Working directory inside a step.
+	//
+	// If the "default" (Pyxis) container runtime is used, it will use the `--container-workdir` flag.
+	//
+	// If the "apptainer" container runtime is used, the `--pwd` flag will be passed.
+	//
+	// If no container runtime is used, `cd` will be executed on the first line.
+	//
+	// If null, default to use $STORAGE_PATH as working directory.
+	WorkDir *string `json:"workDir" yaml:"workDir" validate:"omitempty,startswith=/"`
+	// Add custom network interfaces.
+	//
+	// ONLY enabled if network is "slirp4netns".
+	//
+	// Due to the nature of slirp4netns, the user is automatically mapped as root in order to create network namespaces and add new network interfaces.
+	//
+	// The tunnel interfaces will be named net0, net1, ... netX.
+	//
+	// The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
+	CustomNetworkInterfaces []*NetworkInterface `json:"customNetworkInterfaces" yaml:"customNetworkInterfaces" validate:"dive"`
+	// MPI selection.
+	//
+	// Must be one of: none, pmix_v4, pmi2.
+	//
+	// We recommend pmix_v4.
+	//
+	// If null, will default to infrastructure provider settings (which may not be what you want).
+	Mpi *string `json:"mpi" yaml:"mpi" validate:"omitempty,oneof=none pmix_v4 pmi2"`
+}
+
+// Connect a network interface on a StepRun.
+//
+// The network interface is connected via slirp4netns.
+type NetworkInterface struct {
+	// Use the wireguard transport.
+	Wireguard *Wireguard `json:"wireguard" yaml:"wireguard"`
+}
+
+// Wireguard VPN Transport for StepRun.
+//
+// The Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.
+//
+// Wireguard transport uses UDP hole punching to connect to the VPN Server.
+//
+// Disabled settings: PreUp, PostUp, PreDown, PostDown, Table, MTU, SaveConfig.
+//
+// If these features are necessary, please do contact DeepSquare developpers!
+type Wireguard struct {
+	// The IP addresses of the wireguard interface.
+	//
+	// Format is a CIDRv4 (X.X.X.X/X) or CIDRv6.
+	//
+	// Recommendation is to take one IP from the 10.0.0.0/24 range.
+	Address []string `json:"address" yaml:"address" validate:"dive,cidr"`
+	// The client private key.
+	PrivateKey string `json:"privateKey" yaml:"privateKey"`
+	// The peers connected to the wireguard interface.
+	Peers []*WireguardPeer `json:"peers" yaml:"peers" validate:"dive"`
+}
+
+// A Wireguard Peer.
+type WireguardPeer struct {
+	// The peer private key.
+	PublicKey string `json:"publicKey" yaml:"publicKey"`
+	// The peer shared key.
+	PreSharedKey *string `json:"preSharedKey" yaml:"preSharedKey"`
+	// Configuration of wireguard routes.
+	//
+	// Format is a CIDRv4 (X.X.X.X/X) or CIDRv6.
+	//
+	// 0.0.0.0/0 (or ::/0) would forward all packets to the tunnel. If you plan to use the Wireguard VPN as a gateway, you MUST set this IP range.
+	//
+	// <server internal IP>/32 (not the server's public IP) would forward all packets to the tunnel with the server IP as the destination. MUST be set.
+	//
+	// <VPN IP range> would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other.
+	AllowedIPs []string `json:"allowedIPs" yaml:"allowedIPs" validate:"dive,cidr"`
+	// The peer endpoint.
+	//
+	// Format is IP:port.
+	//
+	// This would be the Wireguard server IP.
+	Endpoint *string `json:"endpoint" yaml:"endpoint" validate:"omitempty,hostname_port"`
+	// Initiate the handshake and re-initiate regularly.
+	//
+	// Takes seconds as parameter. 25 seconds is recommended.
+	//
+	// You MUST to set the persistent keepalive to enables UDP hole-punching.
+	PersistentKeepalive *int `json:"persistentKeepalive" yaml:"persistentKeepalive"`
 }
