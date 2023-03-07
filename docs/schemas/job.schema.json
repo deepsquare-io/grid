@@ -67,7 +67,7 @@
       {
         "kind": "INPUT_OBJECT",
         "name": "HTTPData",
-        "description": "S3Data describes the necessary variables to connect to a HTTP storage.",
+        "description": "HTTPData describes the necessary variables to connect to a HTTP storage.",
         "specifiedByURL": null,
         "fields": null,
         "inputFields": [

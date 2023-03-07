@@ -1,8 +1,12 @@
+---
+toc_max_heading_level: 6
+---
+
 # Job Reference
 
-Jobs submitted to DeepSquare use the JSON format. The top level object is the [Job](#job).
+Jobs submitted to DeepSquare use the JSON format. The top level object is the [Job](#job-top-level-object).
 
-### Job
+### Job (top level object)
 
 A Job is a finite sequence of instructions.
 
@@ -17,7 +21,7 @@ A Job is a finite sequence of instructions.
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>resources</strong></td>
-<td valign="top"><a href="#jobresources">JobResources</a>!</td>
+<td valign="top"><a href="#resources-jobresources">JobResources</a>!</td>
 <td>
 
 Allocated resources for the job.
@@ -36,7 +40,7 @@ Each resource is available as environment variables:
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>env</strong></td>
-<td valign="top">[<a href="#envvar">EnvVar</a>!]</td>
+<td valign="top">[<a href="#env-envvar">EnvVar</a>!]</td>
 <td>
 
 Environment variables accessible for the entire job.
@@ -54,7 +58,7 @@ EnableLogging enables the DeepSquare GRID Logger.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>input</strong></td>
-<td valign="top"><a href="#transportdata">TransportData</a></td>
+<td valign="top"><a href="#input-and-output-transportdata">TransportData</a></td>
 <td>
 
 Pull data at the start of the job.
@@ -84,12 +88,12 @@ If null, the mode won't change and will default to the source.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>steps</strong></td>
-<td valign="top">[<a href="#step">Step</a>!]!</td>
+<td valign="top">[<a href="#steps-step">Step</a>!]!</td>
 <td></td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>output</strong></td>
-<td valign="top"><a href="#transportdata">TransportData</a></td>
+<td valign="top"><a href="#input-and-output-transportdata">TransportData</a></td>
 <td>
 
 Push data at the end of the job.
@@ -212,7 +216,7 @@ ContinousOutputSync is not available with HTTP.
 
 </details>
 
-### JobResources
+### `.resources` _JobResources_
 
 JobResources are the allocated resources for a job in a cluster.
 
@@ -286,7 +290,7 @@ Can be greater or equal to 0.
 
 </details>
 
-### EnvVar
+### `.env[]` _EnvVar_
 
 An environment variable.
 
@@ -326,7 +330,7 @@ Accessible via: "$key". "Key" name must follows the POSIX specifications (alphan
 
 </details>
 
-### TransportData
+### `.input` and `.output` _TransportData_
 
 <table>
 <thead>
@@ -339,7 +343,7 @@ Accessible via: "$key". "Key" name must follows the POSIX specifications (alphan
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>http</strong></td>
-<td valign="top"><a href="#httpdata">HTTPData</a></td>
+<td valign="top"><a href="#inputhttp-and-outputhttp-httpdata">HTTPData</a></td>
 <td>
 
 Use http to download a file or archive, which will be autoextracted.
@@ -348,7 +352,7 @@ Use http to download a file or archive, which will be autoextracted.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>s3</strong></td>
-<td valign="top"><a href="#s3data">S3Data</a></td>
+<td valign="top"><a href="#inputs3-and-outputs3-s3data">S3Data</a></td>
 <td>
 
 Use s3 to sync a file or directory.
@@ -385,9 +389,9 @@ Use s3 to sync a file or directory.
 
 </details>
 
-### HTTPData
+### `.input.http` and `.output.http` _HTTPData_
 
-S3Data describes the necessary variables to connect to a HTTP storage.
+HTTPData describes the necessary variables to connect to a HTTP storage.
 
 <table>
 <thead>
@@ -417,7 +421,7 @@ S3Data describes the necessary variables to connect to a HTTP storage.
 
 </details>
 
-### S3Data
+### `.input.s3` and `.output.s3` _S3Data_
 
 S3Data describes the necessary variables to connect to a S3 storage.
 
@@ -532,7 +536,7 @@ If null, defaults to false.
 
 </details>
 
-### Step
+### `.steps[]` _Step_
 
 Step is one instruction.
 
@@ -556,7 +560,7 @@ Name of the instruction.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>run</strong></td>
-<td valign="top"><a href="#steprun">StepRun</a></td>
+<td valign="top"><a href="#stepsrun-steprun">StepRun</a></td>
 <td>
 
 Run a command if not null.
@@ -567,7 +571,7 @@ Is exclusive with "for".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>for</strong></td>
-<td valign="top"><a href="#stepfor">StepFor</a></td>
+<td valign="top"><a href="#stepsfor-stepfor">StepFor</a></td>
 <td>
 
 Run a for loop if not null.
@@ -613,7 +617,7 @@ Is exclusive with "run".
 
 </details>
 
-### StepRun
+### `.steps[].run` _StepRun_
 
 StepRun is one script executed with the shell.
 
@@ -663,7 +667,7 @@ Default: /bin/sh
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>resources</strong></td>
-<td valign="top"><a href="#steprunresources">StepRunResources</a></td>
+<td valign="top"><a href="#stepsrunresources-steprunresources">StepRunResources</a></td>
 <td>
 
 Allocated resources for the command.
@@ -672,7 +676,7 @@ Allocated resources for the command.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>container</strong></td>
-<td valign="top"><a href="#containerrun">ContainerRun</a></td>
+<td valign="top"><a href="#stepsruncontainer-containerrun">ContainerRun</a></td>
 <td>
 
 Container definition.
@@ -709,7 +713,7 @@ A comma-separated list of DNS IP.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>customNetworkInterfaces</strong></td>
-<td valign="top">[<a href="#networkinterface">NetworkInterface</a>!]</td>
+<td valign="top">[<a href="#stepsruncustomnetworkinterfacesnetworkinterface">NetworkInterface</a>!]</td>
 <td>
 
 Add custom network interfaces.
@@ -726,7 +730,7 @@ The default network interface is tap0, which is a TAP interface connecting the h
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>env</strong></td>
-<td valign="top">[<a href="#envvar">EnvVar</a>!]</td>
+<td valign="top">[<a href="#env-envvar">EnvVar</a>!]</td>
 <td>
 
 Environment variables accessible over the command.
@@ -907,7 +911,7 @@ If null, will default to infrastructure provider settings (which may not be what
 
 </details>
 
-### StepRunResources
+### `.steps[].run.resources` _StepRunResources_
 
 StepRunResources are the allocated resources for a command in a job.
 
@@ -996,7 +1000,7 @@ If null, defaults to the job resources.
 
 </details>
 
-### ContainerRun
+### `.steps[].run.container` _ContainerRun_
 
 <table>
 <thead>
@@ -1033,7 +1037,7 @@ Examples:
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>mounts</strong></td>
-<td valign="top">[<a href="#mount">Mount</a>!]</td>
+<td valign="top">[<a href="#stepsruncontainermountsmount">Mount</a>!]</td>
 <td>
 
 Mount decribes a Bind Mount.
@@ -1171,7 +1175,7 @@ X11 mounts /tmp/.X11-unix in the container.
 
 </details>
 
-### Mount
+### `.steps[].run.container.mounts[]`_Mount_
 
 Mount decribes a Bind Mount.
 
@@ -1227,7 +1231,7 @@ Accepted: ro, rw
 
 </details>
 
-### NetworkInterface
+### `.steps[].run.customNetworkInterfaces[]`_NetworkInterface_
 
 Connect a network interface on a StepRun.
 
@@ -1244,7 +1248,7 @@ The network interface is connected via slirp4netns.
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>wireguard</strong></td>
-<td valign="top"><a href="#wireguard">Wireguard</a></td>
+<td valign="top"><a href="#stepsruncustomnetworkinterfaceswireguard-wireguard">Wireguard</a></td>
 <td>
 
 Use the wireguard transport.
@@ -1284,7 +1288,7 @@ wg genkey > sharedkey
 
 </details>
 
-### Wireguard
+### `.steps[].run.customNetworkInterfaces[].wireguard` _Wireguard_
 
 Wireguard VPN Transport for StepRun.
 
@@ -1329,7 +1333,7 @@ The client private key.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>peers</strong></td>
-<td valign="top">[<a href="#wireguardpeer">WireguardPeer</a>!]</td>
+<td valign="top">[<a href="#stepsruncustomnetworkinterfaceswireguardpeers-wireguardpeer">WireguardPeer</a>!]</td>
 <td>
 
 The peers connected to the wireguard interface.
@@ -1367,7 +1371,7 @@ wg genkey > sharedkey
 
 </details>
 
-### WireguardPeer
+### `.steps[].run.customNetworkInterfaces[].wireguard.peers[]` _WireguardPeer_
 
 A Wireguard Peer.
 
@@ -1466,7 +1470,7 @@ wg genkey > sharedkey
 
 </details>
 
-### StepFor
+### `.steps[].for` _StepFor_
 
 StepFor describes a for loop.
 
@@ -1501,7 +1505,7 @@ Exclusive with "range".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>range</strong></td>
-<td valign="top"><a href="#forrange">ForRange</a></td>
+<td valign="top"><a href="#stepsforrange-forrange">ForRange</a></td>
 <td>
 
 Index accessible via the $index variable.
@@ -1512,7 +1516,7 @@ Exclusive with "items".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>steps</strong></td>
-<td valign="top">[<a href="#step">Step</a>!]!</td>
+<td valign="top">[<a href="#steps-step">Step</a>!]!</td>
 <td>
 
 Steps are run sequentially in one iteration.
@@ -1564,7 +1568,7 @@ Will prints "1", "2", "3".
 
 </details>
 
-### ForRange
+### `.steps[].for.range` _ForRange_
 
 ForRange describes the parameter for a range loop.
 
