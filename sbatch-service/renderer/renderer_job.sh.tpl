@@ -16,7 +16,7 @@ export MEM='{{ mul .Job.Resources.MemPerCPU .Job.Resources.CpusPerTask .Job.Reso
   --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
   --server.tls.server-host-override='{{ .Logger.Endpoint }}' \
   --server.endpoint='{{ .Logger.Endpoint }}:{{ .Logger.Port }}' \
-  --pipe.path="/tmp/$SLURM_JOB_NAME-pipe" \
+  --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
   >/dev/stdout 2>/dev/stderr &
@@ -24,8 +24,10 @@ LOGGER_PID="$!"
 /usr/bin/sleep 1
 exec 3>&1
 exec 4>&2
-exec 1>>"/tmp/$SLURM_JOB_NAME-pipe"
+exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
 exec 2>&1
+
+/usr/bin/echo "--- Job has started ---"
 
 disposeLogs() {
   echo ---
@@ -37,19 +39,33 @@ disposeLogs() {
   wait $LOGGER_PID || true
   echo cleaned
 }
-trap disposeLogs EXIT
+trap disposeLogs EXIT INT TERM
+# SCOPE: LOGS
 (
 {{- end }}
-export STORAGE_PATH="/opt/cache/shared/$UID/$SLURM_JOB_NAME"
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
-/usr/bin/chown -R "$UID:cluster-users" "$STORAGE_PATH"
-/usr/bin/mkdir -p "$SLURM_JOB_NAME/"
-cd "$SLURM_JOB_NAME/"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
 loadDeepsquareEnv() {
   while IFS= read -r envvar; do
     printf ',%s' "$envvar"
@@ -97,6 +113,7 @@ ContinuousOutputSync() {
   export AWS_ACCESS_KEY_ID={{ .Job.Output.S3.AccessKeyID | squote }}
   export AWS_SECRET_ACCESS_KEY={{ .Job.Output.S3.SecretAccessKey | squote }}
   export S3_ENDPOINT_URL={{ .Job.Output.S3.EndpointURL | squote }}
+  set +e
   while true; do
     s5cmd sync {{ if and .Job.Output.S3.DeleteSync (derefBool .Job.Output.S3.DeleteSync) }}--delete {{ end }}--destination-region {{ .Job.Output.S3.Region | squote }} "$DEEPSQUARE_OUTPUT/" {{ .Job.Output.S3.BucketURL | squote }}{{ .Job.Output.S3.Path | squote }}
     /usr/bin/sleep 5
@@ -104,6 +121,7 @@ ContinuousOutputSync() {
 }
 ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
+# SCOPE: CONTINUOUS SYNC
 (
 {{- end }}
 
@@ -118,7 +136,7 @@ export {{ $env.Key | squote }}={{ $env.Value | squote }}
 {{- if and .Job.Output .Job.Output.HTTP }}
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
-cd $DEEPSQUARE_OUTPUT/..
+cd $STORAGE_PATH
 function urldecode() { : "${*//+/ }"; echo -e "${_//%/\\x}"; }
 /usr/bin/echo "##############################################################"
 /usr/bin/echo
@@ -132,10 +150,10 @@ fi
 /usr/bin/echo
 /usr/bin/echo
 /usr/bin/echo "##############################################################"
-cd $STORAGE_PATH
 {{- else if and .Job.Output .Job.Output.S3 }}
 {{- if and .Job.ContinuousOutputSync (derefBool .Job.ContinuousOutputSync) }}
 )
+# END SCOPE: CONTINUOUS SYNC
 kill $CONTINUOUS_SYNC_PID || true
 wait $CONTINUOUS_SYNC_PID || true
 {{- end }}
@@ -149,4 +167,5 @@ s5cmd sync {{ if and .Job.Output.S3.DeleteSync (derefBool .Job.Output.S3.DeleteS
 {{- end }}
 {{- if and .Job.EnableLogging (derefBool .Job.EnableLogging ) }}
 )
+# END SCOPE: LOGS
 {{- end }}

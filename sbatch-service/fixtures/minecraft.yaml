@@ -1,0 +1,81 @@
+job:
+  enableLogging: false
+  resources:
+    tasks: 1
+    cpusPerTask: 8
+    memPerCpu: 8000
+    gpusPerTask: 0
+  input:
+    s3:
+      region: ch-dk-2
+      bucketUrl: s3://minecraft-server
+      path: '/data/'
+      accessKeyId: accessKeyId
+      secretAccessKey: secretAccessKey
+      endpointUrl: https://sos-ch-dk-2.exo.io
+  output:
+    s3:
+      region: ch-dk-2
+      bucketUrl: s3://minecraft-server
+      path: '/data/'
+      accessKeyId: accessKeyId
+      secretAccessKey: secretAccessKey
+      endpointUrl: https://sos-ch-dk-2.exo.io
+      deleteSync: true
+  continuousOutputSync: true
+  steps:
+    - name: move-input-to-output
+      run:
+        resources:
+          tasks: 1
+          cpusPerTask: 8
+          memPerCpu: 8000
+          gpusPerTask: 0
+        command: |-
+          mv $DEEPSQUARE_INPUT/* $DEEPSQUARE_OUTPUT/
+    - name: start-minecraft
+      run:
+        container:
+          apptainer: true
+          registry: registry-1.docker.io
+          image: marctv/minecraft-papermc-server:1.19
+        resources:
+          tasks: 1
+          cpusPerTask: 8
+          memPerCpu: 8000
+          gpusPerTask: 0
+        env:
+          - key: EULA
+            value: 'true'
+          - key: MEMORYSIZE
+            value: 8G
+        dns: ['1.1.1.1']
+        network: 'slirp4netns'
+        customNetworkInterfaces:
+          - wireguard:
+              # Server:
+              # [Interface]
+              # Address = 10.0.0.1/24
+              # ListenPort = 51000
+              # MTU = 1420
+              # PrivateKey = <TO FILL: Serv PK>
+              # PostUp = iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE; iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 25565 -j DNAT --to-destination 10.0.0.2:25565; iptables -A FORWARD -p tcp -d 10.0.0.2 --dport 25565 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT; iptables -t nat -A POSTROUTING -o wgnet0 -j MASQUERADE
+              # PostDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE; iptables -t nat -D PREROUTING -p tcp -i eth0 --dport 25565 -j DNAT --to-destination 10.0.0.2:25565; iptables -D FORWARD -p tcp -d 10.0.0.2 --dport 25565 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT; iptables -t nat -D POSTROUTING -o wgnet -j MASQUERADE
+
+              # [Peer]
+              # PublicKey = <TO FILL: Client Pub>
+              # PresharedKey = <TO FILL: SharedKey>
+              # AllowedIPs = 10.0.0.2/32
+              address: ['10.0.0.2/24']
+              privateKey: '<TO FILL: Client PK>'
+              peers:
+                - publicKey: '<TO FILL: Serv Pub>'
+                  preSharedKey: '<TO FILL: SharedKey>'
+                  allowedIPs: ['10.0.0.1/32']
+                  persistentKeepalive: 10
+                  endpoint: '194.182.186.85:51000'
+
+        command: |-
+          cd $DEEPSQUARE_OUTPUT
+          sed -i 's/eula=false/eula=true/g' eula.txt
+          /usr/bin/java -jar -Xms$MEMORYSIZE -Xmx$MEMORYSIZE -XX:-UseContainerSupport /opt/minecraft/paperspigot.jar nogui

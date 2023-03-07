@@ -262,6 +262,7 @@ func Init() *Container {
 	}
 	ethDataSource := eth.New(
 		ethClientRPC,
+		ethClientRPC,
 		msRPC,
 		msWS,
 		pk,

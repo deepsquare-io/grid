@@ -67,12 +67,12 @@ job:
             params+=("--config" "/models/$MODEL/config.yaml")
           fi
 
-          python /stablediffusion/scripts/txt2img.py "\${params[@]}"
+          python /stablediffusion/scripts/txt2img.py "${params[@]}"
 
           echo "##############################################################"
           echo
           echo "Click on this link to preview your results:"
-          find "$DEEPSQUARE_OUTPUT" -name "grid*.png" -exec sh -c 'file="{}"; curl -sS --upload-file "$file" https://transfer.deepsquare.run/; rm "$file"' \\;
+          find "$DEEPSQUARE_OUTPUT" -name "grid*.png" -exec sh -c 'file="{}"; curl -sS --upload-file "$file" https://transfer.deepsquare.run/; rm "$file"' \;
           echo
           echo
           echo "##############################################################"

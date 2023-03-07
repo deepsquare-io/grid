@@ -531,7 +531,18 @@ func cleanStepRunWith(
 	env *model.EnvVar,
 ) *model.StepRun {
 	return &model.StepRun{
-
+		Container:         &cleanContainerRunWith,
+		DisableCPUBinding: utils.Ptr(true),
+		Network:           utils.Ptr("slirp4netns"),
+		DNS:               []string{"1.1.1.1"},
+		MapRoot:           utils.Ptr(true),
+		WorkDir:           utils.Ptr("/dir"),
+		CustomNetworkInterfaces: []*model.NetworkInterface{
+			{
+				Wireguard: &cleanWireguard,
+			},
+		},
+		Mpi:       utils.Ptr("pmix_v4"),
 		Resources: res,
 		Env:       []*model.EnvVar{env},
 		Command:   "hostname",
@@ -551,9 +562,7 @@ func TestValidateStepRun(t *testing.T) {
 			title: "Positive test",
 		},
 		{
-			input: model.StepRun{
-				Resources: &cleanStepRunResources,
-			},
+			input: model.StepRun{},
 			title: "Positive test: omitempty",
 		},
 		{
@@ -597,6 +606,36 @@ func TestValidateStepRun(t *testing.T) {
 			isError:       true,
 			errorContains: []string{"Resources"},
 			title:         "Negative test: Resources validation error",
+		},
+		{
+			input: func() model.StepRun {
+				r := cleanStepRunWith(&cleanStepRunResources, &cleanEnvVar)
+				r.Network = utils.Ptr("other")
+				return *r
+			}(),
+			isError:       true,
+			errorContains: []string{"Network", "oneof"},
+			title:         "Negative test: Network validation error",
+		},
+		{
+			input: func() model.StepRun {
+				r := cleanStepRunWith(&cleanStepRunResources, &cleanEnvVar)
+				r.DNS = []string{"notanip"}
+				return *r
+			}(),
+			isError:       true,
+			errorContains: []string{"DNS", "ip"},
+			title:         "Negative test: DNS validation error",
+		},
+		{
+			input: func() model.StepRun {
+				r := cleanStepRunWith(&cleanStepRunResources, &cleanEnvVar)
+				r.Mpi = utils.Ptr("error")
+				return *r
+			}(),
+			isError:       true,
+			errorContains: []string{"Mpi", "oneof"},
+			title:         "Negative test: MPI validation error",
 		},
 	}
 
@@ -648,7 +687,9 @@ func TestValidateStep(t *testing.T) {
 		},
 		{
 			input: *cleanStepWith(
-				&model.StepRun{},
+				&model.StepRun{
+					WorkDir: utils.Ptr("aaa"),
+				},
 				nil,
 			),
 			isError:       true,
@@ -659,7 +700,9 @@ func TestValidateStep(t *testing.T) {
 			input: *cleanStepWith(
 				nil,
 				cleanStepForWith(&cleanForRange, cleanStepWith(
-					&model.StepRun{},
+					&model.StepRun{
+						WorkDir: utils.Ptr("aaa"),
+					},
 					nil,
 				)),
 			),
@@ -728,7 +771,9 @@ func TestValidateStepFor(t *testing.T) {
 		},
 		{
 			input: *cleanStepForWith(&cleanForRange, cleanStepWith(
-				&model.StepRun{},
+				&model.StepRun{
+					WorkDir: utils.Ptr("aaa"),
+				},
 				nil,
 			)),
 			isError:       true,
@@ -956,9 +1001,9 @@ func TestValidateJob(t *testing.T) {
 			input: *cleanJobWith(
 				&cleanJobResources,
 				&cleanEnvVar,
-				&model.TransportData{HTTP: &model.HTTPData{URL: "not a url"}},
+				cleanTransportDataWithHTTP(cleanHTTPData),
 				nil,
-				&model.TransportData{HTTP: &model.HTTPData{URL: "not a url"}},
+				cleanTransportDataWithHTTP(cleanHTTPData),
 			),
 			isError:       true,
 			errorContains: []string{"Steps", "required"},
@@ -968,13 +1013,155 @@ func TestValidateJob(t *testing.T) {
 			input: *cleanJobWith(
 				&cleanJobResources,
 				&cleanEnvVar,
-				&model.TransportData{HTTP: &model.HTTPData{URL: "not a url"}},
-				&model.Step{Run: &model.StepRun{}},
-				&model.TransportData{HTTP: &model.HTTPData{URL: "not a url"}},
+				cleanTransportDataWithHTTP(cleanHTTPData),
+				&model.Step{Run: &model.StepRun{
+					WorkDir: utils.Ptr("aaz"),
+				}},
+				cleanTransportDataWithHTTP(cleanHTTPData),
 			),
 			isError:       true,
 			errorContains: []string{"Steps"},
 			title:         "Negative test: step validation errors",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.title, func(t *testing.T) {
+			// Act
+			err := validate.I.Struct(tt.input)
+
+			// Assert
+			if tt.isError {
+				assert.Error(t, err)
+				for _, contain := range tt.errorContains {
+					assert.ErrorContains(t, err, contain)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+var cleanWireguardPeer = model.WireguardPeer{
+	PublicKey:           "pub",
+	AllowedIPs:          []string{"0.0.0.0/0", "172.10.0.0/32"},
+	PreSharedKey:        utils.Ptr("sha"),
+	Endpoint:            utils.Ptr("10.0.0.0:30"),
+	PersistentKeepalive: utils.Ptr(20),
+}
+
+func TestValidateWireguardPeer(t *testing.T) {
+	tests := []struct {
+		input         model.WireguardPeer
+		isError       bool
+		errorContains []string
+		title         string
+	}{
+		{
+			input: cleanWireguardPeer,
+			title: "Positive test",
+		},
+		{
+			input: func() model.WireguardPeer {
+				w := cleanWireguardPeer
+				w.Endpoint = nil
+				return w
+			}(),
+			title: "Positive test: Endpoint allow empty",
+		},
+		{
+			input: func() model.WireguardPeer {
+				w := cleanWireguardPeer
+				w.AllowedIPs = []string{"a"}
+				return w
+			}(),
+			title:         "Negative test: AllowedIPs is not a cidr",
+			isError:       true,
+			errorContains: []string{"AllowedIPs", "cidr"},
+		},
+		{
+			input: func() model.WireguardPeer {
+				w := cleanWireguardPeer
+				w.Endpoint = utils.Ptr("a")
+				return w
+			}(),
+			title:         "Negative test: Endpoint is not an hostname_port",
+			isError:       true,
+			errorContains: []string{"Endpoint", "hostname_port"},
+		},
+		{
+			input: func() model.WireguardPeer {
+				w := cleanWireguardPeer
+				w.Endpoint = utils.Ptr("a")
+				return w
+			}(),
+			title:         "Negative test: Endpoint is not an hostname_port",
+			isError:       true,
+			errorContains: []string{"Endpoint", "hostname_port"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.title, func(t *testing.T) {
+			// Act
+			err := validate.I.Struct(tt.input)
+
+			// Assert
+			if tt.isError {
+				assert.Error(t, err)
+				for _, contain := range tt.errorContains {
+					assert.ErrorContains(t, err, contain)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+var cleanWireguard = model.Wireguard{
+	Address:    []string{"10.0.0.1/32", "11.0.0.1/24"},
+	PrivateKey: "abc",
+	Peers: []*model.WireguardPeer{
+		&cleanWireguardPeer,
+	},
+}
+
+func TestValidateWireguard(t *testing.T) {
+	tests := []struct {
+		input         model.Wireguard
+		isError       bool
+		errorContains []string
+		title         string
+	}{
+		{
+			input: cleanWireguard,
+			title: "Positive test",
+		},
+		{
+			input: func() model.Wireguard {
+				w := cleanWireguard
+				w.Address = []string{"a"}
+				return w
+			}(),
+			title:         "Negative test: Address is not an cidr",
+			isError:       true,
+			errorContains: []string{"Address", "cidr"},
+		},
+		{
+			input: func() model.Wireguard {
+				w := cleanWireguard
+				p := cleanWireguardPeer
+				p.Endpoint = utils.Ptr("err")
+				w.Peers = []*model.WireguardPeer{
+					&p,
+				}
+				return w
+			}(),
+			title:         "Negative test: Dive peers",
+			isError:       true,
+			errorContains: []string{"Peers"},
 		},
 	}
 

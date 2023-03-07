@@ -28,6 +28,7 @@ type DataSourceTestSuite struct {
 	authenticator *mocks.EthereumAuthenticator
 	msRPC         *mocks.MetaSchedulerRPC
 	msWS          *mocks.MetaSchedulerWS
+	deployBackend *mocks.DeployBackend
 	impl          *eth.DataSource
 }
 
@@ -64,9 +65,10 @@ func (suite *DataSourceTestSuite) BeforeTest(suiteName, testName string) {
 	suite.authenticator = mocks.NewEthereumAuthenticator(suite.T())
 	suite.msRPC = mocks.NewMetaSchedulerRPC(suite.T())
 	suite.msWS = mocks.NewMetaSchedulerWS(suite.T())
-
+	suite.deployBackend = mocks.NewDeployBackend(suite.T())
 	suite.impl = eth.New(
 		suite.authenticator,
+		suite.deployBackend,
 		suite.msRPC,
 		suite.msWS,
 		privateKey,
@@ -184,6 +186,7 @@ func (suite *DataSourceTestSuite) TestSetJobStatus() {
 		uint8(eth.JobStatusFailed),
 		jobDuration,
 	).Return(tx, nil)
+	suite.deployBackend.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, nil)
 
 	// Act
 	err := suite.impl.SetJobStatus(context.Background(), jobID, eth.JobStatusFailed, jobDuration)

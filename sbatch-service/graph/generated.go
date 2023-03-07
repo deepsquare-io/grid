@@ -113,12 +113,15 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputJob,
 		ec.unmarshalInputJobResources,
 		ec.unmarshalInputMount,
+		ec.unmarshalInputNetworkInterface,
 		ec.unmarshalInputS3Data,
 		ec.unmarshalInputStep,
 		ec.unmarshalInputStepFor,
 		ec.unmarshalInputStepRun,
 		ec.unmarshalInputStepRunResources,
 		ec.unmarshalInputTransportData,
+		ec.unmarshalInputWireguard,
+		ec.unmarshalInputWireguardPeer,
 	)
 	first := true
 
@@ -406,6 +409,11 @@ Mount decribes a Bind Mount.
 input Mount {
   hostDir: String!
   containerDir: String!
+  """
+  Options modifies the mount options.
+
+  Accepted: ro, rw
+  """
   options: String!
 }
 
@@ -468,6 +476,90 @@ input ContainerRun {
 }
 
 """
+A Wireguard Peer.
+"""
+input WireguardPeer {
+  """
+  The peer private key.
+  """
+  publicKey: String!
+  """
+  The peer pre-shared key.
+  """
+  preSharedKey: String
+  """
+  Configuration of wireguard routes.
+
+  Format is a CIDRv4 (X.X.X.X/X) or CIDRv6.
+
+  0.0.0.0/0 (or ::/0) would forward all packets to the tunnel. If you plan to use the Wireguard VPN as a gateway, you MUST set this IP range.
+
+  <server internal IP>/32 (not the server's public IP) would forward all packets to the tunnel with the server IP as the destination. MUST be set.
+
+  <VPN IP range> would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other and want the gateway to act as a router.
+  """
+  allowedIPs: [String!]
+  """
+  The peer endpoint.
+
+  Format is IP:port.
+
+  This would be the Wireguard server.
+  """
+  endpoint: String
+  """
+  Initiate the handshake and re-initiate regularly.
+
+  Takes seconds as parameter. 25 seconds is recommended.
+
+  You MUST set the persistent keepalive to enables UDP hole-punching.
+  """
+  persistentKeepalive: Int
+}
+
+"""
+Wireguard VPN Transport for StepRun.
+
+The Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.
+
+Wireguard transport uses UDP hole punching to connect to the VPN Server.
+
+Disabled settings: PreUp, PostUp, PreDown, PostDown, ListenPort, Table, MTU, SaveConfig.
+
+If these features are necessary, please do contact DeepSquare developpers!
+"""
+input Wireguard {
+  """
+  The IP addresses of the wireguard interface.
+
+  Format is a CIDRv4 (X.X.X.X/X) or CIDRv6.
+
+  Recommendation is to take one IP from the 10.0.0.0/24 range (example: 10.0.0.2/24).
+  """
+  address: [String!]
+  """
+  The client private key.
+  """
+  privateKey: String!
+  """
+  The peers connected to the wireguard interface.
+  """
+  peers: [WireguardPeer!]
+}
+
+"""
+Connect a network interface on a StepRun.
+
+The network interface is connected via slirp4netns.
+"""
+input NetworkInterface {
+  """
+  Use the wireguard transport.
+  """
+  wireguard: Wireguard
+}
+
+"""
 StepRun is one script executed with the shell.
 
 Shared storage is accessible through the $STORAGE_PATH environment variable.
@@ -480,29 +572,13 @@ $DEEPSQUARE_OUTPUT is the staging directory for uploading files.
 """
 input StepRun {
   """
-  Allocated resources for the command.
-  """
-  resources: StepRunResources!
-  """
-  Container definition.
-
-  If null, run on the host.
-  """
-  container: ContainerRun
-  """
-  DisableCPUBinding disables process affinity binding to tasks.
-
-  Can be useful when running MPI jobs.
-
-  If null, defaults to false.
-  """
-  disableCpuBinding: Boolean
-  """
-  Environment variables accessible over the command.
-  """
-  env: [EnvVar!]
-  """
   Command specifies a shell script.
+
+  If container is used, command automatically overwrite the ENTRYPOINT and CMD. If you want to execute the entrypoint, it MUST be re-specified.
+
+  You can install and use skopeo to inspect an image without having to pull it.
+
+  Example: skopeo inspect --config docker://curlimages/curl:latest will gives "/entrypoint.sh" as ENTRYPOINT and "curl" as CMD. Therefore command="/entrypoint.sh curl".
   """
   command: String!
   """
@@ -512,6 +588,90 @@ input StepRun {
   Default: /bin/sh
   """
   shell: String
+  """
+  Allocated resources for the command.
+  """
+  resources: StepRunResources
+  """
+  Container definition.
+
+  If null, run on the host.
+  """
+  container: ContainerRun
+  """
+  Type of core networking functionality.
+
+  Either: "host" (default) or "slirp4netns" (rootless network namespace).
+
+  Using "slirp4netns" will automatically enables mapRoot.
+  """
+  network: String
+  """
+  Configuration for the DNS in "slirp4netns" mode.
+
+  ONLY enabled if network is "slirp4netns".
+
+  A comma-separated list of DNS IP.
+  """
+  dns: [String!]
+  """
+  Add custom network interfaces.
+
+  ONLY enabled if network is "slirp4netns".
+
+  Due to the nature of slirp4netns, the user is automatically mapped as root in order to create network namespaces and add new network interfaces.
+
+  The tunnel interfaces will be named net0, net1, ... netX.
+
+  The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
+  """
+  customNetworkInterfaces: [NetworkInterface!]
+  """
+  Environment variables accessible over the command.
+  """
+  env: [EnvVar!]
+  """
+  Remap UID to root. Does not grant elevated system permissions, despite appearances.
+
+  If the "default" (Pyxis) container runtime is used, it will use the ` + "`" + `--container-remap-root` + "`" + ` flags.
+
+  If the "apptainer" container runtime is used, the ` + "`" + `--fakeroot` + "`" + ` flag will be passed.
+
+  If no container runtime is used, ` + "`" + `unshare --user --map-root-user --mount` + "`" + ` will be used and a user namespace will be created.
+
+  It is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).
+
+  If null, default to false.
+  """
+  mapRoot: Boolean
+  """
+  Working directory.
+
+  If the "default" (Pyxis) container runtime is used, it will use the ` + "`" + `--container-workdir` + "`" + ` flag.
+
+  If the "apptainer" container runtime is used, the ` + "`" + `--pwd` + "`" + ` flag will be passed.
+
+  If no container runtime is used, ` + "`" + `cd` + "`" + ` will be executed first.
+
+  If null, default to use $STORAGE_PATH as working directory.
+  """
+  workDir: String
+  """
+  DisableCPUBinding disables process affinity binding to tasks.
+
+  Can be useful when running MPI jobs.
+
+  If null, defaults to false.
+  """
+  disableCpuBinding: Boolean
+  """
+  MPI selection.
+
+  Must be one of: none, pmix_v4, pmi2
+
+  If null, will default to infrastructure provider settings (which may not be what you want).
+  """
+  mpi: String
 }
 
 """
@@ -3042,6 +3202,34 @@ func (ec *executionContext) unmarshalInputMount(ctx context.Context, obj interfa
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, obj interface{}) (model.NetworkInterface, error) {
+	var it model.NetworkInterface
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"wireguard"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "wireguard":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wireguard"))
+			it.Wireguard, err = ec.unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interface{}) (model.S3Data, error) {
 	var it model.S3Data
 	asMap := map[string]interface{}{}
@@ -3221,45 +3409,13 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "container", "disableCpuBinding", "env", "command", "shell"}
+	fieldsInOrder := [...]string{"command", "shell", "resources", "container", "network", "dns", "customNetworkInterfaces", "env", "mapRoot", "workDir", "disableCpuBinding", "mpi"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "resources":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
-			it.Resources, err = ec.unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "container":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("container"))
-			it.Container, err = ec.unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "disableCpuBinding":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableCpuBinding"))
-			it.DisableCPUBinding, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "env":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("env"))
-			it.Env, err = ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "command":
 			var err error
 
@@ -3273,6 +3429,86 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("shell"))
 			it.Shell, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "resources":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
+			it.Resources, err = ec.unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "container":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("container"))
+			it.Container, err = ec.unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "network":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("network"))
+			it.Network, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "dns":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dns"))
+			it.DNS, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "customNetworkInterfaces":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customNetworkInterfaces"))
+			it.CustomNetworkInterfaces, err = ec.unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterfaceᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "env":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("env"))
+			it.Env, err = ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "mapRoot":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mapRoot"))
+			it.MapRoot, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "workDir":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workDir"))
+			it.WorkDir, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "disableCpuBinding":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableCpuBinding"))
+			it.DisableCPUBinding, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "mpi":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mpi"))
+			it.Mpi, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3361,6 +3597,110 @@ func (ec *executionContext) unmarshalInputTransportData(ctx context.Context, obj
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("s3"))
 			it.S3, err = ec.unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputWireguard(ctx context.Context, obj interface{}) (model.Wireguard, error) {
+	var it model.Wireguard
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"address", "privateKey", "peers"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "address":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+			it.Address, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "privateKey":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateKey"))
+			it.PrivateKey, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "peers":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("peers"))
+			it.Peers, err = ec.unmarshalOWireguardPeer2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeerᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputWireguardPeer(ctx context.Context, obj interface{}) (model.WireguardPeer, error) {
+	var it model.WireguardPeer
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"publicKey", "preSharedKey", "allowedIPs", "endpoint", "persistentKeepalive"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "publicKey":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicKey"))
+			it.PublicKey, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "preSharedKey":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("preSharedKey"))
+			it.PreSharedKey, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "allowedIPs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allowedIPs"))
+			it.AllowedIPs, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "endpoint":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endpoint"))
+			it.Endpoint, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "persistentKeepalive":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("persistentKeepalive"))
+			it.PersistentKeepalive, err = ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3836,6 +4176,11 @@ func (ec *executionContext) unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNNetworkInterface2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterface(ctx context.Context, v interface{}) (*model.NetworkInterface, error) {
+	res, err := ec.unmarshalInputNetworkInterface(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx context.Context, v interface{}) ([]*model.Step, error) {
 	var vSlice []interface{}
 	if v != nil {
@@ -3858,11 +4203,6 @@ func (ec *executionContext) unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋt
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx context.Context, v interface{}) (*model.StepRunResources, error) {
-	res, err := ec.unmarshalInputStepRunResources(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3876,6 +4216,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNWireguardPeer2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeer(ctx context.Context, v interface{}) (*model.WireguardPeer, error) {
+	res, err := ec.unmarshalInputWireguardPeer(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -4237,6 +4582,26 @@ func (ec *executionContext) unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑio
 	return res, nil
 }
 
+func (ec *executionContext) unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterfaceᚄ(ctx context.Context, v interface{}) ([]*model.NetworkInterface, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.NetworkInterface, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNNetworkInterface2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterface(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx context.Context, v interface{}) (*model.S3Data, error) {
 	if v == nil {
 		return nil, nil
@@ -4258,6 +4623,14 @@ func (ec *executionContext) unmarshalOStepRun2ᚖgithubᚗcomᚋdeepsquareᚑio�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputStepRun(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx context.Context, v interface{}) (*model.StepRunResources, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputStepRunResources(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -4321,6 +4694,34 @@ func (ec *executionContext) unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquare
 	}
 	res, err := ec.unmarshalInputTransportData(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx context.Context, v interface{}) (*model.Wireguard, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputWireguard(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOWireguardPeer2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeerᚄ(ctx context.Context, v interface{}) ([]*model.WireguardPeer, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.WireguardPeer, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNWireguardPeer2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeer(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

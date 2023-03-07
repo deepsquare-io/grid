@@ -24,14 +24,14 @@ func TestFormatImageURL(t *testing.T) {
 			apptainer:        utils.Ptr(false),
 			deepsquareHosted: utils.Ptr(false),
 			title:            "Positive test: enroot",
-			expected:         "registry#image",
+			expected:         "docker://registry#image",
 		},
 		{
 			image:            "image",
 			apptainer:        utils.Ptr(false),
 			deepsquareHosted: utils.Ptr(false),
 			title:            "Positive test: enroot",
-			expected:         "image",
+			expected:         "docker://image",
 		},
 		{
 			registry:         utils.Ptr("registry"),
