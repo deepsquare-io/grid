@@ -583,7 +583,7 @@ loadDeepsquareEnv() {
 cd $DEEPSQUARE_INPUT/
 /usr/bin/wget -q 'https://test/in'
 for filepath in "$DEEPSQUARE_INPUT/"*; do
-  /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
+  /usr/bin/tar -xaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in
       *bzip2*) /usr/bin/bzip2 -fdk "$filepath";;
       *gzip*) /usr/bin/gunzip -df "$filepath";;
