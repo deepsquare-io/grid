@@ -105,11 +105,6 @@ var flags = []cli.Flag{
 	},
 }
 
-var (
-	stream loggerv1alpha1.LoggerAPI_WriteClient
-	conn   *grpc.ClientConn
-)
-
 var app = &cli.App{
 	Name:    "grid-logger-writer",
 	Usage:   "Send logs from pipe",
@@ -149,7 +144,7 @@ var app = &cli.App{
 		}
 
 		// Open grpc stream
-		stream, conn, err = openGRPCConn(ctx, opts)
+		stream, conn, err := openGRPCConn(ctx, opts)
 		if err != nil {
 			logger.I.Error("openGRPCConn failed", zap.Error(err))
 			return err
@@ -232,14 +227,9 @@ var app = &cli.App{
 			// Graceful exit
 			case <-cleanChan:
 				logger.I.Info("gracefully exiting...")
-				if stream != nil {
-					_ = stream.CloseSend()
-				}
-				if conn != nil {
-					_ = conn.Close()
-				}
+				_ = stream.CloseSend()
+				_ = conn.Close()
 				_ = pipe.Close()
-
 				_ = os.Remove(pipeFile)
 				return nil
 			}
