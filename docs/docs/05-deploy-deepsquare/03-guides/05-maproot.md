@@ -1,3 +1,3 @@
-# Re-map root
+# About re-map root
 
 TODO: About fakeroot, uid mapping, user namespaces...
