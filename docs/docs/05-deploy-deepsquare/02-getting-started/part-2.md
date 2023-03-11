@@ -122,7 +122,7 @@ WARNING: There was an error initializing an OpenFabrics device.
 --------------------------------------------------------------------------
 ```
 
-This is because we did not set the OpenMPI workflow. The `mlx*` are [Mellanox devices](https://www.nvidia.com/en-us/networking/) and prefer the [Unified Communication X (UCX)](https://openucx.org) point-to-point messaging layer (pml). We recommend this [tech talk](https://www.youtube.com/watch?v=C4XfxUoSYQs) for a better understanding. Anyway, to tune OpenMPI, you can use environment variables like this:
+This is because we did not optimize the OpenMPI parameters. The `mlx*` devices are [Mellanox devices](https://www.nvidia.com/en-us/networking/) and prefer the [Unified Communication X (UCX)](https://openucx.org) point-to-point messaging layer (pml). We recommend this [tech talk](https://www.youtube.com/watch?v=C4XfxUoSYQs) for a better understanding. To tune OpenMPI, you can use environment variables like this:
 
 ```json title="Workflow"
 {
