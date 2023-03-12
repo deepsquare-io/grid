@@ -11,7 +11,7 @@ specifiers:
   '@graphql-tools/graphql-file-loader': ^7.5.16
   '@graphql-tools/load': ^7.8.12
   '@mdx-js/react': 1.6.22
-  '@tsconfig/docusaurus': 1.0.6
+  '@tsconfig/docusaurus': 1.0.7
   '@types/react': 18.0.28
   clsx: 1.2.1
   graphql: ^16.6.0
@@ -39,11 +39,11 @@ devDependencies:
   '@docusaurus/types': 2.3.1_biqbaboplfbrettd7655fr4n2y
   '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
   '@graphql-tools/load': 7.8.12_graphql@16.6.0
-  '@tsconfig/docusaurus': 1.0.6
+  '@tsconfig/docusaurus': 1.0.7
   '@types/react': 18.0.28
   graphql: 16.6.0
   graphql-markdown: 7.0.0_graphql@16.6.0
-  ts-node: 10.9.1_vxlhnhqkb2daeedmjv4nrsvq5q
+  ts-node: 10.9.1_typescript@4.9.5
   typescript: 4.9.5
 
 packages:
@@ -2679,8 +2679,8 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: false
 
-  /@tsconfig/docusaurus/1.0.6:
-    resolution: {integrity: sha512-1QxDaP54hpzM6bq9E+yFEo4F9WbWHhsDe4vktZXF/iDlc9FqGr9qlg+3X/nuKQXx8QxHV7ue8NXFazzajsxFBA==}
+  /@tsconfig/docusaurus/1.0.7:
+    resolution: {integrity: sha512-ffTXxGIP/IRMCjuzHd6M4/HdIrw1bMfC7Bv8hMkTadnePkpe0lG0oDSdbRpSDZb2rQMAgpbWiR10BvxvNYwYrg==}
     dev: true
 
   /@tsconfig/node10/1.0.9:
@@ -3026,10 +3026,8 @@ packages:
       indent-string: 4.0.0
     dev: false
 
-  /ajv-formats/2.1.1_ajv@8.11.0:
+  /ajv-formats/2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
     peerDependenciesMeta:
       ajv:
         optional: true
@@ -7227,7 +7225,7 @@ packages:
     dependencies:
       '@types/json-schema': 7.0.11
       ajv: 8.11.0
-      ajv-formats: 2.1.1_ajv@8.11.0
+      ajv-formats: 2.1.1
       ajv-keywords: 5.1.0_ajv@8.11.0
     dev: false
 
@@ -7771,7 +7769,7 @@ packages:
     resolution: {integrity: sha512-rvuRbTarPXmMb79SmzEp8aqXNKcK+y0XaB298IXueQ8I2PsrATcPBCSPyK/dDNa2iWOhKlfNnOjdAOTBU/nkFA==}
     dev: false
 
-  /ts-node/10.9.1_vxlhnhqkb2daeedmjv4nrsvq5q:
+  /ts-node/10.9.1_typescript@4.9.5:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -7790,7 +7788,6 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
-      '@types/node': 17.0.29
       acorn: 8.7.1
       acorn-walk: 8.2.0
       arg: 4.1.3
