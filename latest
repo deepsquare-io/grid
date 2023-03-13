@@ -1,5 +1,5 @@
 grid-logger=1.0.9
-supervisor=1.0.0-alpha.39
+supervisor=1.0.0-alpha.40
 ldap-connector=1.0.8
 provider-ssh-authorized-keys=1.0.2
 sbatch-service=0.6.1
