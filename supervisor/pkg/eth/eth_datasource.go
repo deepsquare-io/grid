@@ -173,13 +173,18 @@ func (s *DataSource) SetJobStatus(
 	if err != nil {
 		return err
 	}
+	logger.Debug(
+		"called set job status, waiting for transaction",
+		zap.String("tx", tx.Hash().String()),
+		zap.Uint8("status", uint8(status)),
+	)
 	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
 	if err != nil {
 		logger.Error("failed to wait mined", zap.Error(err))
 		return err
 	}
 	logger.Debug(
-		"called set job status",
+		"set job status success",
 		zap.String("tx", tx.Hash().String()),
 		zap.Uint8("status", uint8(status)),
 	)
