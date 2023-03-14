@@ -3,7 +3,7 @@ module github.com/deepsquare-io/the-grid/ldap-connector
 go 1.19
 
 require (
-	github.com/ethereum/go-ethereum v1.11.1
+	github.com/ethereum/go-ethereum v1.11.4
 	github.com/go-ldap/ldap/v3 v3.4.4
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/joho/godotenv v1.5.1

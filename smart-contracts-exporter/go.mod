@@ -3,7 +3,7 @@ module github.com/deepsquare-io/the-grid/smart-contracts-exporter
 go 1.19
 
 require (
-	github.com/ethereum/go-ethereum v1.11.1
+	github.com/ethereum/go-ethereum v1.11.4
 	github.com/prometheus/client_golang v1.14.0
 	github.com/spf13/cobra v1.6.1
 )
