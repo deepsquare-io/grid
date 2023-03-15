@@ -76,6 +76,8 @@ export 'MODEL'=''
 export 'ITER'='4'
 export 'SAMPLES'='3'
 export 'PROMPT'=''
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''generate-image'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw",'/data/beegfs/cache/persistent':'/cache':'rw','/opt/models/stable-diffusion':'/models':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
@@ -121,6 +123,10 @@ echo
 echo "##############################################################"
 
 chmod -R 777 /cache/* 2>/dev/null || true'
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 cd $STORAGE_PATH

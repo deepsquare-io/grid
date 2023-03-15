@@ -99,6 +99,7 @@ func funcMap() template.FuncMap {
 	f["renderApptainerCommand"] = RenderApptainerCommand
 	f["renderSlirp4NetNS"] = RenderSlirp4NetNS
 	f["renderEnrootCommand"] = RenderEnrootCommand
+	f["renderStepAsyncLaunch"] = RenderStepAsyncLaunch
 	f["squote"] = squote
 	f["escapeSQuote"] = escapeSQuote
 	f["quoteEscape"] = quoteEscape

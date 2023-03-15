@@ -59,6 +59,8 @@ ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
 # SCOPE: CONTINUOUS SYNC
 (
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''move-input-to-output'
 /usr/bin/srun --job-name='move-input-to-output' \
   --export=ALL"$(loadDeepsquareEnv)" \
@@ -208,6 +210,10 @@ trap cleanup EXIT INT TERM
 
 wait $child
 '
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 )
 # END SCOPE: CONTINUOUS SYNC
 kill $CONTINUOUS_SYNC_PID || true

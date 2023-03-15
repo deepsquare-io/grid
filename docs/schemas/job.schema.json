@@ -502,8 +502,28 @@
             "deprecationReason": null
           },
           {
+            "name": "dependsOn",
+            "description": "Depends on wait for async tasks to end before launching this step.\n\nDependsOn uses the `handleName` property of a `StepAsyncLaunch`.\n\nOnly steps at the same level can be awaited.\n\nBE WARNED: Uncontrolled `dependsOn` may results in dead locks.",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                }
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "run",
-            "description": "Run a command if not null.\n\nIs exclusive with \"for\".",
+            "description": "Run a command if not null.\n\nIs exclusive with \"for\", \"launch\".",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "StepRun",
@@ -515,10 +535,22 @@
           },
           {
             "name": "for",
-            "description": "Run a for loop if not null.\n\nIs exclusive with \"run\".",
+            "description": "Run a for loop if not null.\n\nIs exclusive with \"run\", \"launch\".",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "StepFor",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "launch",
+            "description": "Launch a background process to run a group of commands if not null.\n\nIs exclusive with \"run\", \"for\".",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "StepAsyncLaunch",
               "ofType": null
             },
             "defaultValue": null,
@@ -1260,6 +1292,66 @@
               "kind": "SCALAR",
               "name": "Int",
               "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "StepAsyncLaunch",
+        "description": "StepAsyncLaunch describes launching a background process.\n\nStepAsyncLaunch will be awaited at the end of the job.",
+        "specifiedByURL": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "handleName",
+            "description": "HandleName is the name used to await (dependsOn field of the Step).\n\nNaming style is snake_case. Case is insensitive. No symbol allowed.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "signalOnParentStepExit",
+            "description": "SignalOnParentStepExit will send a signal to the step and substeps when the parent step exits.\n\nThis can be used as a cleanup function to avoid a zombie.\n\nZombie processes will still run after the main process dies, and therefore, won't stop the job.\n\nIf null, SIGTERM will be send. If 0, no signal will be send.\n\nCommon signal:\n\n1 SIGHUP\tHang up detected on controlling terminal or death of controlling process\n2 SIGINT\tInterrupt from keyboard\n3 SIGQUIT\tQuit from keyboard\n9 SIGKILL\tIf a process gets this signal it must quit immediately and will not perform any clean-up operations.\n15 SIGTERM\tSoftware termination signal\n\nIt is HEAVILY RECOMMENDED to use SIGTERM to gracefully exit a process. SIGKILL is the most brutal and will certainly work.\n\nIf no signal is sent, the asynchronous step will be considered as a \"fire and forget\" asynchronous step and will have to terminate itself to stop the job.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "steps",
+            "description": "Steps are run sequentially.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "Step",
+                    "ofType": null
+                  }
+                }
+              }
             },
             "defaultValue": null,
             "isDeprecated": false,

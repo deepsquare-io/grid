@@ -662,9 +662,10 @@ func cleanStepWith(
 	f *model.StepFor,
 ) *model.Step {
 	return &model.Step{
-		Name: "test",
-		Run:  r,
-		For:  f,
+		Name:      utils.Ptr("test"),
+		DependsOn: []string{"test_test"},
+		Run:       r,
+		For:       f,
 	}
 }
 
@@ -684,6 +685,19 @@ func TestValidateStep(t *testing.T) {
 				)),
 			),
 			title: "Positive test",
+		},
+		{
+			input: model.Step{},
+			title: "Positive test: omitempty",
+		},
+		{
+			input: model.Step{
+				Name:      utils.Ptr("test"),
+				DependsOn: []string{"test-test"},
+			},
+			isError:       true,
+			errorContains: []string{"DependsOn", "alphanum_underscore"},
+			title:         "Negative test: DependsOn validation error",
 		},
 		{
 			input: *cleanStepWith(

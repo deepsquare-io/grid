@@ -27,7 +27,7 @@ var cleanJob = model.Job{
 	},
 	Steps: []*model.Step{
 		{
-			Name: "test",
+			Name: utils.Ptr("test"),
 			Run:  cleanStepRun("/usr/bin/echo 'hello world'"),
 		},
 	},
@@ -115,6 +115,8 @@ loadDeepsquareEnv() {
 }
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'key'='test'"'"'test'
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -152,6 +154,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 )
 # END SCOPE: LOGS
 `,
@@ -282,6 +288,8 @@ CONTINUOUS_SYNC_PID="$!"
 # SCOPE: CONTINUOUS SYNC
 (
 export 'key'='test'"'"'test'
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -319,6 +327,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 )
 # END SCOPE: CONTINUOUS SYNC
 kill $CONTINUOUS_SYNC_PID || true
@@ -443,6 +455,8 @@ s5cmd cp --source-region 'us‑east‑2' 's3://test''/in''*' "$DEEPSQUARE_INPUT/
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'key'='test'"'"'test'
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -480,6 +494,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 export AWS_ACCESS_KEY_ID='AccessKeyID'
@@ -602,6 +620,8 @@ cd $STORAGE_PATH
 /usr/bin/find "$DEEPSQUARE_INPUT/" -exec realpath --relative-to "$DEEPSQUARE_INPUT/" {} \;
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'key'='test'"'"'test'
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -639,6 +659,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
 cd $STORAGE_PATH
@@ -707,6 +731,8 @@ loadDeepsquareEnv() {
   done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
 }
 export 'key'='test'"'"'test'
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -744,6 +770,10 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-workdir=/deepsquare \
   --container-image="$IMAGE_PATH" \
   /bin/sh -c '/usr/bin/echo '"'"'hello world'"'"''
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 `,
 			title: "Positive test with no logs",
 		},

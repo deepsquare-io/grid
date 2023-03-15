@@ -122,15 +122,63 @@ type JobResources struct {
 // Step is one instruction.
 type Step struct {
 	// Name of the instruction.
-	Name string `json:"name" yaml:"name"`
+	//
+	// Is used for debugging.
+	Name *string `json:"name" yaml:"name"`
+	// Depends on wait for async tasks to end before launching this step.
+	//
+	// DependsOn uses the `handleName` property of a `StepAsyncLaunch`.
+	//
+	// Only steps at the same level can be awaited.
+	//
+	// BE WARNED: Uncontrolled `dependsOn` may results in dead locks.
+	DependsOn []string `json:"dependsOn" yaml:"dependsOn" validate:"dive,alphanum_underscore"`
 	// Run a command if not null.
 	//
-	// Is exclusive with "for".
+	// Is exclusive with "for", "launch".
 	Run *StepRun `json:"run" yaml:"run"`
 	// Run a for loop if not null.
 	//
-	// Is exclusive with "run".
+	// Is exclusive with "run", "launch".
 	For *StepFor `json:"for" yaml:"for"`
+	// Launch a background process to run a group of commands if not null.
+	//
+	// Is exclusive with "run", "for".
+	Launch *StepAsyncLaunch `json:"launch" yaml:"launch"`
+}
+
+// StepAsyncLaunch describes launching a background process.
+//
+// StepAsyncLaunch will be awaited at the end of the job.
+type StepAsyncLaunch struct {
+	// HandleName is the name used to await (dependsOn field of the Step).
+	//
+	// Naming style is snake_case. Case is insensitive. No symbol allowed.
+	HandleName *string `json:"handleName" yaml:"handleName" validate:"omitempty,alphanum_underscore"`
+	// SignalOnParentStepExit sends a signal to the step and sub-steps when the parent step ends.
+	//
+	// This function can be used as a cleanup function to avoid a zombie process.
+	//
+	// Zombie processes will continue to run after the main process dies and therefore will not stop the job.
+	//
+	// If null, SIGTERM will be sent. If 0, no signal will be sent.
+	//
+	// Current signal :
+	//
+	// 1 SIGHUP Hang-up detected on the control terminal or death of the control process.
+	// 2 SIGINT Abort from keyboard
+	// 3 SIGQUIT Quit the keyboard
+	// 9 SIGKILL If a process receives this signal, it must quit immediately and will not perform any cleaning operations.
+	// 15 SIGTERM Software stop signal
+	//
+	// It is STRONGLY RECOMMENDED to use SIGTERM to gracefully exit a process. SIGKILL is the most abrupt and will certainly work.
+	//
+	// If no signal is sent, the asynchronous step will be considered a fire and forget asynchronous step and will have to terminate itself to stop the job.
+	//
+	// WARNING: the "no signal sent" option is subject to removal to avoid undefined behavior. Please refrain from using it.
+	SignalOnParentStepExit *int `json:"signalOnParentStepExit" yaml:"signalOnParentStepExit"`
+	// Steps are run sequentially.
+	Steps []*Step `json:"steps" yaml:"steps" validate:"dive,required"`
 }
 
 // StepFor describes a for loop.

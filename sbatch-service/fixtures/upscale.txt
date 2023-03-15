@@ -93,6 +93,8 @@ CONTINUOUS_SYNC_PID="$!"
 export 'IS_VIDEO'='false'
 export 'IS_FACE'='false'
 export 'IS_ANIME'='false'
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''compute-frames'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098,SC1078
@@ -206,6 +208,10 @@ if "${IS_VIDEO}"; then
   source_fps="$(ffmpeg -i "${STORAGE_PATH}/input_video/input_video_trimmed.mp4" 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p")"
   ffmpeg -r "${source_fps}" -i "${STORAGE_PATH}/output_frames/frame%08d_out.png" -i "${STORAGE_PATH}/input_video/input_video_trimmed.mp4" -map 0:v:0 -map 1:a:0 -c:a copy -c:v libx264 -r "${source_fps}" -pix_fmt yuv420p "${DEEPSQUARE_OUTPUT}/result.mp4"
 fi'
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 )
 # END SCOPE: CONTINUOUS SYNC
 kill $CONTINUOUS_SYNC_PID || true

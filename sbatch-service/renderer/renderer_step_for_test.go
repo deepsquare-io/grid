@@ -16,11 +16,11 @@ var (
 		Items:    []string{"a", "b", "c"},
 		Steps: []*model.Step{
 			{
-				Name: "test",
+				Name: utils.Ptr("test"),
 				Run:  cleanStepRun("/usr/bin/echo $item"),
 			},
 			{
-				Name: "test",
+				Name: utils.Ptr("test"),
 				Run:  cleanStepRun("/usr/bin/echo $item"),
 			},
 		},
@@ -34,11 +34,11 @@ var (
 		},
 		Steps: []*model.Step{
 			{
-				Name: "test",
+				Name: utils.Ptr("test"),
 				Run:  cleanStepRun("/usr/bin/echo $index"),
 			},
 			{
-				Name: "test",
+				Name: utils.Ptr("test"),
 				Run:  cleanStepRun("/usr/bin/echo $index"),
 			},
 		},

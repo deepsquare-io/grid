@@ -91,6 +91,8 @@ cd $STORAGE_PATH
 /usr/bin/chmod -R 755 "$DEEPSQUARE_INPUT/"
 export 'DISPLAY'=':99'
 export 'XDG_RUNTIME_DIR'='/tmp'
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''urs'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 # shellcheck disable=SC2097,SC2098,SC1078
@@ -120,5 +122,9 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   -renderscalestepcount 0.1 \
   -displayfpscounter \
   --logFile -'
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 )
 # END SCOPE: LOGS

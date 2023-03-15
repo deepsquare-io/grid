@@ -5,21 +5,29 @@ import (
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/the-grid/sbatch-service/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func cleanStepWithRun(r *model.StepRun) *model.Step {
 	return &model.Step{
-		Name: "test",
+		Name: utils.Ptr("test"),
 		Run:  r,
 	}
 }
 
 func cleanStepWithFor(f *model.StepFor) *model.Step {
 	return &model.Step{
-		Name: "test",
+		Name: utils.Ptr("test"),
 		For:  f,
+	}
+}
+
+func cleanStepWithAsyncLaunch(s *model.StepAsyncLaunch) *model.Step {
+	return &model.Step{
+		Name:   utils.Ptr("test"),
+		Launch: s,
 	}
 }
 
@@ -71,6 +79,39 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
   --container-image="$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with run",
+		},
+		{
+			input: *cleanStepWithAsyncLaunch(cleanStepAsyncLaunchWithStep("async_launch", &model.Step{})),
+			expected: `/usr/bin/echo 'Running: ''test'
+(
+declare -A EXIT_SIGNALS
+
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  /usr/bin/echo "Process $$ sending signal ${EXIT_SIGNALS[$pid]} to $pid"
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
+) &
+asynclaunchpid="$!"
+export PID_ASYNC_LAUNCH="$asynclaunchpid"
+EXIT_SIGNALS[$asynclaunchpid]=15`,
+			title: "Positive test with async launch",
+		},
+		{
+			input: model.Step{
+				Name:      utils.Ptr("test"),
+				DependsOn: []string{"test2"},
+			},
+			expected: `if [ -n "${PID_TEST2+x}" ]; then
+/usr/bin/echo 'Waiting for: TEST2.'
+wait "${PID_TEST2}"
+else
+/usr/bin/echo 'Cannot await: TEST2 is undefined. Exiting to avoid undefined behavior.'
+/usr/bin/echo 'Is the TEST2 handleName set and is defined at the same scope ?'
+exit 1
+fi
+/usr/bin/echo 'Running: ''test'`,
+			title: "Positive test with await",
 		},
 		{
 			input: *cleanStepWithFor(&cleanStepForItems),
@@ -165,7 +206,7 @@ done`,
 		},
 		{
 			input: model.Step{
-				Name: "test",
+				Name: utils.Ptr("test"),
 			},
 			expected: "/usr/bin/echo 'Running: ''test'",
 			title:    "Positive test with none",

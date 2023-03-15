@@ -129,9 +129,15 @@ CONTINUOUS_SYNC_PID="$!"
 export {{ $env.Key | squote }}={{ $env.Value | squote }}
 {{- end }}
 
+declare -A EXIT_SIGNALS
+
 {{- range $step := .Job.Steps }}
 {{ renderStep $.Job $step }}
 {{- end }}
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 
 {{- if and .Job.Output .Job.Output.HTTP }}
 /usr/bin/echo "Output contains:"

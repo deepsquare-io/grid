@@ -1,0 +1,20 @@
+---
+job:
+  enableLogging: false
+  resources:
+    tasks: 2
+    cpusPerTask: 4
+    memPerCpu: 4096
+    gpusPerTask: 0
+  steps:
+    - name: do-async
+      launch:
+        handleName: task1
+        signalOnParentStepExit: 15
+        steps:
+          - name: work
+            run:
+              command: |-
+                echo "Working"
+                sleep 15
+                echo "Working done"
