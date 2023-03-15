@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/golang:1.20.1 as builder
+FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/golang:1.20.2 as builder
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
