@@ -46,10 +46,10 @@ If you want to try an already existing client, there is the [DeepSquare GRID Por
 
 DeepSquare is composed of a large number of technologies to achieve such a solution:
 
-- The [Solidity programming language](TODO: Need reference) to write the smart-contracts.
-- The [Go](TODO: Need reference) and [Python](TODO: Need reference) programming languages for developing the running services.
-- The [Apptainer](TODO : Need reference) container runtime and several Linux kernel features.
-- The [Slurm job scheduler](TODO : Need reference) for resource allocation and isolation.
+- The [Solidity programming language](https://docs.soliditylang.org/en/latest/) to write the smart-contracts.
+- The [Go](https://go.dev) and [Python](https://www.python.org programming languages for developing the running services.
+- The [Apptainer](https://apptainer.org), and [Enroot](https://github.com/NVIDIA/enroot) container runtime and several Linux kernel features.
+- The [Slurm job scheduler](https://slurm.schedmd.com/documentation.html) for resource allocation and isolation.
 - And much more!
 
-Each workload is allocated resources by Slurm using [`cgroups`](TODO: Need Reference) and is executed in containers using Apptainer. Apptainer acts as the software compatibility layer.
+Each workload is allocated resources by Slurm using [`cgroups`](https://docs.kernel.org/admin-guide/cgroup-v2.html) and is executed in containers using Apptainer. Apptainer acts as the software compatibility layer.

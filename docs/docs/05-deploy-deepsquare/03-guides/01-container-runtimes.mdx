@@ -1,0 +1,204 @@
+# Container Runtimes
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+The container runtime is software that makes it easy to create, manage and destroy containers. Common container runtimes are [containerd](https://containerd.io), [runc](https://github.com/opencontainers/runc)(the Docker runtime) or [crun](https://github.com/containers/crun)(the Podman runtime).
+
+While these runtimes meet the OCI specifications perfectly, we have some requirements to optimize for task scheduling in a HPC environment:
+
+- Rootless and privilege-free by default
+- GPU and MPI compatible
+- No performance overhead, no network overhead
+
+Apptainer and Enroot are the standards container runtimes in HPC.
+
+## Apptainer
+
+Apptainer, also known as Singularity, defaults to integration over isolation, making it easier to integrate GPUs and high-speed networks. It also mounts the container image as a read-only file system by default.
+
+Apptainer downloads and extracts the layers from the container and builds a Singularity Image Format (SIF) file from the extracted layers. Then, Apptainer can mount the SIF file and run the container entrypoint.
+
+One of the main features of apptainer is the ability to load an "unpacked" container image. In fact, it can load the rootfs of a container image from a directory. Coupled with CVMFS, the distributed file system with aggressive caching, apptainer is able to **download the container files dynamically** without having to download the entire container. This is very useful when the container is filled with a large number of files that are useless at runtime. This is basically a Just-in-time file loading.
+
+DeepSquare-hosted images are shared and executed across every clusters in this manner.
+
+## Enroot
+
+Although apptainer fits most use cases, the default DeepSquare runtime is Enroot.
+
+Enroot is incredibly simpler than apptainer and is maintained by NVIDIA. Enroot uses hooks to embed devices on containers, and mount the container image with write permissions.
+
+Enroot extracts layers and creates a squashfs file from the extracted layers. Then, Enroot can extract the squashfs file to a runtime directory and execute the container entry point. As a result, Enroot can mount the rootfs from any squashfs.
+
+Since the behavior is very similar to Docker while being dead simple, this is the reason why DeepSquare chose Enroot as the default container runtime.
+
+## Using Enroot and/or Apptainer locally
+
+### Installation
+
+Enroot and Apptainer can be both installed easily from their releases:
+
+- [Enroot Github Latest Release](https://github.com/NVIDIA/enroot/releases/latest) and [install guide](https://github.com/NVIDIA/enroot/blob/master/doc/installation.md)
+- [Apptainer Github Latest Release](https://github.com/apptainer/apptainer/releases/latest) and [install guide](https://github.com/apptainer/apptainer/blob/main/INSTALL.md)
+
+### Building an image for Enroot and Apptainer
+
+There are a lot of ways to build a container image for Enroot and Apptainer.
+
+You can :
+
+- Build a squashfs file from scratch.
+- Build a SIF using a [Apptainer Definition File](https://apptainer.org/docs/user/latest/definition_files.html)
+- Use Buildah/Podman/Docker to build a Docker image.
+
+We **highly recommend** Podman to build a Docker image.
+
+For this guide, we will build a simple hello world:
+
+```dockerfile title="Dockerfile"
+FROM alpine
+
+ENTRYPOINT [ "echo", "hello world" ]
+```
+
+```shell title="user@~/examples/"
+podman build -t localhost/hello-world .
+```
+
+:::note
+
+Enroot and Apptainer can execute the entrypoint. However, the implementation on DeepSquare doesn't execute the entrypoint when filling the `command` field.
+
+The entrepoint must be re-specified. In this example, the value of the `command` field would be `echo "hello world"`.
+
+:::
+
+### Testing locally
+
+While the Podman have similar constraints to those of enroot (rootless, unprivileged, uid map), you may want to test on Enroot or Apptainer.
+
+<Tabs>
+  <TabItem label="Enroot" value="enroot">
+
+```shell title="user@~/examples/"
+# Pull the image
+enroot import --output "localhost+hello-world+latest.sqsh" "podman://localhost/hello-world:latest"
+# enroot can also pull from the Docker daemon with dockerd:// or from a Docker registry with docker://
+enroot create --name "localhost+hello-world+latest" "localhost+hello-world+latest.sqsh"
+
+# Run the image
+enroot start localhost+hello-world+latest
+
+# Remove the image
+enroot remove "localhost+hello-world+latest"
+rm "localhost+hello-world+latest.sqsh"
+```
+
+  </TabItem>
+  <TabItem label="Apptainer" value="apptainer">
+
+```shell title="user@~/examples/"
+# Pull the image
+podman save localhost/hello-world:latest -o "localhost+hello-world+latest.tar"
+apptainer build "localhost+hello-world+latest.sif" "docker-archive://localhost+hello-world+latest.tar"
+# If using Docker, you can directly build from the Daemon and avoid "docker save" using:
+# apptainer build "localhost+hello-world+latest.sif" "docker-daemon://localhost/hello-world:latest"
+# You can also pull an image from a registry with "docker://".
+
+# Run the image (the image is run in read-only mode, and therefore doesn't need a runtime directory)
+apptainer run "localhost+hello-world+latest.sif"
+
+# Remove the image
+rm "localhost+hello-world+latest.sif"
+rm "localhost+hello-world+latest.tar"
+```
+
+  </TabItem>
+</Tabs>
+
+## Examples of usage with DeepSquare
+
+If your container works with podman, enroot and/or apptainer, your probability of success is very high for running on DeepSquare!
+
+To run a container on DeepSquare, you must distribute your image on a Container Registry like the [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) or with a self-hosting solution like [Harbor](https://goharbor.io).
+
+You can also use S3 to host your squashfs/SIF file and use the Workflow `input` field to extract the image... but this is much more complicated than [deploying a registry](https://docs.docker.com/registry/deploying/) or just pushing on a public registry like [Docker Hub](https://hub.docker.com).
+
+<details open>
+<summary>Example: Public registry</summary>
+
+```json title="Workflow"
+{
+  "resources": {
+    "tasks": 1,
+    "gpusPerTask": 0,
+    "cpusPerTask": 1,
+    "memPerCpu": 1024
+  },
+  "steps": [
+    {
+      "command": "echo 'hello world'",
+      "container": {
+        "image": "my-user/hello-world:latest",
+        "registry": "registry-1.docker.io"
+      }
+    }
+  ]
+}
+```
+
+</details>
+
+<details>
+<summary>Example: Private registry</summary>
+
+```json title="Workflow"
+{
+  "resources": {
+    "tasks": 1,
+    "gpusPerTask": 0,
+    "cpusPerTask": 1,
+    "memPerCpu": 1024
+  },
+  "steps": [
+    {
+      "command": "echo 'hello world'",
+      "container": {
+        "image": "my-user/hello-world:latest",
+        "registry": "registry-1.docker.io",
+        "username": "my-user",
+        "password": "my-password"
+      }
+    }
+  ]
+}
+```
+
+</details>
+
+<details>
+<summary>Example: Using the apptainer container runtime</summary>
+
+```json title="Workflow"
+{
+  "resources": {
+    "tasks": 1,
+    "gpusPerTask": 0,
+    "cpusPerTask": 1,
+    "memPerCpu": 1024
+  },
+  "steps": [
+    {
+      "command": "echo 'hello world'",
+      "container": {
+        "image": "my-user/hello-world:latest",
+        "registry": "registry-1.docker.io",
+        "apptainer": true
+      }
+    }
+  ]
+}
+```
+
+</details>
