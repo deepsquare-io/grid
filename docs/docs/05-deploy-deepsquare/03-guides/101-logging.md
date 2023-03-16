@@ -1,3 +1,3 @@
-# Logging: Expose container logs
+# Exposing container logs
 
 TODO: About using the grid logger

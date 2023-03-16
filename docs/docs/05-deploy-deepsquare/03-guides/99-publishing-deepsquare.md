@@ -1,3 +1,5 @@
-# Using and publishing DeepSquare-hosted images
+# Publishing DeepSquare-hosted images
 
-TODO: About CVMFS, unpacked DUCC ...
+The DeepSquare registry is not yet public.
+
+You can contact the DeepSquare Developpers to integrate one image.
