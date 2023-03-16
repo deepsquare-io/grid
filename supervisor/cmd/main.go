@@ -7,6 +7,7 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/debug"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	pkgsbatch "github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
@@ -322,6 +323,8 @@ var app = &cli.App{
 		); err != nil {
 			return err
 		}
+
+		go debug.WatchGoRoutines(ctx)
 
 		go func(ctx context.Context) {
 			if err := container.jobWatcher.Watch(ctx); err != nil {
