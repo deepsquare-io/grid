@@ -76,53 +76,55 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 		}
 
 		// Do set job status
-		if err = try.Do(func() error {
-			err := s.jobHandler.SetJobStatus(
-				ctx,
-				jobNameFixedLength,
-				status,
-				req.Duration/60,
-			)
-			if err != nil {
-				if strings.Contains(err.Error(), "Cannot change status to itself") || strings.Contains(err.Error(), "trans0") {
-					logger.I.Warn(
-						"Cannot change status to itself",
-						zap.Error(err),
-						zap.String("status", req.Status.String()),
-						zap.String("name", string(jobName)),
-						zap.Uint64("duration", req.Duration/60),
-					)
-					return nil
-				}
-				if strings.Contains(err.Error(), "Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only") || strings.Contains(err.Error(), "trans3") {
-					logger.I.Warn(
-						"Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only. Trying to put in RUNNING first.",
-						zap.Error(err),
-						zap.String("status", req.Status.String()),
-						zap.String("name", string(jobName)),
-						zap.Uint64("duration", req.Duration/60),
-					)
-					if err := s.jobHandler.SetJobStatus(
-						ctx,
-						jobNameFixedLength,
-						eth.JobStatusRunning,
-						req.Duration/60,
-					); err != nil {
-						logger.I.Error(
-							"Failed to put the job in RUNNING",
+		if err = try.DoWithContextTimeout(
+			ctx,
+			func() error {
+				err := s.jobHandler.SetJobStatus(
+					ctx,
+					jobNameFixedLength,
+					status,
+					req.Duration/60,
+				)
+				if err != nil {
+					if strings.Contains(err.Error(), "Cannot change status to itself") || strings.Contains(err.Error(), "trans0") {
+						logger.I.Warn(
+							"Cannot change status to itself",
 							zap.Error(err),
 							zap.String("status", req.Status.String()),
 							zap.String("name", string(jobName)),
 							zap.Uint64("duration", req.Duration/60),
 						)
-						return err
+						return nil
+					}
+					if strings.Contains(err.Error(), "Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only") || strings.Contains(err.Error(), "trans3") {
+						logger.I.Warn(
+							"Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only. Trying to put in RUNNING first.",
+							zap.Error(err),
+							zap.String("status", req.Status.String()),
+							zap.String("name", string(jobName)),
+							zap.Uint64("duration", req.Duration/60),
+						)
+						if err := s.jobHandler.SetJobStatus(
+							ctx,
+							jobNameFixedLength,
+							eth.JobStatusRunning,
+							req.Duration/60,
+						); err != nil {
+							logger.I.Error(
+								"Failed to put the job in RUNNING",
+								zap.Error(err),
+								zap.String("status", req.Status.String()),
+								zap.String("name", string(jobName)),
+								zap.Uint64("duration", req.Duration/60),
+							)
+							return err
+						}
 					}
 				}
-			}
 
-			return err
+				return err
 
-		}, 3, 3*time.Second); err != nil {
+			}, 3, 3*time.Second, 15*time.Second); err != nil {
 			logger.I.Error(
 				"SetJobStatus failed",
 				zap.Error(err),
