@@ -466,12 +466,18 @@ A second job will have `wIQkWhjPnIg9GUg1dhH6FmEIftKuxZdkvaD9VjOWH1Q=` as private
 
 ## Why not IPsec or OpenVPN ?
 
-IPsec is a site-to-site VPN and can't do NAT traversal. OpenVPN is too slow and complicated compared to Wireguard.
+WireGuard is better suited than IPsec and OpenVPN due to its lightweight design, modern cryptography, built-in NAT traversal support, and simpler implementation. Its streamlined design enables it to work more efficiently over networks with limited bandwidth or high latency, while its modern cryptographic techniques reduce the computational overhead required for encryption and decryption.
 
-Wireguard is directly integrated in the Linux kernel, making it super fast.
+Additionally, WireGuard's built-in NAT traversal support means it can automatically detect and work around NAT devices without requiring complex configuration or additional network infrastructure.
+
+Overall, WireGuard is a compelling option for organizations with large and complex networks where managing multiple VPN connections can become challenging.
 
 ## Limitations
 
 If you enables the `slirp4netns` container networking will automatically **re-map the user as root**.
 
-Although you are remapped as root, you are still in an unprivileged container, which means that it is not possible to bind restricted ports (like 80).
+Although you are remapped as root, this is still in an unprivileged container, which means that it is not possible to bind restricted ports (like 80).
+
+Unprivileged containers have some limitations in terms of capabilities and network access. Unprivileged containers are typically limited in their network access, as they are usually isolated from the host network and can only communicate with other containers or the outside world through specific network interfaces or bridges set up by the container runtime.
+
+These limitations are intended to provide better security and isolation for the container and its contents, but may pose challenges for certain types of applications or workloads that require more extensive system access or network connectivity.
