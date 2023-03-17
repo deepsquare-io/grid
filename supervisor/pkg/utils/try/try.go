@@ -43,7 +43,9 @@ func DoWithContextTimeout(
 
 		select {
 		case err = <-errChan:
-			logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try))
+			if err != nil {
+				logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try))
+			}
 			if err == nil {
 				return nil
 			}
