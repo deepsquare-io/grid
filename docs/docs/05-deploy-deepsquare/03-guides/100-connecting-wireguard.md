@@ -28,6 +28,8 @@ For the rest of this guide, we assume that you have deployed an instance with th
 - 1 vCPU, 1GB of RAM, 10 GB of persistent storage
 - 1 public IP
 
+For the sake of the example, we are also deploying NGINX servers on the compute nodes, which will open the port 8080/tcp. We will either load-balance with HAProxy or via iptables.
+
 If you can deploy a [VyOS](https://vyos.io) as an OS image, it will be a lot simpler since it is an OS optimized for routers. You can also use an [OPNSense](https://opnsense.org) OS image, which is an OS for firewalls with routing capabilities, and has a web dashboard.
 
 Alternatively, you can just use a Linux OS Image with iptables/nftables.
@@ -37,7 +39,7 @@ Alternatively, you can just use a Linux OS Image with iptables/nftables.
 #### 1.b. Setup wireguard
 
 <Tabs groupId="os">
-  <TabItem label="Linux with iptables" value="iptable">
+<TabItem label="Linux with iptables" value="iptable">
 
 1. Start by [installing Wireguard](https://www.wireguard.com/install/)
 
@@ -47,177 +49,201 @@ sudo dnf install wireguard-tools
 
 2. For old kernels (< 5.6), you must load the kernel module manually and make it persists:
 
-```shell title="root@~/"
-sudo modprobe wireguard
-echo wireguard > /etc/modules-load.d/wireguard
-```
+   ```shell title="root@~/"
+   sudo modprobe wireguard
+   echo wireguard > /etc/modules-load.d/wireguard
+   ```
 
-Check with:
+   Check with:
 
-```shell
-lsmod | grep wireguard
-```
+   ```shell
+   lsmod | grep wireguard
+   ```
 
 3. Enable packet forwarding by editing the `/etc/sysctl.conf` file:
 
-```shell title="root@/etc/sysctl.conf"
-net.ipv4.ip_forward = 1
-```
+   ```shell title="root@/etc/sysctl.conf"
+   net.ipv4.ip_forward = 1
+   ```
 
-And apply it:
+   And apply it:
 
-```shell title="root@~/"
-sysctl -p /etc/sysctl.conf
-```
+   ```shell title="root@~/"
+   sysctl -p /etc/sysctl.conf
+   ```
 
 4. Create the server and peer private key and public key with:
 
-```shell title="root@~/"
-PK="$(wg genkey)"
-PUB="$(echo "$PK" | wg pubkey)"
-echo "PrivateKey = $PK"
-echo "PublicKey  = $PUB"  # You will send the public key to the job. Don't place it in the server configuration.
-```
+   ```shell title="root@~/"
+   PK="$(wg genkey)"
+   PUB="$(echo "$PK" | wg pubkey)"
+   echo "PrivateKey = $PK"
+   echo "PublicKey  = $PUB"  # You will send the public key to the job. Don't place it in the server configuration.
+   ```
 
-For this example:
+   For this example:
 
-```shell
-ServerPrivateKey = 2GuuSBxL0pd1Mdv7sstzg2IYi5SO6TuuCEp+cDW8r0c=
-ServerPublicKey  = uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=
-```
+   ```shell
+   ServerPrivateKey = 2GuuSBxL0pd1Mdv7sstzg2IYi5SO6TuuCEp+cDW8r0c=
+   ServerPublicKey  = uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=
+   ```
 
-To set up the wireguard virtual interface, create a file `/etc/wireguard/wg0.conf`. The file name indicates the name of the network interface. In this file add:
+   To set up the wireguard virtual interface, create a file `/etc/wireguard/wg0.conf`. The file name indicates the name of the network interface. In this file add:
 
-```shell title="root@/etc/wireguard/wg0.conf"
-[Interface]
-Address = 10.0.0.1/24
-ListenPort = 51820
-MTU = 1420
-PrivateKey = 2GuuSBxL0pd1Mdv7sstzg2IYi5SO6TuuCEp+cDW8r0c=
-# PublicKey = uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=
-# NAT: wg0 -> eth0 and any -> wg0
-PostUp = iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -j MASQUERADE -o eth0
-PostUp = iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
-PostDown = iptables -t nat -D POSTROUTING -s 10.0.0.0/24 -j MASQUERADE -o eth0
-PostDown = iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE
-```
+   ```shell title="root@/etc/wireguard/wg0.conf"
+   [Interface]
+   Address = 10.0.0.1/24
+   ListenPort = 51820
+   MTU = 1420
+   PrivateKey = 2GuuSBxL0pd1Mdv7sstzg2IYi5SO6TuuCEp+cDW8r0c=
+   # PublicKey = uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=
+   # NAT: wg0 -> eth0 and any -> wg0
+   PostUp = iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -j MASQUERADE -o eth0
+   PostUp = iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
+   PostDown = iptables -t nat -D POSTROUTING -s 10.0.0.0/24 -j MASQUERADE -o eth0
+   PostDown = iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE
+   ```
 
 5. To add peers, create the private and public keys of the peers using the same command you used to create the server keys. Assuming you want to load balance between 2 tasks:
 
-```shell title="root@/etc/wireguard/wg0.conf"
-[Interface]
-...
+   ```shell title="root@/etc/wireguard/wg0.conf"
+   [Interface]
+   ...
 
-[Peer]
-# PrivateKey = iBSW/dma96OjnH098U5BEWzNcHIbsZqsCPiQ1DfP11c=
-PublicKey = nnhYC6rdEYyNqpTC9n0Q1ubnL5rmvbZIQ1IA75A1chk=
-AllowedIPs = 10.0.0.2/32
+   [Peer]
+   # PrivateKey = iBSW/dma96OjnH098U5BEWzNcHIbsZqsCPiQ1DfP11c=
+   PublicKey = nnhYC6rdEYyNqpTC9n0Q1ubnL5rmvbZIQ1IA75A1chk=
+   AllowedIPs = 10.0.0.2/32
 
-[Peer]
-# PrivateKey = wIQkWhjPnIg9GUg1dhH6FmEIftKuxZdkvaD9VjOWH1Q=
-PublicKey = hCIM4037XrySn6BSLKz194X+ulqE4+PTVg2il1W12TU=
-AllowedIPs = 10.0.0.3/32
-```
+   [Peer]
+   # PrivateKey = wIQkWhjPnIg9GUg1dhH6FmEIftKuxZdkvaD9VjOWH1Q=
+   PublicKey = hCIM4037XrySn6BSLKz194X+ulqE4+PTVg2il1W12TU=
+   AllowedIPs = 10.0.0.3/32
+   ```
 
 6. Use iptables to loadbalance and port forward. You can add `PostUp` and `PostDown` rules to add your iptables rules safely:
 
-```shell title="root@/etc/wireguard/wg0.conf"
-[Interface]
-...
-# NAT: wg0 -> eth0
-PostUp = iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -j MASQUERADE -o eth0
-# NAT: any -> wg0
-PostUp = iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
-# Accept traffic to 10.0.0.2:80 10.0.0.3:80
-PostUp = iptables -A FORWARD -p tcp -d 10.0.0.2 --dport 8080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-PostUp = iptables -A FORWARD -p tcp -d 10.0.0.3 --dport 8080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-# Forward packets and loadbalance
-PostUp = iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to-destination 10.0.0.2:8080 -m statistic --mode random --probability 0.5
-PostUp = iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to-destination 10.0.0.3:8080 -m statistic --mode random --probability 0.5
-# Cleanup
-PostDown = iptables -t nat -D POSTROUTING -s 10.0.0.0/24 -j MASQUERADE -o eth0
-PostDown = iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE
-PostDown = iptables -D FORWARD -p tcp -d 10.0.0.2 --dport 8080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-PostDown = iptables -D FORWARD -p tcp -d 10.0.0.3 --dport 8080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
-PostDown = iptables -t nat -D PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to-destination 10.0.0.2:8080 -m statistic --mode random --probability 0.5
-PostDown = iptables -t nat -D PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to-destination 10.0.0.3:8080 -m statistic --mode random --probability 0.5
+   ```shell title="root@/etc/wireguard/wg0.conf"
+   [Interface]
+   ...
+   # NAT: wg0 -> eth0
+   PostUp = iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -j MASQUERADE -o eth0
+   # NAT: any -> wg0
+   PostUp = iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
+   # Accept traffic to 10.0.0.2:80 10.0.0.3:80
+   PostUp = iptables -A FORWARD -p tcp -d 10.0.0.2 --dport 8080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+   PostUp = iptables -A FORWARD -p tcp -d 10.0.0.3 --dport 8080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+   # Forward packets and loadbalance
+   PostUp = iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to-destination 10.0.0.2:8080 -m statistic --mode random --probability 0.5
+   PostUp = iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to-destination 10.0.0.3:8080 -m statistic --mode random --probability 0.5
+   # Cleanup
+   PostDown = iptables -t nat -D POSTROUTING -s 10.0.0.0/24 -j MASQUERADE -o eth0
+   PostDown = iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE
+   PostDown = iptables -D FORWARD -p tcp -d 10.0.0.2 --dport 8080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+   PostDown = iptables -D FORWARD -p tcp -d 10.0.0.3 --dport 8080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+   PostDown = iptables -t nat -D PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to-destination 10.0.0.2:8080 -m statistic --mode random --probability 0.5
+   PostDown = iptables -t nat -D PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to-destination 10.0.0.3:8080 -m statistic --mode random --probability 0.5
 
-[Peer]
-...
+   [Peer]
+   ...
 
-[Peer]
-...
-```
+   [Peer]
+   ...
+   ```
 
-Depending on the OS that you are using, eth0 could be renamed with `en*`.
+   Depending on the OS that you are using, eth0 could be renamed with `en*`.
 
-Note that this load balancing doesn't healthcheck the servers. You better use a [HAProxy](https://www.haproxy.org) as a Ingress for this.
+   Note that this load balancing doesn't healthcheck the servers. You better use a [HAProxy](https://www.haproxy.org) as a Ingress for this.
 
-Also, if you want to disable the load balancing, just remove the `-m statistic --mode random --probability 0.5` parameters and remove the extras port forwarding rules.
+   Also, if you want to disable the load balancing, just remove the `-m statistic --mode random --probability 0.5` parameters and remove the extras port forwarding rules.
 
-<details>
-<summary>HAProxy configuration example</summary>
+   :::caution
 
-```cfg title="/etc/haproxy/haproxy.cfg"
-global
-    log         127.0.0.1 local2
+   Make sure that iptables does not conflict with other firewall software (like FirewallD or UFW)!
 
-    chroot      /var/lib/haproxy
-    pidfile     /var/run/haproxy.pid
-    maxconn     50000
-    user        haproxy
-    group       haproxy
-    daemon
+   Also note that there are no rules allowing traffic on ports. If your iptables forbid traffic by default, you can add these rules:
 
-    # turn on stats unix socket
-    stats socket /var/lib/haproxy/stats
+   ```shell
+   # Allow HTTP (you can add this one in PostUp)
+   iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
 
-    # utilize system-wide crypto-policies
-    ssl-default-bind-ciphers PROFILE=SYSTEM
-    ssl-default-server-ciphers PROFILE=SYSTEM
+   # Allow Wireguard (you can add this one in PostUp)
+   iptables -A INPUT -p udp -m udp --dport 51820 -j ACCEPT
 
-defaults
-    mode                    http
-    log                     global
-    option                  httplog
-    option                  dontlognull
-    timeout connect         10s
-    timeout client          30s
-    timeout server          30s
-    timeout tunnel          30s
-    maxconn                 50000
+   # Allow SSH (you should have already opened this port)
+   iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
 
-# Frontends
-frontend my_frontend
-    bind :80
-    mode tcp
-    default_backend my_backend
+   # Allow ICMP (you should have already opened this port)
+   iptables -A INPUT -p icmp ACCEPT
+   ```
 
-# Backends
-backend my_backend
-    mode tcp
-    balance roundrobin
-    server job1 10.0.0.2:8080 check
-    server job2 10.0.0.3:8080 check
+   :::
 
-```
+   <details>
+   <summary>HAProxy configuration example</summary>
 
-You can remove the iptables forwarding rules.
+   ```cfg title="/etc/haproxy/haproxy.cfg"
+   global
+       log         127.0.0.1 local2
 
-</details>
+       chroot      /var/lib/haproxy
+       pidfile     /var/run/haproxy.pid
+       maxconn     50000
+       user        haproxy
+       group       haproxy
+       daemon
+
+       # turn on stats unix socket
+       stats socket /var/lib/haproxy/stats
+
+       # utilize system-wide crypto-policies
+       ssl-default-bind-ciphers PROFILE=SYSTEM
+       ssl-default-server-ciphers PROFILE=SYSTEM
+
+   defaults
+       mode                    http
+       log                     global
+       option                  httplog
+       option                  dontlognull
+       timeout connect         10s
+       timeout client          30s
+       timeout server          30s
+       timeout tunnel          30s
+       maxconn                 50000
+
+   # Frontends
+   frontend my_frontend
+       bind :80
+       mode tcp
+       default_backend my_backend
+
+   # Backends
+   backend my_backend
+       mode tcp
+       balance roundrobin
+       server job1 10.0.0.2:8080 check
+       server job2 10.0.0.3:8080 check
+
+   ```
+
+   You can remove the iptables forwarding rules.
+
+   </details>
 
 7. Enable the interface and start it!
 
-```shell title="root@~/"
-chmod 600 /etc/wireguard/wg0.conf
-systemctl enable wg-quick@wg0
-systemctl start wg-quick@wg0
-```
+   ```shell title="root@~/"
+   chmod 600 /etc/wireguard/wg0.conf
+   systemctl enable wg-quick@wg0
+   systemctl start wg-quick@wg0
+   ```
 
-Your server is now configured!
+   Your cloud router is now configured!
 
-  </TabItem>
-  <TabItem label="VyOS 1.4 (17-03-2023)" value="vyos">
+</TabItem>
+<TabItem label="VyOS 1.4 (17-03-2023)" value="vyos">
+
+Login on the instance and update the VyOS to a version at least greater than `202303170317`:
 
 ```shell title="vyos@~/"
 # Update OS
@@ -225,6 +251,8 @@ add system image https://s3-us.vyos.io/rolling/current/vyos-1.4-rolling-20230317
 # Reboot
 reboot
 ```
+
+Then write these commands, be sure to modify accordingly:
 
 ```shell title="vyos@~/"
 show version
@@ -291,13 +319,15 @@ set nat source rule 30 outbound-interface eth0
 set nat source rule 30 source address 10.0.0.0/24
 set nat source rule 30 translation address 'masquerade'
 
-# If you prefer port forwarding over HAProxy:
+# If you prefer port forwarding over HAProxy, uncomment the following rule:
 # set nat destination rule 201 description 'http-forward'
 # set nat destination rule 201 destination port '80'
 # set nat destination rule 201 inbound-interface 'eth0'
 # set nat destination rule 201 protocol 'tcp'
 # set nat destination rule 201 translation address '10.0.0.2'
 # set nat destination rule 201 translation port '8080'
+# VyOS doesn't offer TCP load-balacing with the NAT rules.
+
 commit-confirm
 confirm
 save
@@ -330,7 +360,9 @@ sudo systemctl enable haproxy
 sudo systemctl start haproxy
 ```
 
-  </TabItem>
+Your cloud router is now configured!
+
+</TabItem>
 </Tabs>
 
 ### 2. Sending jobs and connect them Wireguard VPN
