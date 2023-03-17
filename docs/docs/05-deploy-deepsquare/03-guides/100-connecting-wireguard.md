@@ -155,30 +155,6 @@ sudo dnf install wireguard-tools
 
    Note that this load balancing doesn't healthcheck the servers. You better use a [HAProxy](https://www.haproxy.org) as a Ingress for this.
 
-   Also, if you want to disable the load balancing, just remove the `-m statistic --mode random --probability 0.5` parameters and remove the extras port forwarding rules.
-
-   :::caution
-
-   Make sure that iptables does not conflict with other firewall software (like FirewallD or UFW)!
-
-   Also note that there are no rules allowing traffic on ports. If your iptables forbid traffic by default, you can add these rules:
-
-   ```shell
-   # Allow HTTP (you can add this one in PostUp)
-   iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
-
-   # Allow Wireguard (you can add this one in PostUp)
-   iptables -A INPUT -p udp -m udp --dport 51820 -j ACCEPT
-
-   # Allow SSH (you should have already opened this port)
-   iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
-
-   # Allow ICMP (you should have already opened this port)
-   iptables -A INPUT -p icmp ACCEPT
-   ```
-
-   :::
-
    <details>
    <summary>HAProxy configuration example</summary>
 
@@ -226,9 +202,58 @@ sudo dnf install wireguard-tools
 
    ```
 
+   Also, if you want to disable the load balancing, just remove the `-m statistic --mode random --probability 0.5` parameters and remove the extras port forwarding rules.
+
+   :::caution
+
+   Make sure that iptables does not conflict with other firewall software (like FirewallD or UFW)!
+
+   Also note that there are no rules allowing traffic on ports. If your iptables forbid traffic by default, you can add these rules:
+
+   ```shell
+   # Allow HTTP (you can add this one in PostUp)
+   iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+
+   # Allow Wireguard (you can add this one in PostUp)
+   iptables -A INPUT -p udp -m udp --dport 51820 -j ACCEPT
+
+   # Allow SSH (you should have already opened this port)
+   iptables -A INPUT -p tcp -m tcp --dport 22 -j ACCEPT
+
+   # Allow ICMP (you should have already opened this port)
+   iptables -A INPUT -p icmp ACCEPT
+   ```
+
+   :::
+
    You can remove the iptables forwarding rules.
 
    </details>
+
+   You can also use IPVS for load balancing, which offer better performance than iptables (but doesn't offer healthchecks):
+
+   <details>
+   <summary>IPVS configuration</summary>
+
+   ```shell
+   # Add a virtual service
+   ipvsadm -A -t <public IP>:80 -s rr
+   # Forward packets
+   ipvsadm -a -t <public IP>:80 -r 10.0.0.2:80 -m
+   ipvsadm -a -t <public IP>:80 -r 10.0.0.3:80 -m
+   ```
+
+   You can add these rules to `PostUp`.
+
+   </details>
+
+   One last alternative, if you want to have high performance and high customization, try to look at the latest technologies: eBPF/XDP-based load balancing! BPF load balancing provides high performance, flexibility, and programmability in a safe and efficient way, allowing for the manipulation and analysis of network packets at a low level with minimal overhead.
+
+   - [Cilium standalone](https://cilium.io/blog/2022/04/12/cilium-standalone-L4LB-XDP/)
+   - [Envoy with HTTP3](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/http/http3.html#http-3-overview)
+   - [LoxiLB](https://github.com/loxilb-io/loxilb)
+   - [Developping with Cilium eBPF](https://docs.cilium.io/en/latest/bpf/index.html)
+   - [Developping with Katran](https://github.com/facebookincubator/katran)
 
 7. Enable the interface and start it!
 
@@ -401,7 +426,7 @@ To connect your job to the wireguard server, you can specify the client configur
                   "publicKey": "uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=",
                   "allowedIPs": ["10.0.0.1/32"],
                   "persistentKeepalive": 10,
-                  "endpoint": "85.217.184.28:51820"
+                  "endpoint": "<public IP>:51820"
                 }
               ]
             }
@@ -446,7 +471,7 @@ To connect your job to the wireguard server, you can specify the client configur
                   "publicKey": "uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=",
                   "allowedIPs": ["10.0.0.1/32"],
                   "persistentKeepalive": 10,
-                  "endpoint": "85.217.184.28:51820"
+                  "endpoint": "<public IP>:51820"
                 }
               ]
             }
