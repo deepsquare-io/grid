@@ -814,9 +814,9 @@ mounts() {
 
 hooks() {
   /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
-  cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
-  exec "$@"
-  EOFrclocal
+cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+exec "$@"
+EOFrclocal
 }
 EOFenroot
 /usr/bin/enroot start \
