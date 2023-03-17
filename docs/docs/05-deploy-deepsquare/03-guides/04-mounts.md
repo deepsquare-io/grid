@@ -39,6 +39,6 @@ If you are using a container, you can mount some directories using the `mounts` 
 
 This feature allows you to mount `/sys/fs/cgroups` as read-only to monitor CPU and memory usage.
 
-## Predfined mounts
+## Predefined mounts
 
 DeepSquare automatically mounts a shared file system on all nodes during a job. See [environment variables](environment-variables) for the path to the shared storage.

@@ -6,7 +6,7 @@ DeepSquare is a decentralized high performance computing (HPC) cloud. DeepSquare
 
 DeepSquare provides the ability to run a workload on any supercomputer connected to the DeepSquare grid using a combination of job scheduling, containers and Web3 technologies. Using job scheduling, jobs are intelligently distributed across infrastructure providers. Containers solve compatibility issues with the heterogeneity of different clusters. And Web3 provides true transparency, availability and scale for a global job scheduler.
 
-## What can I use DeepSquare for ?
+## What can I use DeepSquare for?
 
 **Fast and easy deployment of HPC workloads**
 
@@ -47,9 +47,9 @@ If you want to try an already existing client, there is the [DeepSquare GRID Por
 DeepSquare is composed of a large number of technologies to achieve such a solution:
 
 - The [Solidity programming language](https://docs.soliditylang.org/en/latest/) to write the smart-contracts.
-- The [Go](https://go.dev) and [Python](https://www.python.org programming languages for developing the running services.
+- The [Go](https://go.dev) and [Python](https://www.python.org) programming languages for developing the running services.
 - The [Apptainer](https://apptainer.org), and [Enroot](https://github.com/NVIDIA/enroot) container runtime and several Linux kernel features.
 - The [Slurm job scheduler](https://slurm.schedmd.com/documentation.html) for resource allocation and isolation.
 - And much more!
 
-Each workload is allocated resources by Slurm using [`cgroups`](https://docs.kernel.org/admin-guide/cgroup-v2.html) and is executed in containers using Apptainer. Apptainer acts as the software compatibility layer.
+Each workload is allocated resources by Slurm using [`cgroups`](https://docs.kernel.org/admin-guide/cgroup-v2.html) and is executed in containers using Apptainer or Enroot. Apptainer and Enroot acts as the software compatibility layer.
