@@ -220,6 +220,7 @@ func (suite *DataSourceTestSuite) TestRefuseJob() {
 func (suite *DataSourceTestSuite) TestWatchClaimNextJobEvent() {
 	// Arrange
 	sink := make(chan *metascheduler.MetaSchedulerClaimJobEvent)
+	defer close(sink)
 	sub := mocks.NewSubscription(suite.T())
 	suite.msWS.On(
 		"WatchClaimJobEvent",
@@ -239,6 +240,7 @@ func (suite *DataSourceTestSuite) TestWatchClaimNextJobEvent() {
 func (suite *DataSourceTestSuite) TestWatchClaimNextCancellingJobEvent() {
 	// Arrange
 	sink := make(chan *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)
+	defer close(sink)
 	sub := mocks.NewSubscription(suite.T())
 	suite.msWS.On(
 		"WatchClaimNextCancellingJobEvent",

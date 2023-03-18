@@ -117,6 +117,7 @@ func (w *Watcher) ClaimIndefinitely(parent context.Context) error {
 
 func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
 	events := make(chan *metascheduler.MetaSchedulerClaimJobEvent)
+	defer close(events)
 	sub, err := w.metaQueue.WatchClaimNextJobEvent(parent, events)
 	if err != nil {
 		return err
@@ -201,6 +202,7 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 
 func (w *Watcher) WatchClaimNextCancellingJobEvent(parent context.Context) error {
 	events := make(chan *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)
+	defer close(events)
 	sub, err := w.metaQueue.WatchClaimNextCancellingJobEvent(parent, events)
 	if err != nil {
 		return err

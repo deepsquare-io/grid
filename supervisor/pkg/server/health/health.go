@@ -30,6 +30,7 @@ func (h *health) Watch(
 	ctx := context.Background()
 	ticker := time.NewTicker(10 * time.Second)
 	done := make(chan bool)
+	defer close(done)
 
 	go func(ctx context.Context) {
 		for {

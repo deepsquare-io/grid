@@ -75,6 +75,7 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 		string
 		error
 	})
+	defer close(stdChan)
 
 	go func() {
 		sess, close, err := s.establish(user)

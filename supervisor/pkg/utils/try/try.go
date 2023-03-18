@@ -34,10 +34,12 @@ func DoWithContextTimeout(
 	delay time.Duration,
 	timeout time.Duration,
 ) (err error) {
+	errChan := make(chan error)
+	defer close(errChan)
+
 	for try := 0; try < tries; try++ {
 		ctx, cancel := context.WithTimeout(parent, timeout)
 		defer cancel()
-		errChan := make(chan error)
 
 		go func() {
 			errChan <- fn()
