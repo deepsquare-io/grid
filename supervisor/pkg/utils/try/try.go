@@ -21,7 +21,9 @@ func Do(
 		logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try))
 		time.Sleep(delay)
 	}
-	logger.I.Warn("failed all tries", zap.Error(err))
+	if err != nil {
+		logger.I.Warn("failed all tries", zap.Error(err))
+	}
 	return err
 }
 
@@ -55,7 +57,9 @@ func DoWithContextTimeout(
 		}
 		time.Sleep(delay)
 	}
-	logger.I.Warn("failed all tries", zap.Error(err))
+	if err != nil {
+		logger.I.Warn("failed all tries", zap.Error(err))
+	}
 	return err
 }
 
@@ -72,6 +76,8 @@ func DoWithResult[T interface{}](
 		logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try))
 		time.Sleep(delay)
 	}
-	logger.I.Warn("failed all tries", zap.Error(err))
+	if err != nil {
+		logger.I.Warn("failed all tries", zap.Error(err))
+	}
 	return result, err
 }
