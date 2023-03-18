@@ -1,10 +1,10 @@
 # DeepSquare Overview
 
-DeepSquare is a decentralized high performance computing (HPC) cloud. DeepSquare allows you to run your application on supercomputers around the world without having to worry about the complex underlying infrastructure. With DeepSquare, you can run compute-intensive workloads on the DeepSquare GRID, the interoperability layer made of decentralized heterogeneous supercomputers. By leveraging DeepSquare, you can develop, build, and scale applications with minimal restrictions and permissions due to vendor-locked infrastructure.
+DeepSquare is a decentralized high performance computing (HPC) cloud. DeepSquare allows you to run your application on supercomputers around the world without having to worry about the complex underlying infrastructure. With DeepSquare, you can run compute-intensive workloads on the DeepSquare Grid, the interoperability layer made of decentralized heterogeneous supercomputers. By leveraging DeepSquare, you can develop, build, and scale applications with minimal restrictions and permissions due to vendor-locked infrastructure.
 
 ## Running on DeepSquare
 
-DeepSquare provides the ability to run a workload on any supercomputer connected to the DeepSquare grid using a combination of job scheduling, containers and Web3 technologies. Using job scheduling, jobs are intelligently distributed across infrastructure providers. Containers solve compatibility issues with the heterogeneity of different clusters. And Web3 provides true transparency, availability and scale for a global job scheduler.
+DeepSquare provides the ability to run a workload on any supercomputer connected to the DeepSquare Grid using a combination of job scheduling, containers and Web3 technologies. Using job scheduling, jobs are intelligently distributed across infrastructure providers. Containers solve compatibility issues with the heterogeneity of different clusters. And Web3 provides true transparency, availability and scale for a global job scheduler.
 
 ## What can I use DeepSquare for?
 
@@ -16,7 +16,7 @@ DeepSquare accelerates the deployment lifecycle by always providing a cluster HP
 
 DeepSquare's job scheduler uses several criteria to meet the developer's demand. Whether testing on a small server or running a full HPC infrastructure, there is always a choice.
 
-The DeepSquare GRID's nature also facilitates to dynamically manage workloads, scaling up or down applications as business needs dictate, in near real time.
+The DeepSquare Grid's nature also facilitates to dynamically manage workloads, scaling up or down applications as business needs dictate, in near real time.
 
 **Intelligent and transparent billing**
 
@@ -40,7 +40,7 @@ To avoid storing private data on the blockchain, the sbatch API is the intermedi
 
 ![Deepsquare Architecture.drawio](./01-overview.assets/deepsquare-architecture.drawio.svg#invert-on-dark)
 
-If you want to try an already existing client, there is the [DeepSquare GRID Portal](https://app.deepsquare.run). You can also develop your own client using the [DeepSquare SDK](TODO: reference).
+If you want to try an already existing client, there is the [DeepSquare Grid Portal](https://app.deepsquare.run). You can also develop your own client using the [DeepSquare SDK](TODO: reference).
 
 ## The underlying technology
 
