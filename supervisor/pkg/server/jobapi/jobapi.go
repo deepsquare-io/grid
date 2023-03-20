@@ -23,19 +23,24 @@ type JobHandler interface {
 	) error
 }
 
-type jobAPIServer struct {
+type JobAPIServer struct {
 	supervisorv1alpha1.UnimplementedJobAPIServer
 	jobHandler JobHandler
+	Timeout    time.Duration
+	// Delay between tries
+	Delay time.Duration
 }
 
 func New(
 	jobHandler JobHandler,
-) *jobAPIServer {
+) *JobAPIServer {
 	if jobHandler == nil {
 		logger.I.Fatal("jobHandler is nil")
 	}
-	return &jobAPIServer{
+	return &JobAPIServer{
 		jobHandler: jobHandler,
+		Timeout:    15 * time.Second,
+		Delay:      3 * time.Second,
 	}
 }
 
@@ -52,7 +57,7 @@ var gRPCToEthJobStatus = map[supervisorv1alpha1.JobStatus]eth.JobStatus{
 }
 
 // SetJobStatus to the ethereum network
-func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1.SetJobStatusRequest) (*supervisorv1alpha1.SetJobStatusResponse, error) {
+func (s *JobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1.SetJobStatusRequest) (*supervisorv1alpha1.SetJobStatusResponse, error) {
 	logger.I.Info("grpc received job result", zap.Any("job_result", req))
 	jobName, err := hexutil.Decode(req.Name)
 	if err != nil {
@@ -78,7 +83,7 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 		// Do set job status
 		if err = try.DoWithContextTimeout(
 			ctx,
-			3, 3*time.Second, 15*time.Second,
+			3, s.Delay, s.Timeout,
 			func(ctx context.Context, _ int) error {
 				err := s.jobHandler.SetJobStatus(
 					ctx,

@@ -65,6 +65,10 @@ func DoWithContextTimeout(
 			return err
 		}()
 
+		if err == nil {
+			return nil
+		}
+
 		time.Sleep(delay)
 	}
 	logger.I.Warn("failed all tries", zap.Error(err))
