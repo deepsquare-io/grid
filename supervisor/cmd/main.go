@@ -22,6 +22,7 @@ import (
 )
 
 var (
+	version       string = "dev"
 	listenAddress string
 
 	tls      bool
@@ -305,9 +306,10 @@ func Init() *Container {
 }
 
 var app = &cli.App{
-	Name:  "supervisor",
-	Usage: "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
-	Flags: flags,
+	Name:    "supervisor",
+	Version: version,
+	Usage:   "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
+	Flags:   flags,
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context
 		container := Init()
@@ -332,7 +334,7 @@ var app = &cli.App{
 			}
 		}(ctx)
 
-		logger.I.Info("listening", zap.String("address", listenAddress))
+		logger.I.Info("listening", zap.String("address", listenAddress), zap.String("version", version))
 
 		// gRPC server
 		return container.server.ListenAndServe(listenAddress)
