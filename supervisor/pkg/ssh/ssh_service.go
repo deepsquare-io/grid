@@ -3,7 +3,6 @@ package ssh
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"io"
 	"net"
 	"time"
@@ -77,67 +76,20 @@ func (s *Service) establish(ctx context.Context, user string) (session *ssh.Sess
 
 // ExecAs executes a command on the remote host with a timeout
 func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, error) {
-	ctx, cancel := context.WithTimeout(ctx, execTimeout)
-	defer cancel()
-	stdChan := make(chan struct {
-		string
-		error
-	})
-	defer close(stdChan)
-
-	go func(ctx context.Context, stdChan chan<- struct {
-		string
-		error
-	}) {
-		sess, close, err := s.establish(ctx, user)
-		if err != nil {
-			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				return
-			}
-			stdChan <- struct {
-				string
-				error
-			}{"", err}
-			return
-		}
-		defer close()
-
-		logger.I.Debug(
-			"called ssh command",
-			zap.String("cmd", cmd),
-			zap.String("user", user),
-		)
-		out, err := sess.CombinedOutput(cmd)
-		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-			return
-		}
-		stdChan <- struct {
-			string
-			error
-		}{string(out), err}
-	}(ctx, stdChan)
-
-	select {
-	case std, ok := <-stdChan:
-		if !ok {
-			logger.I.Error("command closed", zap.Any("cmd", cmd))
-			return "", io.EOF
-		}
-		if std.error != nil {
-			logger.I.Error(
-				"command failed",
-				zap.Error(std.error),
-				zap.Any("cmd", cmd),
-				zap.String("output", std.string),
-			)
-			return std.string, std.error
-		}
-		return std.string, std.error
-	case <-ctx.Done():
-		logger.I.Error("command timed out",
-			zap.Error(ctx.Err()),
-			zap.Any("cmd", cmd),
-		)
-		return "", ctx.Err()
+	sess, close, err := s.establish(ctx, user)
+	if err != nil {
+		return "", err
 	}
+	defer close()
+
+	logger.I.Debug(
+		"called ssh command",
+		zap.String("cmd", cmd),
+		zap.String("user", user),
+	)
+	out, err := sess.CombinedOutput(cmd)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
 }
