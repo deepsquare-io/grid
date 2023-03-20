@@ -80,12 +80,12 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 	go func() {
 		sess, close, err := s.establish(user)
 		if err != nil {
-			stdChan <- struct {
+			select {
+			case <-ctx.Done():
+			case stdChan <- struct {
 				string
 				error
-			}{
-				"",
-				err,
+			}{"", err}:
 			}
 			return
 		}
@@ -97,12 +97,12 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 			zap.String("user", user),
 		)
 		out, err := sess.CombinedOutput(cmd)
-		stdChan <- struct {
+		select {
+		case <-ctx.Done():
+		case stdChan <- struct {
 			string
 			error
-		}{
-			string(out),
-			err,
+		}{string(out), err}:
 		}
 	}()
 
