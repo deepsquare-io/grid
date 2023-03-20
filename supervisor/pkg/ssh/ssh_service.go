@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"io"
+	"net"
 	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
@@ -38,17 +39,23 @@ func New(
 	}
 }
 
-func (s *Service) establish(user string) (session *ssh.Session, close func(), err error) {
+func (s *Service) establish(ctx context.Context, user string) (session *ssh.Session, close func(), err error) {
 	config := &ssh.ClientConfig{
 		User:            user,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         10 * time.Second,
 		Auth:            []ssh.AuthMethod{s.authMethod},
 	}
-	client, err := ssh.Dial("tcp", s.address, config)
+	d := net.Dialer{Timeout: config.Timeout}
+	conn, err := d.DialContext(ctx, "tcp", s.address)
 	if err != nil {
 		return nil, nil, err
 	}
+	c, chans, reqs, err := ssh.NewClientConn(conn, s.address, config)
+	if err != nil {
+		return nil, nil, err
+	}
+	client := ssh.NewClient(c, chans, reqs)
 	session, err = client.NewSession()
 	if err != nil {
 		if err := client.Close(); err != nil && err != io.EOF {
@@ -78,15 +85,12 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 	defer close(stdChan)
 
 	go func() {
-		sess, close, err := s.establish(user)
+		sess, close, err := s.establish(ctx, user)
 		if err != nil {
-			select {
-			case <-ctx.Done():
-			case stdChan <- struct {
+			stdChan <- struct {
 				string
 				error
-			}{"", err}:
-			}
+			}{"", err}
 			return
 		}
 		defer close()
@@ -97,17 +101,18 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 			zap.String("user", user),
 		)
 		out, err := sess.CombinedOutput(cmd)
-		select {
-		case <-ctx.Done():
-		case stdChan <- struct {
+		stdChan <- struct {
 			string
 			error
-		}{string(out), err}:
-		}
+		}{string(out), err}
 	}()
 
 	select {
-	case std := <-stdChan:
+	case std, ok := <-stdChan:
+		if !ok {
+			logger.I.Error("command closed", zap.Any("cmd", cmd))
+			return "", io.EOF
+		}
 		if std.error != nil {
 			logger.I.Error(
 				"command failed",
