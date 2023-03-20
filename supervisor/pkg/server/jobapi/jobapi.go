@@ -78,7 +78,8 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 		// Do set job status
 		if err = try.DoWithContextTimeout(
 			ctx,
-			func() error {
+			3, 3*time.Second, 15*time.Second,
+			func(_ int) error {
 				err := s.jobHandler.SetJobStatus(
 					ctx,
 					jobNameFixedLength,
@@ -124,7 +125,7 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 
 				return err
 
-			}, 3, 3*time.Second, 15*time.Second); err != nil {
+			}); err != nil {
 			logger.I.Error(
 				"SetJobStatus failed",
 				zap.Error(err),
