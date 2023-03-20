@@ -45,10 +45,10 @@ func DoWithContextTimeout(
 			defer cancel()
 
 			errChan := make(chan error)
-			go func() {
+			go func(try int) {
 				defer close(errChan)
 				errChan <- fn(ctx, try)
-			}()
+			}(try)
 
 			select {
 			case err = <-errChan:
