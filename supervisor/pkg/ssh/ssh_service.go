@@ -84,7 +84,10 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 	})
 	defer close(stdChan)
 
-	go func() {
+	go func(ctx context.Context, stdChan chan<- struct {
+		string
+		error
+	}) {
 		sess, close, err := s.establish(ctx, user)
 		if err != nil {
 			stdChan <- struct {
@@ -105,7 +108,7 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 			string
 			error
 		}{string(out), err}
-	}()
+	}(ctx, stdChan)
 
 	select {
 	case std, ok := <-stdChan:
