@@ -3,6 +3,7 @@ package ssh
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"io"
 	"net"
 	"time"
@@ -90,7 +91,7 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 	}) {
 		sess, close, err := s.establish(ctx, user)
 		if err != nil {
-			if err == context.DeadlineExceeded {
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				return
 			}
 			stdChan <- struct {
@@ -107,7 +108,7 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 			zap.String("user", user),
 		)
 		out, err := sess.CombinedOutput(cmd)
-		if err == context.DeadlineExceeded {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 			return
 		}
 		stdChan <- struct {
