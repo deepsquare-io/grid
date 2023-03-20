@@ -15,7 +15,7 @@ endif()
 FetchContent_Declare(
   grpc
   GIT_REPOSITORY https://github.com/grpc/grpc
-  GIT_TAG v1.51.0)
+  GIT_TAG v1.52.1)
 FetchContent_GetProperties(grpc)
 if(NOT grpc_POPULATED)
   FetchContent_Populate(grpc)
