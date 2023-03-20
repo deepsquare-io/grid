@@ -33,34 +33,38 @@ func DoWithContextTimeout(
 	tries int,
 	delay time.Duration,
 	timeout time.Duration,
-	fn func(try int) error,
+	fn func(ctx context.Context, try int) error,
 ) (err error) {
 	if tries <= 0 {
 		logger.I.Panic("tries is 0 or negative", zap.Int("tries", tries))
 	}
-	errChan := make(chan error)
-	defer close(errChan)
 
 	for try := 0; try < tries; try++ {
-		ctx, cancel := context.WithTimeout(parent, timeout)
-		defer cancel()
+		err = func() error {
+			ctx, cancel := context.WithTimeout(parent, timeout)
+			defer cancel()
 
-		go func(errChan chan error) {
-			errChan <- fn(try)
-		}(errChan)
+			errChan := make(chan error)
+			go func() {
+				defer close(errChan)
+				errChan <- fn(ctx, try)
+			}()
 
-		select {
-		case err = <-errChan:
-			if err != nil {
+			select {
+			case err = <-errChan:
+				if err != nil {
+					logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
+				}
+				if err == nil {
+					return nil
+				}
+			case <-ctx.Done():
+				err = ctx.Err()
 				logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
 			}
-			if err == nil {
-				return nil
-			}
-		case <-ctx.Done():
-			err = ctx.Err()
-			logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
-		}
+			return err
+		}()
+
 		time.Sleep(delay)
 	}
 	logger.I.Warn("failed all tries", zap.Error(err))

@@ -79,7 +79,7 @@ func (s *jobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 		if err = try.DoWithContextTimeout(
 			ctx,
 			3, 3*time.Second, 15*time.Second,
-			func(_ int) error {
+			func(ctx context.Context, _ int) error {
 				err := s.jobHandler.SetJobStatus(
 					ctx,
 					jobNameFixedLength,
