@@ -25,17 +25,6 @@ To set a crypto allowance:
 
 Once the allowance is set, DeepSquare can automatically deduct tokens from your wallet to pay for services, up to the specified allowance amount. Make sure to set an allowance that corresponds to the amount you agree the platform can take from your wallet, to avoid any disruptions in service due to insufficient funds.
 
-If you need to increase or decrease your allowance, simply follow the same steps and enter a new allowance amount. This will help you maintain a smooth experience while using the platform and minimize the need for wallet confirmations during transactions.
-
-To set a crypto allowance:
-
-1. Connect your wallet to the DeepSquare platform.
-2. Go to the *Allowance* section in your account settings.
-3. Enter the amount of tokens you wish to authorize for the platform to use.
-4. Confirm the transaction in your wallet.
-
-Once the allowance is set, DeepSquare can automatically deduct tokens from your wallet to pay for services, up to the specified allowance amount. Make sure to set an allowance that corresponds to the amount you agree the platform can take from your wallet, to avoid any disruptions in service due to insufficient funds.
-
 If you need to increase or decrease your allowance, simply follow the same steps and enter a new allowance amount.
 
 ## Top-Up Credits
