@@ -1,3 +1,3 @@
 # Overview
-General overview diagram and high level explanations.
-![architecture](https://user-images.githubusercontent.com/29931035/226561268-c56ed25e-ad6a-461d-acf4-44f772e7a712.png)
+
+DeepSquare is a decentralized high-performance computing (HPC) cloud that allows you to run your applications on supercomputers around the world without worrying about the complex underlying infrastructure. By leveraging DeepSquare, you can develop, build, and scale applications with minimal restrictions and permissions due to vendor-locked infrastructure.
