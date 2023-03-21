@@ -1,4 +1,4 @@
-# DeepSquare Customer Portal and Nexus
+# DeepSquare Customer Portal
 
 The DeepSquare Customer Portal is a web-based application that allows users to run various computational applications on the DeepSquare infrastructure. Accessible at app.deepsquare.run, the portal provides a user-friendly interface enabling users to easily select and launch different applications.
 
