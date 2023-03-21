@@ -1,6 +1,6 @@
 # Future developements
 
-# Transforming the Customer Portal into DeepSquare Nexus
+## Transforming the Customer Portal into DeepSquare Nexus
 
 The existing portal, which features simple apps showcasing DeepSquare capabilities, is evolving into the DeepSquare Nexus. The Nexus will serve as a dedicated platform for projects built on DeepSquare, showcasing a wide range of applications.
 
