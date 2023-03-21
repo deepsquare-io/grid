@@ -1,9 +1,15 @@
-# Overview
+# DeepSquare Customer Portal and Nexus
 
-The DeepSquare customer portal is a web-based application that allows customers to run various computational applications on the DeepSquare infrastructure. This portal is accessible via the [app.deepsquare.run](app.deepsquare.run) and provides a user-friendly interface that enables customers to easily select and launch different applications.
+The DeepSquare Customer Portal is a web-based application that allows users to run various computational applications on the DeepSquare infrastructure. Accessible at app.deepsquare.run, the portal provides a user-friendly interface enabling users to easily select and launch different applications.
 
-Currently, the DeepSquare customer portal offers several pre-built applications, including Text to Image, Blender, Unity render streaming, and AI Upscaling. These applications are optimized to run on the DeepSquare infrastructure and are designed to deliver high performance and scalability.
+Currently, the DeepSquare Customer Portal offers several pre-built applications, including Text to Image, Blender, Unity Render Streaming, and AI Upscaling. These applications are optimized to run on DeepSquare infrastructure, delivering high performance and scalability.
 
-In addition to these pre-built applications, the DeepSquare customer portal also features a Dev app, where customers can create and run their own customized workflows in an HPC environment. This app provides customers with the flexibility to develop and run their own applications on the DeepSquare infrastructure, using their preferred programming languages and frameworks.
+Besides the pre-built applications, the DeepSquare Customer Portal features a Developer App where users can create and run their customized workflows in an HPC environment. This app offers flexibility for users to develop and run their applications on DeepSquare infrastructure using their preferred programming languages and frameworks.
 
-Overall, the DeepSquare customer portal is a powerful tool that enables customers to leverage the full capabilities of the DeepSquare infrastructure in a simple and intuitive way. Whether customers are running pre-built applications or developing their own workflows, the DeepSquare customer portal makes it easy to access the resources they need to achieve their computing goals.
+# Transforming the Customer Portal into DeepSquare Nexus
+
+The existing portal, which features simple apps showcasing DeepSquare capabilities, is evolving into the DeepSquare Nexus. The Nexus will serve as a dedicated platform for projects built on DeepSquare, showcasing a wide range of applications.
+
+As a central reference point, the DeepSquare Nexus will be the hub for all apps leveraging DeepSquare's HPC capabilities. Its goal is to unite the community by bringing together developers, users, and advanced HPC resources in a single, cohesive ecosystem.
+
+In summary, the DeepSquare Customer Portal and the upcoming DeepSquare Nexus are powerful tools that enable users to fully leverage DeepSquare infrastructure capabilities in a simple, intuitive, and collaborative way.
