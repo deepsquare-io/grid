@@ -2,9 +2,9 @@
 
 DeepSquare supports various storage options for your input and output files. Depending on the application you're using, you can choose from the following storage options:
 
-## 1. DeepSquare Self-Hosted Transfer.sh
+## 1. DeepSquare File Hosting
 
-DeepSquare provides a [self-hosted transfer.sh](https://transfer.deepsquare.run/) service for easy file storage and sharing. You can upload, download, and share files using simple HTTP commands or through the web interface. This option offers:
+DeepSquare hosts a [transfer.sh](https://transfer.deepsquare.run/) service for easy file storage and sharing. You can upload, download, and share files using simple HTTP commands or through the web interface. This option offers:
 
 - Easy file sharing with temporary storage
 - Direct file access through unique URLs
