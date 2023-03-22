@@ -8,19 +8,29 @@ DeepSquare provides the ability to run a workload on any supercomputer connected
 
 ## What can I use DeepSquare for?
 
-**Fast and easy deployment of HPC workloads**
+### Fast and easy deployment of HPC workloads
 
 DeepSquare accelerates the deployment lifecycle by always providing a cluster HPC-ready.
 
-**Scaling and clever scheduling**
+### Scaling and clever scheduling
 
 DeepSquare's job scheduler uses several criteria to meet the developer's demand. Whether testing on a small server or running a full HPC infrastructure, there is always a choice.
 
 The DeepSquare Grid's nature also facilitates to dynamically manage workloads, scaling up or down applications as business needs dictate, in near real time.
 
-**Intelligent and transparent billing**
+### Intelligent and transparent billing
 
-TODO: about billing
+**Credit Allocation**
+Credit allocation allows users to assign a specific number of credit tokens to a job before running it. When using the SDK, you'll need to specify the amount of credit tokens you want to allocate for your job. It's recommended to allocate more tokens rather than less to prevent job failures due to insufficient credits. The tokens allocated for a job are locked during the entire job process, and any leftover tokens will be returned to your account once the job is complete.
+
+**Allowance System**
+Crypto allowance is the maximum amount of cryptocurrency you authorize the platform to spend on your behalf for services provided. By setting a predefined allowance, you can streamline the payment process and prevent your wallet from prompting you to confirm an "increase-allowance" transaction every time you use the platform's services. To set a crypto allowance using the SDK, follow the relevant documentation and API calls provided in the npm package.
+
+**Top-Up Running Job**
+If you didn't allocate enough credits initially, the SDK allows you to add more tokens to a running job by calling the TopUpJob method. This top-up functionality ensures that your job continues running without disruptions due to insufficient credits.
+
+**Auto Top-Up Mode**
+By enabling Auto Top-Up mode, you allow the platform to automatically add credits to your job and keep it running until the allowance amount is reached. Make sure to set an allowance that corresponds to the amount you agree the platform can take from your wallet, or your job may fail due to insufficient credits despite having available funds in your wallet.
 
 ## The Job Scheduling Architecture
 
