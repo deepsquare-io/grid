@@ -31,7 +31,7 @@ If you need to increase or decrease your allowance, simply follow the same steps
 
 If you didn't allocate enough credits initially, you can add more tokens to a running job by clicking the **Top-Up** button on the **Job Status** page.
 
-## Auto Top-Up Mode (yet to be released)
+## Auto Top-Up Mode (Comming soon)
 
 You can enable **Auto Top-Up** mode to let the platform automatically add credits to your job and keep it running until your wallet runs out of funds. Make sure to set an allowance that corresponds to the amount you agree the platform can take from your wallet. Otherwise, your job may fail due to insufficient credits despite having available funds in your wallet.
 
