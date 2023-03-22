@@ -53,7 +53,3 @@ Key strategies for improving the economy of compute are:
 - Cloud computing: Using on-demand cloud services to access resources, enabling cost-effective scaling.
 
 By optimizing the economy of compute, organizations can reduce costs, improve workload efficiency, and decrease environmental impact through lower energy consumption.
-
-```
-
-```
