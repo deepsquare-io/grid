@@ -120,7 +120,7 @@ declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
@@ -293,7 +293,7 @@ declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
@@ -460,7 +460,7 @@ declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
@@ -625,7 +625,7 @@ declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
@@ -736,7 +736,7 @@ declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH

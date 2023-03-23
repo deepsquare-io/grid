@@ -48,7 +48,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 {{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password -}}
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine {{ derefStr .Step.Run.Container.Registry | quoteEscape }} login {{ derefStr .Step.Run.Container.Username | quoteEscape }} password {{ derefStr .Step.Run.Container.Password | quoteEscape }}
+machine {{ derefStr .Step.Run.Container.Registry }} login {{ derefStr .Step.Run.Container.Username | quoteEscape }} password {{ derefStr .Step.Run.Container.Password | quoteEscape }}
 EOFnetrc
 {{- end }}
 {{ if not (isAbs $image) -}}
