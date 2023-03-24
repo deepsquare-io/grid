@@ -24,6 +24,7 @@ import (
 var (
 	version       string = "dev"
 	listenAddress string
+	publicAddress string
 
 	tls      bool
 	keyFile  string
@@ -61,6 +62,13 @@ var flags = []cli.Flag{
 		Usage:       "Address to listen on. Is used for receiving job status via the job completion plugin.",
 		Destination: &listenAddress,
 		EnvVars:     []string{"LISTEN_ADDRESS"},
+	},
+	&cli.StringFlag{
+		Name:        "public-address",
+		Value:       "supervisor.example.com:3000",
+		Usage:       "Public address or address of the reverse proxy. Is used by the SLURL plugins to know where to report job statuses.",
+		Destination: &publicAddress,
+		EnvVars:     []string{"PUBLIC_ADDRESS"},
 	},
 	&cli.BoolFlag{
 		Name:        "tls",
@@ -280,6 +288,7 @@ func Init() *Container {
 		sbatch,
 		squeue,
 		scontrol,
+		publicAddress,
 	)
 	watcher := job.New(
 		ethDataSource,

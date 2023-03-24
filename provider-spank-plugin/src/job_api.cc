@@ -10,7 +10,7 @@ using supervisor::v1alpha1::JobStatus;
 using supervisor::v1alpha1::SetJobStatusRequest;
 using supervisor::v1alpha1::SetJobStatusResponse;
 
-SetJobStatusRequest MakeSetJobRunning(const report_t& report) {
+SetJobStatusRequest MakeSetJobRunning(const report_t &report) {
   SetJobStatusRequest req;
   req.set_name(report.job_name);
   req.set_id(report.job_id);
@@ -20,8 +20,10 @@ SetJobStatusRequest MakeSetJobRunning(const report_t& report) {
   return req;
 }
 
-bool JobAPIClient::SetJobStatus(const SetJobStatusRequest& req) {
+bool JobAPIClient::SetJobStatus(const SetJobStatusRequest &req) {
   grpc::ClientContext context;
+  auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(30);
+  context.set_deadline(deadline);
 
   SetJobStatusResponse rep;
   grpc::Status status = stub_->SetJobStatus(&context, req, &rep);

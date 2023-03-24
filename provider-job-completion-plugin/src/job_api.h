@@ -9,17 +9,17 @@
 using supervisor::v1alpha1::JobAPI;
 using supervisor::v1alpha1::SetJobStatusRequest;
 
-SetJobStatusRequest MakeSetJobStatusRequest(const report_t& report);
+SetJobStatusRequest MakeSetJobStatusRequest(const report_t &report);
 
 class JobAPIClient {
- private:
+private:
   std::unique_ptr<JobAPI::Stub> stub_;
 
- public:
+public:
   JobAPIClient(std::shared_ptr<grpc::Channel> channel)
       : stub_(JobAPI::NewStub(channel)) {}
 
-  bool SetJobStatus(const SetJobStatusRequest& req);
+  bool SetJobStatus(const SetJobStatusRequest &req);
 };
 
-#endif  // JOB_API_H
+#endif // JOB_API_H

@@ -8,32 +8,34 @@ using supervisor::v1alpha1::JobStatus;
 using supervisor::v1alpha1::SetJobStatusRequest;
 using supervisor::v1alpha1::SetJobStatusResponse;
 
-SetJobStatusRequest MakeSetJobStatusRequest(const report_t& report) {
+SetJobStatusRequest MakeSetJobStatusRequest(const report_t &report) {
   SetJobStatusRequest req;
   req.set_name(report.job_name);
   req.set_id(report.job_id);
   req.set_duration(report.elapsed);
 
   switch (report.job_state & JOB_STATE_BASE) {
-    case JOB_FAILED:
-      req.set_status(JobStatus::JOB_STATUS_FAILED);
-      break;
-    case JOB_TIMEOUT:
-      req.set_status(JobStatus::JOB_STATUS_OUT_OF_CREDITS);
-      break;
-    case JOB_CANCELLED:
-      req.set_status(JobStatus::JOB_STATUS_CANCELLED);
-      break;
-    default:
-      req.set_status(JobStatus::JOB_STATUS_FINISHED);
-      break;
+  case JOB_FAILED:
+    req.set_status(JobStatus::JOB_STATUS_FAILED);
+    break;
+  case JOB_TIMEOUT:
+    req.set_status(JobStatus::JOB_STATUS_OUT_OF_CREDITS);
+    break;
+  case JOB_CANCELLED:
+    req.set_status(JobStatus::JOB_STATUS_CANCELLED);
+    break;
+  default:
+    req.set_status(JobStatus::JOB_STATUS_FINISHED);
+    break;
   }
 
   return req;
 }
 
-bool JobAPIClient::SetJobStatus(const SetJobStatusRequest& req) {
+bool JobAPIClient::SetJobStatus(const SetJobStatusRequest &req) {
   grpc::ClientContext context;
+  auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(30);
+  context.set_deadline(deadline);
 
   SetJobStatusResponse rep;
   grpc::Status status = stub_->SetJobStatus(&context, req, &rep);
