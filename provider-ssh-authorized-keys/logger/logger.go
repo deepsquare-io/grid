@@ -15,7 +15,7 @@ func init() {
 	config.TimeKey = "timestamp"
 	config.EncodeTime = zapcore.ISO8601TimeEncoder
 	config.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	config.EncodeCaller = zapcore.ShortCallerEncoderr
+	config.EncodeCaller = zapcore.ShortCallerEncoder
 	I = zap.New(zapcore.NewCore(
 		zapcore.NewConsoleEncoder(config),
 		zapcore.Lock(os.Stdout),
