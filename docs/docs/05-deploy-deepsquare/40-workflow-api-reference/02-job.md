@@ -551,10 +551,12 @@ Step is one instruction.
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>name</strong></td>
-<td valign="top"><a href="#string">String</a>!</td>
+<td valign="top"><a href="#string">String</a></td>
 <td>
 
 Name of the instruction.
+
+Is used for debugging.
 
 </td>
 </tr>
@@ -1284,6 +1286,15 @@ Use the wireguard transport.
 
 </td>
 </tr>
+<tr>
+<td colspan="2" valign="top"><strong>bore</strong></td>
+<td valign="top"><a href="#stepsruncustomnetworkinterfacesbore-bore">Bore</a></td>
+<td>
+
+Use the bore transport.
+
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -1442,9 +1453,9 @@ Format is a CIDRv4 (X.X.X.X/X) or CIDRv6.
 
 0.0.0.0/0 (or ::/0) would forward all packets to the tunnel. If you plan to use the Wireguard VPN as a gateway, you MUST set this IP range.
 
-\<server internal IP\>/32 (not the server's public IP) would forward all packets to the tunnel with the server IP as the destination. MUST be set.
+&lt;server internal IP&gt;/32 (not the server's public IP) would forward all packets to the tunnel with the server IP as the destination. MUST be set.
 
-\<VPN IP range\> would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other and want the gateway to act as a router.
+&lt;VPN IP range&gt; would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other and want the gateway to act as a router.
 
 </td>
 </tr>
@@ -1496,6 +1507,66 @@ You can generate a keypair and a shared key with:
 wg genkey | tee privatekey | wg pubkey > pubkey
 wg genkey > sharedkey
 ```
+
+</details>
+
+### `.steps[].run.customNetworkInterfaces[].bore` _Bore_
+
+jkuri/bore tunnel Transport for StepRun.
+
+Bore is a proxy to expose TCP sockets.
+
+<table>
+<thead>
+<tr>
+<th colspan="2" align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="2" valign="top"><strong>address</strong></td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Bore server IP/Address.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>port</strong></td>
+<td valign="top"><a href="#int">Int</a>!</td>
+<td>
+
+The bore server port.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>targetPort</strong></td>
+<td valign="top"><a href="#int">Int</a>!</td>
+<td>
+
+Target port.
+
+</td>
+</tr>
+</tbody>
+</table>
+
+<details>
+  <summary>Example</summary>
+
+```json title="Bore"
+{
+  "address": "bore.deepsquare.run",
+  "port": 2200,
+  "targetPort": 8080
+}
+```
+
+Will results in 3 steps.
 
 </details>
 

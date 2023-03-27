@@ -487,15 +487,11 @@
         "inputFields": [
           {
             "name": "name",
-            "description": "Name of the instruction.",
+            "description": "Name of the instruction.\n\nIs used for debugging.",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -956,6 +952,66 @@
       },
       {
         "kind": "INPUT_OBJECT",
+        "name": "Bore",
+        "description": "jkuri/bore tunnel Transport for StepRun.\n\nBore is a proxy to expose TCP sockets.",
+        "specifiedByURL": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "address",
+            "description": "Bore server IP/Address.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "port",
+            "description": "The bore server port.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "targetPort",
+            "description": "Target port.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
         "name": "NetworkInterface",
         "description": "Connect a network interface on a StepRun.\n\nThe network interface is connected via slirp4netns.",
         "specifiedByURL": null,
@@ -967,6 +1023,18 @@
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "Wireguard",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "bore",
+            "description": "Use the bore transport.",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Bore",
               "ofType": null
             },
             "defaultValue": null,
@@ -1323,7 +1391,7 @@
           },
           {
             "name": "signalOnParentStepExit",
-            "description": "SignalOnParentStepExit will send a signal to the step and substeps when the parent step exits.\n\nThis can be used as a cleanup function to avoid a zombie.\n\nZombie processes will still run after the main process dies, and therefore, won't stop the job.\n\nIf null, SIGTERM will be send. If 0, no signal will be send.\n\nCommon signal:\n\n1 SIGHUP\tHang up detected on controlling terminal or death of controlling process\n2 SIGINT\tInterrupt from keyboard\n3 SIGQUIT\tQuit from keyboard\n9 SIGKILL\tIf a process gets this signal it must quit immediately and will not perform any clean-up operations.\n15 SIGTERM\tSoftware termination signal\n\nIt is HEAVILY RECOMMENDED to use SIGTERM to gracefully exit a process. SIGKILL is the most brutal and will certainly work.\n\nIf no signal is sent, the asynchronous step will be considered as a \"fire and forget\" asynchronous step and will have to terminate itself to stop the job.",
+            "description": "SignalOnParentStepExit sends a signal to the step and sub-steps when the parent step ends.\n\nThis function can be used as a cleanup function to avoid a zombie process.\n\nZombie processes will continue to run after the main process dies and therefore will not stop the job.\n\nIf null, SIGTERM will be sent. If 0, no signal will be sent.\n\nCurrent signal :\n\n1 SIGHUP Hang-up detected on the control terminal or death of the control process.\n2 SIGINT Abort from keyboard\n3 SIGQUIT Quit the keyboard\n9 SIGKILL If a process receives this signal, it must quit immediately and will not perform any cleaning operations.\n15 SIGTERM Software stop signal\n\nIt is STRONGLY RECOMMENDED to use SIGTERM to gracefully exit a process. SIGKILL is the most abrupt and will certainly work.\n\nIf no signal is sent, the asynchronous step will be considered a fire and forget asynchronous step and will have to terminate itself to stop the job.\n\nWARNING: the \"no signal sent\" option is subject to removal to avoid undefined behavior. Please refrain from using it.",
             "type": {
               "kind": "SCALAR",
               "name": "Int",

@@ -1196,3 +1196,58 @@ func TestValidateWireguard(t *testing.T) {
 		})
 	}
 }
+
+var cleanBore = model.Bore{
+	Address:    "10.0.0.1",
+	Port:       2200,
+	TargetPort: 80,
+}
+
+func TestValidateBore(t *testing.T) {
+	tests := []struct {
+		input         model.Bore
+		isError       bool
+		errorContains []string
+		title         string
+	}{
+		{
+			input: cleanBore,
+			title: "Positive test",
+		},
+		{
+			input: func() model.Bore {
+				w := cleanBore
+				w.Address = "a.com"
+				return w
+			}(),
+			title: "Positive test: fqdn",
+		},
+		{
+			input: func() model.Bore {
+				w := cleanBore
+				w.Address = "a"
+				return w
+			}(),
+			title:         "Negative test: Address is not an ip|fqdn",
+			isError:       true,
+			errorContains: []string{"Address", "ip|fqdn"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.title, func(t *testing.T) {
+			// Act
+			err := validate.I.Struct(tt.input)
+
+			// Assert
+			if tt.isError {
+				assert.Error(t, err)
+				for _, contain := range tt.errorContains {
+					assert.ErrorContains(t, err, contain)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}

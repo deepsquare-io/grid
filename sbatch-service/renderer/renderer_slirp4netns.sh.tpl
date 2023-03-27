@@ -87,6 +87,8 @@ wait_for_network_device $$ tap0
 {{ range $i, $nic := .NICs }}
 {{- if $nic.Wireguard -}}
 {{ renderWireguard $nic.Wireguard (printf "net%d" $i) | escapeSQuote }}
+{{- else if $nic.Bore -}}
+/usr/bin/bore -s {{ $nic.Bore.Address }} -p {{ $nic.Bore.Port }} -ls localhost -lp {{ $nic.Bore.TargetPort }} -r &
 {{- end -}}
 {{- end -}}
 {{- range $dns := .DNS }}

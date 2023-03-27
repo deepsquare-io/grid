@@ -73,6 +73,12 @@ func Format(err validator.FieldError) string {
 			"Field '%s' (='%+v') is not a alphanumeric with underscore value {\"error\": \"%s\", \"field\": \"%s\", \"value\": \"%+v\"}",
 			err.Field(), err.Value(), err.Tag(), err.Field(), err.Value(),
 		)
+	case "ip|fqdn":
+		return fmt.Sprintf(
+			"Field '%s' (='%+v') is not an IP address nor an FQDN {\"error\": \"%s\", \"field\": \"%s\", \"value\": \"%+v\"}",
+			err.Field(), err.Value(), err.Tag(), err.Field(), err.Value(),
+		)
 	}
+
 	return err.Error()
 }

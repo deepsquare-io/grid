@@ -107,6 +107,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputBore,
 		ec.unmarshalInputContainerRun,
 		ec.unmarshalInputEnvVar,
 		ec.unmarshalInputForRange,
@@ -570,6 +571,26 @@ input Wireguard {
 }
 
 """
+jkuri/bore tunnel Transport for StepRun.
+
+Bore is a proxy to expose TCP sockets.
+"""
+input Bore {
+  """
+  Bore server IP/Address.
+  """
+  address: String!
+  """
+  The bore server port.
+  """
+  port: Int!
+  """
+  Target port.
+  """
+  targetPort: Int!
+}
+
+"""
 Connect a network interface on a StepRun.
 
 The network interface is connected via slirp4netns.
@@ -579,6 +600,10 @@ input NetworkInterface {
   Use the wireguard transport.
   """
   wireguard: Wireguard
+  """
+  Use the bore transport.
+  """
+  bore: Bore
 }
 
 """
@@ -2898,6 +2923,50 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputBore(ctx context.Context, obj interface{}) (model.Bore, error) {
+	var it model.Bore
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"address", "port", "targetPort"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "address":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+			it.Address, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "port":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("port"))
+			it.Port, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "targetPort":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetPort"))
+			it.TargetPort, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj interface{}) (model.ContainerRun, error) {
 	var it model.ContainerRun
 	asMap := map[string]interface{}{}
@@ -3277,7 +3346,7 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"wireguard"}
+	fieldsInOrder := [...]string{"wireguard", "bore"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3289,6 +3358,14 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wireguard"))
 			it.Wireguard, err = ec.unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "bore":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bore"))
+			it.Bore, err = ec.unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐBore(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4642,6 +4719,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐBore(ctx context.Context, v interface{}) (*model.Bore, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBore(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx context.Context, v interface{}) (*model.ContainerRun, error) {
