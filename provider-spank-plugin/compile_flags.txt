@@ -1,0 +1,4 @@
+-xc++
+-I./build/_deps/slurm-src
+-I./gen/cpp
+-I./build/_deps/grpc-src/include

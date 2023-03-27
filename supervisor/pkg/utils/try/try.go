@@ -1,6 +1,7 @@
 package try
 
 import (
+	"context"
 	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
@@ -8,33 +9,88 @@ import (
 )
 
 func Do(
-	fn func() error,
 	tries int,
 	delay time.Duration,
+	fn func(try int) error,
 ) (err error) {
+	if tries <= 0 {
+		logger.I.Panic("tries is 0 or negative", zap.Int("tries", tries))
+	}
 	for try := 0; try < tries; try++ {
-		err = fn()
+		err = fn(try)
 		if err == nil {
-			break
+			return nil
 		}
-		logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try))
+		logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
 		time.Sleep(delay)
 	}
+	logger.I.Warn("failed all tries", zap.Error(err))
+	return err
+}
+
+func DoWithContextTimeout(
+	parent context.Context,
+	tries int,
+	delay time.Duration,
+	timeout time.Duration,
+	fn func(ctx context.Context, try int) error,
+) (err error) {
+	if tries <= 0 {
+		logger.I.Panic("tries is 0 or negative", zap.Int("tries", tries))
+	}
+
+	for try := 0; try < tries; try++ {
+		err = func() error {
+			ctx, cancel := context.WithTimeout(parent, timeout)
+			defer cancel()
+
+			errChan := make(chan error)
+			go func(try int) {
+				defer close(errChan)
+				errChan <- fn(ctx, try)
+			}(try)
+
+			select {
+			case err = <-errChan:
+				if err != nil {
+					logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
+				}
+				if err == nil {
+					return nil
+				}
+			case <-ctx.Done():
+				err = ctx.Err()
+				logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
+			}
+			return err
+		}()
+
+		if err == nil {
+			return nil
+		}
+
+		time.Sleep(delay)
+	}
+	logger.I.Warn("failed all tries", zap.Error(err))
 	return err
 }
 
 func DoWithResult[T interface{}](
-	fn func() (T, error),
 	tries int,
 	delay time.Duration,
+	fn func(try int) (T, error),
 ) (result T, err error) {
+	if tries <= 0 {
+		logger.I.Panic("tries is 0 or negative", zap.Int("tries", tries))
+	}
 	for try := 0; try < tries; try++ {
-		result, err = fn()
+		result, err = fn(try)
 		if err == nil {
-			break
+			return result, nil
 		}
 		logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try))
 		time.Sleep(delay)
 	}
+	logger.I.Warn("failed all tries", zap.Error(err))
 	return result, err
 }

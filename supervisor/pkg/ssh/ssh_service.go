@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"io"
+	"net"
 	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
@@ -38,17 +39,26 @@ func New(
 	}
 }
 
-func (s *Service) establish(user string) (session *ssh.Session, close func(), err error) {
+func (s *Service) establish(ctx context.Context, user string) (session *ssh.Session, close func(), err error) {
 	config := &ssh.ClientConfig{
 		User:            user,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         10 * time.Second,
 		Auth:            []ssh.AuthMethod{s.authMethod},
 	}
-	client, err := ssh.Dial("tcp", s.address, config)
+	d := net.Dialer{Timeout: config.Timeout}
+	conn, err := d.DialContext(ctx, "tcp", s.address)
 	if err != nil {
 		return nil, nil, err
 	}
+	if err := conn.SetDeadline(time.Now().Add(execTimeout)); err != nil {
+		return nil, nil, err
+	}
+	c, chans, reqs, err := ssh.NewClientConn(conn, s.address, config)
+	if err != nil {
+		return nil, nil, err
+	}
+	client := ssh.NewClient(c, chans, reqs)
 	session, err = client.NewSession()
 	if err != nil {
 		if err := client.Close(); err != nil && err != io.EOF {
@@ -69,59 +79,20 @@ func (s *Service) establish(user string) (session *ssh.Session, close func(), er
 
 // ExecAs executes a command on the remote host with a timeout
 func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, error) {
-	ctx, cancel := context.WithTimeout(ctx, execTimeout)
-	defer cancel()
-	stdChan := make(chan struct {
-		string
-		error
-	})
-
-	go func() {
-		sess, close, err := s.establish(user)
-		if err != nil {
-			stdChan <- struct {
-				string
-				error
-			}{
-				"",
-				err,
-			}
-			return
-		}
-		defer close()
-
-		logger.I.Debug(
-			"called ssh command",
-			zap.String("cmd", cmd),
-			zap.String("user", user),
-		)
-		out, err := sess.CombinedOutput(cmd)
-		stdChan <- struct {
-			string
-			error
-		}{
-			string(out),
-			err,
-		}
-	}()
-
-	select {
-	case std := <-stdChan:
-		if std.error != nil {
-			logger.I.Error(
-				"command failed",
-				zap.Error(std.error),
-				zap.Any("cmd", cmd),
-				zap.String("output", std.string),
-			)
-			return std.string, std.error
-		}
-		return std.string, std.error
-	case <-ctx.Done():
-		logger.I.Error("command timed out",
-			zap.Error(ctx.Err()),
-			zap.Any("cmd", cmd),
-		)
-		return "", ctx.Err()
+	sess, close, err := s.establish(ctx, user)
+	if err != nil {
+		return "", err
 	}
+	defer close()
+
+	logger.I.Debug(
+		"called ssh command",
+		zap.String("cmd", cmd),
+		zap.String("user", user),
+	)
+	out, err := sess.CombinedOutput(cmd)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
 }

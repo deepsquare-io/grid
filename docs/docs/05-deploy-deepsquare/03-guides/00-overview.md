@@ -12,7 +12,7 @@ Containers running of DeepSquare can be configured! You might want to see:
 
 ## Connectivity
 
-Looking for a solution to connect your workload ?
+Looking for a solution to connect your workload?
 
 These guides will help you:
 

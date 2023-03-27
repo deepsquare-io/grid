@@ -1,5 +1,7 @@
 github.com/99designs/gqlgen v0.17.26 h1:fxgSTbPf1G30uWAWSoHd+9gSNMagmP04k58ThJ1/ikQ=
 github.com/99designs/gqlgen v0.17.26/go.mod h1:i4rEatMrzzu6RXaHydq1nmEPZkb3bKQsnxNRHS4DQB4=
+github.com/99designs/gqlgen v0.17.27 h1:XPsaZiWY1lL2qqVYtBt37GzkyX7bBiVvda7k1buC/Ao=
+github.com/99designs/gqlgen v0.17.27/go.mod h1:i4rEatMrzzu6RXaHydq1nmEPZkb3bKQsnxNRHS4DQB4=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver/v3 v3.2.0 h1:3MEsd0SM6jqZojhjLWWeBY+Kcjy9i6MQAeY7YgDP83g=

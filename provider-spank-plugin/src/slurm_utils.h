@@ -13,6 +13,6 @@ extern "C" {
  * @param job (input) The slurm job info.
  * @param report (output) The report.
  */
-void parse_slurm_job_info(const slurm_job_info_t& job, report_t& report);
+void parse_slurm_job_info(const slurm_job_info_t &job, report_t &report);
 
-#endif  // SLURM_UTIL_H
+#endif // SLURM_UTIL_H

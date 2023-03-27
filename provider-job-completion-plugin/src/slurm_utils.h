@@ -14,6 +14,6 @@ extern "C" {
  * @param report (output) The report.
  * @return int Error code.
  */
-void parse_slurm_job_info(const job_record_t& job, report_t& report);
+void parse_slurm_job_info(const job_record_t &job, report_t &report);
 
-#endif  // SLURM_UTIL_H
+#endif // SLURM_UTIL_H

@@ -5,13 +5,13 @@
       "includePath": [
         "${default}",
         "${workspaceFolder}/**",
-        "${workspaceFolder}/build/_deps/*/include",
-        "${workspaceFolder}/build/_deps/*/**",
+        "${workspaceFolder}/build/_deps/grpc-src/include",
+        "${workspaceFolder}/build/_deps/slurm-src",
         "${workspaceFolder}/gen/cpp",
         "/usr/include/**"
       ],
       "defines": [],
-      "compilerPath": "/bin/clang",
+      "compilerPath": "clang",
       "cStandard": "c17",
       "cppStandard": "c++14",
       "intelliSenseMode": "linux-clang-x64"

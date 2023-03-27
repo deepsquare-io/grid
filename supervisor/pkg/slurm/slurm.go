@@ -10,12 +10,13 @@ import (
 )
 
 type Service struct {
-	executor  Executor
-	adminUser string
-	scancel   string
-	sbatch    string
-	squeue    string
-	scontrol  string
+	executor                Executor
+	adminUser               string
+	scancel                 string
+	sbatch                  string
+	squeue                  string
+	scontrol                string
+	supervisorPublicAddress string
 }
 
 func New(
@@ -25,14 +26,16 @@ func New(
 	sbatch string,
 	squeue string,
 	scontrol string,
+	supervisorPublicAddress string,
 ) *Service {
 	return &Service{
-		executor:  executor,
-		adminUser: adminUser,
-		scancel:   scancel,
-		sbatch:    sbatch,
-		squeue:    squeue,
-		scontrol:  scontrol,
+		executor:                executor,
+		adminUser:               adminUser,
+		scancel:                 scancel,
+		sbatch:                  sbatch,
+		squeue:                  squeue,
+		scontrol:                scontrol,
+		supervisorPublicAddress: supervisorPublicAddress,
 	}
 }
 
@@ -65,11 +68,11 @@ func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (string, er
 	cmd := fmt.Sprintf(`%s \
   --parsable \
   --job-name=%s \
+	--comment="supervisor %s" \
   --time=%d \
   --ntasks=%d \
   --cpus-per-task=%d \
   --mem-per-cpu=%dM \
-  --comment="from supervisor" \
   --gpus-per-task=%d \
   --output=/tmp/supervisor-%s-%s.log << '%s'
 #!/bin/bash -l
@@ -78,6 +81,7 @@ true
 %s`,
 		s.sbatch,
 		req.Name,
+		s.supervisorPublicAddress,
 		req.TimeLimit,
 		req.NTasks,
 		req.CPUsPerTask,

@@ -57,6 +57,11 @@ const config = {
         },
         items: [
           {
+            href: 'https://discord.gg/zvFnqVHmJh',
+            label: 'Discord',
+            position: 'right',
+          },
+          {
             href: 'https://github.com/deepsquare-io/the-grid',
             label: 'GitHub',
             position: 'right',

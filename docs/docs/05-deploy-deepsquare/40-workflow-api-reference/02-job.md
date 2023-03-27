@@ -1188,7 +1188,8 @@ X11 mounts /tmp/.X11-unix in the container.
   "mounts": [
     {
       "hostDir": "/host",
-      "containerDir": "/container"
+      "containerDir": "/container",
+      "options": "ro"
     }
   ],
   "username": "john",
@@ -1244,14 +1245,16 @@ Accepted: ro, rw
 ```json title="Mount"
 {
   "hostDir": "/host",
-  "containerDir": "/container"
+  "containerDir": "/container",
+  "options": "ro"
 }
 ```
 
 ```json title="Mount-bind tmp (can be used to pass data between steps)"
 {
   "hostDir": "/tmp",
-  "containerDir": "/tmp"
+  "containerDir": "/tmp",
+  "options": "rw"
 }
 ```
 

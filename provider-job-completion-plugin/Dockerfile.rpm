@@ -21,7 +21,7 @@ COPY cmake/dependencies.cmake ./cmake/dependencies.cmake
 COPY ./gen ./gen
 
 RUN ls -la \
-  && mkdir build \
+  && mkdir -p build \
   && cd build \
   && cmake .. \
   && make -j$(nproc) grpc++
