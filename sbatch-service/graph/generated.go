@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"sync/atomic"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -106,6 +107,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputBore,
 		ec.unmarshalInputContainerRun,
 		ec.unmarshalInputEnvVar,
 		ec.unmarshalInputForRange,
@@ -116,6 +118,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputNetworkInterface,
 		ec.unmarshalInputS3Data,
 		ec.unmarshalInputStep,
+		ec.unmarshalInputStepAsyncLaunch,
 		ec.unmarshalInputStepFor,
 		ec.unmarshalInputStepRun,
 		ec.unmarshalInputStepRunResources,
@@ -193,7 +196,7 @@ input EnvVar {
 }
 
 """
-S3Data describes the necessary variables to connect to a HTTP storage.
+HTTPData describes the necessary variables to connect to a HTTP storage.
 """
 input HTTPData {
   url: String!
@@ -349,20 +352,38 @@ Step is one instruction.
 input Step {
   """
   Name of the instruction.
+
+  Is used for debugging.
   """
-  name: String!
+  name: String
+  """
+  Depends on wait for async tasks to end before launching this step.
+
+  DependsOn uses the ` + "`" + `handleName` + "`" + ` property of a ` + "`" + `StepAsyncLaunch` + "`" + `.
+
+  Only steps at the same level can be awaited.
+
+  BE WARNED: Uncontrolled ` + "`" + `dependsOn` + "`" + ` may results in dead locks.
+  """
+  dependsOn: [String!]
   """
   Run a command if not null.
 
-  Is exclusive with "for".
+  Is exclusive with "for", "launch".
   """
   run: StepRun
   """
   Run a for loop if not null.
 
-  Is exclusive with "run".
+  Is exclusive with "run", "launch".
   """
   for: StepFor
+  """
+  Launch a background process to run a group of commands if not null.
+
+  Is exclusive with "run", "for".
+  """
+  launch: StepAsyncLaunch
 }
 
 """
@@ -419,7 +440,7 @@ input Mount {
 
 input ContainerRun {
   """
-  Run the command inside a container with Pyxis.
+  Run the command inside a container with Enroot.
 
   Format: image:tag. Registry and authentication is not allowed on this field.
 
@@ -456,9 +477,11 @@ input ContainerRun {
   """
   registry: String
   """
-  Run with Apptainer as Container runtime instead of Pyxis.
+  Run with Apptainer as Container runtime instead of Enroot.
 
   By running with apptainer, you get access Deepsquare-hosted images.
+
+  When running Apptainer, the container file system is read-only.
 
   Defaults to false.
   """
@@ -548,6 +571,26 @@ input Wireguard {
 }
 
 """
+jkuri/bore tunnel Transport for StepRun.
+
+Bore is a proxy to expose TCP sockets.
+"""
+input Bore {
+  """
+  Bore server IP/Address.
+  """
+  address: String!
+  """
+  The bore server port.
+  """
+  port: Int!
+  """
+  Target port.
+  """
+  targetPort: Int!
+}
+
+"""
 Connect a network interface on a StepRun.
 
 The network interface is connected via slirp4netns.
@@ -557,6 +600,10 @@ input NetworkInterface {
   Use the wireguard transport.
   """
   wireguard: Wireguard
+  """
+  Use the bore transport.
+  """
+  bore: Bore
 }
 
 """
@@ -633,7 +680,7 @@ input StepRun {
   """
   Remap UID to root. Does not grant elevated system permissions, despite appearances.
 
-  If the "default" (Pyxis) container runtime is used, it will use the ` + "`" + `--container-remap-root` + "`" + ` flags.
+  If the "default" (Enroot) container runtime is used, it will use the ` + "`" + `--container-remap-root` + "`" + ` flags.
 
   If the "apptainer" container runtime is used, the ` + "`" + `--fakeroot` + "`" + ` flag will be passed.
 
@@ -647,7 +694,7 @@ input StepRun {
   """
   Working directory.
 
-  If the "default" (Pyxis) container runtime is used, it will use the ` + "`" + `--container-workdir` + "`" + ` flag.
+  If the "default" (Enroot) container runtime is used, it will use the ` + "`" + `--container-workdir` + "`" + ` flag.
 
   If the "apptainer" container runtime is used, the ` + "`" + `--pwd` + "`" + ` flag will be passed.
 
@@ -667,7 +714,7 @@ input StepRun {
   """
   MPI selection.
 
-  Must be one of: none, pmix_v4, pmi2
+  Must be one of: none, pmix_v4, pmi2.
 
   If null, will default to infrastructure provider settings (which may not be what you want).
   """
@@ -716,6 +763,48 @@ input ForRange {
   Increment counter by x count. If null, defaults to 1.
   """
   increment: Int
+}
+
+"""
+StepAsyncLaunch describes launching a background process.
+
+StepAsyncLaunch will be awaited at the end of the job.
+"""
+input StepAsyncLaunch {
+  """
+  HandleName is the name used to await (dependsOn field of the Step).
+
+  Naming style is snake_case. Case is insensitive. No symbol allowed.
+  """
+  handleName: String
+  """
+  SignalOnParentStepExit sends a signal to the step and sub-steps when the parent step ends.
+
+  This function can be used as a cleanup function to avoid a zombie process.
+
+  Zombie processes will continue to run after the main process dies and therefore will not stop the job.
+
+  If null, SIGTERM will be sent. If 0, no signal will be sent.
+
+  Current signal :
+
+  1 SIGHUP Hang-up detected on the control terminal or death of the control process.
+  2 SIGINT Abort from keyboard
+  3 SIGQUIT Quit the keyboard
+  9 SIGKILL If a process receives this signal, it must quit immediately and will not perform any cleaning operations.
+  15 SIGTERM Software stop signal
+
+  It is STRONGLY RECOMMENDED to use SIGTERM to gracefully exit a process. SIGKILL is the most abrupt and will certainly work.
+
+  If no signal is sent, the asynchronous step will be considered a fire and forget asynchronous step and will have to terminate itself to stop the job.
+
+  WARNING: the "no signal sent" option is subject to removal to avoid undefined behavior. Please refrain from using it.
+  """
+  signalOnParentStepExit: Int
+  """
+  Steps are run sequentially.
+  """
+  steps: [Step!]!
 }
 
 type Mutation {
@@ -840,6 +929,7 @@ func (ec *executionContext) _Mutation_submit(ctx context.Context, field graphql.
 	})
 	if err != nil {
 		ec.Error(ctx, err)
+		return graphql.Null
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
@@ -894,6 +984,7 @@ func (ec *executionContext) _Query_job(ctx context.Context, field graphql.Collec
 	})
 	if err != nil {
 		ec.Error(ctx, err)
+		return graphql.Null
 	}
 	if resTmp == nil {
 		if !graphql.HasFieldError(ctx, fc) {
@@ -948,6 +1039,7 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 	})
 	if err != nil {
 		ec.Error(ctx, err)
+		return graphql.Null
 	}
 	if resTmp == nil {
 		return graphql.Null
@@ -1021,6 +1113,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	})
 	if err != nil {
 		ec.Error(ctx, err)
+		return graphql.Null
 	}
 	if resTmp == nil {
 		return graphql.Null
@@ -2830,6 +2923,50 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputBore(ctx context.Context, obj interface{}) (model.Bore, error) {
+	var it model.Bore
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"address", "port", "targetPort"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "address":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+			it.Address, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "port":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("port"))
+			it.Port, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "targetPort":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetPort"))
+			it.TargetPort, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj interface{}) (model.ContainerRun, error) {
 	var it model.ContainerRun
 	asMap := map[string]interface{}{}
@@ -3209,7 +3346,7 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"wireguard"}
+	fieldsInOrder := [...]string{"wireguard", "bore"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3221,6 +3358,14 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wireguard"))
 			it.Wireguard, err = ec.unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "bore":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bore"))
+			it.Bore, err = ec.unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐBore(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3313,7 +3458,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "run", "for"}
+	fieldsInOrder := [...]string{"name", "dependsOn", "run", "for", "launch"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3324,7 +3469,15 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "dependsOn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dependsOn"))
+			it.DependsOn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3341,6 +3494,58 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("for"))
 			it.For, err = ec.unmarshalOStepFor2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepFor(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "launch":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("launch"))
+			it.Launch, err = ec.unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputStepAsyncLaunch(ctx context.Context, obj interface{}) (model.StepAsyncLaunch, error) {
+	var it model.StepAsyncLaunch
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"handleName", "signalOnParentStepExit", "steps"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "handleName":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("handleName"))
+			it.HandleName, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "signalOnParentStepExit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signalOnParentStepExit"))
+			it.SignalOnParentStepExit, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "steps":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
+			it.Steps, err = ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3727,6 +3932,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 	})
 
 	out := graphql.NewFieldSet(fields)
+	var invalids uint32
 	for i, field := range fields {
 		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
 			Object: field.Name,
@@ -3742,11 +3948,17 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_submit(ctx, field)
 			})
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
 	}
 	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
 	return out
 }
 
@@ -3759,6 +3971,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	})
 
 	out := graphql.NewFieldSet(fields)
+	var invalids uint32
 	for i, field := range fields {
 		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
 			Object: field.Name,
@@ -3778,6 +3991,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_job(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			}
 
@@ -3805,6 +4021,9 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		}
 	}
 	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
 	return out
 }
 
@@ -4502,6 +4721,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐBore(ctx context.Context, v interface{}) (*model.Bore, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputBore(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx context.Context, v interface{}) (*model.ContainerRun, error) {
 	if v == nil {
 		return nil, nil
@@ -4607,6 +4834,14 @@ func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑio�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputS3Data(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx context.Context, v interface{}) (*model.StepAsyncLaunch, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputStepAsyncLaunch(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

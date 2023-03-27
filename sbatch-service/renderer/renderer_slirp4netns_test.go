@@ -13,6 +13,14 @@ var cleanWireguardNIC = model.NetworkInterface{
 	Wireguard: &cleanWireguard,
 }
 
+var cleanBoreNIC = model.NetworkInterface{
+	Bore: &model.Bore{
+		Address:    "address.com",
+		Port:       11,
+		TargetPort: 22,
+	},
+}
+
 func TestRenderSlirp4NetNS(t *testing.T) {
 	tests := []struct {
 		input struct {
@@ -159,6 +167,126 @@ trap cleanup EXIT INT TERM
 wait $child
 `,
 			title: "Positive test with run",
+		},
+		{
+			input: struct {
+				NICs    []*model.NetworkInterface
+				DNS     []string
+				Command string
+				Shell   *string
+			}{
+				NICs: []*model.NetworkInterface{
+					&cleanBoreNIC,
+				},
+				DNS:     []string{"1.1.1.1"},
+				Command: "echo 'hello world'",
+			},
+			expected: `set -e
+
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    if nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# shellcheck disable=SC2016,SC1078,SC1079
+/usr/bin/unshare --user --net --mount --map-root-user /bin/sh -c '
+set -e
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ tap0
+
+/usr/bin/bore -s address.com -p 11 -ls localhost -lp 22 -r &
+/usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
+/usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
+
+''echo '"'"'hello world'"'"'' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/slirp4netns --configure --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
+slirp_pid=$!
+
+cleanup() {
+  kill -9 $child $slirp_pid || true
+}
+trap cleanup EXIT INT TERM
+
+wait $child
+`,
+			title: "Positive test with run bore",
 		},
 	}
 

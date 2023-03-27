@@ -1,0 +1,28 @@
+---
+job:
+  enableLogging: false
+  resources:
+    tasks: 2
+    cpusPerTask: 4
+    memPerCpu: 4096
+    gpusPerTask: 0
+  steps:
+    - name: do-async
+      launch:
+        handleName: task1
+        steps:
+          - name: work
+            run:
+              command: |-
+                echo "Working"
+                sleep 15
+                echo "Working done"
+    - name: do-stuff-in-foreground
+      run:
+        command: |-
+          echo I work fast
+    - name: wait for task1
+      dependsOn: [task1]
+      run:
+        command: |-
+          echo Task 1 is done!

@@ -70,4 +70,7 @@ versions.lock
 ci/
 .vscode/
 .github/
+build/
 artifacts/
+cache/
+.s3cfg

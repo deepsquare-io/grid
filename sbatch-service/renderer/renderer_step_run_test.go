@@ -56,12 +56,12 @@ func TestRenderStepRun(t *testing.T) {
 			input: *cleanStepRun("hostname"),
 			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
@@ -131,12 +131,12 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 			}(),
 			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
@@ -175,12 +175,12 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 			}(),
 			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
@@ -653,12 +653,12 @@ wait $child
 			},
 			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
@@ -814,9 +814,9 @@ mounts() {
 
 hooks() {
   /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
-  cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
-  exec "$@"
-  EOFrclocal
+cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+exec "$@"
+EOFrclocal
 }
 EOFenroot
 /usr/bin/enroot start \

@@ -1,3 +1,0 @@
-# Using and publishing DeepSquare-hosted images
-
-TODO: About CVMFS, unpacked DUCC ...

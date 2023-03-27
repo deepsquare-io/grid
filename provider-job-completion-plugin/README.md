@@ -64,10 +64,7 @@ The .so file is installed in the `/usr/lib64/slurm` directory. To load the plugi
 
 ```conf
 JobCompType=jobcomp/provider
-JobCompLoc=supervisor:3000
 ```
-
-Change the `JobCompLoc` to the right endpoint.
 
 ## Packaging (RPM/DEB)
 

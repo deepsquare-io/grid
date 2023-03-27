@@ -1,0 +1,200 @@
+---
+title: 'Part 4: Taking advantage of MPI'
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Taking advantage of MPI
+
+## MPI and DeepSquare
+
+Since DeepSquare is primarily made up of an ecosystem of supercomputers, it would be a waste not to utilize the parallelization capabilities of these clusters.
+
+Compared to the standard servers you may see in the cloud, supercomputers are designed for high-performance computing tasks and can handle much larger and more complex deep learning models with much larger datasets. Supercomputers often use specialized hardware, such as GPUs or TPUs, and parallel processing techniques to achieve maximum performance, while servers may rely on standard CPUs or GPUs. Supercomputers are used for large-scale deep neural network training and inference, while servers are typically used for smaller-scale deep learning tasks, such as training on moderately sized datasets or inferring on pre-trained models.
+
+Message Passing Interface (MPI), is a communication protocol commonly used on supercomputers to allow different processors and nodes to exchange data and coordinate their work during parallel computing tasks. There are several reasons why MPI is used on supercomputers: it is scalable, flexible, and optimized for high-performance computing tasks, providing low-latency, high-bandwidth communication between processors.
+
+MPI is a key tool for achieving high-performance parallel computing on supercomputers, and its flexibility, scalability, and performance make it an essential component of many scientific and engineering applications.
+
+## Adapting the ML example for multi-node distributed training
+
+We can use [Horovod](https://horovod.ai/) to add multi-process parallelization. We have to add:
+
+1. The initialization of Horovod:
+
+   ```python
+   hvd.init()
+   ```
+
+   at the initialization of the script.
+
+2. Pin one GPU per process and set the devices to horovod local ranks:
+
+   ```python
+   if torch.cuda.is_available():
+       torch.cuda.set_device(hvd.local_rank())
+   ```
+
+3. Wrap the optimizer using `hvd.DistributedOptimizer`.
+
+4. Broadcast the initial variable states from rank 0 to all other processes:
+
+   ```python
+   hvd.broadcast_parameters(model.state_dict(), root_rank=0)
+   hvd.broadcast_optimizer_state(optimizer, root_rank=0)
+   ```
+
+5. Modify your code to save checkpoints only on worker 0 to prevent other workers from corrupting them.
+
+Since we must pin one GPU per process, we change the resource **allocation** and **usage**.
+
+<Tabs groupId="workflow-type">
+  <TabItem value="new" label="Workflow">
+
+```json title="Workflow with 2 tasks and 1 GPU per task"
+{
+  "resources": {
+    "tasks": 4,
+    "gpusPerTask": 1,
+    "cpusPerTask": 8,
+    "memPerCpu": 2048
+  },
+  "enableLogging": true,
+  "env": [
+    {
+      "key": "OMPI_MCA_pml",
+      "value": "ucx"
+    },
+    {
+      "key": "OMPI_MCA_btl",
+      "value": "^vader,tcp,openib,uct"
+    }
+  ],
+  "input": {
+    "http": {
+      "url": "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
+    }
+  },
+  "output": {
+    "s3": {
+      "region": "at-vie-1",
+      "bucketUrl": "s3://cifar10",
+      "path": "/",
+      "accessKeyId": "EXO***",
+      "secretAccessKey": "***",
+      "endpointUrl": "https://sos-at-vie-1.exo.io"
+    }
+  },
+  "continuousOutputSync": true,
+  "steps": [
+    {
+      "name": "train",
+      "run": {
+        "command": "/.venv/bin/python3 main.py --horovod --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$DEEPSQUARE_INPUT/",
+        "resources": {
+          "tasks": 4
+        },
+        "container": {
+          "image": "deepsquare-io/cifar-10-example:latest",
+          "registry": "ghcr.io"
+        },
+        "workDir": "/app"
+      }
+    }
+  ]
+}
+```
+
+  </TabItem>
+  <TabItem value="resume" label="Workflow (from checkpoint)">
+
+```json title="Workflow with 2 tasks and 1 GPU per task (from checkpoint)"
+{
+  "resources": {
+    "tasks": 4,
+    "gpusPerTask": 1,
+    "cpusPerTask": 8,
+    "memPerCpu": 2048
+  },
+  "enableLogging": true,
+  "env": [
+    {
+      "key": "OMPI_MCA_pml",
+      "value": "ucx"
+    },
+    {
+      "key": "OMPI_MCA_btl",
+      "value": "^vader,tcp,openib,uct"
+    }
+  ],
+  "input": {
+    "s3": {
+      "region": "at-vie-1",
+      "bucketUrl": "s3://cifar10",
+      "path": "/",
+      "accessKeyId": "EXO***",
+      "secretAccessKey": "***",
+      "endpointUrl": "https://sos-at-vie-1.exo.io"
+    }
+  },
+  "output": {
+    "s3": {
+      "region": "at-vie-1",
+      "bucketUrl": "s3://cifar10",
+      "path": "/",
+      "accessKeyId": "EXO***",
+      "secretAccessKey": "***",
+      "endpointUrl": "https://sos-at-vie-1.exo.io"
+    }
+  },
+  "continuousOutputSync": true,
+  "steps": [
+    {
+      "name": "download dataset",
+      "run": {
+        "command": "curl -fsSL https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz -o $STORAGE_PATH/cifar-10-python.tar.gz; tar -C $STORAGE_PATH -xvzf $STORAGE_PATH/cifar-10-python.tar.gz; ls -lah $STORAGE_PATH",
+        "container": {
+          "image": "curlimages/curl:latest",
+          "registry": "registry-1.docker.io"
+        }
+      }
+    },
+    {
+      "name": "train",
+      "run": {
+        "command": "/.venv/bin/python3 main.py --horovod --checkpoint_in=$DEEPSQUARE_INPUT/ckpt.pth --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$STORAGE_PATH/",
+        "resources": {
+          "tasks": 4
+        },
+        "container": {
+          "image": "deepsquare-io/cifar-10-example:latest",
+          "registry": "ghcr.io"
+        },
+        "workDir": "/app"
+      }
+    }
+  ]
+}
+```
+
+  </TabItem>
+</Tabs>
+
+And that's it! With Horovod, you can use the whole cluster to accelerate your HPC workload!
+
+The performance of HPC clusters heavily depends on the effectiveness of the message passing interface (MPI) utilized to distribute tasks across the nodes. DeepSquare offers a decentralized network of HPC clusters, eliminating the need to maintain personal infrastructure, while providing an efficient MPI-based communication framework to enable seamless distributed computing.
+
+The combination of DeepSquare's capacity and MPI creates a potent solution for scaling HPC workloads. This approach offers researchers and engineers a cost-effective solution for HPC, enabling them to focus on developing new technologies and unlocking new possibilities without the added burden of infrastructure maintenance.
+
+## What's next?
+
+Although we've finished our getting started guide, there are still some great features you can use to speed up your research and development.
+
+If you want to play around with DeepSquare, you can use [the development environment](https://app.deepsquare.run/sandbox) to dispatch workflows.
+
+You can also read [the guides](/docs/deploy-deepsquare/guides/overview) about the advanced features of DeepSquare.
+
+Want to create your own application with DeepSquare? You might be interested in the [DeepSquare SDK](/docs/deploy-deepsquare/client-development/overview).
+
+Don't forget! If you are lost when writing a workflow, you can use the Workflow API reference as your companion.

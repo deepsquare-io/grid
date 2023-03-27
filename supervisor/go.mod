@@ -3,7 +3,7 @@ module github.com/deepsquare-io/the-grid/supervisor
 go 1.19
 
 require (
-	github.com/ethereum/go-ethereum v1.11.2
+	github.com/ethereum/go-ethereum v1.11.4
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.2
 	github.com/urfave/cli/v2 v2.24.4

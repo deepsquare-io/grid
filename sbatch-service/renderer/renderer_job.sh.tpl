@@ -75,7 +75,7 @@ loadDeepsquareEnv() {
 cd $DEEPSQUARE_INPUT/
 /usr/bin/wget -q {{ .Job.Input.HTTP.URL | squote }}
 for filepath in "$DEEPSQUARE_INPUT/"*; do
-  /usr/bin/tar -xvaf "$filepath" 2>/dev/null && continue
+  /usr/bin/tar -xaf "$filepath" 2>/dev/null && continue
   case $(file "$filepath") in
       *bzip2*) /usr/bin/bzip2 -fdk "$filepath";;
       *gzip*) /usr/bin/gunzip -df "$filepath";;
@@ -129,9 +129,15 @@ CONTINUOUS_SYNC_PID="$!"
 export {{ $env.Key | squote }}={{ $env.Value | squote }}
 {{- end }}
 
+declare -A EXIT_SIGNALS
+
 {{- range $step := .Job.Steps }}
 {{ renderStep $.Job $step }}
 {{- end }}
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
 
 {{- if and .Job.Output .Job.Output.HTTP }}
 /usr/bin/echo "Output contains:"

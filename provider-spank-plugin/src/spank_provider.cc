@@ -6,7 +6,6 @@ extern "C" {
 #include <grpcpp/channel.h>
 #include <grpcpp/create_channel.h>
 
-#include "config.h"
 #include "job_api.h"
 #include "report.h"
 #include "slurm_utils.h"
@@ -57,15 +56,6 @@ extern const uint32_t plugin_version = SLURM_VERSION_NUMBER;
  * @return int Error code
  */
 extern int slurm_spank_job_prolog(spank_t spank, int ac, char *argv[]) {
-  // Parse argv
-  config_t config = {
-      .endpoint = {0},
-  };
-  if (config_parse(ac, argv, config) != 0) {
-    slurm_error("%s: failed to parse configuration", plugin_type);
-    return SLURM_ERROR;
-  }
-
   // Fetch the job
   unsigned int jobid = 0;
   job_info_msg_t *job_info = NULL;
@@ -84,16 +74,19 @@ extern int slurm_spank_job_prolog(spank_t spank, int ac, char *argv[]) {
   parse_slurm_job_info(job, report);
 
   // Filter
-  if (report.comment != "from supervisor") {
+  if (report.comment.find("supervisor") != 0) {
     slurm_debug("%s: won't report job %d", plugin_type, report.job_id);
     return SLURM_SUCCESS;
   }
+
+  // Get endpoint
+  auto endpoint = report.comment.substr(11);
 
   // Output
   grpc::experimental::TlsChannelCredentialsOptions options;
   options.set_verify_server_certs(false);
   JobAPIClient job_api(grpc::CreateChannel(
-      config.endpoint, grpc::experimental::TlsCredentials(options)));
+      endpoint, grpc::experimental::TlsCredentials(options)));
 
   auto req = MakeSetJobRunning(report);
   if (!job_api.SetJobStatus(req)) {

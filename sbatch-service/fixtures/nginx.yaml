@@ -1,0 +1,21 @@
+---
+job:
+  enableLogging: false
+  resources:
+    tasks: 1
+    cpusPerTask: 1
+    memPerCpu: 512
+    gpusPerTask: 0
+  steps:
+    - name: start-nginx
+      run:
+        command: nginx -g "daemon off;"
+        container:
+          registry: registry-1.docker.io
+          image: nginxinc/nginx-unprivileged:latest
+        network: 'slirp4netns'
+        customNetworkInterfaces:
+          - bore:
+              address: bore.deepsquare.run
+              port: 2200
+              targetPort: 8080

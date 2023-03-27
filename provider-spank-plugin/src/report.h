@@ -26,4 +26,4 @@ typedef struct report {
   std::string comment;
 } report_t;
 
-#endif  // REPORT_H
+#endif // REPORT_H

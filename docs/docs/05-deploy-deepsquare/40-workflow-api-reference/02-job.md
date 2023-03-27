@@ -551,32 +551,60 @@ Step is one instruction.
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>name</strong></td>
-<td valign="top"><a href="#string">String</a>!</td>
+<td valign="top"><a href="#string">String</a></td>
 <td>
 
 Name of the instruction.
+
+Is used for debugging.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>dependsOn</strong></td>
+<td valign="top">[<a href="#string">String</a>!]</td>
+<td>
+
+Depends on wait for async tasks to end before launching this step.
+
+DependsOn uses the `handleName` property of a `StepAsyncLaunch`.
+
+Only steps at the same level can be awaited.
+
+BE WARNED: Uncontrolled `dependsOn` may results in dead locks.
 
 </td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>run</strong></td>
-<td valign="top"><a href="#stepsrun-steprun">StepRun</a></td>
+<td valign="top"><a href="#steprun">StepRun</a></td>
 <td>
 
 Run a command if not null.
 
-Is exclusive with "for".
+Is exclusive with "for", "launch".
 
 </td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>for</strong></td>
-<td valign="top"><a href="#stepsfor-stepfor">StepFor</a></td>
+<td valign="top"><a href="#stepfor">StepFor</a></td>
 <td>
 
 Run a for loop if not null.
 
-Is exclusive with "run".
+Is exclusive with "run", "launch".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>launch</strong></td>
+<td valign="top"><a href="#stepslaunch-stepasynclaunch">StepAsyncLaunch</a></td>
+<td>
+
+Launch a background process to run a group of commands if not null.
+
+Is exclusive with "run", "for".
 
 </td>
 </tr>
@@ -1162,7 +1190,8 @@ X11 mounts /tmp/.X11-unix in the container.
   "mounts": [
     {
       "hostDir": "/host",
-      "containerDir": "/container"
+      "containerDir": "/container",
+      "options": "ro"
     }
   ],
   "username": "john",
@@ -1218,14 +1247,16 @@ Accepted: ro, rw
 ```json title="Mount"
 {
   "hostDir": "/host",
-  "containerDir": "/container"
+  "containerDir": "/container",
+  "options": "ro"
 }
 ```
 
 ```json title="Mount-bind tmp (can be used to pass data between steps)"
 {
   "hostDir": "/tmp",
-  "containerDir": "/tmp"
+  "containerDir": "/tmp",
+  "options": "rw"
 }
 ```
 
@@ -1252,6 +1283,15 @@ The network interface is connected via slirp4netns.
 <td>
 
 Use the wireguard transport.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>bore</strong></td>
+<td valign="top"><a href="#stepsruncustomnetworkinterfacesbore-bore">Bore</a></td>
+<td>
+
+Use the bore transport.
 
 </td>
 </tr>
@@ -1413,9 +1453,9 @@ Format is a CIDRv4 (X.X.X.X/X) or CIDRv6.
 
 0.0.0.0/0 (or ::/0) would forward all packets to the tunnel. If you plan to use the Wireguard VPN as a gateway, you MUST set this IP range.
 
-\<server internal IP\>/32 (not the server's public IP) would forward all packets to the tunnel with the server IP as the destination. MUST be set.
+&lt;server internal IP&gt;/32 (not the server's public IP) would forward all packets to the tunnel with the server IP as the destination. MUST be set.
 
-\<VPN IP range\> would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other and want the gateway to act as a router.
+&lt;VPN IP range&gt; would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other and want the gateway to act as a router.
 
 </td>
 </tr>
@@ -1467,6 +1507,66 @@ You can generate a keypair and a shared key with:
 wg genkey | tee privatekey | wg pubkey > pubkey
 wg genkey > sharedkey
 ```
+
+</details>
+
+### `.steps[].run.customNetworkInterfaces[].bore` _Bore_
+
+jkuri/bore tunnel Transport for StepRun.
+
+Bore is a proxy to expose TCP sockets.
+
+<table>
+<thead>
+<tr>
+<th colspan="2" align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="2" valign="top"><strong>address</strong></td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Bore server IP/Address.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>port</strong></td>
+<td valign="top"><a href="#int">Int</a>!</td>
+<td>
+
+The bore server port.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>targetPort</strong></td>
+<td valign="top"><a href="#int">Int</a>!</td>
+<td>
+
+Target port.
+
+</td>
+</tr>
+</tbody>
+</table>
+
+<details>
+  <summary>Example</summary>
+
+```json title="Bore"
+{
+  "address": "bore.deepsquare.run",
+  "port": 2200,
+  "targetPort": 8080
+}
+```
+
+Will results in 3 steps.
 
 </details>
 
@@ -1622,6 +1722,169 @@ Increment counter by x count. If null, defaults to 1.
 ```
 
 Will results in 3 steps.
+
+</details>
+
+### `.steps[].launch` _StepAsyncLaunch_
+
+StepAsyncLaunch describes launching a background process.
+
+StepAsyncLaunch will be awaited at the end of the job.
+
+<table>
+<thead>
+<tr>
+<th colspan="2" align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="2" valign="top"><strong>handleName</strong></td>
+<td valign="top"><a href="#string">String</a></td>
+<td>
+
+HandleName is the name used to await (dependsOn field of the Step).
+
+Naming style is snake_case. Case is insensitive. No symbol allowed.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>signalOnParentStepExit</strong></td>
+<td valign="top"><a href="#int">Int</a></td>
+<td>
+
+SignalOnParentStepExit sends a signal to the step and sub-steps when the parent step ends.
+
+This function can be used as a cleanup function to avoid a zombie process.
+
+Zombie processes will continue to run after the main process dies and therefore will not stop the job.
+
+If null, SIGTERM will be sent. If 0, no signal will be sent.
+
+Current signal :
+
+1 SIGHUP Hang-up detected on the control terminal or death of the control process.
+2 SIGINT Abort from keyboard
+3 SIGQUIT Quit the keyboard
+9 SIGKILL If a process receives this signal, it must quit immediately and will not perform any cleaning operations.
+15 SIGTERM Software stop signal
+
+It is STRONGLY RECOMMENDED to use SIGTERM to gracefully exit a process. SIGKILL is the most abrupt and will certainly work.
+
+If no signal is sent, the asynchronous step will be considered a fire and forget asynchronous step and will have to terminate itself to stop the job.
+
+WARNING: the "no signal sent" option is subject to removal to avoid undefined behavior. Please refrain from using it.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>steps</strong></td>
+<td valign="top">[<a href="#step">Step</a>!]!</td>
+<td>
+
+Steps are run sequentially.
+
+</td>
+</tr>
+</tbody>
+</table>
+
+<details>
+  <summary>Examples</summary>
+
+```json title="Async-await"
+{
+  "resources": {
+    "tasks": 2,
+    "cpusPerTask": 4,
+    "memPerCpu": 4096,
+    "gpusPerTask": 0
+  },
+  "steps": [
+    {
+      "launch": {
+        "handleName": "task1",
+        "steps": [
+          {
+            "name": "work",
+            "run": {
+              "command": "echo \"Working\"; sleep 15; echo \"Working done\""
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "do-stuff-in-foreground",
+      "run": {
+        "command": "echo I work fast"
+      }
+    },
+    {
+      "name": "wait for task1",
+      "dependsOn": ["task1"],
+      "run": {
+        "command": "echo Task 1 is done!"
+      }
+    }
+  ]
+}
+```
+
+```json title="Fire-and-forget (explicit safe)"
+{
+  "resources": {
+    "tasks": 2,
+    "cpusPerTask": 4,
+    "memPerCpu": 4096,
+    "gpusPerTask": 0
+  },
+  "steps": [
+    {
+      "launch": {
+        "signalOnParentStepExit": 15,
+        "steps": [
+          {
+            "name": "work",
+            "run": {
+              "command": "echo \"Working\"; sleep 15; echo \"Working done\""
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+```json title="Fire-and-forget (explicit unsafe)"
+{
+  "resources": {
+    "tasks": 2,
+    "cpusPerTask": 4,
+    "memPerCpu": 4096,
+    "gpusPerTask": 0
+  },
+  "steps": [
+    {
+      "launch": {
+        "signalOnParentStepExit": 0,
+        "steps": [
+          {
+            "name": "work",
+            "run": {
+              "command": "echo \"Working\"; sleep 15; echo \"Working done\""
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
 
 </details>
 

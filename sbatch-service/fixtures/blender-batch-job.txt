@@ -90,6 +90,8 @@ ContinuousOutputSync &
 CONTINUOUS_SYNC_PID="$!"
 # SCOPE: CONTINUOUS SYNC
 (
+
+declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''compute-frames'
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw"
 # shellcheck disable=SC2097,SC2098,SC1078
@@ -183,6 +185,10 @@ for index in $(seq 1 1 4); do
 done
 for pid in "${pids[@]}"; do
   wait "$pid"
+done
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
 done
 )
 # END SCOPE: CONTINUOUS SYNC

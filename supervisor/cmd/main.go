@@ -7,6 +7,7 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/debug"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	pkgsbatch "github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
@@ -21,7 +22,9 @@ import (
 )
 
 var (
+	version       string = "dev"
 	listenAddress string
+	publicAddress string
 
 	tls      bool
 	keyFile  string
@@ -59,6 +62,13 @@ var flags = []cli.Flag{
 		Usage:       "Address to listen on. Is used for receiving job status via the job completion plugin.",
 		Destination: &listenAddress,
 		EnvVars:     []string{"LISTEN_ADDRESS"},
+	},
+	&cli.StringFlag{
+		Name:        "public-address",
+		Value:       "supervisor.example.com:3000",
+		Usage:       "Public address or address of the reverse proxy. Is used by the SLURL plugins to know where to report job statuses.",
+		Destination: &publicAddress,
+		EnvVars:     []string{"PUBLIC_ADDRESS"},
 	},
 	&cli.BoolFlag{
 		Name:        "tls",
@@ -278,6 +288,7 @@ func Init() *Container {
 		sbatch,
 		squeue,
 		scontrol,
+		publicAddress,
 	)
 	watcher := job.New(
 		ethDataSource,
@@ -304,9 +315,10 @@ func Init() *Container {
 }
 
 var app = &cli.App{
-	Name:  "supervisor",
-	Usage: "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
-	Flags: flags,
+	Name:    "supervisor",
+	Version: version,
+	Usage:   "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
+	Flags:   flags,
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context
 		container := Init()
@@ -323,13 +335,15 @@ var app = &cli.App{
 			return err
 		}
 
+		go debug.WatchGoRoutines(ctx)
+
 		go func(ctx context.Context) {
 			if err := container.jobWatcher.Watch(ctx); err != nil {
 				logger.I.Fatal("jobWatcher crashed", zap.Error(err))
 			}
 		}(ctx)
 
-		logger.I.Info("listening", zap.String("address", listenAddress))
+		logger.I.Info("listening", zap.String("address", listenAddress), zap.String("version", version))
 
 		// gRPC server
 		return container.server.ListenAndServe(listenAddress)

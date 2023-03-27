@@ -97,4 +97,3 @@ clean:
 .PHONY: grpc
 grpc:
 	cd "../protos/supervisorapis" && buf generate
-	cd "../protos/oracleapis" && buf generate

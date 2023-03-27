@@ -41,9 +41,6 @@ extern const char plugin_name[] = "Job completion plugin for providers";
 extern const char plugin_type[] = "jobcomp/provider";
 extern const uint32_t plugin_version = SLURM_VERSION_NUMBER;
 
-/* File descriptor used for logging */
-static char *report_url = NULL;
-
 /**
  * @brief Called when the plugin is loaded, before any other functions are
  * called. Put global initialization here.
@@ -62,7 +59,6 @@ extern int init(void) {
  */
 extern int fini(void) {
   slurm_info("%s: Finishing %s", plugin_type, plugin_name);
-  xfree(report_url);
   return SLURM_SUCCESS;
 }
 
@@ -76,18 +72,7 @@ extern int fini(void) {
  * SLURM_ERROR and set the errno to an appropriate value to indicate the reason
  * for failure.
  */
-extern int jobcomp_p_set_location(char *location) {
-  slurm_info("%s: Set location %s", plugin_type, location);
-  int rc = SLURM_SUCCESS;
-
-  if (location == NULL || location[0] == '\0') {
-    return error("%s: JobCompLoc was either not set or blank", plugin_type);
-  }
-  xfree(report_url);
-  report_url = xstrdup(location);
-
-  return rc;
-}
+extern int jobcomp_p_set_location(char *location) { return SLURM_SUCCESS; }
 
 /**
  * @brief Note that a job is about to terminate or change size. The job's state
@@ -104,16 +89,16 @@ extern int jobcomp_p_set_location(char *location) {
  */
 extern int jobcomp_p_log_record(job_record_t *job_ptr) {
   debug("%s: start %s %u", plugin_type, __func__, job_ptr->job_id);
-  if (job_ptr == NULL) return error("%s: job_ptr is NULL", plugin_type);
+  if (job_ptr == NULL)
+    return error("%s: job_ptr is NULL", plugin_type);
 
   // Assert the job state
   if (!IS_JOB_COMPLETE(job_ptr) && !IS_JOB_CANCELLED(job_ptr) &&
       !IS_JOB_TIMEOUT(job_ptr) && !IS_JOB_FAILED(job_ptr) &&
       !IS_JOB_COMPLETING(job_ptr)) {
-    debug(
-        "%s: job %u is not COMPLETED but was %s, "
-        "ignoring...",
-        plugin_type, job_ptr->job_id, job_state_string(job_ptr->job_state));
+    debug("%s: job %u is not COMPLETED but was %s, "
+          "ignoring...",
+          plugin_type, job_ptr->job_id, job_state_string(job_ptr->job_state));
     return SLURM_SUCCESS;
   }
   int rc = SLURM_SUCCESS;
@@ -125,15 +110,18 @@ extern int jobcomp_p_log_record(job_record_t *job_ptr) {
   parse_slurm_job_info(*job_ptr, report);
 
   // Filter
-  if (report.comment != "from supervisor") {
-    debug("%s: won't report %d", plugin_type, report.job_id);
+  if (report.comment.find("supervisor") != 0) {
+    debug("%s: won't report job %d", plugin_type, report.job_id);
     return SLURM_SUCCESS;
   }
+
+  // Get endpoint
+  auto endpoint = report.comment.substr(11);
 
   grpc::experimental::TlsChannelCredentialsOptions options;
   options.set_verify_server_certs(false);
   JobAPIClient job_api(grpc::CreateChannel(
-      report_url, grpc::experimental::TlsCredentials(options)));
+      endpoint, grpc::experimental::TlsCredentials(options)));
 
   auto req = MakeSetJobStatusRequest(report);
   if (!job_api.SetJobStatus(req)) {

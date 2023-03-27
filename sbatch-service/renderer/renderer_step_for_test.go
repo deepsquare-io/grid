@@ -16,11 +16,11 @@ var (
 		Items:    []string{"a", "b", "c"},
 		Steps: []*model.Step{
 			{
-				Name: "test",
+				Name: utils.Ptr("test"),
 				Run:  cleanStepRun("/usr/bin/echo $item"),
 			},
 			{
-				Name: "test",
+				Name: utils.Ptr("test"),
 				Run:  cleanStepRun("/usr/bin/echo $item"),
 			},
 		},
@@ -34,11 +34,11 @@ var (
 		},
 		Steps: []*model.Step{
 			{
-				Name: "test",
+				Name: utils.Ptr("test"),
 				Run:  cleanStepRun("/usr/bin/echo $index"),
 			},
 			{
-				Name: "test",
+				Name: utils.Ptr("test"),
 				Run:  cleanStepRun("/usr/bin/echo $index"),
 			},
 		},
@@ -60,12 +60,12 @@ export item="$1"
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
@@ -97,12 +97,12 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
@@ -150,12 +150,12 @@ export index="$1"
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
@@ -187,12 +187,12 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 /usr/bin/echo 'Running: ''test'
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine "registry" login "username" password "password"
+machine registry login "username" password "password"
 EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image'
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break

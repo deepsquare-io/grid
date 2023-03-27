@@ -38,6 +38,7 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 		"sbatch",
 		"squeue",
 		"scontrol",
+		"localhost",
 	)
 }
 

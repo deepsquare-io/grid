@@ -267,6 +267,14 @@ skopeo inspect --config docker://ghcr.io/deepsquare-io/mpi-example:latest
 }
 ```
 
+If you want to publish your own image, you must tag your image correctly, login to the registry and push it:
+
+```shell title="user@~/example/"
+podman tag localhost/mpi-circle:latest ghcr.io/my-user/my-image:latest
+podman login ghcr.io
+podman push ghcr.io/my-user/my-image:latest
+```
+
 ## Next steps
 
 You learned how to containerise your application into a container image and publish it.

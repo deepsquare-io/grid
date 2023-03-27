@@ -117,6 +117,7 @@ func (w *Watcher) ClaimIndefinitely(parent context.Context) error {
 
 func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
 	events := make(chan *metascheduler.MetaSchedulerClaimJobEvent)
+	defer close(events)
 	sub, err := w.metaQueue.WatchClaimNextJobEvent(parent, events)
 	if err != nil {
 		return err
@@ -201,6 +202,7 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 
 func (w *Watcher) WatchClaimNextCancellingJobEvent(parent context.Context) error {
 	events := make(chan *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)
+	defer close(events)
 	sub, err := w.metaQueue.WatchClaimNextCancellingJobEvent(parent, events)
 	if err != nil {
 		return err
@@ -234,29 +236,33 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 		logger.I.Error("GetJobStatus failed, abort handleClaimNextCancellingJobEvent", zap.Error(err))
 		return
 	}
-	if err := try.Do(func() error {
-		if err := try.Do(func() error {
-			return w.scheduler.CancelJob(ctx, &slurm.CancelJobRequest{
-				Name: hexutil.Encode(event.JobId[:]),
-				User: strings.ToLower(event.CustomerAddr.Hex()),
-			})
-		}, 5, 5*time.Second); err != nil {
-			logger.I.Error("CancelJob failed, abort handleClaimNextCancellingJobEvent", zap.Error(err))
-			return err
-		}
+	if err := try.Do(
+		10, 5*time.Second,
+		func(_ int) error {
+			if err := try.Do(
+				5, 5*time.Second,
+				func(_ int) error {
+					return w.scheduler.CancelJob(ctx, &slurm.CancelJobRequest{
+						Name: hexutil.Encode(event.JobId[:]),
+						User: strings.ToLower(event.CustomerAddr.Hex()),
+					})
+				}); err != nil {
+				logger.I.Error("CancelJob failed, abort handleClaimNextCancellingJobEvent", zap.Error(err))
+				return err
+			}
 
-		time.Sleep(5 * time.Second)
+			time.Sleep(5 * time.Second)
 
-		status, err = w.metaQueue.GetJobStatus(ctx, event.JobId)
-		if err != nil {
-			logger.I.Error("GetJobStatus failed, considering as Cancelled", zap.Error(err))
-			status = eth.JobStatusCancelled
-		}
-		if status != eth.JobStatusCancelled {
-			return errors.New("failed to cancel job")
-		}
-		return nil
-	}, 10, 5*time.Second); err != nil {
+			status, err = w.metaQueue.GetJobStatus(ctx, event.JobId)
+			if err != nil {
+				logger.I.Error("GetJobStatus failed, considering as Cancelled", zap.Error(err))
+				status = eth.JobStatusCancelled
+			}
+			if status != eth.JobStatusCancelled {
+				return errors.New("failed to cancel job")
+			}
+			return nil
+		}); err != nil {
 		logger.I.Error("failed to cancel, considering as CANCELLED", zap.Error(err))
 		if err := w.metaQueue.SetJobStatus(ctx, event.JobId, eth.JobStatusCancelled, 0); err != nil {
 			logger.I.Error("Even considering as CANCELLED, it failed", zap.Error(err))
