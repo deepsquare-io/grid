@@ -11,8 +11,8 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	pkgsbatch "github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -238,7 +238,7 @@ type Container struct {
 	server     *server.Server
 	sbatchAPI  *pkgsbatch.API
 	eth        *eth.DataSource
-	slurm      *slurm.Service
+	slurm      *scheduler.Slurm
 	jobWatcher *job.Watcher
 }
 
@@ -281,7 +281,7 @@ func Init() *Container {
 		slurmSSHAddress,
 		slurmSSHB64PK,
 	)
-	slurmJobService := slurm.New(
+	slurmJobService := scheduler.NewSlurm(
 		sshService,
 		slurmSSHAdminUser,
 		scancel,

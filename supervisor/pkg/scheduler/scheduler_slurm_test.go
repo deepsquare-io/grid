@@ -1,6 +1,6 @@
 //go:build unit
 
-package slurm_test
+package scheduler_test
 
 import (
 	"context"
@@ -10,7 +10,8 @@ import (
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -26,12 +27,12 @@ var (
 type ServiceTestSuite struct {
 	suite.Suite
 	ssh  *mocks.Executor
-	impl *slurm.Service
+	impl *scheduler.Slurm
 }
 
 func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 	suite.ssh = mocks.NewExecutor(suite.T())
-	suite.impl = slurm.New(
+	suite.impl = scheduler.NewSlurm(
 		suite.ssh,
 		admin,
 		"scancel",
@@ -45,7 +46,7 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 func (suite *ServiceTestSuite) TestCancel() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
-	req := &slurm.CancelJobRequest{
+	req := &job.CancelRequest{
 		Name: name,
 		User: user,
 	}
@@ -72,10 +73,10 @@ func (suite *ServiceTestSuite) TestSubmit() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	expectedJobID := "123"
-	req := &slurm.SubmitJobRequest{
+	req := &job.SubmitRequest{
 		Name: name,
 		User: user,
-		JobDefinition: &slurm.JobDefinition{
+		Definition: &job.Definition{
 			TimeLimit:    uint64(5),
 			NTasks:       1,
 			GPUsPerTask:  0,
@@ -117,9 +118,8 @@ func (suite *ServiceTestSuite) TestTopUp() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	jobID := "123"
-	req := &slurm.TopUpRequest{
+	req := &job.TopUpRequest{
 		Name:           name,
-		User:           user,
 		AdditionalTime: 30,
 	}
 	suite.ssh.On(
@@ -173,7 +173,7 @@ func (suite *ServiceTestSuite) TestFindRunningJobByName() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	jobID := 123
-	req := &slurm.FindRunningJobByNameRequest{
+	req := &job.FindRunningJobByNameRequest{
 		Name: name,
 		User: user,
 	}

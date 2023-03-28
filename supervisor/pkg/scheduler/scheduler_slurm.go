@@ -1,4 +1,4 @@
-package slurm
+package scheduler
 
 import (
 	"context"
@@ -6,10 +6,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 )
 
-type Service struct {
+type Slurm struct {
 	executor                Executor
 	adminUser               string
 	scancel                 string
@@ -19,7 +20,7 @@ type Service struct {
 	supervisorPublicAddress string
 }
 
-func New(
+func NewSlurm(
 	executor Executor,
 	adminUser string,
 	scancel string,
@@ -27,8 +28,8 @@ func New(
 	squeue string,
 	scontrol string,
 	supervisorPublicAddress string,
-) *Service {
-	return &Service{
+) *Slurm {
+	return &Slurm{
 		executor:                executor,
 		adminUser:               adminUser,
 		scancel:                 scancel,
@@ -39,30 +40,15 @@ func New(
 	}
 }
 
-type CancelJobRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation.
-	User string
-}
-
 // CancelJob kills a job using scancel command.
-func (s *Service) CancelJob(ctx context.Context, req *CancelJobRequest) error {
+func (s *Slurm) CancelJob(ctx context.Context, req *job.CancelRequest) error {
 	cmd := fmt.Sprintf("%s --name=%s --me", s.scancel, req.Name)
 	_, err := s.executor.ExecAs(ctx, req.User, cmd)
 	return err
 }
 
-type SubmitJobRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation.
-	User string
-	*JobDefinition
-}
-
 // Submit a sbatch definition script to the SLURM controller using the sbatch command.
-func (s *Service) Submit(ctx context.Context, req *SubmitJobRequest) (string, error) {
+func (s *Slurm) Submit(ctx context.Context, req *job.SubmitRequest) (string, error) {
 	eof := utils.GenerateRandomString(10)
 
 	cmd := fmt.Sprintf(`%s \
@@ -101,19 +87,10 @@ true
 	return strings.TrimSpace(strings.TrimRight(string(out), "\n")), nil
 }
 
-type TopUpRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation.
-	User string
-	// AdditionalTime is the number of minutes to be added
-	AdditionalTime uint64
-}
-
 // TopUp add additional time to a SLURM job
-func (s *Service) TopUp(ctx context.Context, req *TopUpRequest) error {
+func (s *Slurm) TopUp(ctx context.Context, req *job.TopUpRequest) error {
 	// Fetch jobID
-	jobID, err := s.FindRunningJobByName(ctx, &FindRunningJobByNameRequest{
+	jobID, err := s.FindRunningJobByName(ctx, &job.FindRunningJobByNameRequest{
 		Name: req.Name,
 		User: s.adminUser,
 	})
@@ -127,20 +104,13 @@ func (s *Service) TopUp(ctx context.Context, req *TopUpRequest) error {
 }
 
 // HealthCheck runs squeue to check if the queue is running
-func (s *Service) HealthCheck(ctx context.Context) error {
+func (s *Slurm) HealthCheck(ctx context.Context) error {
 	_, err := s.executor.ExecAs(ctx, s.adminUser, s.squeue)
 	return err
 }
 
-type FindRunningJobByNameRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation. This user should be SLURM admin.
-	User string
-}
-
 // FindRunningJobByName find a running job using squeue.
-func (s *Service) FindRunningJobByName(ctx context.Context, req *FindRunningJobByNameRequest) (int, error) {
+func (s *Slurm) FindRunningJobByName(ctx context.Context, req *job.FindRunningJobByNameRequest) (int, error) {
 	cmd := fmt.Sprintf("%s --name %s -O JobId:256 --noheader", s.squeue, req.Name)
 	out, err := s.executor.ExecAs(ctx, req.User, cmd)
 	if err != nil {
