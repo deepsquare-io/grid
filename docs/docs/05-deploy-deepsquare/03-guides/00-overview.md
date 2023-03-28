@@ -18,4 +18,4 @@ These guides will help you:
 
 - [Connecting a Wireguard interface](connecting-wireguard)
 - [Using the DeepSquare Logger](logging)
-- ~~Receiving metrics~~ (Work in Progress)
+- Receiving metrics (Coming soon)

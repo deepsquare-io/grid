@@ -31,7 +31,7 @@ By participating in the DeepSquare grid as infrastructure providers, organizatio
 
 High Performance Computing (HPC) employs cutting-edge hardware and software technologies to handle intricate and computationally demanding tasks. HPC systems typically consist of clusters of interconnected servers or supercomputers that collaborate to process large-scale projects.
 
-HPC is commonly utilized in fields such as scientific research, engineering, finance, and others where massive amounts of data must be processed rapidly and accurately. Applications of HPC include weather prediction, drug development, aerospace engineering, and financial risk assessment.
+HPC is commonly utilized in fields such as scientific research, engineering, finance, and others where massive amounts of data must be processed rapidly and accurately. Applications of HPC include Artificial intelligence, weather prediction, drug development, aerospace engineering, and financial risk assessment, etc.
 
 HPC systems generally demand specialized hardware components like high-speed interconnects, parallel processors, and substantial amounts of memory and storage. Additionally, they depend on advanced software tools and frameworks for managing and coordinating the distribution of computational workloads throughout the cluster.
 

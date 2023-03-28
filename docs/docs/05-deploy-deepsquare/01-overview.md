@@ -50,7 +50,7 @@ To avoid storing private data on the blockchain, the sbatch API is the intermedi
 
 ![Deepsquare Architecture.drawio](./.assets-deploy-deepsquare/image-226926804-7515f9e2-9f5f-43fc-b3f7-edc134be683f.png)
 
-If you want to try an already existing client, there is the [DeepSquare Grid Portal](https://app.deepsquare.run). You can also develop your own client using the [DeepSquare SDK](TODO: reference).
+If you want to try an already existing client, there is the [DeepSquare Grid Portal](https://app.deepsquare.run). You can also develop your own client using the [DeepSquare SDK](https://www.npmjs.com/package/@deepsquare/deepsquare-client).
 
 ## The underlying technology
 

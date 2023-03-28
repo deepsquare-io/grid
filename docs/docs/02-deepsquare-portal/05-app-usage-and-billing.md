@@ -19,7 +19,7 @@ Setting a predefined allowance allows you to streamline the payment process by p
 To set a crypto allowance:
 
 1. Connect your wallet to the DeepSquare platform.
-2. Click on your *balance* in the header section.
+2. Click on your _balance_ in the header section.
 3. Enter the amount of tokens you wish to authorize for the platform to use.
 4. Confirm the transaction.
 
@@ -31,7 +31,7 @@ If you need to increase or decrease your allowance, simply follow the same steps
 
 If you didn't allocate enough credits initially, you can add more tokens to a running job by clicking the **Top-Up** button on the **Job Status** page.
 
-## Auto Top-Up Mode (Comming soon)
+## Auto Top-Up Mode (Coming soon)
 
 You can enable **Auto Top-Up** mode to let the platform automatically add credits to your job and keep it running until your wallet runs out of funds. Make sure to set an allowance that corresponds to the amount you agree the platform can take from your wallet. Otherwise, your job may fail due to insufficient credits despite having available funds in your wallet.
 
