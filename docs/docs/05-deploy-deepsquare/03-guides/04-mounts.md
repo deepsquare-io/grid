@@ -20,17 +20,20 @@ If you are using a container, you can mount some directories using the `mounts` 
   },
   "steps": [
     {
-      "command": "ping 10.0.0.1",
-      "container": {
-        "image": "ubuntu:latest",
-        "registry": "registry-1.docker.io",
-        "mounts": [
-          {
-            "hostDir": "/host",
-            "containerDir": "/container",
-            "options": "rw"
-          }
-        ]
+      "name": "map-root",
+      "run": {
+        "command": "ping 10.0.0.1",
+        "container": {
+          "image": "ubuntu:latest",
+          "registry": "registry-1.docker.io",
+          "mounts": [
+            {
+              "hostDir": "/host",
+              "containerDir": "/container",
+              "options": "rw"
+            }
+          ]
+        }
       }
     }
   ]
