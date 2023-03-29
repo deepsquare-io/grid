@@ -3,12 +3,12 @@ module github.com/deepsquare-io/the-grid/ldap-connector
 go 1.19
 
 require (
-	github.com/ethereum/go-ethereum v1.11.4
+	github.com/ethereum/go-ethereum v1.11.5
 	github.com/go-ldap/ldap/v3 v3.4.4
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.2
-	github.com/urfave/cli/v2 v2.24.4
+	github.com/urfave/cli/v2 v2.25.1
 	go.uber.org/zap v1.24.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -28,6 +28,7 @@ require (
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/holiman/uint256 v1.2.0 // indirect
 	github.com/leodido/go-urn v1.2.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
