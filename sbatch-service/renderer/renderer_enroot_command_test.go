@@ -68,7 +68,7 @@ environ() {
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container bind,ro'
+  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
 }
 
 hooks() {
@@ -111,7 +111,7 @@ environ() {
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container bind,ro'
+  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
 }
 
 hooks() {
@@ -154,7 +154,7 @@ environ() {
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container bind,ro'
+  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
 }
 
 hooks() {
@@ -197,7 +197,7 @@ environ() {
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container bind,ro'
+  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
 }
 
 hooks() {

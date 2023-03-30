@@ -28,7 +28,7 @@ mounts() {
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
 {{- end }}
 {{- range $mount := .Run.Container.Mounts }}
-  /usr/bin/echo '{{ $mount.HostDir }} {{ $mount.ContainerDir }} bind,{{ $mount.Options }}'
+  /usr/bin/echo '{{ $mount.HostDir }} {{ $mount.ContainerDir }} none x-create=auto,bind,{{ $mount.Options }}'
 {{- end }}
 }
 
