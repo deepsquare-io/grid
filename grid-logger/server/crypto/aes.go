@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"io"
 )
 
 func GenerateKey() ([]byte, error) {
@@ -21,10 +22,10 @@ func Encrypt(key []byte, text []byte) ([]byte, error) {
 	}
 	ciphertext := make([]byte, aes.BlockSize+len(text))
 	iv := ciphertext[:aes.BlockSize]
-	if _, err := rand.Read(iv); err != nil {
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return []byte{}, err
 	}
-	stream := cipher.NewCFBEncrypter(block, iv)
+	stream := cipher.NewCTR(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], text)
 	return ciphertext, nil
 }
@@ -36,7 +37,7 @@ func Decrypt(key []byte, ciphertext []byte) ([]byte, error) {
 	}
 	iv := ciphertext[:aes.BlockSize]
 	ciphertext = ciphertext[aes.BlockSize:]
-	stream := cipher.NewCFBDecrypter(block, iv)
+	stream := cipher.NewCTR(block, iv)
 	stream.XORKeyStream(ciphertext, ciphertext)
 	return ciphertext, nil
 }

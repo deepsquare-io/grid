@@ -1,7 +1,9 @@
 package db
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -40,12 +42,12 @@ func (db *File) Append(logName string, user string, content []byte) (n int, err 
 	}
 	defer file.Close()
 
-	encrypted, err := crypto.Encrypt(db.key, content)
+	encrypted, err := crypto.Encrypt(db.key, bytes.TrimRight(content, "\n\r"))
 	if err != nil {
 		return 0, err
 	}
-
-	n, err = file.Write(encrypted)
+	str := base64.StdEncoding.EncodeToString(encrypted)
+	n, err = file.WriteString(str + "\n")
 	if err != nil {
 		return 0, err
 	}
@@ -85,7 +87,11 @@ func (db *File) ReadAndWatch(
 			if !ok {
 				return nil
 			}
-			decrypted, err := crypto.Decrypt(db.key, []byte(l.Text))
+			data, err := base64.StdEncoding.DecodeString(l.Text)
+			if err != nil {
+				return err
+			}
+			decrypted, err := crypto.Decrypt(db.key, data)
 			if err != nil {
 				return err
 			}

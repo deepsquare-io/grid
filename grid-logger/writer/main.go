@@ -100,7 +100,6 @@ var flags = []cli.Flag{
 	&cli.BoolFlag{
 		Name:        "uid-verify",
 		Usage:       "Verify that the uid and the user field matches.",
-		Required:    true,
 		Destination: &uidVerify,
 		EnvVars:     []string{"UID_VERIFY"},
 	},
@@ -126,12 +125,14 @@ var app = &cli.App{
 		ctx := cCtx.Context
 
 		// Check UNIX username with user string
-		currentUser, err := user.Current()
-		if err != nil {
-			return err
-		}
-		if !strings.EqualFold(currentUser.Username, userString) {
-			return errors.New("UNIX username does not match with user address")
+		if uidVerify {
+			currentUser, err := user.Current()
+			if err != nil {
+				return err
+			}
+			if !strings.EqualFold(currentUser.Username, userString) {
+				return errors.New("UNIX username does not match with user address")
+			}
 		}
 
 		// Trap cleanup

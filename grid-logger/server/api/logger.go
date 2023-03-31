@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -40,9 +42,10 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 
 	for {
 		req, err := stream.Recv()
-		if err == io.EOF {
+		if err == io.EOF || errors.Is(err, context.Canceled) {
 			logger.I.Info("writer closed", zap.String("IP", p.Addr.String()))
-			return stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
+			_ = stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
+			return nil
 		}
 		if err != nil {
 			logger.I.Error("writer closed with error", zap.String("IP", p.Addr.String()), zap.Error(err))
