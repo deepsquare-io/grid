@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"context"
 	"crypto/tls"
+	"errors"
 	"io"
 	"os"
 	"os/signal"
+	"os/user"
+	"strings"
 	"syscall"
 	"time"
 
@@ -29,9 +32,11 @@ var (
 	serverCAFile       string
 	serverHostOverride string
 
-	pipeFile string
-	logName  string
-	user     string
+	pipeFile   string
+	logName    string
+	userString string
+
+	uidVerify bool
 )
 
 var flags = []cli.Flag{
@@ -89,8 +94,15 @@ var flags = []cli.Flag{
 		Name:        "user",
 		Usage:       "User/Owner of the log. Used for authentication.",
 		Required:    true,
-		Destination: &user,
+		Destination: &userString,
 		EnvVars:     []string{"OWNER"},
+	},
+	&cli.BoolFlag{
+		Name:        "uid-verify",
+		Usage:       "Verify that the uid and the user field matches.",
+		Required:    true,
+		Destination: &uidVerify,
+		EnvVars:     []string{"UID_VERIFY"},
 	},
 	&cli.BoolFlag{
 		Name:    "debug",
@@ -112,6 +124,15 @@ var app = &cli.App{
 	Suggest: true,
 	Action: func(cCtx *cli.Context) (err error) {
 		ctx := cCtx.Context
+
+		// Check UNIX username with user string
+		currentUser, err := user.Current()
+		if err != nil {
+			return err
+		}
+		if !strings.EqualFold(currentUser.Username, userString) {
+			return errors.New("UNIX username does not match with user address")
+		}
 
 		// Trap cleanup
 		cleanChan := make(chan os.Signal, 1)
@@ -189,7 +210,7 @@ var app = &cli.App{
 				err = stream.Send(&loggerv1alpha1.WriteRequest{
 					LogName: logName,
 					Data:    line,
-					User:    user,
+					User:    userString,
 				})
 				// Connection lost retry
 				if err != nil {
