@@ -9,20 +9,23 @@ import (
 	"time"
 
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	"github.com/deepsquare-io/the-grid/grid-logger/server/crypto"
 	"github.com/nxadm/tail"
 	"go.uber.org/zap"
 )
 
 type File struct {
 	storagePath string
+	key         []byte
 }
 
-func NewFileDB(storagePath string) *File {
+func NewFileDB(storagePath string, key []byte) *File {
 	if err := os.MkdirAll(storagePath, 0o700); err != nil {
 		logger.I.Panic("failed to mkdir storage path", zap.Error(err))
 	}
 	return &File{
 		storagePath: storagePath,
+		key:         key,
 	}
 }
 
@@ -37,7 +40,12 @@ func (db *File) Append(logName string, user string, content []byte) (n int, err 
 	}
 	defer file.Close()
 
-	n, err = file.Write(content)
+	encrypted, err := crypto.Encrypt(db.key, content)
+	if err != nil {
+		return 0, err
+	}
+
+	n, err = file.Write(encrypted)
 	if err != nil {
 		return 0, err
 	}
@@ -77,7 +85,12 @@ func (db *File) ReadAndWatch(
 			if !ok {
 				return nil
 			}
-			out <- l.Text
+			decrypted, err := crypto.Decrypt(db.key, []byte(l.Text))
+			if err != nil {
+				return err
+			}
+
+			out <- string(decrypted)
 		case <-ctx.Done():
 			return nil
 		}
