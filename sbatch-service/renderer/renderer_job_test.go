@@ -62,6 +62,7 @@ export MEM='16384'
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
@@ -213,6 +214,7 @@ export MEM='16384'
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
@@ -394,6 +396,7 @@ export MEM='16384'
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
@@ -547,6 +550,7 @@ export MEM='16384'
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1

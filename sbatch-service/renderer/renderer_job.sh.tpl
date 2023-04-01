@@ -19,6 +19,7 @@ export MEM='{{ mul .Job.Resources.MemPerCPU .Job.Resources.CpusPerTask .Job.Reso
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
