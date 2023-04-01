@@ -1,4 +1,4 @@
-grid-logger=1.0.9
+grid-logger=1.1.0
 supervisor=0.2.0
 ldap-connector=1.0.8
 provider-ssh-authorized-keys=1.0.2
