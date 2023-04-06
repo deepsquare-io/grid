@@ -14,9 +14,11 @@ We designed the workflow as follows:
   - The scaled frames are reassembled into the original video.
 - The output will be the scaled image or video.
 
-The steps are as follows
+The docker image is already compiled from [github.com/xinntao/Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) and is exported as `registry-1.deepsquare.run/library/upscaling:latest`.
 
-1. Compute the images (extract and distribute the images if the input is a video).
+The steps are as follows:
+
+1. Compute the number of images (extract and distribute the frames into batches if the input is a video).
 
 2. Scaling of the images.
 
@@ -24,7 +26,7 @@ The steps are as follows
 
 ## Implementation
 
-Let's start with the input, output and resources. For the sake of readability, we use YAML. You can use an online YAML to JSON converter if you wish to execute the workflow on the [dev environment](https://beta.deepsquare.run/sandbox).
+Let's start with the input, output and resources. For the sake of readability, we use YAML. You can use an online YAML to JSON converter if you wish to execute the workflow on the [dev environment](https://app.deepsquare.run/sandbox).
 
 ### Resource allocation, environment variable and input/output
 
