@@ -16,6 +16,10 @@ const config = {
   organizationName: 'DeepSquare',
   projectName: 'DeepSquare',
   trailingSlash: false,
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
 
   presets: [
     [

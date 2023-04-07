@@ -20,6 +20,34 @@ The steps are as follows:
 
 2. Combine all the images into one grid.
 
+```mermaid
+---
+title: Stable Diffusion Workflow Architecture
+---
+flowchart LR
+  prompt[Prompt] --> inference1
+  prompt[Prompt] --> inference2
+  prompt[Prompt] --> inference3
+
+  subgraph Infer in Parallel
+    inference1[[Inference Task 1]]
+    inference2[[Inference Task 2]]
+    inference3[[Inference Task 3]]
+  end
+
+  inference1 --> combine_the_images
+  inference2 --> combine_the_images
+  inference3 --> combine_the_images
+
+  subgraph Combine the images
+    combine_the_images[[Images Concatenation]]
+  end
+
+  combine_the_images --> output
+
+  output[Grid of images]
+```
+
 ## Implementation
 
 Let's start with the input, output and resources. For the sake of readability, we use YAML. You can use an online YAML to JSON converter if you wish to execute the workflow on the [dev environment](https://app.deepsquare.run/sandbox).
@@ -56,7 +84,7 @@ env:
     value: 'an astronaut in space'
 ```
 
-### Inference loop
+### 1. Inference loop
 
 We just need to execute a `for` directive which executes 4 steps in parallel.
 
@@ -118,7 +146,7 @@ DeepSquare already hosts its own models at `/opt/models`. If you plan to use you
 
 The last step is to assemble the rows into a grid.
 
-### Combine the rows
+### 2. Combine the rows
 
 Our docker image already includes ImageMagick, meaning we can compose a new image from the generated images.
 

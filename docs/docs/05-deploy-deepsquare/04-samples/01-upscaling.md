@@ -20,9 +20,45 @@ The steps are as follows:
 
 1. Compute the number of images (extract and distribute the frames into batches if the input is a video).
 
-2. Scaling of the images.
+2. Upscaling of the images.
 
 3. If the input is a video, reassemble the images into a video.
+
+```mermaid
+---
+title: Upscaling Workflow Architecture
+---
+flowchart LR
+  video[Video] --> extract_frames
+
+  subgraph Compute the number of images
+    extract_frames[[Frames extraction]]
+    split_images_into_batches[[Creation of batches of images]]
+    extract_frames --> split_images_into_batches
+  end
+
+  split_images_into_batches --> upscaling1
+  split_images_into_batches --> upscaling2
+  split_images_into_batches --> upscaling3
+
+  subgraph Upscale in Parallel
+    upscaling1[[Upscaling Task 1]]
+    upscaling2[[Upscaling Task 2]]
+    upscaling3[[Upscaling Task 3]]
+  end
+
+  upscaling1 --> combine_the_frames
+  upscaling2 --> combine_the_frames
+  upscaling3 --> combine_the_frames
+
+  subgraph Combine the frames
+    combine_the_frames[[Frames Concatenation]]
+  end
+
+  combine_the_frames --> output
+
+  output[New Upscaled Video]
+```
 
 ## Implementation
 
@@ -136,7 +172,7 @@ steps:
 
 ### 2. Upscale the frames
 
-Let's implement the second step. We need to launch a substep with their batch. We can use the `for` directive, and the variable `$index` to select the batch directory:
+Let's implement the second step. We need to launch multiple substeps in parallel. We can use the `for` directive, and the variable `$index` to select the batch directory:
 
 ```yaml
 steps:
