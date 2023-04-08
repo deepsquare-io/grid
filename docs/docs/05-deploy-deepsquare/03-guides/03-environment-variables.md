@@ -6,7 +6,7 @@ Environment variables are the best way to customize your environment without hav
 
 Environment variables can be set at the task level and at the step level.
 
-The order of priority is:
+From lowest to highest, the order of priority is:
 
 - Job level
 - DeepSquare defined variables (`DEEPSQUARE_INPUT`, `DEEPSQUARE_OUTPUT`, `STORAGE_PATH`, `DEEPSQUARE_ENV`)
@@ -25,7 +25,7 @@ The only way to pass information between steps is to use shared storage and Deep
 
 ## DeepSquare defined variables
 
-The environement variable `$STORAGE_PATH` stores the path of the shared storage path.
+The environement variable `$STORAGE_PATH` stores the path of the shared storage path. That shared storage only lives during the job, it is a scratch storage.
 
 If running a container, `$STORAGE_PATH` will be defined at `/deepsquare`.
 
