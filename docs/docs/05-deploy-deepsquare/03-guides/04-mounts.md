@@ -44,4 +44,6 @@ This feature allows you to mount `/sys/fs/cgroups` as read-only to monitor CPU a
 
 ## Predefined mounts
 
-DeepSquare automatically mounts a shared file system on all nodes during a job. See [environment variables](environment-variables) for the path to the shared storage.
+DeepSquare automatically mounts a shared file system on all nodes during a job. This shared filesystem only lives during the job, so no worries about cleaning it.
+
+See [environment variables](environment-variables) for the path to the shared storage.
