@@ -161,7 +161,7 @@ var app = &cli.App{
 			AllowCredentials: false,
 			MaxAge:           300,
 		}))
-		r.Handle("/", playground.Handler("GraphQL playground", "/graphql"))
+		r.Handle("/", playground.ApolloSandboxHandler("GraphQL playground", "/graphql"))
 		r.Handle("/graphql", srv)
 		r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write([]byte("ok"))
