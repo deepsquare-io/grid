@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"math/big"
+
+	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/logger"
+	"go.uber.org/zap"
 )
 
 type BigInt struct {
@@ -29,5 +32,8 @@ func (bi *BigInt) UnmarshalGQL(v interface{}) error {
 
 // MarshalGQL implements the graphql.Marshaler interface
 func (bi BigInt) MarshalGQL(w io.Writer) {
-	w.Write([]byte(fmt.Sprintf("\"%s\"", bi.Int.String())))
+	_, err := w.Write([]byte(fmt.Sprintf("\"%s\"", bi.Int.String())))
+	if err != nil {
+		logger.I.Error("failed to write string", zap.Error(err))
+	}
 }
