@@ -172,7 +172,7 @@ var app = &cli.App{
 			return err
 		}
 
-		readerChan := make(chan []byte)
+		readerChan := make(chan *loggerv1alpha1.WriteRequest)
 		readerErrChan := make(chan error)
 		pipe, err := os.OpenFile(pipeFile, os.O_RDWR, os.ModeNamedPipe)
 		if err != nil {
@@ -191,7 +191,13 @@ var app = &cli.App{
 					logger.I.Error("reader thread receive a reading error, exiting...", zap.Error(err))
 					return
 				}
-				readerChan <- line
+				readerChan <- &loggerv1alpha1.WriteRequest{
+					LogName:   logName,
+					Data:      line,
+					User:      userString,
+					Timestamp: time.Now().Unix(),
+				}
+
 				if ctx.Err() != nil {
 					logger.I.Warn("reader thread receive a context error, exiting...", zap.Error(err))
 					return
@@ -207,14 +213,9 @@ var app = &cli.App{
 					logger.I.Error("context closed", zap.Error(err))
 					return err
 				}
-			case line := <-readerChan:
-				err = stream.Send(&loggerv1alpha1.WriteRequest{
-					LogName: logName,
-					Data:    line,
-					User:    userString,
-				})
+			case data := <-readerChan:
 				// Connection lost retry
-				if err != nil {
+				if err = stream.Send(data); err != nil {
 					logger.I.Error("grpc write failed", zap.Error(err))
 					_ = conn.Close()
 					time.Sleep(time.Second)
@@ -223,6 +224,12 @@ var app = &cli.App{
 						logger.I.Error("failed to reconnect on EOF error", zap.Error(err))
 						return err
 					}
+					_ = stream.Send(&loggerv1alpha1.WriteRequest{
+						LogName:   logName,
+						Data:      []byte("Logger was disconnected temporarly, some logs may be lost."),
+						User:      userString,
+						Timestamp: time.Now().Unix(),
+					})
 					logger.I.Info("successfully reconnected")
 				}
 			case err := <-readerErrChan:
