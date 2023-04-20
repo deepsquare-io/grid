@@ -9,11 +9,9 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
-	"golang.org/x/sync/errgroup"
 )
 
 const claimJobMaxTimeout = time.Duration(60 * time.Second)
@@ -50,109 +48,137 @@ func New(
 
 // Watch incoming jobs and handles it.
 func (w *Watcher) Watch(parent context.Context) error {
-	g, ctx := errgroup.WithContext(parent)
-	g.Go(func() error { return w.WatchClaimNextJob(ctx) })
-	g.Go(func() error { return w.WatchClaimNextCancellingJobEvent(ctx) })
-	g.Go(func() error { return w.ClaimIndefinitely(ctx) })
-
-	if err := g.Wait(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// ClaimIndefinitely claims the queues in the smart contract indefinetly
-func (w *Watcher) ClaimIndefinitely(parent context.Context) error {
+	// Ticker for claim
 	queryTicker := time.NewTicker(w.pollingTime)
 	defer queryTicker.Stop()
 
-	for {
-		func(parent context.Context) {
-			done := make(chan error)
-			ctx, cancel := context.WithTimeout(parent, claimJobMaxTimeout)
-			defer cancel()
-
-			go func(ctx context.Context) {
-				// One shot
-				defer close(done)
-
-				// Slurm healthcheck first
-				if err := w.scheduler.HealthCheck(ctx); err != nil {
-					done <- err
-					return
-				}
-
-				if err := w.metaQueue.Claim(ctx); err != nil {
-					logger.I.Info("failed to claim a job", zap.Error(err))
-					done <- err
-				}
-
-				if err := w.metaQueue.ClaimCancelling(ctx); err != nil {
-					logger.I.Info("failed to claim cancelling job", zap.Error(err))
-					done <- err
-				}
-			}(ctx)
-
-			// Await for the claim response
-			select {
-			case err := <-done:
-				if err != nil {
-					logger.I.Error("ClaimNextJobIndefinitely failed", zap.Error(err))
-				}
-
-			case <-ctx.Done():
-				logger.I.Warn("ClaimNextJobIndefinitely context closed", zap.Error(ctx.Err()))
-			}
-		}(parent)
-
-		// Await for ticking
-		select {
-		case <-parent.Done():
-			return parent.Err()
-		case <-queryTicker.C:
-		}
-	} // for loop
-}
-
-func (w *Watcher) WatchClaimNextJob(parent context.Context) error {
-	events := make(chan *metascheduler.MetaSchedulerClaimJobEvent)
-	defer close(events)
-	sub, err := w.metaQueue.WatchClaimNextJobEvent(parent, events)
+	claimNextJobEvents := make(chan *metascheduler.MetaSchedulerClaimJobEvent)
+	defer close(claimNextJobEvents)
+	subClaimNextJobEvents, err := w.metaQueue.WatchClaimNextJobEvent(parent, claimNextJobEvents)
 	if err != nil {
 		return err
 	}
-	defer sub.Unsubscribe()
-	logger.I.Debug("Watching ClaimNextJob events...")
+	defer subClaimNextJobEvents.Unsubscribe()
+	logger.I.Debug("Watching ClaimNextJobEvents...")
+
+	claimNextCancellingJobEvents := make(chan *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)
+	defer close(claimNextCancellingJobEvents)
+	subClaimNextCancellingJobEvents, err := w.metaQueue.WatchClaimNextCancellingJobEvent(parent, claimNextCancellingJobEvents)
+	if err != nil {
+		return err
+	}
+	defer subClaimNextCancellingJobEvents.Unsubscribe()
+	logger.I.Debug("Watching ClaimNextCancellingJobEvents...")
+
+	claimNextTopUpJobEvents := make(chan *metascheduler.MetaSchedulerClaimNextTopUpJobEvent)
+	defer close(claimNextTopUpJobEvents)
+	subClaimNextTopUpJobEvents, err := w.metaQueue.WatchClaimNextTopUpJobEvent(parent, claimNextTopUpJobEvents)
+	if err != nil {
+		return err
+	}
+	defer subClaimNextTopUpJobEvents.Unsubscribe()
+	logger.I.Debug("Watching ClaimNextTopUpJobEvents...")
 
 	for {
 		select {
 		case <-parent.Done():
-			logger.I.Warn("WatchClaimNextJobEvent context is done")
-			return nil
-		case err := <-sub.Err():
+			return parent.Err()
+
+		// ClaimNextJobEvents handling
+		case err := <-subClaimNextJobEvents.Err():
 			logger.I.Error("WatchClaimNextJobEvent thrown an error", zap.Error(err))
 			return err
-		case event := <-events:
+		case event := <-claimNextJobEvents:
 			if !strings.EqualFold(event.ProviderAddr.Hex(), w.metaQueue.GetProviderAddress().Hex()) {
 				// Ignore event
 				logger.I.Debug("ignore event", zap.Any("event", event))
 				continue
 			}
-			err := w.handleClaimNextJob(parent, event)
-			if err != nil {
-				return err
+			go w.handleClaimNextJob(parent, event)
+
+		// ClaimNextCancellingJobEvents handling
+		case err := <-subClaimNextCancellingJobEvents.Err():
+			logger.I.Error("WatchClaimNextCancellingJobEvent thrown an error", zap.Error(err))
+			return err
+		case event := <-claimNextCancellingJobEvents:
+			if !strings.EqualFold(event.ProviderAddr.Hex(), w.metaQueue.GetProviderAddress().Hex()) {
+				// Ignore event
+				logger.I.Debug("ignore event", zap.Any("event", event))
+				continue
 			}
+			go w.handleClaimNextCancellingJobEvent(parent, event)
+
+		// ClaimNextTopUpJobEvents handling
+		case err := <-subClaimNextTopUpJobEvents.Err():
+			logger.I.Error("WatchClaimNextTopUpJobEvent thrown an error", zap.Error(err))
+			return err
+		case event := <-claimNextTopUpJobEvents:
+			if !strings.EqualFold(event.ProviderAddr.Hex(), w.metaQueue.GetProviderAddress().Hex()) {
+				// Ignore event
+				logger.I.Debug("ignore event", zap.Any("event", event))
+				continue
+			}
+			go w.handleClaimNextTopUpEvent(parent, event)
+
+		// Claim indefinitely
+		case <-queryTicker.C:
+			go w.handleClaimIndefinitely(parent)
 		}
 	}
 }
 
-func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.MetaSchedulerClaimJobEvent) error {
+func (w *Watcher) handleClaimIndefinitely(parent context.Context) {
+	done := make(chan error)
+	ctx, cancel := context.WithTimeout(parent, claimJobMaxTimeout)
+	defer cancel()
+
+	go func(ctx context.Context) {
+		// One shot
+		defer close(done)
+
+		// Slurm healthcheck first
+		if err := w.scheduler.HealthCheck(ctx); err != nil {
+			done <- err
+			return
+		}
+
+		if err := w.metaQueue.Claim(ctx); err != nil {
+			logger.I.Info("failed to claim a job", zap.Error(err))
+			done <- err
+			return
+		}
+
+		if err := w.metaQueue.ClaimCancelling(ctx); err != nil {
+			logger.I.Info("failed to claim cancelling job", zap.Error(err))
+			done <- err
+			return
+		}
+
+		if err := w.metaQueue.ClaimTopUp(ctx); err != nil {
+			logger.I.Info("failed to claim topup job", zap.Error(err))
+			done <- err
+			return
+		}
+	}(ctx)
+
+	// Await for the claim response
+	select {
+	case err := <-done:
+		if err != nil {
+			logger.I.Error("ClaimIndefinitely failed", zap.Error(err))
+		}
+
+	case <-ctx.Done():
+		logger.I.Warn("ClaimIndefinitely context closed", zap.Error(ctx.Err()))
+	}
+}
+
+func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.MetaSchedulerClaimJobEvent) {
 	if event == nil {
-		logger.I.Warn(
+		logger.I.Error(
 			"job is nil, we didn't find a job",
 		)
-		return nil
+		return
 	}
 	// Reject the job if the time limit is incorrect
 	if event.MaxDurationMinute <= 0 {
@@ -163,7 +189,7 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 		if err := w.metaQueue.SetJobStatus(ctx, event.JobId, eth.JobStatusFailed, 0); err != nil {
 			logger.I.Error("failed to refuse a job", zap.Error(err))
 		}
-		return nil
+		return
 	}
 
 	// Fetch the job script
@@ -173,14 +199,14 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 		if err := w.metaQueue.SetJobStatus(ctx, event.JobId, eth.JobStatusFailed, 0); err != nil {
 			logger.I.Error("failed to refuse a job", zap.Error(err))
 		}
-		return nil
+		return
 	}
 
-	job := eth.JobDefinitionMapToSlurm(event.JobDefinition, event.MaxDurationMinute, body)
-	req := &slurm.SubmitJobRequest{
-		Name:          hexutil.Encode(event.JobId[:]),
-		User:          strings.ToLower(event.CustomerAddr.Hex()),
-		JobDefinition: &job,
+	definition := DefinitionFromMetascheduler(event.JobDefinition, event.MaxDurationMinute, body)
+	req := &SubmitRequest{
+		Name:       hexutil.Encode(event.JobId[:]),
+		User:       strings.ToLower(event.CustomerAddr.Hex()),
+		Definition: &definition,
 	}
 
 	// Submit the job script
@@ -190,44 +216,13 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 		if err := w.metaQueue.RefuseJob(ctx, event.JobId); err != nil {
 			logger.I.Error("failed to refuse a job", zap.Error(err))
 		}
-		return nil
+		return
 	}
 	logger.I.Info(
 		"submitted a job successfully",
 		zap.String("Response", resp),
 		zap.Any("Req", req),
 	)
-	return nil
-}
-
-func (w *Watcher) WatchClaimNextCancellingJobEvent(parent context.Context) error {
-	events := make(chan *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)
-	defer close(events)
-	sub, err := w.metaQueue.WatchClaimNextCancellingJobEvent(parent, events)
-	if err != nil {
-		return err
-	}
-	defer sub.Unsubscribe()
-	logger.I.Debug("Watching WatchClaimNextCancelling events...")
-
-	for {
-		select {
-		case <-parent.Done():
-			logger.I.Warn("WatchClaimNextCancellingJobEvent context is done")
-			return nil
-		case err := <-sub.Err():
-			logger.I.Error("WatchClaimNextCancellingJobEvent thrown an error", zap.Error(err))
-			return err
-		case event := <-events:
-			if !strings.EqualFold(event.ProviderAddr.Hex(), w.metaQueue.GetProviderAddress().Hex()) {
-				// Ignore event
-				logger.I.Debug("ignore event", zap.Any("event", event))
-				continue
-			}
-			// Fire and forget
-			go w.handleClaimNextCancellingJobEvent(parent, event)
-		}
-	}
 }
 
 func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) {
@@ -242,7 +237,7 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 			if err := try.Do(
 				5, 5*time.Second,
 				func(_ int) error {
-					return w.scheduler.CancelJob(ctx, &slurm.CancelJobRequest{
+					return w.scheduler.CancelJob(ctx, &CancelRequest{
 						Name: hexutil.Encode(event.JobId[:]),
 						User: strings.ToLower(event.CustomerAddr.Hex()),
 					})
@@ -265,8 +260,19 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 		}); err != nil {
 		logger.I.Error("failed to cancel, considering as CANCELLED", zap.Error(err))
 		if err := w.metaQueue.SetJobStatus(ctx, event.JobId, eth.JobStatusCancelled, 0); err != nil {
-			logger.I.Error("Even considering as CANCELLED, it failed", zap.Error(err))
+			logger.I.Error("even considering as CANCELLED, it failed", zap.Error(err))
 			return
 		}
+	}
+}
+
+func (w *Watcher) handleClaimNextTopUpEvent(ctx context.Context, event *metascheduler.MetaSchedulerClaimNextTopUpJobEvent) {
+	if err := try.Do(5, 5*time.Second, func(_ int) error {
+		return w.scheduler.TopUp(ctx, &TopUpRequest{
+			Name:           hexutil.Encode(event.JobId[:]),
+			AdditionalTime: event.MaxDurationMinute,
+		})
+	}); err != nil {
+		logger.I.Error("failed to topup", zap.Error(err))
 	}
 }

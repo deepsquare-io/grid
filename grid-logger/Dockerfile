@@ -8,7 +8,7 @@ ARG TARGETOS TARGETARCH
 RUN --mount=target=/build/ \
   --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/go/pkg \
-  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -o /out/app ./server/main.go
+  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w" -a -o /out/app ./server/main.go
 
 # ---
 FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/alpine as certs

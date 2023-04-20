@@ -27,6 +27,8 @@ type MetaSchedulerRPC interface {
 	HasNextJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error)
 	ClaimNextCancellingJob(opts *bind.TransactOpts) (*types.Transaction, error)
 	HasCancellingJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error)
+	ClaimNextTopUpJob(opts *bind.TransactOpts) (*types.Transaction, error)
+	HasTopUpJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error)
 	RefuseJob(opts *bind.TransactOpts, _jobID [32]byte) (*types.Transaction, error)
 	ParseClaimJobEvent(log types.Log) (*metascheduler.MetaSchedulerClaimJobEvent, error)
 	ProviderSetJobStatus(opts *bind.TransactOpts, _jobID [32]byte, _jobStatus uint8, jobDurationMinute uint64) (*types.Transaction, error)
@@ -47,4 +49,5 @@ type MetaSchedulerRPC interface {
 type MetaSchedulerWS interface {
 	WatchClaimJobEvent(opts *bind.WatchOpts, sink chan<- *metascheduler.MetaSchedulerClaimJobEvent) (event.Subscription, error)
 	WatchClaimNextCancellingJobEvent(opts *bind.WatchOpts, sink chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) (event.Subscription, error)
+	WatchClaimNextTopUpJobEvent(opts *bind.WatchOpts, sink chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent) (event.Subscription, error)
 }

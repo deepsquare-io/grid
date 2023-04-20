@@ -223,12 +223,22 @@ func (s *DataSource) WatchClaimNextJobEvent(
 	}, sink)
 }
 
-// WatchClaimNextCancellingJobEvent observes the incoming JobCanceledEvents.
+// WatchClaimNextCancellingJobEvent observes the incoming ClaimNextCancellingJobEvents.
 func (s *DataSource) WatchClaimNextCancellingJobEvent(
 	ctx context.Context,
 	sink chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
 ) (event.Subscription, error) {
 	return s.metaschedulerWS.WatchClaimNextCancellingJobEvent(&bind.WatchOpts{
+		Context: ctx,
+	}, sink)
+}
+
+// WatchClaimNextTopUpJobEvent observes the incoming ClaimNextTopUpJobEvent.
+func (s *DataSource) WatchClaimNextTopUpJobEvent(
+	ctx context.Context,
+	sink chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent,
+) (event.Subscription, error) {
+	return s.metaschedulerWS.WatchClaimNextTopUpJobEvent(&bind.WatchOpts{
 		Context: ctx,
 	}, sink)
 }
@@ -245,10 +255,6 @@ func (s *DataSource) GetJobStatus(ctx context.Context, jobID [32]byte) (JobStatu
 }
 
 // ClaimCancelling a cancelling call.
-//
-// If the queue is not empty, it will claim the cancelling call and return true.
-// Else, it will return false.
-// Else, it will return false and an error.
 func (s *DataSource) ClaimCancelling(ctx context.Context) error {
 	ok, err := s.metaschedulerRPC.HasCancellingJob(&bind.CallOpts{
 		Context: ctx,
@@ -272,6 +278,34 @@ func (s *DataSource) ClaimCancelling(ctx context.Context) error {
 		return err
 	}
 	logger.I.Debug("called ClaimNextCancellingJob", zap.String("tx", tx.Hash().String()))
+
+	return nil
+}
+
+// ClaimTopUp a top up call.
+func (s *DataSource) ClaimTopUp(ctx context.Context) error {
+	ok, err := s.metaschedulerRPC.HasTopUpJob(&bind.CallOpts{
+		Context: ctx,
+	}, s.fromAddress)
+	if err != nil {
+		logger.I.Error("HasTopUpJob failed", zap.Error(err))
+		return err
+	}
+	if !ok {
+		logger.I.Debug("No top up call")
+		return nil
+	}
+
+	auth, err := s.auth(ctx)
+	if err != nil {
+		return err
+	}
+
+	tx, err := s.metaschedulerRPC.ClaimNextTopUpJob(auth)
+	if err != nil {
+		return err
+	}
+	logger.I.Debug("called ClaimNextTopUpJob", zap.String("tx", tx.Hash().String()))
 
 	return nil
 }

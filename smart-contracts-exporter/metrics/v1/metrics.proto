@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package metrics.v1;
+
+option go_package = "github.com/deepsquare-io/the-grid/smart-contracts-exporter/metrics/v1;metricsv1";
+
+message DB {
+  string version = 1;
+  Metrics metrics = 2;
+  repeated Job old_jobs = 3;
+}
+
+message LabeledMetric {
+  string key = 1;
+  double value = 2;
+}
+
+message Metrics {
+  string metascheduler_address = 1;
+  repeated LabeledMetric total_number_of_jobs = 2;
+  repeated LabeledMetric total_jobs_pending = 3;
+  repeated LabeledMetric total_jobs_meta_scheduled = 4;
+  repeated LabeledMetric total_jobs_scheduled = 5;
+  repeated LabeledMetric total_jobs_running = 6;
+  repeated LabeledMetric total_jobs_cancelled = 7;
+  repeated LabeledMetric total_jobs_finished = 8;
+  repeated LabeledMetric total_jobs_failed = 9;
+  repeated LabeledMetric total_jobs_out_of_credits = 10;
+  repeated LabeledMetric total_credit_spent = 11;
+  repeated LabeledMetric total_gpu_time = 12;
+  repeated LabeledMetric total_cpu_time = 13;
+  repeated LabeledMetric total_job_duration = 14;
+  double last_block_watched = 15;
+  repeated LabeledMetric total_job_refused = 16;
+  repeated LabeledMetric total_billed_too_much = 17;
+}
+
+message Job {
+  bytes job_id = 1;
+  uint32 status = 2;
+  string customer_addr = 3;
+  string provider_addr = 4;
+  JobDefinition definition = 5;
+  bool valid = 6;
+  JobCost cost = 7;
+  JobTime time = 8;
+  bytes job_name = 9;
+  bool has_cancel_request = 10;
+}
+
+message BigInt { bytes bytes = 1; }
+
+message JobCost {
+  BigInt max_cost = 1;
+  BigInt final_cost = 2;
+  BigInt pending_top_up = 3;
+  bool delegate_spending_authority = 4;
+}
+
+message JobDefinition {
+  uint64 gpu_per_task = 1;
+  uint64 mem_per_cpu = 2;
+  uint64 cpu_per_task = 3;
+  uint64 ntasks = 4;
+  string batch_location_hash = 5;
+  uint32 storage_type = 6;
+}
+
+message JobTime {
+  BigInt start = 1;
+  BigInt end = 2;
+  BigInt cancel_request_timestamp = 3;
+  BigInt block_number_state_change = 4;
+}

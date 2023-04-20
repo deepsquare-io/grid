@@ -277,6 +277,46 @@ func (suite *DataSourceTestSuite) TestClaimCancelling() {
 	suite.assertMocksExpectations()
 }
 
+func (suite *DataSourceTestSuite) TestWatchClaimNextTopUpJobEvent() {
+	// Arrange
+	sink := make(chan *metascheduler.MetaSchedulerClaimNextTopUpJobEvent)
+	defer close(sink)
+	sub := mocks.NewSubscription(suite.T())
+	suite.msWS.On(
+		"WatchClaimNextTopUpJobEvent",
+		mock.Anything,
+		mock.Anything,
+	).Return(sub, nil)
+
+	// Act
+	res, err := suite.impl.WatchClaimNextTopUpJobEvent(context.Background(), sink)
+
+	// Assert
+	suite.NoError(err)
+	suite.Equal(res, sub)
+	suite.assertMocksExpectations()
+}
+
+func (suite *DataSourceTestSuite) TestClaimTopUp() {
+	// Arrange
+	suite.mustAuthenticate()
+	tx := legacyTx()
+	suite.msRPC.On("HasTopUpJob", mock.Anything, fromAddress).Return(true, nil)
+	suite.msRPC.On(
+		"ClaimNextTopUpJob",
+		mock.MatchedBy(func(auth *bind.TransactOpts) bool {
+			return auth.Nonce.Cmp(big.NewInt(0).SetUint64(nonce)) == 0 && auth.GasPrice == gasPrice
+		}),
+	).Return(tx, nil)
+
+	// Act
+	err := suite.impl.ClaimTopUp(context.Background())
+
+	// Assert
+	suite.NoError(err)
+	suite.assertMocksExpectations()
+}
+
 func (suite *DataSourceTestSuite) TestGetJobStatus() {
 	// Arrange
 	fixtureStatus := eth.JobStatusRunning

@@ -18,12 +18,15 @@ It is possible to enable remap root using the `step.mapRoot` parameter:
   },
   "steps": [
     {
-      "command": "ping 10.0.0.1",
-      "container": {
-        "image": "library/ubuntu:latest",
-        "registry": "registry-1.docker.io"
-      },
-      "mapRoot": true
+      "name": "map-root",
+      "run": {
+        "command": "ping 10.0.0.1",
+        "container": {
+          "image": "library/ubuntu:latest",
+          "registry": "registry-1.docker.io"
+        },
+        "mapRoot": true
+      }
     }
   ]
 }

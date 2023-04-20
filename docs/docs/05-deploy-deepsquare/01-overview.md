@@ -48,9 +48,9 @@ The infrastructure provider uses a worker, which we call the **Supervisor** of j
 
 To avoid storing private data on the blockchain, the sbatch API is the intermediary between the Supervisor and the Client. The sbatch API converts a workflow defined by strict specifications into a slurm batch (SBatch) script and stores it temporarily, waiting for the supervisor to claim a job and pull the sbatch script.
 
-![Deepsquare Architecture.drawio](https://user-images.githubusercontent.com/29931035/226926804-7515f9e2-9f5f-43fc-b3f7-edc134be683f.png)
+![Deepsquare Architecture.drawio](./.assets-deploy-deepsquare/image-226926804-7515f9e2-9f5f-43fc-b3f7-edc134be683f.png)
 
-If you want to try an already existing client, there is the [DeepSquare Grid Portal](https://app.deepsquare.run). You can also develop your own client using the [DeepSquare SDK](TODO: reference).
+If you want to try an already existing client, there is the [DeepSquare Grid Portal](https://app.deepsquare.run). You can also develop your own client using the [DeepSquare SDK](https://www.npmjs.com/package/@deepsquare/deepsquare-client).
 
 ## The underlying technology
 

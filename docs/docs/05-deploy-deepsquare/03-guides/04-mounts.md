@@ -20,17 +20,20 @@ If you are using a container, you can mount some directories using the `mounts` 
   },
   "steps": [
     {
-      "command": "ping 10.0.0.1",
-      "container": {
-        "image": "ubuntu:latest",
-        "registry": "registry-1.docker.io",
-        "mounts": [
-          {
-            "hostDir": "/host",
-            "containerDir": "/container",
-            "options": "rw"
-          }
-        ]
+      "name": "map-root",
+      "run": {
+        "command": "ping 10.0.0.1",
+        "container": {
+          "image": "ubuntu:latest",
+          "registry": "registry-1.docker.io",
+          "mounts": [
+            {
+              "hostDir": "/host",
+              "containerDir": "/container",
+              "options": "rw"
+            }
+          ]
+        }
       }
     }
   ]
@@ -41,4 +44,6 @@ This feature allows you to mount `/sys/fs/cgroups` as read-only to monitor CPU a
 
 ## Predefined mounts
 
-DeepSquare automatically mounts a shared file system on all nodes during a job. See [environment variables](environment-variables) for the path to the shared storage.
+DeepSquare automatically mounts a shared file system on all nodes during a job. This shared filesystem only lives during the job, so no worries about cleaning it.
+
+See [environment variables](environment-variables) for the path to the shared storage.

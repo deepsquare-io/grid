@@ -1,6 +1,6 @@
 //go:build integration
 
-package slurm_test
+package scheduler_test
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/joho/godotenv"
@@ -16,23 +17,23 @@ import (
 	"go.uber.org/zap"
 )
 
-type ServiceTestSuite struct {
+type ServiceIntegrationTestSuite struct {
 	suite.Suite
 	address   string
 	adminUser string
 	user      string
 	pkB64     string
-	impl      *slurm.Service
+	impl      *scheduler.Slurm
 }
 
-func (suite *ServiceTestSuite) submitJob() *slurm.SubmitJobRequest {
+func (suite *ServiceIntegrationTestSuite) submitJob() *job.SubmitRequest {
 	// Arrange
 	ctx := context.Background()
 	name := utils.GenerateRandomString(6)
-	req := &slurm.SubmitJobRequest{
+	req := &job.SubmitRequest{
 		Name: name,
 		User: suite.user,
-		JobDefinition: &slurm.JobDefinition{
+		Definition: &job.Definition{
 			TimeLimit:    uint64(5),
 			NTasks:       1,
 			GPUsPerTask:  0,
@@ -54,12 +55,12 @@ srun sleep infinity
 	return req
 }
 
-func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
+func (suite *ServiceIntegrationTestSuite) BeforeTest(suiteName, testName string) {
 	service := ssh.New(
 		suite.address,
 		suite.pkB64,
 	)
-	suite.impl = slurm.New(
+	suite.impl = scheduler.NewSlurm(
 		service,
 		suite.adminUser,
 		"scancel",
@@ -70,17 +71,17 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 	)
 }
 
-func (suite *ServiceTestSuite) TestSubmit() {
+func (suite *ServiceIntegrationTestSuite) TestSubmit() {
 	suite.submitJob()
 }
 
-func (suite *ServiceTestSuite) TestCancel() {
+func (suite *ServiceIntegrationTestSuite) TestCancel() {
 	// Arrange
 	ctx := context.Background()
 	req := suite.submitJob()
 
 	// Act
-	err := suite.impl.CancelJob(ctx, &slurm.CancelJobRequest{
+	err := suite.impl.CancelJob(ctx, &job.CancelRequest{
 		Name: req.Name,
 		User: suite.user,
 	})
@@ -89,15 +90,14 @@ func (suite *ServiceTestSuite) TestCancel() {
 	suite.NoError(err)
 }
 
-func (suite *ServiceTestSuite) TestTopUp() {
+func (suite *ServiceIntegrationTestSuite) TestTopUp() {
 	// Arrange
 	ctx := context.Background()
 	req := suite.submitJob()
 
 	// Act
-	err := suite.impl.TopUp(ctx, &slurm.TopUpRequest{
+	err := suite.impl.TopUp(ctx, &job.TopUpRequest{
 		Name:           req.Name,
-		User:           suite.user,
 		AdditionalTime: 5,
 	})
 
@@ -105,13 +105,13 @@ func (suite *ServiceTestSuite) TestTopUp() {
 	suite.NoError(err)
 }
 
-func TestServiceTestSuite(t *testing.T) {
+func TestServiceIntegrationTestSuite(t *testing.T) {
 	err := godotenv.Load(".env.test")
 	if err != nil {
 		// Skip test if not defined
 		logger.I.Error("Error loading .env.test file", zap.Error(err))
 	} else {
-		suite.Run(t, &ServiceTestSuite{
+		suite.Run(t, &ServiceIntegrationTestSuite{
 			address:   os.Getenv("SLURM_SSH_ADDRESS"),
 			user:      os.Getenv("SLURM_SSH_USER"),
 			adminUser: os.Getenv("SLURM_ADMIN_SSH_USER"),

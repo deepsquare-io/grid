@@ -26,6 +26,8 @@ var (
 	certFile string
 
 	storagePath string
+
+	secret []byte
 )
 
 var flags = []cli.Flag{
@@ -63,6 +65,19 @@ var flags = []cli.Flag{
 		Value:       "./db",
 		Destination: &storagePath,
 		EnvVars:     []string{"STORAGE_PATH"},
+	},
+	&cli.StringFlag{
+		Name:     "secret-path",
+		Usage:    "Path to a 32 bytes AES-256 secret used to encrypt logs. (use openssl rand -out secret.key 32)",
+		Required: true,
+		EnvVars:  []string{"SECRET_PATH"},
+		Action: func(ctx *cli.Context, s string) (err error) {
+			secret, err = os.ReadFile(s)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
 	},
 	&cli.BoolFlag{
 		Name:    "debug",
@@ -103,7 +118,7 @@ var app = &cli.App{
 		loggerv1alpha1.RegisterLoggerAPIServer(
 			server,
 			api.NewLoggerAPIServer(
-				db.NewFileDB(storagePath),
+				db.NewFileDB(storagePath, secret),
 			),
 		)
 		healthv1.RegisterHealthServer(

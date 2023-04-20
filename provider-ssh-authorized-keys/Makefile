@@ -10,46 +10,46 @@ golint := $(shell go env GOPATH)/bin/golangci-lint
 endif
 
 bin/provider-ssh-authorized-keys: $(GO_SRCS)
-	go build -o "$@" ./main.go
+	go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-darwin-amd64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-darwin-arm64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-freebsd-amd64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-freebsd-arm64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=freebsd GOARCH=arm64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=freebsd GOARCH=arm64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-linux-amd64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-linux-arm64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-linux-mips64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-linux-mips64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-linux-ppc64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-linux-ppc64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-linux-riscv64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-linux-s390x: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -ldflags "-s -w" -o "$@" ./main.go
 
 bin/provider-ssh-authorized-keys-windows-amd64.exe: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o "$@" ./main.go
 
 bins := provider-ssh-authorized-keys-darwin-amd64 provider-ssh-authorized-keys-darwin-arm64 provider-ssh-authorized-keys-freebsd-arm64 provider-ssh-authorized-keys-freebsd-arm64 provider-ssh-authorized-keys-linux-amd64 provider-ssh-authorized-keys-linux-arm64 provider-ssh-authorized-keys-linux-mips64 provider-ssh-authorized-keys-linux-mips64le provider-ssh-authorized-keys-linux-ppc64 provider-ssh-authorized-keys-linux-ppc64le provider-ssh-authorized-keys-linux-riscv64 provider-ssh-authorized-keys-linux-s390x provider-ssh-authorized-keys-windows-amd64.exe
 

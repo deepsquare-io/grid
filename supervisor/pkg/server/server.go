@@ -6,10 +6,10 @@ import (
 	healthv1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/grpc/health/v1"
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/health"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/sshapi"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/slurm"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -24,7 +24,7 @@ func New(
 	keyFile string,
 	certFile string,
 	jobHandler jobapi.JobHandler,
-	slurm *slurm.Service,
+	slurm *scheduler.Slurm,
 	pkB64 string,
 ) *Server {
 	opts := []grpc.ServerOption{}

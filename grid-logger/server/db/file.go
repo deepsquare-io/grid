@@ -1,43 +1,62 @@
 package db
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
 
+	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	"github.com/deepsquare-io/the-grid/grid-logger/server/crypto"
 	"github.com/nxadm/tail"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 type File struct {
 	storagePath string
+	key         []byte
 }
 
-func NewFileDB(storagePath string) *File {
+func NewFileDB(storagePath string, key []byte) *File {
 	if err := os.MkdirAll(storagePath, 0o700); err != nil {
 		logger.I.Panic("failed to mkdir storage path", zap.Error(err))
 	}
 	return &File{
 		storagePath: storagePath,
+		key:         key,
 	}
 }
 
-func (db *File) Append(logName string, user string, content []byte) (n int, err error) {
-	if err := os.MkdirAll(fmt.Sprintf("%s/%s", db.storagePath, user), 0o700); err != nil {
+func (db *File) Append(req *loggerv1alpha1.WriteRequest) (n int, err error) {
+	if err := os.MkdirAll(fmt.Sprintf("%s/%s", db.storagePath, strings.ToLower(req.User)), 0o700); err != nil {
 		logger.I.Error("failed to mkdir storage path", zap.Error(err))
 	}
-	logPath := fmt.Sprintf("%s/%s/%s.log", db.storagePath, user, logName)
+	logPath := fmt.Sprintf("%s/%s/%s.log", db.storagePath, strings.ToLower(req.User), req.LogName)
 	file, err := os.OpenFile(logPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return 0, err
 	}
 	defer file.Close()
 
-	n, err = file.Write(content)
+	data, err := proto.Marshal(&loggerv1alpha1.ReadResponse{
+		Data:      bytes.TrimRight(req.Data, "\r\n"),
+		Timestamp: req.Timestamp,
+	})
+	if err != nil {
+		return 0, err
+	}
+	encrypted, err := crypto.Encrypt(db.key, data)
+	if err != nil {
+		return 0, err
+	}
+	str := base64.StdEncoding.EncodeToString(encrypted)
+	n, err = file.WriteString(str + "\n")
 	if err != nil {
 		return 0, err
 	}
@@ -48,7 +67,7 @@ func (db *File) ReadAndWatch(
 	ctx context.Context,
 	address string,
 	logName string,
-	out chan<- string,
+	out chan<- *loggerv1alpha1.ReadResponse,
 ) error {
 	if err := os.MkdirAll(fmt.Sprintf("%s/%s", db.storagePath, address), 0o700); err != nil {
 		logger.I.Error("failed to mkdir storage path", zap.Error(err))
@@ -77,7 +96,20 @@ func (db *File) ReadAndWatch(
 			if !ok {
 				return nil
 			}
-			out <- l.Text
+			data, err := base64.StdEncoding.DecodeString(l.Text)
+			if err != nil {
+				return err
+			}
+			decrypted, err := crypto.Decrypt(db.key, data)
+			if err != nil {
+				return err
+			}
+			resp := &loggerv1alpha1.ReadResponse{}
+			if err := proto.Unmarshal(decrypted, resp); err != nil {
+				return err
+			}
+
+			out <- resp
 		case <-ctx.Done():
 			return nil
 		}
