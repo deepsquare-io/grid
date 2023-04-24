@@ -191,12 +191,13 @@ var app = &cli.App{
 					logger.I.Error("reader thread receive a reading error, exiting...", zap.Error(err))
 					return
 				}
-				readerChan <- &loggerv1alpha1.WriteRequest{
+				req := &loggerv1alpha1.WriteRequest{
 					LogName:   logName,
 					Data:      line,
 					User:      userString,
-					Timestamp: time.Now().Unix(),
+					Timestamp: time.Now().UnixNano(),
 				}
+				readerChan <- req
 
 				if ctx.Err() != nil {
 					logger.I.Warn("reader thread receive a context error, exiting...", zap.Error(err))

@@ -69,6 +69,7 @@ func (c *Client) ReadAndWatch(
 		if err != nil {
 			return err
 		}
+		fmt.Printf("%d ", log.Timestamp)
 		fmt.Println(string(log.Data))
 	}
 	return nil
