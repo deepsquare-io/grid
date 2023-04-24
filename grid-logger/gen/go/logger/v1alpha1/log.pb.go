@@ -31,7 +31,7 @@ type WriteRequest struct {
 	User string `protobuf:"bytes,2,opt,name=user,proto3" json:"user,omitempty"`
 	// / data is the actual log
 	Data []byte `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
-	// / timestamp of the log
+	// / timestamp of the log (in nanoseconds)
 	Timestamp int64 `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
@@ -138,8 +138,9 @@ type ReadRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Address   string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	LogName   string `protobuf:"bytes,2,opt,name=log_name,json=logName,proto3" json:"log_name,omitempty"`
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	LogName string `protobuf:"bytes,2,opt,name=log_name,json=logName,proto3" json:"log_name,omitempty"`
+	// / timestamp of the log (in nanoseconds)
 	Timestamp uint64 `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// signedHash = sign(hash('read:'+address + '/' + log_name + '/' + timestamp))
 	SignedHash []byte `protobuf:"bytes,4,opt,name=signed_hash,json=signedHash,proto3" json:"signed_hash,omitempty"`
@@ -212,7 +213,7 @@ type ReadResponse struct {
 
 	// / data is the actual log
 	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
-	// / timestamp of the log
+	// / timestamp of the log (in nanoseconds)
 	Timestamp int64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
