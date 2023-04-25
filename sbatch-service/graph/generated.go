@@ -38,6 +38,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Step() StepResolver
 }
 
 type DirectiveRoot struct {
@@ -45,7 +46,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		Submit func(childComplexity int, job model.Job) int
+		Submit   func(childComplexity int, job model.Job) int
+		Validate func(childComplexity int, module model.Module) int
 	}
 
 	Query struct {
@@ -55,9 +57,14 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	Submit(ctx context.Context, job model.Job) (string, error)
+	Validate(ctx context.Context, module model.Module) (string, error)
 }
 type QueryResolver interface {
 	Job(ctx context.Context, batchLocationHash string) (string, error)
+}
+
+type StepResolver interface {
+	Use(ctx context.Context, obj *model.Step, data *model.StepUse) error
 }
 
 type executableSchema struct {
@@ -87,6 +94,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Submit(childComplexity, args["job"].(model.Job)), true
 
+	case "Mutation.validate":
+		if e.complexity.Mutation.Validate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_validate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Validate(childComplexity, args["module"].(model.Module)), true
+
 	case "Query.job":
 		if e.complexity.Query.Job == nil {
 			break
@@ -114,6 +133,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputHTTPData,
 		ec.unmarshalInputJob,
 		ec.unmarshalInputJobResources,
+		ec.unmarshalInputModule,
+		ec.unmarshalInputModuleInput,
+		ec.unmarshalInputModuleOutput,
 		ec.unmarshalInputMount,
 		ec.unmarshalInputNetworkInterface,
 		ec.unmarshalInputS3Data,
@@ -122,6 +144,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputStepFor,
 		ec.unmarshalInputStepRun,
 		ec.unmarshalInputStepRunResources,
+		ec.unmarshalInputStepUse,
 		ec.unmarshalInputTransportData,
 		ec.unmarshalInputWireguard,
 		ec.unmarshalInputWireguardPeer,
@@ -384,6 +407,31 @@ input Step {
   Is exclusive with "run", "for".
   """
   launch: StepAsyncLaunch
+  """
+  Use a third-party group of steps.
+  """
+  use: StepUse
+}
+
+input StepUse {
+  """
+  Use git to import the group of steps.
+
+  Syntax: <url>@<tag/hash>
+
+  Example: github.com/example/my-module@v1
+  """
+  git: String!
+  """
+  Arguments to be passed as inputs to the group of steps.
+  """
+  args: [EnvVar!]
+  """
+  Environment variables exported with be prefixed with the value of this field.
+
+  Exemple: If exportEnvAs=MY_MODULE, and KEY is exported. Then you can invoke ${MY_MODULE_KEY} environment variable.
+  """
+  exportEnvAs: String
 }
 
 """
@@ -807,11 +855,64 @@ input StepAsyncLaunch {
   steps: [Step!]!
 }
 
+input ModuleInput {
+  """
+  Name of the input.
+  """
+  key: String!
+  """
+  Description of the input.
+  """
+  description: String!
+}
+
+input ModuleOutput {
+  """
+  Name of the output.
+  """
+  key: String!
+  """
+  Description of the output.
+  """
+  description: String!
+}
+
+input Module {
+  """
+  Name of the module.
+  """
+  name: String!
+  """
+  Description of the module.
+  """
+  description: String!
+  """
+  Minimum job resources.
+  """
+  minimumResources: JobResources!
+  """
+  List of allowed arguments.
+  """
+  inputs: [ModuleInput!]
+  """
+  List of exported environment variables.
+  """
+  outputs: [ModuleOutput!]
+  """
+  Steps of the module.
+  """
+  steps: [Step!]!
+}
+
 type Mutation {
   """
   Submit a Job and retrieve the batch location hash.
   """
   submit(job: Job!): String!
+  """
+  Validate a module.
+  """
+  validate(module: Module!): String!
 }
 
 type Query {
@@ -840,6 +941,21 @@ func (ec *executionContext) field_Mutation_submit_args(ctx context.Context, rawA
 		}
 	}
 	args["job"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_validate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.Module
+	if tmp, ok := rawArgs["module"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("module"))
+		arg0, err = ec.unmarshalNModule2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModule(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["module"] = arg0
 	return args, nil
 }
 
@@ -960,6 +1076,61 @@ func (ec *executionContext) fieldContext_Mutation_submit(ctx context.Context, fi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_submit_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_validate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_validate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Validate(rctx, fc.Args["module"].(model.Module))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_validate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_validate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -3295,6 +3466,146 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interface{}) (model.Module, error) {
+	var it model.Module
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "description", "minimumResources", "inputs", "outputs", "steps"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "minimumResources":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minimumResources"))
+			it.MinimumResources, err = ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "inputs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inputs"))
+			it.Inputs, err = ec.unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "outputs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("outputs"))
+			it.Outputs, err = ec.unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "steps":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
+			it.Steps, err = ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputModuleInput(ctx context.Context, obj interface{}) (model.ModuleInput, error) {
+	var it model.ModuleInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"key", "description"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "key":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			it.Key, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputModuleOutput(ctx context.Context, obj interface{}) (model.ModuleOutput, error) {
+	var it model.ModuleOutput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"key", "description"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "key":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			it.Key, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputMount(ctx context.Context, obj interface{}) (model.Mount, error) {
 	var it model.Mount
 	asMap := map[string]interface{}{}
@@ -3458,7 +3769,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "dependsOn", "run", "for", "launch"}
+	fieldsInOrder := [...]string{"name", "dependsOn", "run", "for", "launch", "use"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3503,6 +3814,17 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("launch"))
 			it.Launch, err = ec.unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx, v)
 			if err != nil {
+				return it, err
+			}
+		case "use":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("use"))
+			data, err := ec.unmarshalOStepUse2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepUse(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			if err = ec.resolvers.Step().Use(ctx, &it, data); err != nil {
 				return it, err
 			}
 		}
@@ -3775,6 +4097,50 @@ func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj interface{}) (model.StepUse, error) {
+	var it model.StepUse
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"git", "args", "exportEnvAs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "git":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("git"))
+			it.Git, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "args":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("args"))
+			it.Args, err = ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "exportEnvAs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exportEnvAs"))
+			it.ExportEnvAs, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputTransportData(ctx context.Context, obj interface{}) (model.TransportData, error) {
 	var it model.TransportData
 	asMap := map[string]interface{}{}
@@ -3946,6 +4312,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_submit(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "validate":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_validate(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -4390,6 +4765,21 @@ func (ec *executionContext) unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquare�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNModule2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModule(ctx context.Context, v interface{}) (model.Module, error) {
+	res, err := ec.unmarshalInputModule(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNModuleInput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInput(ctx context.Context, v interface{}) (*model.ModuleInput, error) {
+	res, err := ec.unmarshalInputModuleInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNModuleOutput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutput(ctx context.Context, v interface{}) (*model.ModuleOutput, error) {
+	res, err := ec.unmarshalInputModuleOutput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx context.Context, v interface{}) (*model.Mount, error) {
 	res, err := ec.unmarshalInputMount(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -4789,6 +5179,46 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
+func (ec *executionContext) unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInputᚄ(ctx context.Context, v interface{}) ([]*model.ModuleInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ModuleInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNModuleInput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutputᚄ(ctx context.Context, v interface{}) ([]*model.ModuleOutput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ModuleOutput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNModuleOutput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx context.Context, v interface{}) ([]*model.Mount, error) {
 	if v == nil {
 		return nil, nil
@@ -4866,6 +5296,14 @@ func (ec *executionContext) unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsqu
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputStepRunResources(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOStepUse2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepUse(ctx context.Context, v interface{}) (*model.StepUse, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputStepUse(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

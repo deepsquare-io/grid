@@ -1,5 +1,3 @@
-github.com/99designs/gqlgen v0.17.27 h1:XPsaZiWY1lL2qqVYtBt37GzkyX7bBiVvda7k1buC/Ao=
-github.com/99designs/gqlgen v0.17.27/go.mod h1:i4rEatMrzzu6RXaHydq1nmEPZkb3bKQsnxNRHS4DQB4=
 github.com/99designs/gqlgen v0.17.29 h1:z2MrNOFATCVgQLRCF6Uufz4uz2IQLB5BBMwPUMafJOA=
 github.com/99designs/gqlgen v0.17.29/go.mod h1:i4rEatMrzzu6RXaHydq1nmEPZkb3bKQsnxNRHS4DQB4=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
