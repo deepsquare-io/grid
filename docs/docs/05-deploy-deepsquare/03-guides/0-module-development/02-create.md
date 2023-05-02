@@ -1,47 +1,4 @@
-# Getting Started
-
-Modules are reusable group of steps that can be shared between different workflows. They can help developers save time and reduce errors by automating common tasks and integrating with popular tools.
-
-## About modules
-
-The modular feature allows developers to discover and use pre-built custom group of steps that have been created and shared by other members of the community. These modules can be easily integrated into a workflow by simply referencing them in a "use" step. The community aspect of this feature means that developers can benefit from the collective expertise of other developers and find solutions to problems they may not have encountered before.
-
-Example of usage:
-
-```json title="Hello-world workflow"
-{
-  "enableLogging": false,
-  "resources": {
-    "tasks": 1,
-    "cpusPerTask": 8,
-    "memPerCpu": 8000,
-    "gpusPerTask": 0
-  },
-  "steps": [
-    {
-      "name": "hello-world",
-      "use": {
-        "source": "github.com/deepsquare-io/workflow-module-example@v1",
-        "args": [
-          {
-            "key": "WHO",
-            "value": "me"
-          }
-        ],
-        "exportEnvAs": "HELLO_WORLD"
-      }
-    },
-    {
-      "name": "repeat",
-      "run": {
-        "command": "echo ${HELLO_WORLD_RESULT}"
-      }
-    }
-  ]
-}
-```
-
-## Creating a module
+# Creating and publishing a module
 
 Creating a module is quite easy:
 
@@ -73,7 +30,7 @@ Creating a module is quite easy:
      memPerCpu: 100
      gpusPerTask: 0
    steps:
-     - name: "Say hello World"
+     - name: 'Say hello World'
        run:
          container:
            registry: registry-1.docker.io
@@ -96,12 +53,16 @@ Creating a module is quite easy:
    - expected `inputs` which the user of the module can use by adding a value to the `args` field of the [_StepUse_](/docs/deploy-deepsquare/workflow-api-reference/job#steprsuse-stepuse).
    - expected `outputs`, which can be exported if the user of the module specify the `exportEnvAs` field of the [_StepUse_](/docs/deploy-deepsquare/workflow-api-reference/job#steprsuse-stepuse).
 
+   Notice that the `module.yaml` goes through a Go template engine before being used. This means you can access to context variables like [`Job`](/docs/deploy-deepsquare/workflow-api-reference/job) or [`Step`](/docs/deploy-deepsquare/workflow-api-reference/job#steps-step). This can help you design your module according based on the job or step specifications.
+
 4. Commit and push.
 
    ```shell title="user@~/workflow-module-example"
    git add module.yaml
    git commit -m "added module.yaml"
    git push -u origin main
+
+   ```
 
 5. Add tags to your module.
 
@@ -117,15 +78,3 @@ That's it! Now users can use your module by either specifying:
 - `github.com/deepsquare-io/workflow-module-example@v1`
 - `github.com/deepsquare-io/workflow-module-example@v1.0.0`
 - `github.com/deepsquare-io/workflow-module-example@<commit-sha>`, the commit SHA can be shorten to 7 characters.
-
-:::caution
-
-Be careful, when using a tag like `v1` or `v1.0.0`, make sure that the author is trustworthy, otherwise you may be the victim of a supply-chain attack.
-
-When using a module with a tag, it's crucial to ensure that the author of the module can be trusted. Otherwise, there's a risk of falling victim to a supply-chain attack, where the attacker has tampered with the module code, and any workflow that uses the module can be compromised.
-
-Specifying the full commit SHA is the most secure option, specifying a tag is more convenient.
-
-:::
-
-## 
