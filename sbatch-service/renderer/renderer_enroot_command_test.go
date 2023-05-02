@@ -47,7 +47,7 @@ func TestRenderEnrootCommand(t *testing.T) {
 	}{
 		{
 			input: *cleanEnrootStepRun("hostname"),
-			expected: `/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=y
@@ -61,7 +61,7 @@ environ() {
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
   /usr/bin/echo "test='value'"
 }
 
@@ -90,7 +90,7 @@ EOFenroot
 				r.MapRoot = utils.Ptr(true)
 				return r
 			}(),
-			expected: `/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=y
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=y
@@ -104,7 +104,7 @@ environ() {
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
   /usr/bin/echo "test='value'"
 }
 
@@ -133,7 +133,7 @@ EOFenroot
 				r.Container.Image = "/test/my.sqshfs"
 				return r
 			}(),
-			expected: `/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=y
@@ -147,7 +147,7 @@ environ() {
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
   /usr/bin/echo "test='value'"
 }
 
@@ -176,7 +176,7 @@ EOFenroot
 				r.WorkDir = utils.Ptr("/dir")
 				return r
 			}(),
-			expected: `/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=y
@@ -190,7 +190,7 @@ environ() {
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
   /usr/bin/echo "test='value'"
 }
 

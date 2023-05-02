@@ -1,0 +1,18 @@
+job:
+  enableLogging: false
+  resources:
+    tasks: 1
+    cpusPerTask: 8
+    memPerCpu: 8000
+    gpusPerTask: 0
+  steps:
+    - name: 'hello-world'
+      use:
+        source: 'github.com/deepsquare-io/workflow-module-example@5ca6163'
+        args:
+          - key: 'WHO'
+            value: 'me'
+        exportEnvAs: 'HELLO_WORLD'
+    - name: repeat
+      run:
+        command: 'echo ${HELLO_WORLD_RESULT}'

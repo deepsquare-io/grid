@@ -17,4 +17,6 @@ fi
 {{ renderStepFor .Job .Step.For }}
 {{- else if .Step.Launch }}
 {{ renderStepAsyncLaunch .Job .Step.Launch }}
+{{- else if .Step.Use }}
+{{ renderStepUse .Job .Step .Step.Use }}
 {{- end -}}

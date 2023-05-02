@@ -2,11 +2,13 @@
 FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/golang:1.20.2 as builder
 WORKDIR /build
 COPY go.mod go.sum ./
+ENV GOPROXY=https://goproxy.io,https://proxy.golang.org,direct
 RUN go mod download
 
+COPY . .
+
 ARG TARGETOS TARGETARCH
-RUN --mount=target=/build/ \
-  --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/go/pkg \
   CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w" -a -o /out/app ./server/main.go
 

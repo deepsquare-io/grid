@@ -8,6 +8,8 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/the-grid/sbatch-service/utils/base58"
 )
 
 func squote(str ...interface{}) string {
@@ -100,6 +102,13 @@ func funcMap() template.FuncMap {
 	f["renderSlirp4NetNS"] = RenderSlirp4NetNS
 	f["renderEnrootCommand"] = RenderEnrootCommand
 	f["renderStepAsyncLaunch"] = RenderStepAsyncLaunch
+	f["renderStepUse"] = func(
+		j *model.Job,
+		s *model.Step,
+		u *model.StepUse,
+	) (string, error) {
+		return NewStepUseRenderer(base58.Encoder{}).Render(j, s, u)
+	}
 	f["squote"] = squote
 	f["escapeSQuote"] = escapeSQuote
 	f["quoteEscape"] = quoteEscape

@@ -29,7 +29,7 @@ bin/sbatch-service: $(GO_SRCS)
 .PHONY: graphql
 graphql: graph/model/models_gen.go
 
-graph/model/models_gen.go: ../schemas/sbatchapi/schema.graphqls
+graph/model/models_gen.go: ../schemas/sbatchapi/schema.graphqls gqlgen.yml
 	go run github.com/99designs/gqlgen generate
 
 .PHONY: unit

@@ -1,4 +1,4 @@
-/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 {{- if and .Run.MapRoot (derefBool .Run.MapRoot ) }}
 #ENROOT_REMAP_ROOT=y
 {{- else }}
@@ -16,7 +16,7 @@ environ() {
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
 {{- range $env := .Run.Env }}
   /usr/bin/echo "{{ $env.Key }}={{ $env.Value | squote }}"
 {{- end }}

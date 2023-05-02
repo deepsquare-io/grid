@@ -36,6 +36,8 @@ Each resource is available as environment variables:
 - $CPUS: total number of CPUS
 - $MEM: total number of memory in MB
 
+Go name: "Resources".
+
 </td>
 </tr>
 <tr>
@@ -45,6 +47,8 @@ Each resource is available as environment variables:
 
 Environment variables accessible for the entire job.
 
+Go name: "Env".
+
 </td>
 </tr>
 <tr>
@@ -53,6 +57,8 @@ Environment variables accessible for the entire job.
 <td>
 
 EnableLogging enables the DeepSquare GRID Logger.
+
+Go name: "EnableLogging".
 
 </td>
 </tr>
@@ -64,6 +70,8 @@ EnableLogging enables the DeepSquare GRID Logger.
 Pull data at the start of the job.
 
 It is recommended to set the mode of the data by filling the `inputMode` field.
+
+Go name: "Input".
 
 </td>
 </tr>
@@ -84,12 +92,20 @@ Common modes:
 
 If null, the mode won't change and will default to the source.
 
+Go name: "InputMode".
+
 </td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>steps</strong></td>
 <td valign="top">[<a href="#steps-step">Step</a>!]!</td>
-<td></td>
+<td>
+
+Group of steps that will be run sequentially.
+
+Go name: "Steps".
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>output</strong></td>
@@ -99,6 +115,8 @@ If null, the mode won't change and will default to the source.
 Push data at the end of the job.
 
 Continuous sync/push can be enabled using the `continuousOutputSync` flag.
+
+Go name: "Output".
 
 </td>
 </tr>
@@ -112,6 +130,8 @@ ContinuousOutputSync will push data during the whole job.
 This is useful when it is not desired to lose data when the job is suddenly stopped.
 
 ContinousOutputSync is not available with HTTP.
+
+Go name: "ContinuousOutputSync".
 
 </td>
 </tr>
@@ -238,6 +258,8 @@ Number of tasks which are run in parallel.
 
 Can be greater or equal to 1.
 
+Go name: "Tasks".
+
 </td>
 </tr>
 <tr>
@@ -248,6 +270,8 @@ Can be greater or equal to 1.
 Allocated CPUs per task.
 
 Can be greater or equal to 1.
+
+Go name: "CpusPerTask".
 
 </td>
 </tr>
@@ -260,6 +284,8 @@ Allocated memory (MB) per task.
 
 Can be greater or equal to 1.
 
+Go name: "MemPerCPU".
+
 </td>
 </tr>
 <tr>
@@ -270,6 +296,8 @@ Can be greater or equal to 1.
 Allocated GPUs per task.
 
 Can be greater or equal to 0.
+
+Go name: "GpusPerTask".
 
 </td>
 </tr>
@@ -308,12 +336,24 @@ Accessible via: "$key". "Key" name must follows the POSIX specifications (alphan
 <tr>
 <td colspan="2" valign="top"><strong>key</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Key of the environment variable.
+
+Go name: "Key".
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>value</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Value of the environment variable.
+
+Go name: "Value".
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -348,6 +388,8 @@ Accessible via: "$key". "Key" name must follows the POSIX specifications (alphan
 
 Use http to download a file or archive, which will be autoextracted.
 
+Go name: "HTTP".
+
 </td>
 </tr>
 <tr>
@@ -356,6 +398,8 @@ Use http to download a file or archive, which will be autoextracted.
 <td>
 
 Use s3 to sync a file or directory.
+
+Go name: "S3".
 
 </td>
 </tr>
@@ -405,7 +449,13 @@ HTTPData describes the necessary variables to connect to a HTTP storage.
 <tr>
 <td colspan="2" valign="top"><strong>url</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+HTTP or HTTPS URL to a file.
+
+Go name: "URL".
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -441,6 +491,8 @@ S3Data describes the necessary variables to connect to a S3 storage.
 
 S3 region. Example: "us‑east‑2".
 
+Go name: "Region".
+
 </td>
 </tr>
 <tr>
@@ -452,6 +504,8 @@ The S3 Bucket URL. Must not end with "/".
 
 Example: "s3://my-bucket".
 
+Go name: "BucketURL".
+
 </td>
 </tr>
 <tr>
@@ -460,6 +514,8 @@ Example: "s3://my-bucket".
 <td>
 
 The absolute path to a directory/file inside the bucket. Must start with "/".
+
+Go name: "Path".
 
 </td>
 </tr>
@@ -470,6 +526,8 @@ The absolute path to a directory/file inside the bucket. Must start with "/".
 
 An access key ID for the S3 endpoint.
 
+Go name: "AccessKeyID".
+
 </td>
 </tr>
 <tr>
@@ -479,6 +537,8 @@ An access key ID for the S3 endpoint.
 
 A secret access key for the S3 endpoint.
 
+Go name: "SecretAccessKey".
+
 </td>
 </tr>
 <tr>
@@ -487,6 +547,8 @@ A secret access key for the S3 endpoint.
 <td>
 
 A S3 Endpoint URL used for authentication. Example: https://s3.us‑east‑2.amazonaws.com
+
+Go name: "EndpointURL".
 
 </td>
 </tr>
@@ -502,6 +564,8 @@ This applies to any type of source to any type of destination (s3 or filesystem)
 See: s5cmd sync --delete.
 
 If null, defaults to false.
+
+Go name: "DeleteSync".
 
 </td>
 </tr>
@@ -558,6 +622,8 @@ Name of the instruction.
 
 Is used for debugging.
 
+Go name: "Name".
+
 </td>
 </tr>
 <tr>
@@ -573,6 +639,8 @@ Only steps at the same level can be awaited.
 
 BE WARNED: Uncontrolled `dependsOn` may results in dead locks.
 
+Go name: "DependsOn".
+
 </td>
 </tr>
 <tr>
@@ -582,7 +650,9 @@ BE WARNED: Uncontrolled `dependsOn` may results in dead locks.
 
 Run a command if not null.
 
-Is exclusive with "for", "launch".
+Is exclusive with "for", "launch", "use".
+
+Go name: "Run".
 
 </td>
 </tr>
@@ -593,7 +663,9 @@ Is exclusive with "for", "launch".
 
 Run a for loop if not null.
 
-Is exclusive with "run", "launch".
+Is exclusive with "run", "launch", "use".
+
+Go name: "For".
 
 </td>
 </tr>
@@ -604,7 +676,22 @@ Is exclusive with "run", "launch".
 
 Launch a background process to run a group of commands if not null.
 
-Is exclusive with "run", "for".
+Is exclusive with "run", "for", "use".
+
+Go name: "Launch".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>use</strong></td>
+<td valign="top"><a href="#steprsuse-stepuse">StepUse</a></td>
+<td>
+
+Use a third-party group of steps.
+
+Is exclusive with "run", "for", "launch".
+
+Go name: "Use".
 
 </td>
 </tr>
@@ -679,6 +766,8 @@ You can install and use skopeo to inspect an image without having to pull it.
 
 Example: skopeo inspect --config docker://curlimages/curl:latest will gives "/entrypoint.sh" as ENTRYPOINT and "curl" as CMD. Therefore command="/entrypoint.sh curl".
 
+Go name: "Command".
+
 </td>
 </tr>
 <tr>
@@ -691,6 +780,8 @@ Shell to use.
 Accepted: /bin/bash, /bin/ash, /bin/sh
 Default: /bin/sh
 
+Go name: "Shell".
+
 </td>
 </tr>
 <tr>
@@ -699,6 +790,8 @@ Default: /bin/sh
 <td>
 
 Allocated resources for the command.
+
+Go name: "Resources".
 
 </td>
 </tr>
@@ -710,6 +803,8 @@ Allocated resources for the command.
 Container definition.
 
 If null, run on the host.
+
+Go name: "Container".
 
 </td>
 </tr>
@@ -724,6 +819,8 @@ Either: "host" (default) or "slirp4netns" (rootless network namespace).
 
 Using "slirp4netns" will automatically enables mapRoot.
 
+Go name: "Network".
+
 </td>
 </tr>
 <tr>
@@ -736,6 +833,8 @@ Configuration for the DNS in "slirp4netns" mode.
 ONLY enabled if network is "slirp4netns".
 
 A comma-separated list of DNS IP.
+
+Go name: "DNS".
 
 </td>
 </tr>
@@ -754,6 +853,8 @@ The tunnel interfaces will be named net0, net1, ... netX.
 
 The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
 
+Go name: "CustomNetworkInterfaces".
+
 </td>
 </tr>
 <tr>
@@ -762,6 +863,8 @@ The default network interface is tap0, which is a TAP interface connecting the h
 <td>
 
 Environment variables accessible over the command.
+
+Go name: "Env".
 
 </td>
 </tr>
@@ -782,6 +885,8 @@ It is not recommended to use mapRoot with network=slirp4netns, as it will create
 
 If null, default to false.
 
+Go name: "MapRoot".
+
 </td>
 </tr>
 <tr>
@@ -799,6 +904,8 @@ If no container runtime is used, `cd` will be executed first.
 
 If null, default to use $STORAGE_PATH as working directory.
 
+Go name: "WorkDir".
+
 </td>
 </tr>
 <tr>
@@ -812,6 +919,8 @@ Can be useful when running MPI jobs.
 
 If null, defaults to false.
 
+Go name: "DisableCPUBinding".
+
 </td>
 </tr>
 <tr>
@@ -824,6 +933,8 @@ MPI selection.
 Must be one of: none, pmix_v4, pmi2.
 
 If null, will default to infrastructure provider settings (which may not be what you want).
+
+Go name: "Mpi".
 
 </td>
 </tr>
@@ -963,6 +1074,8 @@ Can be greater or equal to 1.
 
 If null, default to 1.
 
+Go name: "Tasks".
+
 </td>
 </tr>
 <tr>
@@ -975,6 +1088,8 @@ Allocated CPUs per task.
 Can be greater or equal to 1.
 
 If null, defaults to the job resources.
+
+Go name: "CpusPerTask".
 
 </td>
 </tr>
@@ -989,6 +1104,8 @@ Can be greater or equal to 1.
 
 If null, defaults to the job resources.
 
+Go name: "MemPerCPU".
+
 </td>
 </tr>
 <tr>
@@ -1001,6 +1118,8 @@ Allocated GPUs per task.
 Can be greater or equal to 0.
 
 If null, defaults to the job resources.
+
+Go name: "GpusPerTask".
 
 </td>
 </tr>
@@ -1061,6 +1180,8 @@ Examples:
 - library/ubuntu:latest
 - /my.squashfs
 
+Go name: "Image".
+
 </td>
 </tr>
 <tr>
@@ -1068,7 +1189,9 @@ Examples:
 <td valign="top">[<a href="#stepsruncontainermountsmount">Mount</a>!]</td>
 <td>
 
-Mount decribes a Bind Mount.
+Mounts decribes a Bind Mount.
+
+Go name: "Mounts".
 
 </td>
 </tr>
@@ -1079,6 +1202,8 @@ Mount decribes a Bind Mount.
 
 Username of a basic authentication.
 
+Go name: "Username".
+
 </td>
 </tr>
 <tr>
@@ -1087,6 +1212,8 @@ Username of a basic authentication.
 <td>
 
 Password of a basic authentication.
+
+Go name: "Password".
 
 </td>
 </tr>
@@ -1097,7 +1224,9 @@ Password of a basic authentication.
 
 Container registry host.
 
-Defaults to registry-1.docker.io
+Defaults to registry-1.docker.io.
+
+Go name: "Registry".
 
 </td>
 </tr>
@@ -1114,6 +1243,8 @@ When running Apptainer, the container file system is read-only.
 
 Defaults to false.
 
+Go name: "Apptainer".
+
 </td>
 </tr>
 <tr>
@@ -1125,6 +1256,8 @@ Use DeepSquare-hosted images.
 
 By setting to true, apptainer will be set to true.
 
+Go name: "DeepsquareHosted".
+
 </td>
 </tr>
 <tr>
@@ -1133,6 +1266,8 @@ By setting to true, apptainer will be set to true.
 <td>
 
 X11 mounts /tmp/.X11-unix in the container.
+
+Go name: "X11".
 
 </td>
 </tr>
@@ -1206,7 +1341,7 @@ X11 mounts /tmp/.X11-unix in the container.
 
 ### `.steps[].run.container.mounts[]`_Mount_
 
-Mount decribes a Bind Mount.
+DEPRECATED: Mount decribes a Bind Mount.
 
 <table>
 <thead>
@@ -1220,12 +1355,24 @@ Mount decribes a Bind Mount.
 <tr>
 <td colspan="2" valign="top"><strong>hostDir</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Directory on the host to be mounted inside the container.
+
+Go name: "HostDir".
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>containerDir</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Target directory inside the container.
+
+Go name: "ContainerDir".
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>options</strong></td>
@@ -1235,6 +1382,8 @@ Mount decribes a Bind Mount.
 Options modifies the mount options.
 
 Accepted: ro, rw
+
+Go name: "Options".
 
 </td>
 </tr>
@@ -1284,6 +1433,8 @@ The network interface is connected via slirp4netns.
 
 Use the wireguard transport.
 
+Go name: "Wireguard".
+
 </td>
 </tr>
 <tr>
@@ -1292,6 +1443,8 @@ Use the wireguard transport.
 <td>
 
 Use the bore transport.
+
+Go name: "Bore".
 
 </td>
 </tr>
@@ -1360,6 +1513,8 @@ Format is a CIDRv4 (X.X.X.X/X) or CIDRv6.
 
 Recommendation is to take one IP from the 10.0.0.0/24 range (example: 10.0.0.2/24).
 
+Go name: "Address".
+
 </td>
 </tr>
 <tr>
@@ -1369,6 +1524,8 @@ Recommendation is to take one IP from the 10.0.0.0/24 range (example: 10.0.0.2/2
 
 The client private key.
 
+Go name: "PrivateKey".
+
 </td>
 </tr>
 <tr>
@@ -1377,6 +1534,8 @@ The client private key.
 <td>
 
 The peers connected to the wireguard interface.
+
+Go name: "Peers".
 
 </td>
 </tr>
@@ -1431,6 +1590,8 @@ A Wireguard Peer.
 
 The peer private key.
 
+Go name: "PublicKey".
+
 </td>
 </tr>
 <tr>
@@ -1439,6 +1600,8 @@ The peer private key.
 <td>
 
 The peer pre-shared key.
+
+Go name: "PreSharedKey".
 
 </td>
 </tr>
@@ -1457,6 +1620,8 @@ Format is a CIDRv4 (X.X.X.X/X) or CIDRv6.
 
 &lt;VPN IP range&gt; would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other and want the gateway to act as a router.
 
+Go name: "AllowedIPs".
+
 </td>
 </tr>
 <tr>
@@ -1470,6 +1635,8 @@ Format is IP:port.
 
 This would be the Wireguard server.
 
+Go name: "Endpoint".
+
 </td>
 </tr>
 <tr>
@@ -1482,6 +1649,8 @@ Initiate the handshake and re-initiate regularly.
 Takes seconds as parameter. 25 seconds is recommended.
 
 You MUST set the persistent keepalive to enables UDP hole-punching.
+
+Go name: "PersistentKeepalive".
 
 </td>
 </tr>
@@ -1532,6 +1701,8 @@ Bore is a proxy to expose TCP sockets.
 
 Bore server IP/Address.
 
+Go name: "Address".
+
 </td>
 </tr>
 <tr>
@@ -1541,6 +1712,8 @@ Bore server IP/Address.
 
 The bore server port.
 
+Go name: "Port".
+
 </td>
 </tr>
 <tr>
@@ -1549,6 +1722,8 @@ The bore server port.
 <td>
 
 Target port.
+
+Go name: "TargetPort".
 
 </td>
 </tr>
@@ -1590,6 +1765,8 @@ StepFor describes a for loop.
 
 Do a parallel for loop. Each iteration is run in parallel.
 
+Go name: "Parallel".
+
 </td>
 </tr>
 <tr>
@@ -1600,6 +1777,8 @@ Do a parallel for loop. Each iteration is run in parallel.
 Item accessible via the {{ .Item }} variable. Index accessible via the $item variable.
 
 Exclusive with "range".
+
+Go name: "Items".
 
 </td>
 </tr>
@@ -1612,6 +1791,8 @@ Index accessible via the $index variable.
 
 Exclusive with "items".
 
+Go name: "Range".
+
 </td>
 </tr>
 <tr>
@@ -1620,6 +1801,8 @@ Exclusive with "items".
 <td>
 
 Steps are run sequentially in one iteration.
+
+Go name: "Steps".
 
 </td>
 </tr>
@@ -1688,6 +1871,8 @@ ForRange describes the parameter for a range loop.
 
 Begin is inclusive.
 
+Go name: "Begin".
+
 </td>
 </tr>
 <tr>
@@ -1697,6 +1882,8 @@ Begin is inclusive.
 
 End is inclusive.
 
+Go name: "End".
+
 </td>
 </tr>
 <tr>
@@ -1705,6 +1892,8 @@ End is inclusive.
 <td>
 
 Increment counter by x count. If null, defaults to 1.
+
+Go name: "Increment".
 
 </td>
 </tr>
@@ -1749,6 +1938,8 @@ HandleName is the name used to await (dependsOn field of the Step).
 
 Naming style is snake_case. Case is insensitive. No symbol allowed.
 
+Go name: "HandleName".
+
 </td>
 </tr>
 <tr>
@@ -1778,6 +1969,8 @@ If no signal is sent, the asynchronous step will be considered a fire and forget
 
 WARNING: the "no signal sent" option is subject to removal to avoid undefined behavior. Please refrain from using it.
 
+Go name: "SignalOnParentStepExit".
+
 </td>
 </tr>
 <tr>
@@ -1786,6 +1979,8 @@ WARNING: the "no signal sent" option is subject to removal to avoid undefined be
 <td>
 
 Steps are run sequentially.
+
+Go name: "Steps".
 
 </td>
 </tr>
@@ -1880,6 +2075,90 @@ Steps are run sequentially.
             }
           }
         ]
+      }
+    }
+  ]
+}
+```
+
+</details>
+
+### `.steprs[].use` _StepUse_
+
+<table>
+<thead>
+<tr>
+<th colspan="2" align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="2" valign="top"><strong>source</strong></td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Source of the group of steps.
+
+Syntax: &lt;url&gt;@&lt;tag/hash&gt;
+
+Example: github.com/example/my-module@v1
+
+Go name: "Source".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>args</strong></td>
+<td valign="top">[<a href="#env-envvar">EnvVar</a>!]</td>
+<td>
+
+Arguments to be passed as inputs to the group of steps.
+
+Go name: "Args".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>exportEnvAs</strong></td>
+<td valign="top"><a href="#string">String</a></td>
+<td>
+
+Environment variables exported with be prefixed with the value of this field.
+
+Exemple: If exportEnvAs=MY_MODULE, and KEY is exported. Then you can invoke ${MY_MODULE_KEY} environment variable.
+
+Go name: "ExportEnvAs".
+
+</td>
+</tr>
+</tbody>
+</table>
+
+<details>
+  <summary>Example</summary>
+
+```json title="StepUse"
+{
+  "steps": [
+    {
+      "name": "use external module",
+      "use": {
+        "source": "github.com/deepsquare-io/workflow-module-example@5ca6163",
+        "args": [
+          {
+            "key": "WHO",
+            "value": "me"
+          }
+        ],
+        "exportEnvAs": "HELLO_WORLD"
+      }
+    },
+    {
+      "name": "repeat",
+      "run": {
+        "command": "echo ${HELLO_WORLD_RESULT}"
       }
     }
   ]
