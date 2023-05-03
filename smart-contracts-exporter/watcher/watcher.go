@@ -295,6 +295,10 @@ func (w *Watcher) handleJobTransition(ctx context.Context, event *metascheduler.
 		metricsv1.TotalCreditSpent(job.CustomerAddr.Hex()).Add(f)
 
 		bduration := new(big.Int).Div(new(big.Int).Sub(job.Time.End, job.Time.Start), big.NewInt(60))
+		if bduration.Sign() == -1 {
+			logger.I.Error("job duration is negative", zap.String("duration", bduration.String()), zap.Any("job", job))
+			return nil
+		}
 		f, _ = new(big.Float).SetInt(bduration).Float64()
 		metricsv1.TotalJobDuration(job.CustomerAddr.Hex()).Add(f)
 
