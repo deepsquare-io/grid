@@ -16,7 +16,7 @@ import (
 	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/watcher"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -175,10 +175,10 @@ var app = &cli.App{
 		logger.I.Info("listening", zap.String("listeningAddress", listenAddress))
 		r := chi.NewRouter()
 		r.Use(cors.Handler(cors.Options{
-			AllowedOrigins:   []string{"https://*", "http://*"},
+			AllowedOrigins:   []string{"*"},
 			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-			AllowedHeaders:   []string{"Accept", "Content-Type"},
-			AllowCredentials: false,
+			AllowedHeaders:   []string{"Accept", "Content-Type", "X-Requested-With"},
+			AllowCredentials: true,
 			MaxAge:           300,
 		}))
 
