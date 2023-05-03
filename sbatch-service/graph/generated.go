@@ -611,6 +611,8 @@ input StepRunResources {
 
 """
 DEPRECATED: Mount decribes a Bind Mount.
+
+Mount is now deprecated. Please use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ...
 """
 input Mount {
   """
@@ -666,7 +668,9 @@ input ContainerRun {
     @goTag(key: "yaml")
     @goTag(key: "validate", value: "valid_container_image_url")
   """
-  Mounts decribes a Bind Mount.
+  [DEPRECATED] Mounts decribes a Bind Mount.
+
+  Please use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ...
 
   Go name: "Mounts".
   """
@@ -870,7 +874,9 @@ input NetworkInterface {
 """
 StepRun is one script executed with the shell.
 
-Shared storage is accessible through the $STORAGE_PATH environment variable.
+A temporary shared storage is accessible through the $STORAGE_PATH environment variable.
+
+A shared cache per site is accessible via the $DEEPSQUARE_TMP environment variable. The $DEEPSQUARE_TMP directory is cleared periodically.
 
 echo "KEY=value" >> "$DEEPSQUARE_ENV" can be used to share environment variables between steps.
 

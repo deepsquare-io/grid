@@ -9,7 +9,7 @@ Environment variables can be set at the task level and at the step level.
 From lowest to highest, the order of priority is:
 
 - Job level
-- DeepSquare defined variables (`DEEPSQUARE_INPUT`, `DEEPSQUARE_OUTPUT`, `STORAGE_PATH`, `DEEPSQUARE_ENV`)
+- DeepSquare defined variables (`DEEPSQUARE_INPUT`, `DEEPSQUARE_OUTPUT`, `DEEPSQUARE_TMP` `STORAGE_PATH`, `DEEPSQUARE_ENV`)
 - Container environment variables (`<container rootfs>/etc/environment`)
 - Step level
 
@@ -27,6 +27,8 @@ The only way to pass information between steps is to use shared storage and Deep
 
 The environement variable `$STORAGE_PATH` stores the path of the shared storage path. That shared storage only lives during the job, it is a scratch storage.
 
+The environment variable `$DEEPSQUARE_TMP` stores the path to a per-site cache. The cache is flushed periodically according to the infrastructure provider's policy.
+
 If running a container, `$STORAGE_PATH` will be defined at `/deepsquare`.
 
 The other environment variables defined by DeepSquare are subdirectories in the `$STORAGE_PATH`.
@@ -37,6 +39,7 @@ The other environment variables defined by DeepSquare are subdirectories in the 
 | DEEPSQUARE_INPUT      | /deepsquare/input                  |
 | DEEPSQUARE_OUTPUT     | /deepsquare/output                 |
 | DEEPSQUARE_ENV        | /deepsquare/env                    |
+| DEEPSQUARE_TMP        | /deepsquare/tmp                    |
 
 **Always use environment variables and not hard-code the values to be future-proof.**
 

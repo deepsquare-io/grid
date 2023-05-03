@@ -1,4 +1,11 @@
 {{- if .Step.Run.Container -}}
+{{- if .Step.Run.Container.Mounts -}}
+/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
+{{ end -}}
 {{- $image := formatImageURL .Step.Run.Container.Registry .Step.Run.Container.Image .Step.Run.Container.Apptainer .Step.Run.Container.DeepsquareHosted -}}
 {{- if or (and .Step.Run.Container.Apptainer (derefBool .Step.Run.Container.Apptainer)) (and .Step.Run.Container.DeepsquareHosted (derefBool .Step.Run.Container.DeepsquareHosted)) -}}
 {{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password -}}
@@ -12,9 +19,9 @@ export IMAGE_PATH
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" {{ $image | squote }}
 /usr/bin/echo "Image successfully imported!"
 {{ end -}}
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP/deepsquare/tmp:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
   --export=ALL"$(loadDeepsquareEnv)" \
 {{- if and .Step.Run.Resources .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) }}
   --cpus-per-task={{ derefInt .Step.Run.Resources.CpusPerTask }} \
@@ -113,9 +120,9 @@ enrootClean() {
 trap enrootClean EXIT INT TERM
 '{{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS (renderEnrootCommand .Step.Run) .Step.Run.Shell | squote -}}
 {{- else }}
-MOUNTS="$STORAGE_PATH:/deepsquare:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
   --export=ALL"$(loadDeepsquareEnv)" \
 {{- if and .Step.Run.Resources .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) }}
   --cpus-per-task={{ derefInt .Step.Run.Resources.CpusPerTask }} \

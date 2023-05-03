@@ -14,6 +14,7 @@ environ() {
   /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
 
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
@@ -24,6 +25,7 @@ environ() {
 
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_TMP /deepsquare/tmp none x-create=dir,bind,rw"
 {{- if and .Run.Container.X11 (derefBool .Run.Container.X11 ) }}
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
 {{- end }}

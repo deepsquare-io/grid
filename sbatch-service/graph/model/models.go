@@ -60,7 +60,9 @@ type Mount struct {
 
 // StepRun is one script executed with the shell.
 //
-// Shared storage is accessible through the $STORAGE_PATH environment variable.
+// A temporary shared storage is accessible through the $STORAGE_PATH environment variable.
+//
+// A shared cache per site is accessible via the $DEEPSQUARE_TMP environment variable. The $DEEPSQUARE_TMP directory is cleared periodically.
 //
 // echo "KEY=value" >> "$DEEPSQUARE_ENV" can be used to share environment variables between steps.
 //

@@ -2,7 +2,9 @@
 
 :::caution
 
-The bind mounts feature is experimental and might be removed in the future.
+The bind mounts feature is deprecated and will be removed in the future.
+
+Please use predefined mounts by using the available [environment variables](environment-variables).
 
 :::
 

@@ -693,7 +693,7 @@
       {
         "kind": "INPUT_OBJECT",
         "name": "Mount",
-        "description": "DEPRECATED: Mount decribes a Bind Mount.",
+        "description": "DEPRECATED: Mount decribes a Bind Mount.\n\nMount is now deprecated. Please use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ...",
         "specifiedByURL": null,
         "fields": null,
         "inputFields": [
@@ -775,7 +775,7 @@
           },
           {
             "name": "mounts",
-            "description": "Mounts decribes a Bind Mount.\n\nGo name: \"Mounts\".",
+            "description": "[DEPRECATED] Mounts decribes a Bind Mount.\n\nPlease use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ...\n\nGo name: \"Mounts\".",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -1121,7 +1121,7 @@
       {
         "kind": "INPUT_OBJECT",
         "name": "StepRun",
-        "description": "StepRun is one script executed with the shell.\n\nShared storage is accessible through the $STORAGE_PATH environment variable.\n\necho \"KEY=value\" >> \"$DEEPSQUARE_ENV\" can be used to share environment variables between steps.\n\n$DEEPSQUARE_INPUT is the path that contains imported files.\n\n$DEEPSQUARE_OUTPUT is the staging directory for uploading files.",
+        "description": "StepRun is one script executed with the shell.\n\nA temporary shared storage is accessible through the $STORAGE_PATH environment variable.\n\nA shared cache per site is accessible via the $DEEPSQUARE_TMP environment variable. The $DEEPSQUARE_TMP directory is cleared periodically.\n\necho \"KEY=value\" >> \"$DEEPSQUARE_ENV\" can be used to share environment variables between steps.\n\n$DEEPSQUARE_INPUT is the path that contains imported files.\n\n$DEEPSQUARE_OUTPUT is the staging directory for uploading files.",
         "specifiedByURL": null,
         "fields": null,
         "inputFields": [

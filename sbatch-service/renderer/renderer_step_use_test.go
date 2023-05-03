@@ -58,9 +58,9 @@ if [ "$tries" -ge 10 ]; then
 	exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw"
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw"
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-name='Say hello World"' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-name='Say hello World"' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \

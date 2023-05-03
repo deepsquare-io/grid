@@ -40,7 +40,9 @@ type ContainerRun struct {
 	//
 	// Go name: "Image".
 	Image string `json:"image" yaml:"image" validate:"valid_container_image_url"`
-	// Mounts decribes a Bind Mount.
+	// [DEPRECATED] Mounts decribes a Bind Mount.
+	//
+	// Please use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ...
 	//
 	// Go name: "Mounts".
 	Mounts []*Mount `json:"mounts,omitempty" yaml:"mounts,omitempty" validate:"dive,required"`

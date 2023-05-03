@@ -54,7 +54,12 @@ func TestRenderStepRun(t *testing.T) {
 	}{
 		{
 			input: *cleanStepRun("hostname"),
-			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
+			expected: `/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine registry login "username" password "password"
 EOFnetrc
@@ -75,9 +80,9 @@ if [ "$tries" -ge 10 ]; then
 	exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -98,16 +103,21 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				r.Container.Apptainer = utils.Ptr(true)
 				return r
 			}(),
-			expected: `export APPTAINER_DOCKER_USERNAME='username'
+			expected: `/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
+export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry/image'
 /usr/bin/echo "Image successfully imported!"
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -129,7 +139,12 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				r.MapRoot = utils.Ptr(true)
 				return r
 			}(),
-			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
+			expected: `/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine registry login "username" password "password"
 EOFnetrc
@@ -150,9 +165,9 @@ if [ "$tries" -ge 10 ]; then
 	exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -173,7 +188,12 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				r.WorkDir = utils.Ptr("/home")
 				return r
 			}(),
-			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
+			expected: `/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine registry login "username" password "password"
 EOFnetrc
@@ -194,9 +214,9 @@ if [ "$tries" -ge 10 ]; then
 	exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -218,11 +238,16 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				r.Container.Image = "/test/my.sqshfs"
 				return r
 			}(),
-			expected: `export APPTAINER_DOCKER_USERNAME='username'
+			expected: `/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
+export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -244,11 +269,16 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPU
 				r.Container.DeepsquareHosted = utils.Ptr(true)
 				return r
 			}(),
-			expected: `export APPTAINER_DOCKER_USERNAME='username'
+			expected: `/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
+export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -497,16 +527,21 @@ wait $child
 					&cleanWireguardNIC,
 				},
 			},
-			expected: `export APPTAINER_DOCKER_USERNAME='username'
+			expected: `/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
+export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry/image'
 /usr/bin/echo "Image successfully imported!"
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -651,7 +686,12 @@ wait $child
 					&cleanWireguardNIC,
 				},
 			},
-			expected: `/usr/bin/mkdir -p "$HOME/.config/enroot/"
+			expected: `/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
+/usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine registry login "username" password "password"
 EOFnetrc
@@ -801,6 +841,7 @@ environ() {
   /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
 
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
@@ -808,6 +849,7 @@ environ() {
 
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_TMP /deepsquare/tmp none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
   /usr/bin/echo '"'"'"'"'"'"'"'"'/host /container none x-create=auto,bind,ro'"'"'"'"'"'"'"'"'
 }
