@@ -11,12 +11,13 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/graph"
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/http/middleware"
 	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/logger"
 	metricsv1 "github.com/deepsquare-io/the-grid/smart-contracts-exporter/metrics/v1"
 	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/watcher"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 	"github.com/gorilla/websocket"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/urfave/cli/v2"
@@ -172,14 +173,21 @@ var app = &cli.App{
 		srv.AddTransport(transport.MultipartForm{})
 		srv.Use(extension.Introspection{})
 		logger.I.Info("listening", zap.String("listeningAddress", listenAddress))
-		mux := http.NewServeMux()
+		r := chi.NewRouter()
+		r.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   []string{"https://*", "http://*"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Content-Type"},
+			AllowCredentials: false,
+			MaxAge:           300,
+		}))
 
-		mux.HandleFunc("/", playground.ApolloSandboxHandler("GraphQL Playground", "/graphql"))
-		mux.Handle("/graphql", srv)
-		mux.Handle("/metrics", promhttp.Handler())
+		r.HandleFunc("/", playground.ApolloSandboxHandler("GraphQL Playground", "/graphql"))
+		r.Handle("/graphql", srv)
+		r.Handle("/metrics", promhttp.Handler())
 		server := &http.Server{
 			Addr:    listenAddress,
-			Handler: middleware.CORS(mux),
+			Handler: r,
 		}
 
 		wg.Add(1)
