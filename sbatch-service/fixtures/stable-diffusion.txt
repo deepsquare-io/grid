@@ -88,7 +88,7 @@ WARNING: Mounts is now deprecated.
 If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
 The cache is cleared periodically and only persists on the site.
 EOFmounterror
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP/deepsquare/tmp:rw",'/data/beegfs/cache/persistent':'/cache':'rw','/opt/models/stable-diffusion':'/models':'ro'
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw",'/data/beegfs/cache/persistent':'/cache':'rw','/opt/models/stable-diffusion':'/models':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" HF_HOME='/cache' /usr/bin/srun --job-name='generate-image' \
   --export=ALL"$(loadDeepsquareEnv)" \

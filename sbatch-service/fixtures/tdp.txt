@@ -77,7 +77,7 @@ export 'XDG_RUNTIME_DIR'='/tmp'
 
 declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''tdp'
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro"
 # shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-name='tdp' \
   --export=ALL"$(loadDeepsquareEnv)" \
