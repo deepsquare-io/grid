@@ -26,11 +26,9 @@ build-all: $(addprefix bin/,$(bins)) bin/checksums.md
 bin/sbatch-service: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -tags reader -o "$@" ./server.go
 
-.PHONY: graphql
-graphql: graph/model/models_gen.go
-
-graph/model/models_gen.go: ../schemas/sbatchapi/schema.graphqls gqlgen.yml
-	go run github.com/99designs/gqlgen generate
+.PHONY: generate
+generate:
+	go generate ./...
 
 .PHONY: unit
 unit:

@@ -41,7 +41,6 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	DisabledGoTag func(ctx context.Context, obj interface{}, next graphql.Resolver, key string, value *string) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -219,9 +218,8 @@ directive @goTag(
   value: String
 ) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
-directive @disabledGoTag(
-  key: String!
-  value: String
+directive @constraint(
+  format: String
 ) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
 """
@@ -237,10 +235,7 @@ input EnvVar {
   """
   key: String!
     @goTag(key: "yaml")
-    @goTag(
-      key: "validate"
-      value: "required,valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"
-    )
+    @constraint(format: "required,valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH")
   """
   Value of the environment variable.
 
@@ -258,7 +253,7 @@ input HTTPData {
 
   Go name: "URL".
   """
-  url: String! @goTag(key: "yaml") @goTag(key: "validate", value: "url")
+  url: String! @goTag(key: "yaml") @constraint(format: "url")
 }
 
 """
@@ -280,15 +275,13 @@ input S3Data {
   """
   bucketUrl: String!
     @goTag(key: "yaml")
-    @disabledGoTag(key: "validate", value: "url,startswith=s3://,endsnotwith=/")
+    @constraint(format: "url,startswith=s3://,endsnotwith=/")
   """
   The absolute path to a directory/file inside the bucket. Must start with "/".
 
   Go name: "Path".
   """
-  path: String!
-    @goTag(key: "yaml")
-    @goTag(key: "validate", value: "startswith=/")
+  path: String! @goTag(key: "yaml") @constraint(format: "startswith=/")
   """
   An access key ID for the S3 endpoint.
 
@@ -306,7 +299,7 @@ input S3Data {
 
   Go name: "EndpointURL".
   """
-  endpointUrl: String! @goTag(key: "yaml") @goTag(key: "validate", value: "url")
+  endpointUrl: String! @goTag(key: "yaml") @constraint(format: "url")
   """
   DeleteSync removes destination files that doesn't correspond to the source.
 
@@ -347,7 +340,7 @@ input JobResources {
 
   Go name: "Tasks".
   """
-  tasks: Int! @goTag(key: "yaml") @goTag(key: "validate", value: "gte=1")
+  tasks: Int! @goTag(key: "yaml") @constraint(format: "gte=1")
   """
   Allocated CPUs per task.
 
@@ -355,7 +348,7 @@ input JobResources {
 
   Go name: "CpusPerTask".
   """
-  cpusPerTask: Int! @goTag(key: "yaml") @goTag(key: "validate", value: "gte=1")
+  cpusPerTask: Int! @goTag(key: "yaml") @constraint(format: "gte=1")
   """
   Allocated memory (MB) per task.
 
@@ -363,7 +356,7 @@ input JobResources {
 
   Go name: "MemPerCPU".
   """
-  memPerCpu: Int! @goTag(key: "yaml") @goTag(key: "validate", value: "gte=1")
+  memPerCpu: Int! @goTag(key: "yaml") @constraint(format: "gte=1")
   """
   Allocated GPUs per task.
 
@@ -371,7 +364,7 @@ input JobResources {
 
   Go name: "GpusPerTask".
   """
-  gpusPerTask: Int! @goTag(key: "yaml") @goTag(key: "validate", value: "gte=0")
+  gpusPerTask: Int! @goTag(key: "yaml") @constraint(format: "gte=0")
 }
 
 """
@@ -392,9 +385,7 @@ input Job {
 
   Go name: "Resources".
   """
-  resources: JobResources!
-    @goTag(key: "yaml")
-    @goTag(key: "validate", value: "required")
+  resources: JobResources! @goTag(key: "yaml") @constraint(format: "required")
   """
   Environment variables accessible for the entire job.
 
@@ -402,7 +393,7 @@ input Job {
   """
   env: [EnvVar!]
     @goTag(key: "yaml", value: "env,omitempty")
-    @goTag(key: "validate", value: "dive,required")
+    @constraint(format: "dive,required")
   """
   EnableLogging enables the DeepSquare GRID Logger.
 
@@ -433,15 +424,13 @@ input Job {
   """
   inputMode: Int
     @goTag(key: "yaml", value: "inputMode,omitempty")
-    @goTag(key: "validate", value: "omitempty,lt=512")
+    @constraint(format: "omitempty,lt=512")
   """
   Group of steps that will be run sequentially.
 
   Go name: "Steps".
   """
-  steps: [Step!]!
-    @goTag(key: "yaml")
-    @goTag(key: "validate", value: "dive,required")
+  steps: [Step!]! @goTag(key: "yaml") @constraint(format: "dive,required")
   """
   Push data at the end of the job.
 
@@ -488,7 +477,7 @@ input Step {
   """
   dependsOn: [String!]
     @goTag(key: "yaml", value: "dependsOn,omitempty")
-    @goTag(key: "validate", value: "dive,alphanum_underscore")
+    @constraint(format: "dive,alphanum_underscore")
   """
   Run a command if not null.
 
@@ -549,10 +538,7 @@ input StepUse {
   """
   exportEnvAs: String
     @goTag(key: "yaml", value: "exportEnvAs,omitempty")
-    @goTag(
-      key: "validate"
-      value: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"
-    )
+    @constraint(format: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH")
 }
 
 """
@@ -570,7 +556,7 @@ input StepRunResources {
   """
   tasks: Int
     @goTag(key: "yaml", value: "tasks,omitempty")
-    @goTag(key: "validate", value: "omitempty,gte=1")
+    @constraint(format: "omitempty,gte=1")
   """
   Allocated CPUs per task.
 
@@ -582,7 +568,7 @@ input StepRunResources {
   """
   cpusPerTask: Int
     @goTag(key: "yaml", value: "cpusPerTask,omitempty")
-    @goTag(key: "validate", value: "omitempty,gte=1")
+    @constraint(format: "omitempty,gte=1")
   """
   Allocated memory (MB) per task.
 
@@ -594,7 +580,7 @@ input StepRunResources {
   """
   memPerCpu: Int
     @goTag(key: "yaml", value: "memPerCpu,omitempty")
-    @goTag(key: "validate", value: "omitempty,gte=1")
+    @constraint(format: "omitempty,gte=1")
   """
   Allocated GPUs per task.
 
@@ -606,7 +592,7 @@ input StepRunResources {
   """
   gpusPerTask: Int
     @goTag(key: "yaml", value: "gpusPerTask,omitempty")
-    @goTag(key: "validate", value: "omitempty,gte=0")
+    @constraint(format: "omitempty,gte=0")
 }
 
 """
@@ -620,17 +606,13 @@ input Mount {
 
   Go name: "HostDir".
   """
-  hostDir: String!
-    @goTag(key: "yaml")
-    @goTag(key: "validate", value: "startswith=/")
+  hostDir: String! @goTag(key: "yaml") @constraint(format: "startswith=/")
   """
   Target directory inside the container.
 
   Go name: "ContainerDir".
   """
-  containerDir: String!
-    @goTag(key: "yaml")
-    @goTag(key: "validate", value: "startswith=/")
+  containerDir: String! @goTag(key: "yaml") @constraint(format: "startswith=/")
   """
   Options modifies the mount options.
 
@@ -640,7 +622,7 @@ input Mount {
   """
   options: String!
     @goTag(key: "yaml")
-    @disabledGoTag(key: "validate", value: "omitempty,oneof=rw ro")
+    @constraint(format: "omitempty,oneof=rw ro")
 }
 
 input ContainerRun {
@@ -666,7 +648,7 @@ input ContainerRun {
   """
   image: String!
     @goTag(key: "yaml")
-    @goTag(key: "validate", value: "valid_container_image_url")
+    @constraint(format: "valid_container_image_url")
   """
   [DEPRECATED] Mounts decribes a Bind Mount.
 
@@ -676,7 +658,7 @@ input ContainerRun {
   """
   mounts: [Mount!]
     @goTag(key: "yaml", value: "mounts,omitempty")
-    @goTag(key: "validate", value: "dive,required")
+    @constraint(format: "dive,required")
   """
   Username of a basic authentication.
 
@@ -698,7 +680,7 @@ input ContainerRun {
   """
   registry: String
     @goTag(key: "yaml", value: "registry,omitempty")
-    @goTag(key: "validate", value: "omitempty,hostname")
+    @constraint(format: "omitempty,hostname")
   """
   Run with Apptainer as Container runtime instead of Enroot.
 
@@ -759,7 +741,7 @@ input WireguardPeer {
   """
   allowedIPs: [String!]
     @goTag(key: "yaml", value: "allowedIPs,omitempty")
-    @goTag(key: "validate", value: "dive,cidr")
+    @constraint(format: "dive,cidr")
   """
   The peer endpoint.
 
@@ -771,7 +753,7 @@ input WireguardPeer {
   """
   endpoint: String
     @goTag(key: "yaml", value: "endpoint,omitempty")
-    @goTag(key: "validate", value: "omitempty,hostname_port")
+    @constraint(format: "omitempty,hostname_port")
   """
   Initiate the handshake and re-initiate regularly.
 
@@ -808,7 +790,7 @@ input Wireguard {
   """
   address: [String!]
     @goTag(key: "yaml", value: "address,omitempty")
-    @goTag(key: "validate", value: "dive,cidr")
+    @constraint(format: "dive,cidr")
   """
   The client private key.
 
@@ -822,7 +804,7 @@ input Wireguard {
   """
   peers: [WireguardPeer!]
     @goTag(key: "yaml", value: "peers,omitempty")
-    @goTag(key: "validate", value: "dive,required")
+    @constraint(format: "dive,required")
 }
 
 """
@@ -836,7 +818,7 @@ input Bore {
 
   Go name: "Address".
   """
-  address: String! @goTag(key: "yaml") @goTag(key: "validate", value: "ip|fqdn")
+  address: String! @goTag(key: "yaml") @constraint(format: "ip|fqdn")
   """
   The bore server port.
 
@@ -907,10 +889,7 @@ input StepRun {
   """
   shell: String
     @goTag(key: "yaml", value: "shell,omitempty")
-    @disabledGoTag(
-      key: "validate"
-      value: "omitempty,oneof=/bin/bash /bin/ash /bin/sh"
-    )
+    @constraint(format: "omitempty,oneof=/bin/bash /bin/ash /bin/sh")
   """
   Allocated resources for the command.
 
@@ -936,7 +915,7 @@ input StepRun {
   """
   network: String
     @goTag(key: "yaml", value: "network,omitempty")
-    @disabledGoTag(key: "validate", value: "omitempty,oneof=host slirp4netns")
+    @constraint(format: "omitempty,oneof=host slirp4netns")
   """
   Configuration for the DNS in "slirp4netns" mode.
 
@@ -948,7 +927,7 @@ input StepRun {
   """
   dns: [String!]
     @goTag(key: "yaml", value: "dns,omitempty")
-    @goTag(key: "validate", value: "dive,ip")
+    @constraint(format: "dive,ip")
   """
   Add custom network interfaces.
 
@@ -964,7 +943,7 @@ input StepRun {
   """
   customNetworkInterfaces: [NetworkInterface!]
     @goTag(key: "yaml", value: "customNetworkInterfaces,omitempty")
-    @goTag(key: "validate", value: "dive,required")
+    @constraint(format: "dive,required")
   """
   Environment variables accessible over the command.
 
@@ -972,7 +951,7 @@ input StepRun {
   """
   env: [EnvVar!]
     @goTag(key: "yaml", value: "env,omitempty")
-    @goTag(key: "validate", value: "dive,required")
+    @constraint(format: "dive,required")
   """
   Remap UID to root. Does not grant elevated system permissions, despite appearances.
 
@@ -1004,7 +983,7 @@ input StepRun {
   """
   workDir: String
     @goTag(key: "yaml", value: "workDir,omitempty")
-    @goTag(key: "validate", value: "omitempty,startswith=/")
+    @constraint(format: "omitempty,startswith=/")
   """
   DisableCPUBinding disables process affinity binding to tasks.
 
@@ -1027,7 +1006,7 @@ input StepRun {
   """
   mpi: String
     @goTag(key: "yaml", value: "mpi,omitempty")
-    @disabledGoTag(key: "validate", value: "omitempty,oneof=none pmix_v4 pmi2")
+    @constraint(format: "omitempty,oneof=none pmix_v4 pmi2")
 }
 
 """
@@ -1061,9 +1040,7 @@ input StepFor {
 
   Go name: "Steps".
   """
-  steps: [Step!]!
-    @goTag(key: "yaml")
-    @goTag(key: "validate", value: "dive,required")
+  steps: [Step!]! @goTag(key: "yaml") @constraint(format: "dive,required")
 }
 
 """
@@ -1105,7 +1082,7 @@ input StepAsyncLaunch {
   """
   handleName: String
     @goTag(key: "yaml", value: "handleName,omitempty")
-    @goTag(key: "validate", value: "omitempty,alphanum_underscore")
+    @constraint(format: "omitempty,alphanum_underscore")
   """
   SignalOnParentStepExit sends a signal to the step and sub-steps when the parent step ends.
 
@@ -1149,10 +1126,7 @@ input ModuleInput {
   """
   key: String!
     @goTag(key: "yaml")
-    @goTag(
-      key: "validate"
-      value: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"
-    )
+    @constraint(format: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH")
   """
   Description of the input.
 
@@ -1177,10 +1151,7 @@ input ModuleOutput {
   """
   key: String!
     @goTag(key: "yaml")
-    @goTag(
-      key: "validate"
-      value: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"
-    )
+    @constraint(format: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH")
   """
   Description of the output.
 
@@ -1227,7 +1198,7 @@ input Module {
   """
   inputs: [ModuleInput!]
     @goTag(key: "yaml", value: "inputs,omitempty")
-    @goTag(key: "validate", value: "dive,required")
+    @constraint(format: "dive,required")
   """
   List of exported environment variables.
 
@@ -1235,15 +1206,13 @@ input Module {
   """
   outputs: [ModuleOutput!]
     @goTag(key: "yaml", value: "outputs,omitempty")
-    @goTag(key: "validate", value: "dive,required")
+    @constraint(format: "dive,required")
   """
   Steps of the module.
 
   Go name: "Steps".
   """
-  steps: [Step!]!
-    @goTag(key: "yaml")
-    @goTag(key: "validate", value: "dive,required")
+  steps: [Step!]! @goTag(key: "yaml") @constraint(format: "dive,required")
 }
 
 type Mutation {
@@ -1270,30 +1239,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
-
-func (ec *executionContext) dir_disabledGoTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["key"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["key"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["value"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["value"] = arg1
-	return args, nil
-}
 
 func (ec *executionContext) field_Mutation_submit_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -4014,31 +3959,9 @@ func (ec *executionContext) unmarshalInputMount(ctx context.Context, obj interfa
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("options"))
-			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalNString2string(ctx, v) }
-			directive1 := func(ctx context.Context) (interface{}, error) {
-				key, err := ec.unmarshalNString2string(ctx, "validate")
-				if err != nil {
-					return nil, err
-				}
-				value, err := ec.unmarshalOString2ᚖstring(ctx, "omitempty,oneof=rw ro")
-				if err != nil {
-					return nil, err
-				}
-				if ec.directives.DisabledGoTag == nil {
-					return nil, errors.New("directive disabledGoTag is not implemented")
-				}
-				return ec.directives.DisabledGoTag(ctx, obj, directive0, key, value)
-			}
-
-			tmp, err := directive1(ctx)
+			it.Options, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, graphql.ErrorOnPath(ctx, err)
-			}
-			if data, ok := tmp.(string); ok {
-				it.Options = data
-			} else {
-				err := fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-				return it, graphql.ErrorOnPath(ctx, err)
+				return it, err
 			}
 		}
 	}
@@ -4108,31 +4031,9 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bucketUrl"))
-			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalNString2string(ctx, v) }
-			directive1 := func(ctx context.Context) (interface{}, error) {
-				key, err := ec.unmarshalNString2string(ctx, "validate")
-				if err != nil {
-					return nil, err
-				}
-				value, err := ec.unmarshalOString2ᚖstring(ctx, "url,startswith=s3://,endsnotwith=/")
-				if err != nil {
-					return nil, err
-				}
-				if ec.directives.DisabledGoTag == nil {
-					return nil, errors.New("directive disabledGoTag is not implemented")
-				}
-				return ec.directives.DisabledGoTag(ctx, obj, directive0, key, value)
-			}
-
-			tmp, err := directive1(ctx)
+			it.BucketURL, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
-				return it, graphql.ErrorOnPath(ctx, err)
-			}
-			if data, ok := tmp.(string); ok {
-				it.BucketURL = data
-			} else {
-				err := fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-				return it, graphql.ErrorOnPath(ctx, err)
+				return it, err
 			}
 		case "path":
 			var err error
@@ -4370,33 +4271,9 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("shell"))
-			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOString2ᚖstring(ctx, v) }
-			directive1 := func(ctx context.Context) (interface{}, error) {
-				key, err := ec.unmarshalNString2string(ctx, "validate")
-				if err != nil {
-					return nil, err
-				}
-				value, err := ec.unmarshalOString2ᚖstring(ctx, "omitempty,oneof=/bin/bash /bin/ash /bin/sh")
-				if err != nil {
-					return nil, err
-				}
-				if ec.directives.DisabledGoTag == nil {
-					return nil, errors.New("directive disabledGoTag is not implemented")
-				}
-				return ec.directives.DisabledGoTag(ctx, obj, directive0, key, value)
-			}
-
-			tmp, err := directive1(ctx)
+			it.Shell, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, graphql.ErrorOnPath(ctx, err)
-			}
-			if data, ok := tmp.(*string); ok {
-				it.Shell = data
-			} else if tmp == nil {
-				it.Shell = nil
-			} else {
-				err := fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
-				return it, graphql.ErrorOnPath(ctx, err)
+				return it, err
 			}
 		case "resources":
 			var err error
@@ -4418,33 +4295,9 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("network"))
-			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOString2ᚖstring(ctx, v) }
-			directive1 := func(ctx context.Context) (interface{}, error) {
-				key, err := ec.unmarshalNString2string(ctx, "validate")
-				if err != nil {
-					return nil, err
-				}
-				value, err := ec.unmarshalOString2ᚖstring(ctx, "omitempty,oneof=host slirp4netns")
-				if err != nil {
-					return nil, err
-				}
-				if ec.directives.DisabledGoTag == nil {
-					return nil, errors.New("directive disabledGoTag is not implemented")
-				}
-				return ec.directives.DisabledGoTag(ctx, obj, directive0, key, value)
-			}
-
-			tmp, err := directive1(ctx)
+			it.Network, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, graphql.ErrorOnPath(ctx, err)
-			}
-			if data, ok := tmp.(*string); ok {
-				it.Network = data
-			} else if tmp == nil {
-				it.Network = nil
-			} else {
-				err := fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
-				return it, graphql.ErrorOnPath(ctx, err)
+				return it, err
 			}
 		case "dns":
 			var err error
@@ -4498,33 +4351,9 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mpi"))
-			directive0 := func(ctx context.Context) (interface{}, error) { return ec.unmarshalOString2ᚖstring(ctx, v) }
-			directive1 := func(ctx context.Context) (interface{}, error) {
-				key, err := ec.unmarshalNString2string(ctx, "validate")
-				if err != nil {
-					return nil, err
-				}
-				value, err := ec.unmarshalOString2ᚖstring(ctx, "omitempty,oneof=none pmix_v4 pmi2")
-				if err != nil {
-					return nil, err
-				}
-				if ec.directives.DisabledGoTag == nil {
-					return nil, errors.New("directive disabledGoTag is not implemented")
-				}
-				return ec.directives.DisabledGoTag(ctx, obj, directive0, key, value)
-			}
-
-			tmp, err := directive1(ctx)
+			it.Mpi, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, graphql.ErrorOnPath(ctx, err)
-			}
-			if data, ok := tmp.(*string); ok {
-				it.Mpi = data
-			} else if tmp == nil {
-				it.Mpi = nil
-			} else {
-				err := fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
-				return it, graphql.ErrorOnPath(ctx, err)
+				return it, err
 			}
 		}
 	}

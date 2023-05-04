@@ -2888,7 +2888,7 @@
         ]
       },
       {
-        "name": "disabledGoTag",
+        "name": "constraint",
         "description": null,
         "isRepeatable": false,
         "locations": [
@@ -2897,23 +2897,7 @@
         ],
         "args": [
           {
-            "name": "key",
-            "description": null,
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "value",
+            "name": "format",
             "description": null,
             "type": {
               "kind": "SCALAR",
