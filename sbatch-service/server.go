@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"net"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/deepsquare-io/the-grid/sbatch-service/cmd"
@@ -148,11 +150,15 @@ var app = &cli.App{
 		jobRenderer := renderer.NewJobRenderer(loggerEndpoint)
 
 		// GraphQL server
-		srv := handler.NewDefaultServer(graph.NewExecutableSchema(
-			graph.Config{
-				Resolvers: graph.NewResolver(rdb, jobRenderer),
+		c := graph.Config{
+			Resolvers: graph.NewResolver(rdb, jobRenderer),
+			Directives: graph.DirectiveRoot{
+				DisabledGoTag: func(ctx context.Context, obj interface{}, next graphql.Resolver, key string, value *string) (res interface{}, err error) {
+					return next(ctx)
+				},
 			},
-		))
+		}
+		srv := handler.NewDefaultServer(graph.NewExecutableSchema(c))
 		r := chi.NewRouter()
 		r.Use(cors.Handler(cors.Options{
 			AllowedOrigins:   []string{"https://*", "http://*"},
