@@ -391,7 +391,7 @@
           },
           {
             "name": "enableLogging",
-            "description": "EnableLogging enables the DeepSquare GRID Logger.\n\nGo name: \"EnableLogging\".",
+            "description": "EnableLogging enables the DeepSquare Grid Logger.\n\nGo name: \"EnableLogging\".",
             "type": {
               "kind": "SCALAR",
               "name": "Boolean",
@@ -2817,10 +2817,7 @@
         "name": "goField",
         "description": null,
         "isRepeatable": false,
-        "locations": [
-          "INPUT_FIELD_DEFINITION",
-          "FIELD_DEFINITION"
-        ],
+        "locations": ["INPUT_FIELD_DEFINITION", "FIELD_DEFINITION"],
         "args": [
           {
             "name": "forceResolver",
@@ -2852,10 +2849,7 @@
         "name": "goTag",
         "description": null,
         "isRepeatable": false,
-        "locations": [
-          "INPUT_FIELD_DEFINITION",
-          "FIELD_DEFINITION"
-        ],
+        "locations": ["INPUT_FIELD_DEFINITION", "FIELD_DEFINITION"],
         "args": [
           {
             "name": "key",
@@ -2891,10 +2885,7 @@
         "name": "constraint",
         "description": null,
         "isRepeatable": false,
-        "locations": [
-          "INPUT_FIELD_DEFINITION",
-          "FIELD_DEFINITION"
-        ],
+        "locations": ["INPUT_FIELD_DEFINITION", "FIELD_DEFINITION"],
         "args": [
           {
             "name": "format",
@@ -2914,11 +2905,7 @@
         "name": "include",
         "description": "Directs the executor to include this field or fragment only when the `if` argument is true.",
         "isRepeatable": false,
-        "locations": [
-          "FIELD",
-          "FRAGMENT_SPREAD",
-          "INLINE_FRAGMENT"
-        ],
+        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
         "args": [
           {
             "name": "if",
@@ -2942,11 +2929,7 @@
         "name": "skip",
         "description": "Directs the executor to skip this field or fragment when the `if` argument is true.",
         "isRepeatable": false,
-        "locations": [
-          "FIELD",
-          "FRAGMENT_SPREAD",
-          "INLINE_FRAGMENT"
-        ],
+        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
         "args": [
           {
             "name": "if",
@@ -2995,9 +2978,7 @@
         "name": "specifiedBy",
         "description": "Exposes a URL that specifies the behavior of this scalar.",
         "isRepeatable": false,
-        "locations": [
-          "SCALAR"
-        ],
+        "locations": ["SCALAR"],
         "args": [
           {
             "name": "url",

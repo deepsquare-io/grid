@@ -2,7 +2,7 @@
 
 DeepSquare integrates [Blender](https://www.blender.org), a 3D computer graphics software tool set used for creating animated films, visual effects, art and 3D models.
 
-This guide presents how we designed and implmented the workflow to execute Blender on the DeepSquare GRID.
+This guide presents how we designed and implmented the workflow to execute Blender on the DeepSquare Grid.
 
 ## Design
 

@@ -56,7 +56,7 @@ Go name: "Env".
 <td valign="top"><a href="#boolean">Boolean</a></td>
 <td>
 
-EnableLogging enables the DeepSquare GRID Logger.
+EnableLogging enables the DeepSquare Grid Logger.
 
 Go name: "EnableLogging".
 

@@ -2,7 +2,7 @@
 
 DeepSquare integrates the neural network text-to-image model [Stable Diffusion](https://github.com/Stability-AI/stablediffusion).
 
-This guide presents how we designed and implmented the workflow to execute Stable Diffusion on the DeepSquare GRID.
+This guide presents how we designed and implmented the workflow to execute Stable Diffusion on the DeepSquare Grid.
 
 ## Design
 

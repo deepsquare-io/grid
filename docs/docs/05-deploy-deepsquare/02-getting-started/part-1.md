@@ -279,4 +279,4 @@ podman push ghcr.io/my-user/my-image:latest
 
 You learned how to containerise your application into a container image and publish it.
 
-Next, you're going to run it on the DeepSquare GRID, the decentralized HPC cloud.
+Next, you're going to run it on the DeepSquare Grid, the decentralized HPC cloud.

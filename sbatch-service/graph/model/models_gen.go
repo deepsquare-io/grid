@@ -139,7 +139,7 @@ type Job struct {
 	//
 	// Go name: "Env".
 	Env []*EnvVar `json:"env,omitempty" yaml:"env,omitempty" validate:"dive,required"`
-	// EnableLogging enables the DeepSquare GRID Logger.
+	// EnableLogging enables the DeepSquare Grid Logger.
 	//
 	// Go name: "EnableLogging".
 	EnableLogging *bool `json:"enableLogging,omitempty" yaml:"enableLogging,omitempty"`

@@ -4,7 +4,7 @@ title: 'Part 2: Writing a workflow file'
 
 # Writing a workflow file
 
-You containerized the MPI example application. In this part, you will now run it on the DeepSquare GRID.
+You containerized the MPI example application. In this part, you will now run it on the DeepSquare Grid.
 
 A workflow file is a [JSON](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON) file that describes the resources allocation and the suite of instructions necessary to run your application.
 
@@ -99,7 +99,7 @@ Notice the `tasks` and `cpusPerTask`. We specify the resource allocation using t
 
 The `.resources` block indicates the **allocation** but not the actual **use** by the step. Here, the execution of the step **implicitly uses** 16 CPUs per task, 1024 MB of memory per CPU, and no GPUs per task and **explicitly uses** 16 tasks. Default values for `.steps[].run.resources` are specified in the [reference](/docs/deploy-deepsquare/workflow-api-reference/job#stepsrunresources-steprunresources).
 
-By enabling `enableLogging`, you allow the application to send logs to the DeepSquare logging system, which allows you to read the logs on the [DeepSquare GRID Portal](https://app.deepsquare.run).
+By enabling `enableLogging`, you allow the application to send logs to the DeepSquare logging system, which allows you to read the logs on the [DeepSquare Grid Portal](https://app.deepsquare.run).
 
 You can launch it on DeepSquare to see the results!
 

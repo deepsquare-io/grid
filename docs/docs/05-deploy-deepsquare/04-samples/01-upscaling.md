@@ -2,7 +2,7 @@
 
 DeepSquare integrates the neural network model optimised image upscaler [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN).
 
-This guide presents how we designed and implmented the workflow to execute Real-ESRGAN on the DeepSquare GRID.
+This guide presents how we designed and implmented the workflow to execute Real-ESRGAN on the DeepSquare Grid.
 
 ## Design
 

@@ -1,6 +1,6 @@
 # Unity Render Streaming
 
-The DeepSquare GRID can run workloads requiring x11. One usecase is to run [Unity Render Streaming](https://docs.unity3d.com/Packages/com.unity.renderstreaming@3.1/manual/index.html) which is a solution for peer-to-peer streaming.
+The DeepSquare Grid can run workloads requiring x11. One usecase is to run [Unity Render Streaming](https://docs.unity3d.com/Packages/com.unity.renderstreaming@3.1/manual/index.html) which is a solution for peer-to-peer streaming.
 
 Unity uses WebRTC which permits [**NAT traversal via STUN**](https://www.rfc-editor.org/rfc/rfc7635.html), so no need to use a tunnel to expose the video stream.
 
@@ -41,7 +41,7 @@ ocl-icd-opencl-dev
 
 You should also install the Vulkan SDK if you are using Vulkan inside your Unity application.
 
-The DeepSquare GRID should already mount the devices and shared libraries of the NVIDIA drivers.
+The DeepSquare Grid should already mount the devices and shared libraries of the NVIDIA drivers.
 
 Since this is not an HPC workload, parallel computing is not possible. Therefore, we can only run the service with a single GPU, as there is no parallel decomposition.
 

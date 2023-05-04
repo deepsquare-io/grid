@@ -395,7 +395,7 @@ input Job {
     @goTag(key: "yaml", value: "env,omitempty")
     @constraint(format: "dive,required")
   """
-  EnableLogging enables the DeepSquare GRID Logger.
+  EnableLogging enables the DeepSquare Grid Logger.
 
   Go name: "EnableLogging".
   """
