@@ -171,7 +171,7 @@ From left to right:
 4. The **SLURM controller** transmits the batch job to a compute node via the **SLURM daemon** and starts running the job.
 5. Job statuses are reported to the **Supervisor** via the **SLURM SPANK plugin** on the compute node and the **SLURM completion plugin** on the SLURM Controller.
 
-Everything is authenticated via **389ds** and **SSSD** (SSSD is also run inside the SLURM connection and controller containers).
+Everything is authenticated via **389ds** and **SSSD** (SSSD is also running inside the SLURM login and controller containers).
 
 The **CVMFS server** is exposed so that the compute node can mount the DeepSquare software on the compute nodes.
 
