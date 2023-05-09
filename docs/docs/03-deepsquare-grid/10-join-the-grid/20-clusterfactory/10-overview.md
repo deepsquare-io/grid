@@ -157,9 +157,11 @@ IPVLAN is a Container Network Interface (CNI) plugin that leverages the IPVLAN t
 
 ### Lastly, we deploy the software stack which permits DeepSquare to work
 
-This is the diagram that interconnect every components:
+Knowing that we have deployed all the solutions to ensure that the software stack works perfectly. Here is the diagram that links all the components of the software stack:
 
 ![architecture-cf-de-Page-5.drawio](./10-overview.assets/architecture-cf-de-Page-5.drawio.svg#invert-on-dark)
+
+This diagram is also valid for a cluster without **ClusterFactory**.
 
 From left to right:
 
