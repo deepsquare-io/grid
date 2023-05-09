@@ -163,11 +163,11 @@ This is the diagram that interconnect every components:
 
 From left to right:
 
-1. The **Supervisor** retrieves jobs from the smart contract and forwards them to a **SLURM login**.
-
-2. The **SLURM login** submits the batch job to the **SLURM controller** and starts accounting with the **SLURM DB**, which is connected to a **MariaDB**.
-3. The **SLURM controller** transmits the batch job to a compute node via the **SLURM daemon** and starts running the job.
-4. Job statuses are reported to the **Supervisor** via the **SLURM SPANK plugin** on the compute node and the **SLURM completion plugin** on the SLURM Controller.
+1. The **LDAP Connector** creates DeepSquare users in the 389ds LDAP server.
+2. The **Supervisor** retrieves jobs from the smart contract and forwards them to a **SLURM login**.
+3. The **SLURM login** submits the batch job to the **SLURM controller** and starts accounting with the **SLURM DB**, which is connected to a **MariaDB**.
+4. The **SLURM controller** transmits the batch job to a compute node via the **SLURM daemon** and starts running the job.
+5. Job statuses are reported to the **Supervisor** via the **SLURM SPANK plugin** on the compute node and the **SLURM completion plugin** on the SLURM Controller.
 
 Everything is authenticated via **389ds** and **SSSD** (SSSD is also run inside the SLURM connection and controller containers).
 
