@@ -14,4 +14,5 @@ solc --optimize --optimize-runs=200 ./contracts/Metascheduler.sol \
   --include-path "node_modules/" \
   --combined-json abi | abigen --pkg metascheduler \
   --combined-json - \
+  --exc "contracts/Tools.sol:Tools" \
   --out "${PROJECTPATH}/contracts/metascheduler/metascheduler.go"
