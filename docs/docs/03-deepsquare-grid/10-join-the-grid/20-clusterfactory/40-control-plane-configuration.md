@@ -1,4 +1,4 @@
-# Deploying the control plane services
+# 2. Deploying the control plane services
 
 This guide will only indicates how to deploy the software stack. It won't help you to learn what one software do. Please read the documentation of each software if you wish to learn more.
 
@@ -139,7 +139,7 @@ If you are using an another distributed file system, you can check the available
 
 5. Edit the ArgoCD Application to use our private fork:
 
-   ```yaml title="argo.example/ldap/apps/389ds-app.yaml > spec > source"
+   ```yaml title="argo/ldap/apps/389ds-app.yaml > spec > source"
    source:
      # You should have forked this repo. Change the URL to your fork.
      repoURL: git@github.com:<your account>/ClusterFactory.git
@@ -327,6 +327,170 @@ If you are using an another distributed file system, you can check the available
    Check the [ArgoCD dashboard](https://argocd.internal) to see if everything went well.
 
 ## 3. Deploy MariaDB
+
+1. Deploy Namespace and AppProject
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl apply -f argo/mariadb/
+   ```
+
+2. Configure the passwords in the secret. Create a `-secret.yaml.local` file:
+
+   ```yaml title="argo/mariadb/secrets/mariadb-secret.yaml.local"
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: mariadb-secret
+     namespace: mariadb
+   stringData:
+     mariadb-root-password: <..>
+     mariadb-replication-password: <...>
+     mariadb-password: <...>
+   ```
+
+   Seal and apply the secret:
+
+   ```shell title="user@local:/ClusterFactory"
+   cfctl kubeseal
+   kubectl apply -f argo/mariadb/secrets/mariadb-sealed-secret.yaml
+   ```
+
+3. Configure the `values.yaml` of the mariadb helm subchart:
+
+   ```yaml title="helm-subcharts/mariadb/values.yaml"
+   mariadb:
+     global:
+       storageClass: 'local-path'
+
+     auth:
+       existingSecret: 'mariadb-secret'
+
+     primary:
+       configuration: |-
+         [mysqld]
+         skip-name-resolve
+         explicit_defaults_for_timestamp
+         basedir=/opt/bitnami/mariadb
+         plugin_dir=/opt/bitnami/mariadb/plugin
+         port=3306
+         socket=/opt/bitnami/mariadb/tmp/mysql.sock
+         tmpdir=/opt/bitnami/mariadb/tmp
+         max_allowed_packet=16M
+         bind-address=*
+         pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid
+         log-error=/opt/bitnami/mariadb/logs/mysqld.log
+         character-set-server=UTF8
+         collation-server=utf8_general_ci
+         slow_query_log=0
+         slow_query_log_file=/opt/bitnami/mariadb/logs/mysqld.log
+         long_query_time=10.0
+
+         # Slurm requirements
+         innodb_buffer_pool_size=4096M
+         innodb_log_file_size=64M
+         innodb_lock_wait_timeout=900
+         innodb_default_row_format=dynamic
+
+         [client]
+         port=3306
+         socket=/opt/bitnami/mariadb/tmp/mysql.sock
+         default-character-set=UTF8
+         plugin_dir=/opt/bitnami/mariadb/plugin
+
+         [manager]
+         port=3306
+         socket=/opt/bitnami/mariadb/tmp/mysql.sock
+         pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid
+
+       nodeSelector:
+         kubernetes.io/hostname: <host with local-path>
+
+       resources:
+         limits:
+           memory: 2048Mi
+         requests:
+           cpu: 250m
+           memory: 2048Mi
+
+     secondary:
+       replicaCount: 0
+
+     ## Init containers parameters:
+     ## volumePermissions: Change the owner and group of the persistent volume mountpoint to runAsUser:fsGroup values from the securityContext section.
+     ##
+     volumePermissions:
+       enabled: false
+
+     metrics:
+       enabled: false
+
+       serviceMonitor:
+         ## @param metrics.serviceMonitor.enabled Create ServiceMonitor Resource for scraping metrics using PrometheusOperator
+         ##
+         enabled: false
+   ```
+
+   **Change the `mariadb.global.storageClass` according to your need**! If you are using `local-path`, the pod need to be stuck on a node by using the `mariadb.nodeSelector` like so:
+
+   ```yaml title="helm-subcharts/mariadb/values-production.yaml"
+   mariadb:
+     nodeSelector:
+       kubernetes.io/hostname: mn1.example.com
+   ```
+
+4. Edit the ArgoCD Application to use our private fork:
+
+   ```yaml title="argo/mariadb/apps/mariadb-app.yaml > spec > source"
+   source:
+     # You should have forked this repo. Change the URL to your fork.
+     repoURL: git@github.com:<your account>/ClusterFactory.git
+     # You should use your branch too.
+     targetRevision: <your branch>
+     path: helm-subcharts/mariadb
+     helm:
+       releaseName: mariadb
+
+       # Create a values file inside your fork and change the values.
+       valueFiles:
+         - values-production.yaml
+   ```
+
+5. Commit and push:
+
+   ```shell title="user@local:/ClusterFactory"
+   git add .
+   git commit -m "Added mariadb service"
+   git push
+   ```
+
+   And deploy the Argo CD application:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl apply -f argo/mariadb/apps/mariadb-app.yaml
+   ```
+
+   Check the [ArgoCD dashboard](https://argocd.internal) to see if everything went well.
+
+6. Enter the shell of the container:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl exec -i -t -n mariadb mariadb-0 -c mariadb -- sh -c "clear; (bash || ash || sh)"
+   ```
+
+   Initialize the SLURM database:
+
+   ```shell title="pod: mariadb-0 (namespace: mariadb)
+   mysql -u root -p -h localhost
+   # Enter your root password
+   ```
+
+   ```shell title="pod: mariadb-0 (namespace: mariadb) (sql)
+   create user 'slurmdb'@'%' identified by '<your password>';
+   grant all on slurm_acct_db.* TO 'slurmdb'@'%';
+   create database slurm_acct_db;
+   ```
+
+   Rememeber the **slurmdb** password to deploy SLURM.
 
 ## 4. Deploy SLURM
 

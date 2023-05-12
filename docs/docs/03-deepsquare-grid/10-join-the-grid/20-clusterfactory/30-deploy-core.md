@@ -1,4 +1,4 @@
-# Deploying ClusterFactory
+# 1. Deploying ClusterFactory
 
 ## Overview
 

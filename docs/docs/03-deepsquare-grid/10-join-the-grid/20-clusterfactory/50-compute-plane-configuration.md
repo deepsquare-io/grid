@@ -1,3 +1,3 @@
-# Deploying the compute plane
+# 3. Deploying the compute plane
 
 (WIP)
