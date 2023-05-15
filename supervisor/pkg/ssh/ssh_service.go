@@ -39,7 +39,10 @@ func New(
 	}
 }
 
-func (s *Service) establish(ctx context.Context, user string) (session *ssh.Session, close func(), err error) {
+func (s *Service) establish(
+	ctx context.Context,
+	user string,
+) (session *ssh.Session, close func(), err error) {
 	config := &ssh.ClientConfig{
 		User:            user,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),

@@ -231,7 +231,10 @@ func (w *Watcher) handleLog(ctx context.Context, log types.Log) error {
 	return nil
 }
 
-func (w *Watcher) handleJobTransition(ctx context.Context, event *metascheduler.MetaSchedulerJobTransitionEvent) error {
+func (w *Watcher) handleJobTransition(
+	ctx context.Context,
+	event *metascheduler.MetaSchedulerJobTransitionEvent,
+) error {
 	from := JobStatus(event.From)
 	to := JobStatus(event.To)
 	job, err := w.contractRPC.Jobs(&bind.CallOpts{
@@ -294,9 +297,15 @@ func (w *Watcher) handleJobTransition(ctx context.Context, event *metascheduler.
 		f, _ := bf.Float64()
 		metricsv1.TotalCreditSpent(job.CustomerAddr.Hex()).Add(f)
 
-		bduration := new(big.Int).Div(new(big.Int).Sub(job.Time.End, job.Time.Start), big.NewInt(60))
+		bduration := new(
+			big.Int,
+		).Div(new(big.Int).Sub(job.Time.End, job.Time.Start), big.NewInt(60))
 		if bduration.Sign() == -1 {
-			logger.I.Error("job duration is negative", zap.String("duration", bduration.String()), zap.Any("job", job))
+			logger.I.Error(
+				"job duration is negative",
+				zap.String("duration", bduration.String()),
+				zap.Any("job", job),
+			)
 			return nil
 		}
 		f, _ = new(big.Float).SetInt(bduration).Float64()
@@ -316,7 +325,10 @@ func (w *Watcher) handleJobTransition(ctx context.Context, event *metascheduler.
 	return nil
 }
 
-func (w *Watcher) handleNewJobRequest(ctx context.Context, event *metascheduler.MetaSchedulerNewJobRequestEvent) error {
+func (w *Watcher) handleNewJobRequest(
+	ctx context.Context,
+	event *metascheduler.MetaSchedulerNewJobRequestEvent,
+) error {
 	metricsv1.TotalJobsPending(event.CustomerAddr.Hex()).Inc()
 	metricsv1.TotalNumberOfJobs(event.CustomerAddr.Hex()).Inc()
 	job, err := w.contractRPC.Jobs(&bind.CallOpts{
@@ -330,20 +342,18 @@ func (w *Watcher) handleNewJobRequest(ctx context.Context, event *metascheduler.
 	return nil
 }
 
-func (w *Watcher) handleJobRefused(ctx context.Context, event *metascheduler.MetaSchedulerJobRefusedEvent) error {
-	job, err := w.contractRPC.Jobs(&bind.CallOpts{
-		Context: ctx,
-	}, event.JobId)
-	if err != nil {
-		return err
-	}
-	metricsv1.TotalNumberOfJobs(job.CustomerAddr.Hex()).Dec()
-	metricsv1.TotalJobsPending(job.CustomerAddr.Hex()).Dec()
+func (w *Watcher) handleJobRefused(
+	ctx context.Context,
+	event *metascheduler.MetaSchedulerJobRefusedEvent,
+) error {
 	metricsv1.TotalJobRefused(event.ProviderAddr.Hex()).Inc()
 	return nil
 }
 
-func (w *Watcher) handleBilledTooMuch(ctx context.Context, event *metascheduler.MetaSchedulerBilledTooMuchEvent) error {
+func (w *Watcher) handleBilledTooMuch(
+	ctx context.Context,
+	event *metascheduler.MetaSchedulerBilledTooMuchEvent,
+) error {
 	job, err := w.contractRPC.Jobs(&bind.CallOpts{
 		Context: ctx,
 	}, event.JobId)

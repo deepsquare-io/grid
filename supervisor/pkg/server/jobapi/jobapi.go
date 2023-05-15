@@ -2,8 +2,8 @@ package jobapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
@@ -23,7 +23,7 @@ type JobHandler interface {
 	) error
 }
 
-type JobAPIServer struct {
+type Server struct {
 	supervisorv1alpha1.UnimplementedJobAPIServer
 	jobHandler JobHandler
 	Timeout    time.Duration
@@ -33,11 +33,11 @@ type JobAPIServer struct {
 
 func New(
 	jobHandler JobHandler,
-) *JobAPIServer {
+) *Server {
 	if jobHandler == nil {
 		logger.I.Fatal("jobHandler is nil")
 	}
-	return &JobAPIServer{
+	return &Server{
 		jobHandler: jobHandler,
 		Timeout:    15 * time.Second,
 		Delay:      3 * time.Second,
@@ -57,11 +57,18 @@ var gRPCToEthJobStatus = map[supervisorv1alpha1.JobStatus]eth.JobStatus{
 }
 
 // SetJobStatus to the ethereum network
-func (s *JobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1.SetJobStatusRequest) (*supervisorv1alpha1.SetJobStatusResponse, error) {
+func (s *Server) SetJobStatus(
+	ctx context.Context,
+	req *supervisorv1alpha1.SetJobStatusRequest,
+) (*supervisorv1alpha1.SetJobStatusResponse, error) {
 	logger.I.Info("grpc received job result", zap.Any("job_result", req))
 	jobName, err := hexutil.Decode(req.Name)
 	if err != nil {
-		logger.I.Warn("SetJobStatus: DecodeString failed", zap.Error(err), zap.String("name", req.Name))
+		logger.I.Warn(
+			"SetJobStatus: DecodeString failed",
+			zap.Error(err),
+			zap.String("name", req.Name),
+		)
 		return nil, err
 	}
 	var jobNameFixedLength [32]byte
@@ -92,7 +99,7 @@ func (s *JobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 					req.Duration/60,
 				)
 				if err != nil {
-					if strings.Contains(err.Error(), "Cannot change status to itself") || strings.Contains(err.Error(), "trans0") {
+					if errors.Is(err, &eth.SameStatusError{}) {
 						logger.I.Warn(
 							"Cannot change status to itself",
 							zap.Error(err),
@@ -102,9 +109,9 @@ func (s *JobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 						)
 						return nil
 					}
-					if strings.Contains(err.Error(), "Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only") || strings.Contains(err.Error(), "trans3") {
+					if errors.Is(err, &eth.InvalidTransitionFromScheduled{}) {
 						logger.I.Warn(
-							"Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only. Trying to put in RUNNING first.",
+							"Invalid state transition from SCHEDULED.",
 							zap.Error(err),
 							zap.String("status", req.Status.String()),
 							zap.String("name", string(jobName)),

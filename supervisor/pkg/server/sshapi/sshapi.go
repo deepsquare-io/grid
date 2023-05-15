@@ -10,12 +10,12 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type sshAPIServer struct {
+type Server struct {
 	supervisorv1alpha1.UnimplementedSshAPIServer
 	pub ssh.PublicKey
 }
 
-func New(b64pk string) *sshAPIServer {
+func New(b64pk string) *Server {
 	pk, err := base64.StdEncoding.DecodeString(b64pk)
 	if err != nil {
 		logger.I.Panic("failed to decode key", zap.Error(err))
@@ -26,12 +26,15 @@ func New(b64pk string) *sshAPIServer {
 		logger.I.Panic("couldn't parse private key", zap.Error(err))
 	}
 
-	return &sshAPIServer{
+	return &Server{
 		pub: signer.PublicKey(),
 	}
 }
 
-func (s *sshAPIServer) FetchAuthorizedKeys(ctx context.Context, req *supervisorv1alpha1.FetchAuthorizedKeysRequest) (*supervisorv1alpha1.FetchAuthorizedKeysResponse, error) {
+func (s *Server) FetchAuthorizedKeys(
+	ctx context.Context,
+	req *supervisorv1alpha1.FetchAuthorizedKeysRequest,
+) (*supervisorv1alpha1.FetchAuthorizedKeysResponse, error) {
 	return &supervisorv1alpha1.FetchAuthorizedKeysResponse{
 		AuthorizedKeys: string(ssh.MarshalAuthorizedKey(s.pub)),
 	}, nil

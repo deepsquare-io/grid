@@ -18,18 +18,13 @@ type JobMetaQueue interface {
 	ClaimTopUp(ctx context.Context) error
 	// Refuse a job for metascheduling.
 	RefuseJob(ctx context.Context, jobID [32]byte) error
-	// WatchClaimNextJobEvent observes the incoming ClaimNextJobEvents.
-	WatchClaimNextJobEvent(
+	// WatchEvents observes the incoming ClaimNextTopUpJobEvent, ClaimNextCancellingJobEvent and ClaimJobEvent.
+	WatchEvents(
 		ctx context.Context,
-		sink chan<- *metascheduler.MetaSchedulerClaimJobEvent,
+		claimNextTopUpJobEvents chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent,
+		claimNextCancellingJobEvents chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
+		claimJobEvents chan<- *metascheduler.MetaSchedulerClaimJobEvent,
 	) (event.Subscription, error)
-	// WatchJobCanceledEvent observes the incoming ClaimNextCancellingJobEvents.
-	WatchClaimNextCancellingJobEvent(
-		ctx context.Context,
-		sink chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
-	) (event.Subscription, error)
-	// WatchClaimNextTopUpJobEvent observes the incoming ClaimNextTopUpJobEvents.
-	WatchClaimNextTopUpJobEvent(ctx context.Context, sink chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent) (event.Subscription, error)
 	// GetProviderAddress fetches the provider public address
 	GetProviderAddress() common.Address
 	// GetJobStatus fetches the job status.

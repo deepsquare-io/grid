@@ -125,8 +125,8 @@ var (
 	dbVersion                 string
 	metaschedulerAddress      string
 	checkpointFile            string
-	mapTotalNumberOfJobs      = make(map[string]prometheus.Gauge)
-	TotalNumberOfJobs         func(key string) prometheus.Gauge
+	mapTotalNumberOfJobs      = make(map[string]prometheus.Counter)
+	TotalNumberOfJobs         func(key string) prometheus.Counter
 	mapTotalJobsPending       = make(map[string]prometheus.Gauge)
 	TotalJobsPending          func(key string) prometheus.Gauge
 	mapTotalJobsMetaScheduled = make(map[string]prometheus.Gauge)
@@ -162,8 +162,8 @@ func Init(msAddress string, file string, version string) {
 	metaschedulerAddress = msAddress
 	checkpointFile = file
 	dbVersion = version
-	TotalNumberOfJobs = singleton.Map(mapTotalNumberOfJobs, func(key string) prometheus.Gauge {
-		return promauto.NewGauge(prometheus.GaugeOpts{
+	TotalNumberOfJobs = singleton.Map(mapTotalNumberOfJobs, func(key string) prometheus.Counter {
+		return promauto.NewCounter(prometheus.CounterOpts{
 			Namespace: "metascheduler",
 			Subsystem: "jobs",
 			Name:      "total",
@@ -186,18 +186,21 @@ func Init(msAddress string, file string, version string) {
 			},
 		})
 	})
-	TotalJobsMetaScheduled = singleton.Map(mapTotalJobsMetaScheduled, func(key string) prometheus.Gauge {
-		return promauto.NewGauge(prometheus.GaugeOpts{
-			Namespace: "metascheduler",
-			Subsystem: "jobs",
-			Name:      "metascheduled_total",
-			Help:      "Total jobs meta-scheduled",
-			ConstLabels: prometheus.Labels{
-				"wallet_address":        key,
-				"metascheduler_address": msAddress,
-			},
-		})
-	})
+	TotalJobsMetaScheduled = singleton.Map(
+		mapTotalJobsMetaScheduled,
+		func(key string) prometheus.Gauge {
+			return promauto.NewGauge(prometheus.GaugeOpts{
+				Namespace: "metascheduler",
+				Subsystem: "jobs",
+				Name:      "metascheduled_total",
+				Help:      "Total jobs meta-scheduled",
+				ConstLabels: prometheus.Labels{
+					"wallet_address":        key,
+					"metascheduler_address": msAddress,
+				},
+			})
+		},
+	)
 	TotalJobsScheduled = singleton.Map(mapTotalJobsScheduled, func(key string) prometheus.Gauge {
 		return promauto.NewGauge(prometheus.GaugeOpts{
 			Namespace: "metascheduler",
@@ -258,18 +261,21 @@ func Init(msAddress string, file string, version string) {
 			},
 		})
 	})
-	TotalJobsOutOfCredits = singleton.Map(mapTotalJobsOutOfCredits, func(key string) prometheus.Gauge {
-		return promauto.NewGauge(prometheus.GaugeOpts{
-			Namespace: "metascheduler",
-			Subsystem: "jobs",
-			Name:      "out_of_credits_total",
-			Help:      "Total jobs out of credits",
-			ConstLabels: prometheus.Labels{
-				"wallet_address":        key,
-				"metascheduler_address": msAddress,
-			},
-		})
-	})
+	TotalJobsOutOfCredits = singleton.Map(
+		mapTotalJobsOutOfCredits,
+		func(key string) prometheus.Gauge {
+			return promauto.NewGauge(prometheus.GaugeOpts{
+				Namespace: "metascheduler",
+				Subsystem: "jobs",
+				Name:      "out_of_credits_total",
+				Help:      "Total jobs out of credits",
+				ConstLabels: prometheus.Labels{
+					"wallet_address":        key,
+					"metascheduler_address": msAddress,
+				},
+			})
+		},
+	)
 	TotalCreditSpent = singleton.Map(mapTotalCreditSpent, func(key string) prometheus.Counter {
 		return promauto.NewCounter(prometheus.CounterOpts{
 			Namespace: "metascheduler",
@@ -361,7 +367,7 @@ func Save() error {
 	db := &DB{
 		Metrics: &Metrics{
 			MetaschedulerAddress:   metaschedulerAddress,
-			TotalNumberOfJobs:      dumpGaugeMap(mapTotalNumberOfJobs),
+			TotalNumberOfJobs:      dumpCounterMap(mapTotalNumberOfJobs),
 			TotalJobsPending:       dumpGaugeMap(mapTotalJobsPending),
 			TotalJobsMetaScheduled: dumpGaugeMap(mapTotalJobsMetaScheduled),
 			TotalJobsScheduled:     dumpGaugeMap(mapTotalJobsScheduled),
@@ -424,7 +430,6 @@ func Load() error {
 		return nil
 	}
 
-	loadMap(db.Metrics.TotalNumberOfJobs, TotalNumberOfJobs)
 	loadMap(db.Metrics.TotalNumberOfJobs, TotalNumberOfJobs)
 	loadMap(db.Metrics.TotalJobsPending, TotalJobsPending)
 	loadMap(db.Metrics.TotalJobsMetaScheduled, TotalJobsMetaScheduled)

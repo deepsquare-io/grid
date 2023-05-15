@@ -110,7 +110,10 @@ func (s *Slurm) HealthCheck(ctx context.Context) error {
 }
 
 // FindRunningJobByName find a running job using squeue.
-func (s *Slurm) FindRunningJobByName(ctx context.Context, req *job.FindRunningJobByNameRequest) (int, error) {
+func (s *Slurm) FindRunningJobByName(
+	ctx context.Context,
+	req *job.FindRunningJobByNameRequest,
+) (int, error) {
 	cmd := fmt.Sprintf("%s --name %s -O JobId:256 --noheader", s.squeue, req.Name)
 	out, err := s.executor.ExecAs(ctx, req.User, cmd)
 	if err != nil {

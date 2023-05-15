@@ -12,10 +12,16 @@ import (
 )
 
 func TestDoWithContextTimeout(t *testing.T) {
-	err := try.DoWithContextTimeout(context.Background(), 5, time.Millisecond, 1*time.Second, func(ctx context.Context, try int) error {
-		<-ctx.Done()
-		return ctx.Err()
-	})
+	err := try.DoWithContextTimeout(
+		context.Background(),
+		5,
+		time.Millisecond,
+		1*time.Second,
+		func(ctx context.Context, try int) error {
+			<-ctx.Done()
+			return ctx.Err()
+		},
+	)
 
 	require.Equal(t, context.DeadlineExceeded, err)
 }

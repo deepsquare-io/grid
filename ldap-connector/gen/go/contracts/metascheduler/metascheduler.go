@@ -29,6 +29,20 @@ var (
 	_ = abi.ConvertType
 )
 
+// Job is an auto generated low-level Go binding around an user-defined struct.
+type Job struct {
+	JobId            [32]byte
+	Status           uint8
+	CustomerAddr     common.Address
+	ProviderAddr     common.Address
+	Definition       JobDefinition
+	Valid            bool
+	Cost             JobCost
+	Time             JobTime
+	JobName          [32]byte
+	HasCancelRequest bool
+}
+
 // JobCost is an auto generated low-level Go binding around an user-defined struct.
 type JobCost struct {
 	MaxCost                   *big.Int
@@ -45,6 +59,7 @@ type JobDefinition struct {
 	Ntasks            uint64
 	BatchLocationHash string
 	StorageType       uint8
+	Uses              []Label
 }
 
 // JobTime is an auto generated low-level Go binding around an user-defined struct.
@@ -55,26 +70,25 @@ type JobTime struct {
 	BlockNumberStateChange *big.Int
 }
 
-// Provider is an auto generated low-level Go binding around an user-defined struct.
-type Provider struct {
-	Addr          common.Address
-	Definition    ProviderDefinition
-	Status        uint8
-	Valid         bool
-	JobCount      uint64
-	PointPrevNode *big.Int
-	PointNextNode *big.Int
+// Label is an auto generated low-level Go binding around an user-defined struct.
+type Label struct {
+	Key   string
+	Value string
 }
 
-// ProviderDefinition is an auto generated low-level Go binding around an user-defined struct.
-type ProviderDefinition struct {
-	Nodes          uint64
-	Gpus           uint64
-	GpuPricePerMin uint64
-	Cpus           uint64
-	CpuPricePerMin uint64
-	Mem            uint64
-	MemPricePerMin uint64
+// ProviderHardware is an auto generated low-level Go binding around an user-defined struct.
+type ProviderHardware struct {
+	Nodes uint64
+	Gpus  uint64
+	Cpus  uint64
+	Mem   uint64
+}
+
+// ProviderPrices is an auto generated low-level Go binding around an user-defined struct.
+type ProviderPrices struct {
+	GpuPricePerMin *big.Int
+	CpuPricePerMin *big.Int
+	MemPricePerMin *big.Int
 }
 
 // AccessControlMetaData contains all meta data concerning the AccessControl contract.
@@ -1050,6 +1064,695 @@ func (_AddressUpgradeable *AddressUpgradeableTransactorRaw) Transfer(opts *bind.
 // Transact invokes the (paid) contract method with params as input values.
 func (_AddressUpgradeable *AddressUpgradeableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _AddressUpgradeable.Contract.contract.Transact(opts, method, params...)
+}
+
+// ConstantsMetaData contains all meta data concerning the Constants contract.
+var ConstantsMetaData = &bind.MetaData{
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"billDurationDeltaMinute\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"cancellationFeeMinute\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimJobTimeout\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"deepsquareCut\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minimumAmount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_billDurationDeltaMinute\",\"type\":\"uint256\"}],\"name\":\"setBillDurationDeltaMinute\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_cancellationFeeMinute\",\"type\":\"uint256\"}],\"name\":\"setCancellationFeeMinute\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"_claimJobTimeout\",\"type\":\"uint64\"}],\"name\":\"setClaimJobTimeout\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_deepsquareCut\",\"type\":\"uint256\"}],\"name\":\"setDeepsquareCut\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_minimumAmount\",\"type\":\"uint256\"}],\"name\":\"setMinimumAmount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"_topUpSliceDurationMin\",\"type\":\"uint64\"}],\"name\":\"setTopUpSliceDurationMin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"topUpSliceDurationMin\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+}
+
+// ConstantsABI is the input ABI used to generate the binding from.
+// Deprecated: Use ConstantsMetaData.ABI instead.
+var ConstantsABI = ConstantsMetaData.ABI
+
+// Constants is an auto generated Go binding around an Ethereum contract.
+type Constants struct {
+	ConstantsCaller     // Read-only binding to the contract
+	ConstantsTransactor // Write-only binding to the contract
+	ConstantsFilterer   // Log filterer for contract events
+}
+
+// ConstantsCaller is an auto generated read-only Go binding around an Ethereum contract.
+type ConstantsCaller struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// ConstantsTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type ConstantsTransactor struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// ConstantsFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+type ConstantsFilterer struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// ConstantsSession is an auto generated Go binding around an Ethereum contract,
+// with pre-set call and transact options.
+type ConstantsSession struct {
+	Contract     *Constants        // Generic contract binding to set the session for
+	CallOpts     bind.CallOpts     // Call options to use throughout this session
+	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
+}
+
+// ConstantsCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// with pre-set call options.
+type ConstantsCallerSession struct {
+	Contract *ConstantsCaller // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts    // Call options to use throughout this session
+}
+
+// ConstantsTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// with pre-set transact options.
+type ConstantsTransactorSession struct {
+	Contract     *ConstantsTransactor // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts    // Transaction auth options to use throughout this session
+}
+
+// ConstantsRaw is an auto generated low-level Go binding around an Ethereum contract.
+type ConstantsRaw struct {
+	Contract *Constants // Generic contract binding to access the raw methods on
+}
+
+// ConstantsCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type ConstantsCallerRaw struct {
+	Contract *ConstantsCaller // Generic read-only contract binding to access the raw methods on
+}
+
+// ConstantsTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type ConstantsTransactorRaw struct {
+	Contract *ConstantsTransactor // Generic write-only contract binding to access the raw methods on
+}
+
+// NewConstants creates a new instance of Constants, bound to a specific deployed contract.
+func NewConstants(address common.Address, backend bind.ContractBackend) (*Constants, error) {
+	contract, err := bindConstants(address, backend, backend, backend)
+	if err != nil {
+		return nil, err
+	}
+	return &Constants{ConstantsCaller: ConstantsCaller{contract: contract}, ConstantsTransactor: ConstantsTransactor{contract: contract}, ConstantsFilterer: ConstantsFilterer{contract: contract}}, nil
+}
+
+// NewConstantsCaller creates a new read-only instance of Constants, bound to a specific deployed contract.
+func NewConstantsCaller(address common.Address, caller bind.ContractCaller) (*ConstantsCaller, error) {
+	contract, err := bindConstants(address, caller, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &ConstantsCaller{contract: contract}, nil
+}
+
+// NewConstantsTransactor creates a new write-only instance of Constants, bound to a specific deployed contract.
+func NewConstantsTransactor(address common.Address, transactor bind.ContractTransactor) (*ConstantsTransactor, error) {
+	contract, err := bindConstants(address, nil, transactor, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &ConstantsTransactor{contract: contract}, nil
+}
+
+// NewConstantsFilterer creates a new log filterer instance of Constants, bound to a specific deployed contract.
+func NewConstantsFilterer(address common.Address, filterer bind.ContractFilterer) (*ConstantsFilterer, error) {
+	contract, err := bindConstants(address, nil, nil, filterer)
+	if err != nil {
+		return nil, err
+	}
+	return &ConstantsFilterer{contract: contract}, nil
+}
+
+// bindConstants binds a generic wrapper to an already deployed contract.
+func bindConstants(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := ConstantsMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_Constants *ConstantsRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _Constants.Contract.ConstantsCaller.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_Constants *ConstantsRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Constants.Contract.ConstantsTransactor.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_Constants *ConstantsRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _Constants.Contract.ConstantsTransactor.contract.Transact(opts, method, params...)
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_Constants *ConstantsCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _Constants.Contract.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_Constants *ConstantsTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Constants.Contract.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_Constants *ConstantsTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _Constants.Contract.contract.Transact(opts, method, params...)
+}
+
+// BillDurationDeltaMinute is a free data retrieval call binding the contract method 0xb9590171.
+//
+// Solidity: function billDurationDeltaMinute() view returns(uint256)
+func (_Constants *ConstantsCaller) BillDurationDeltaMinute(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Constants.contract.Call(opts, &out, "billDurationDeltaMinute")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// BillDurationDeltaMinute is a free data retrieval call binding the contract method 0xb9590171.
+//
+// Solidity: function billDurationDeltaMinute() view returns(uint256)
+func (_Constants *ConstantsSession) BillDurationDeltaMinute() (*big.Int, error) {
+	return _Constants.Contract.BillDurationDeltaMinute(&_Constants.CallOpts)
+}
+
+// BillDurationDeltaMinute is a free data retrieval call binding the contract method 0xb9590171.
+//
+// Solidity: function billDurationDeltaMinute() view returns(uint256)
+func (_Constants *ConstantsCallerSession) BillDurationDeltaMinute() (*big.Int, error) {
+	return _Constants.Contract.BillDurationDeltaMinute(&_Constants.CallOpts)
+}
+
+// CancellationFeeMinute is a free data retrieval call binding the contract method 0xd7f37cc6.
+//
+// Solidity: function cancellationFeeMinute() view returns(uint256)
+func (_Constants *ConstantsCaller) CancellationFeeMinute(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Constants.contract.Call(opts, &out, "cancellationFeeMinute")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// CancellationFeeMinute is a free data retrieval call binding the contract method 0xd7f37cc6.
+//
+// Solidity: function cancellationFeeMinute() view returns(uint256)
+func (_Constants *ConstantsSession) CancellationFeeMinute() (*big.Int, error) {
+	return _Constants.Contract.CancellationFeeMinute(&_Constants.CallOpts)
+}
+
+// CancellationFeeMinute is a free data retrieval call binding the contract method 0xd7f37cc6.
+//
+// Solidity: function cancellationFeeMinute() view returns(uint256)
+func (_Constants *ConstantsCallerSession) CancellationFeeMinute() (*big.Int, error) {
+	return _Constants.Contract.CancellationFeeMinute(&_Constants.CallOpts)
+}
+
+// ClaimJobTimeout is a free data retrieval call binding the contract method 0xd6aa37a6.
+//
+// Solidity: function claimJobTimeout() view returns(uint64)
+func (_Constants *ConstantsCaller) ClaimJobTimeout(opts *bind.CallOpts) (uint64, error) {
+	var out []interface{}
+	err := _Constants.contract.Call(opts, &out, "claimJobTimeout")
+
+	if err != nil {
+		return *new(uint64), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
+
+	return out0, err
+
+}
+
+// ClaimJobTimeout is a free data retrieval call binding the contract method 0xd6aa37a6.
+//
+// Solidity: function claimJobTimeout() view returns(uint64)
+func (_Constants *ConstantsSession) ClaimJobTimeout() (uint64, error) {
+	return _Constants.Contract.ClaimJobTimeout(&_Constants.CallOpts)
+}
+
+// ClaimJobTimeout is a free data retrieval call binding the contract method 0xd6aa37a6.
+//
+// Solidity: function claimJobTimeout() view returns(uint64)
+func (_Constants *ConstantsCallerSession) ClaimJobTimeout() (uint64, error) {
+	return _Constants.Contract.ClaimJobTimeout(&_Constants.CallOpts)
+}
+
+// DeepsquareCut is a free data retrieval call binding the contract method 0xa234d90f.
+//
+// Solidity: function deepsquareCut() view returns(uint256)
+func (_Constants *ConstantsCaller) DeepsquareCut(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Constants.contract.Call(opts, &out, "deepsquareCut")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// DeepsquareCut is a free data retrieval call binding the contract method 0xa234d90f.
+//
+// Solidity: function deepsquareCut() view returns(uint256)
+func (_Constants *ConstantsSession) DeepsquareCut() (*big.Int, error) {
+	return _Constants.Contract.DeepsquareCut(&_Constants.CallOpts)
+}
+
+// DeepsquareCut is a free data retrieval call binding the contract method 0xa234d90f.
+//
+// Solidity: function deepsquareCut() view returns(uint256)
+func (_Constants *ConstantsCallerSession) DeepsquareCut() (*big.Int, error) {
+	return _Constants.Contract.DeepsquareCut(&_Constants.CallOpts)
+}
+
+// MinimumAmount is a free data retrieval call binding the contract method 0xbb0c8298.
+//
+// Solidity: function minimumAmount() view returns(uint256)
+func (_Constants *ConstantsCaller) MinimumAmount(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Constants.contract.Call(opts, &out, "minimumAmount")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// MinimumAmount is a free data retrieval call binding the contract method 0xbb0c8298.
+//
+// Solidity: function minimumAmount() view returns(uint256)
+func (_Constants *ConstantsSession) MinimumAmount() (*big.Int, error) {
+	return _Constants.Contract.MinimumAmount(&_Constants.CallOpts)
+}
+
+// MinimumAmount is a free data retrieval call binding the contract method 0xbb0c8298.
+//
+// Solidity: function minimumAmount() view returns(uint256)
+func (_Constants *ConstantsCallerSession) MinimumAmount() (*big.Int, error) {
+	return _Constants.Contract.MinimumAmount(&_Constants.CallOpts)
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() view returns(address)
+func (_Constants *ConstantsCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Constants.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() view returns(address)
+func (_Constants *ConstantsSession) Owner() (common.Address, error) {
+	return _Constants.Contract.Owner(&_Constants.CallOpts)
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() view returns(address)
+func (_Constants *ConstantsCallerSession) Owner() (common.Address, error) {
+	return _Constants.Contract.Owner(&_Constants.CallOpts)
+}
+
+// TopUpSliceDurationMin is a free data retrieval call binding the contract method 0x8ce9843b.
+//
+// Solidity: function topUpSliceDurationMin() view returns(uint64)
+func (_Constants *ConstantsCaller) TopUpSliceDurationMin(opts *bind.CallOpts) (uint64, error) {
+	var out []interface{}
+	err := _Constants.contract.Call(opts, &out, "topUpSliceDurationMin")
+
+	if err != nil {
+		return *new(uint64), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
+
+	return out0, err
+
+}
+
+// TopUpSliceDurationMin is a free data retrieval call binding the contract method 0x8ce9843b.
+//
+// Solidity: function topUpSliceDurationMin() view returns(uint64)
+func (_Constants *ConstantsSession) TopUpSliceDurationMin() (uint64, error) {
+	return _Constants.Contract.TopUpSliceDurationMin(&_Constants.CallOpts)
+}
+
+// TopUpSliceDurationMin is a free data retrieval call binding the contract method 0x8ce9843b.
+//
+// Solidity: function topUpSliceDurationMin() view returns(uint64)
+func (_Constants *ConstantsCallerSession) TopUpSliceDurationMin() (uint64, error) {
+	return _Constants.Contract.TopUpSliceDurationMin(&_Constants.CallOpts)
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_Constants *ConstantsTransactor) RenounceOwnership(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Constants.contract.Transact(opts, "renounceOwnership")
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_Constants *ConstantsSession) RenounceOwnership() (*types.Transaction, error) {
+	return _Constants.Contract.RenounceOwnership(&_Constants.TransactOpts)
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_Constants *ConstantsTransactorSession) RenounceOwnership() (*types.Transaction, error) {
+	return _Constants.Contract.RenounceOwnership(&_Constants.TransactOpts)
+}
+
+// SetBillDurationDeltaMinute is a paid mutator transaction binding the contract method 0x5e60af51.
+//
+// Solidity: function setBillDurationDeltaMinute(uint256 _billDurationDeltaMinute) returns()
+func (_Constants *ConstantsTransactor) SetBillDurationDeltaMinute(opts *bind.TransactOpts, _billDurationDeltaMinute *big.Int) (*types.Transaction, error) {
+	return _Constants.contract.Transact(opts, "setBillDurationDeltaMinute", _billDurationDeltaMinute)
+}
+
+// SetBillDurationDeltaMinute is a paid mutator transaction binding the contract method 0x5e60af51.
+//
+// Solidity: function setBillDurationDeltaMinute(uint256 _billDurationDeltaMinute) returns()
+func (_Constants *ConstantsSession) SetBillDurationDeltaMinute(_billDurationDeltaMinute *big.Int) (*types.Transaction, error) {
+	return _Constants.Contract.SetBillDurationDeltaMinute(&_Constants.TransactOpts, _billDurationDeltaMinute)
+}
+
+// SetBillDurationDeltaMinute is a paid mutator transaction binding the contract method 0x5e60af51.
+//
+// Solidity: function setBillDurationDeltaMinute(uint256 _billDurationDeltaMinute) returns()
+func (_Constants *ConstantsTransactorSession) SetBillDurationDeltaMinute(_billDurationDeltaMinute *big.Int) (*types.Transaction, error) {
+	return _Constants.Contract.SetBillDurationDeltaMinute(&_Constants.TransactOpts, _billDurationDeltaMinute)
+}
+
+// SetCancellationFeeMinute is a paid mutator transaction binding the contract method 0x2bb30159.
+//
+// Solidity: function setCancellationFeeMinute(uint256 _cancellationFeeMinute) returns()
+func (_Constants *ConstantsTransactor) SetCancellationFeeMinute(opts *bind.TransactOpts, _cancellationFeeMinute *big.Int) (*types.Transaction, error) {
+	return _Constants.contract.Transact(opts, "setCancellationFeeMinute", _cancellationFeeMinute)
+}
+
+// SetCancellationFeeMinute is a paid mutator transaction binding the contract method 0x2bb30159.
+//
+// Solidity: function setCancellationFeeMinute(uint256 _cancellationFeeMinute) returns()
+func (_Constants *ConstantsSession) SetCancellationFeeMinute(_cancellationFeeMinute *big.Int) (*types.Transaction, error) {
+	return _Constants.Contract.SetCancellationFeeMinute(&_Constants.TransactOpts, _cancellationFeeMinute)
+}
+
+// SetCancellationFeeMinute is a paid mutator transaction binding the contract method 0x2bb30159.
+//
+// Solidity: function setCancellationFeeMinute(uint256 _cancellationFeeMinute) returns()
+func (_Constants *ConstantsTransactorSession) SetCancellationFeeMinute(_cancellationFeeMinute *big.Int) (*types.Transaction, error) {
+	return _Constants.Contract.SetCancellationFeeMinute(&_Constants.TransactOpts, _cancellationFeeMinute)
+}
+
+// SetClaimJobTimeout is a paid mutator transaction binding the contract method 0x1d84a59d.
+//
+// Solidity: function setClaimJobTimeout(uint64 _claimJobTimeout) returns()
+func (_Constants *ConstantsTransactor) SetClaimJobTimeout(opts *bind.TransactOpts, _claimJobTimeout uint64) (*types.Transaction, error) {
+	return _Constants.contract.Transact(opts, "setClaimJobTimeout", _claimJobTimeout)
+}
+
+// SetClaimJobTimeout is a paid mutator transaction binding the contract method 0x1d84a59d.
+//
+// Solidity: function setClaimJobTimeout(uint64 _claimJobTimeout) returns()
+func (_Constants *ConstantsSession) SetClaimJobTimeout(_claimJobTimeout uint64) (*types.Transaction, error) {
+	return _Constants.Contract.SetClaimJobTimeout(&_Constants.TransactOpts, _claimJobTimeout)
+}
+
+// SetClaimJobTimeout is a paid mutator transaction binding the contract method 0x1d84a59d.
+//
+// Solidity: function setClaimJobTimeout(uint64 _claimJobTimeout) returns()
+func (_Constants *ConstantsTransactorSession) SetClaimJobTimeout(_claimJobTimeout uint64) (*types.Transaction, error) {
+	return _Constants.Contract.SetClaimJobTimeout(&_Constants.TransactOpts, _claimJobTimeout)
+}
+
+// SetDeepsquareCut is a paid mutator transaction binding the contract method 0xf64a2d67.
+//
+// Solidity: function setDeepsquareCut(uint256 _deepsquareCut) returns()
+func (_Constants *ConstantsTransactor) SetDeepsquareCut(opts *bind.TransactOpts, _deepsquareCut *big.Int) (*types.Transaction, error) {
+	return _Constants.contract.Transact(opts, "setDeepsquareCut", _deepsquareCut)
+}
+
+// SetDeepsquareCut is a paid mutator transaction binding the contract method 0xf64a2d67.
+//
+// Solidity: function setDeepsquareCut(uint256 _deepsquareCut) returns()
+func (_Constants *ConstantsSession) SetDeepsquareCut(_deepsquareCut *big.Int) (*types.Transaction, error) {
+	return _Constants.Contract.SetDeepsquareCut(&_Constants.TransactOpts, _deepsquareCut)
+}
+
+// SetDeepsquareCut is a paid mutator transaction binding the contract method 0xf64a2d67.
+//
+// Solidity: function setDeepsquareCut(uint256 _deepsquareCut) returns()
+func (_Constants *ConstantsTransactorSession) SetDeepsquareCut(_deepsquareCut *big.Int) (*types.Transaction, error) {
+	return _Constants.Contract.SetDeepsquareCut(&_Constants.TransactOpts, _deepsquareCut)
+}
+
+// SetMinimumAmount is a paid mutator transaction binding the contract method 0xeeb4a9c8.
+//
+// Solidity: function setMinimumAmount(uint256 _minimumAmount) returns()
+func (_Constants *ConstantsTransactor) SetMinimumAmount(opts *bind.TransactOpts, _minimumAmount *big.Int) (*types.Transaction, error) {
+	return _Constants.contract.Transact(opts, "setMinimumAmount", _minimumAmount)
+}
+
+// SetMinimumAmount is a paid mutator transaction binding the contract method 0xeeb4a9c8.
+//
+// Solidity: function setMinimumAmount(uint256 _minimumAmount) returns()
+func (_Constants *ConstantsSession) SetMinimumAmount(_minimumAmount *big.Int) (*types.Transaction, error) {
+	return _Constants.Contract.SetMinimumAmount(&_Constants.TransactOpts, _minimumAmount)
+}
+
+// SetMinimumAmount is a paid mutator transaction binding the contract method 0xeeb4a9c8.
+//
+// Solidity: function setMinimumAmount(uint256 _minimumAmount) returns()
+func (_Constants *ConstantsTransactorSession) SetMinimumAmount(_minimumAmount *big.Int) (*types.Transaction, error) {
+	return _Constants.Contract.SetMinimumAmount(&_Constants.TransactOpts, _minimumAmount)
+}
+
+// SetTopUpSliceDurationMin is a paid mutator transaction binding the contract method 0xc670a130.
+//
+// Solidity: function setTopUpSliceDurationMin(uint64 _topUpSliceDurationMin) returns()
+func (_Constants *ConstantsTransactor) SetTopUpSliceDurationMin(opts *bind.TransactOpts, _topUpSliceDurationMin uint64) (*types.Transaction, error) {
+	return _Constants.contract.Transact(opts, "setTopUpSliceDurationMin", _topUpSliceDurationMin)
+}
+
+// SetTopUpSliceDurationMin is a paid mutator transaction binding the contract method 0xc670a130.
+//
+// Solidity: function setTopUpSliceDurationMin(uint64 _topUpSliceDurationMin) returns()
+func (_Constants *ConstantsSession) SetTopUpSliceDurationMin(_topUpSliceDurationMin uint64) (*types.Transaction, error) {
+	return _Constants.Contract.SetTopUpSliceDurationMin(&_Constants.TransactOpts, _topUpSliceDurationMin)
+}
+
+// SetTopUpSliceDurationMin is a paid mutator transaction binding the contract method 0xc670a130.
+//
+// Solidity: function setTopUpSliceDurationMin(uint64 _topUpSliceDurationMin) returns()
+func (_Constants *ConstantsTransactorSession) SetTopUpSliceDurationMin(_topUpSliceDurationMin uint64) (*types.Transaction, error) {
+	return _Constants.Contract.SetTopUpSliceDurationMin(&_Constants.TransactOpts, _topUpSliceDurationMin)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_Constants *ConstantsTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
+	return _Constants.contract.Transact(opts, "transferOwnership", newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_Constants *ConstantsSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+	return _Constants.Contract.TransferOwnership(&_Constants.TransactOpts, newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_Constants *ConstantsTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+	return _Constants.Contract.TransferOwnership(&_Constants.TransactOpts, newOwner)
+}
+
+// ConstantsOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the Constants contract.
+type ConstantsOwnershipTransferredIterator struct {
+	Event *ConstantsOwnershipTransferred // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *ConstantsOwnershipTransferredIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(ConstantsOwnershipTransferred)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(ConstantsOwnershipTransferred)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *ConstantsOwnershipTransferredIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *ConstantsOwnershipTransferredIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// ConstantsOwnershipTransferred represents a OwnershipTransferred event raised by the Constants contract.
+type ConstantsOwnershipTransferred struct {
+	PreviousOwner common.Address
+	NewOwner      common.Address
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// FilterOwnershipTransferred is a free log retrieval operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_Constants *ConstantsFilterer) FilterOwnershipTransferred(opts *bind.FilterOpts, previousOwner []common.Address, newOwner []common.Address) (*ConstantsOwnershipTransferredIterator, error) {
+
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _Constants.contract.FilterLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return &ConstantsOwnershipTransferredIterator{contract: _Constants.contract, event: "OwnershipTransferred", logs: logs, sub: sub}, nil
+}
+
+// WatchOwnershipTransferred is a free log subscription operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_Constants *ConstantsFilterer) WatchOwnershipTransferred(opts *bind.WatchOpts, sink chan<- *ConstantsOwnershipTransferred, previousOwner []common.Address, newOwner []common.Address) (event.Subscription, error) {
+
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _Constants.contract.WatchLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(ConstantsOwnershipTransferred)
+				if err := _Constants.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseOwnershipTransferred is a log parse operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_Constants *ConstantsFilterer) ParseOwnershipTransferred(log types.Log) (*ConstantsOwnershipTransferred, error) {
+	event := new(ConstantsOwnershipTransferred)
+	if err := _Constants.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
 }
 
 // ContextMetaData contains all meta data concerning the Context contract.
@@ -3097,7 +3800,7 @@ func (_IERC20 *IERC20Filterer) ParseTransfer(log types.Log) (*IERC20Transfer, er
 
 // IMetaSchedulerMetaData contains all meta data concerning the IMetaScheduler contract.
 var IMetaSchedulerMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_billingAmount\",\"type\":\"uint256\"}],\"name\":\"BilledTooMuchEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"maxDurationMinute\",\"type\":\"uint64\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"}],\"indexed\":false,\"internalType\":\"structJobDefinition\",\"name\":\"jobDefinition\",\"type\":\"tuple\"}],\"name\":\"ClaimJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"}],\"name\":\"ClaimNextCancellingJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"maxDurationMinute\",\"type\":\"uint64\"}],\"name\":\"ClaimNextTopUpJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"JobRefusedEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"enumJobStatus\",\"name\":\"_from\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"enumJobStatus\",\"name\":\"_to\",\"type\":\"uint8\"}],\"name\":\"JobTransitionEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_customerAddr\",\"type\":\"address\"}],\"name\":\"NewJobRequestEvent\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"cancelJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"claimJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextCancellingJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasCancellingJob\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasNextJob\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"metaSchedule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"enumJobStatus\",\"name\":\"_jobStatus\",\"type\":\"uint8\"},{\"internalType\":\"uint64\",\"name\":\"_jobDurationMinute\",\"type\":\"uint64\"}],\"name\":\"providerSetJobStatus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"refuseJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"}],\"internalType\":\"structJobDefinition\",\"name\":\"_definition\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"_maxCost\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_jobName\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"delegateSpendingAuthority\",\"type\":\"bool\"}],\"name\":\"requestNewJob\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"topUpJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"topUpJobDelegate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"withdrawAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_billingAmount\",\"type\":\"uint256\"}],\"name\":\"BilledTooMuchEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"maxDurationMinute\",\"type\":\"uint64\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"uses\",\"type\":\"tuple[]\"}],\"indexed\":false,\"internalType\":\"structJobDefinition\",\"name\":\"jobDefinition\",\"type\":\"tuple\"}],\"name\":\"ClaimJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"}],\"name\":\"ClaimNextCancellingJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"maxDurationMinute\",\"type\":\"uint64\"}],\"name\":\"ClaimNextTopUpJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_customerAddr\",\"type\":\"address\"}],\"name\":\"JobRefusedEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"enumJobStatus\",\"name\":\"_from\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"enumJobStatus\",\"name\":\"_to\",\"type\":\"uint8\"}],\"name\":\"JobTransitionEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_customerAddr\",\"type\":\"address\"}],\"name\":\"NewJobRequestEvent\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"cancelJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextCancellingJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"getJob\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"},{\"internalType\":\"enumJobStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"uses\",\"type\":\"tuple[]\"}],\"internalType\":\"structJobDefinition\",\"name\":\"definition\",\"type\":\"tuple\"},{\"internalType\":\"bool\",\"name\":\"valid\",\"type\":\"bool\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"maxCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"finalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"pendingTopUp\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"delegateSpendingAuthority\",\"type\":\"bool\"}],\"internalType\":\"structJobCost\",\"name\":\"cost\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"end\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cancelRequestTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"blockNumberStateChange\",\"type\":\"uint256\"}],\"internalType\":\"structJobTime\",\"name\":\"time\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"jobName\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"hasCancelRequest\",\"type\":\"bool\"}],\"internalType\":\"structJob\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"metaSchedule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"enumJobStatus\",\"name\":\"_jobStatus\",\"type\":\"uint8\"},{\"internalType\":\"uint64\",\"name\":\"_jobDurationMinute\",\"type\":\"uint64\"}],\"name\":\"providerSetJobStatus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"refuseJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"uses\",\"type\":\"tuple[]\"}],\"internalType\":\"structJobDefinition\",\"name\":\"_definition\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"_maxCost\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_jobName\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"delegateSpendingAuthority\",\"type\":\"bool\"}],\"name\":\"requestNewJob\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"topUpJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"topUpJobDelegate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"withdrawAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IMetaSchedulerABI is the input ABI used to generate the binding from.
@@ -3246,66 +3949,35 @@ func (_IMetaScheduler *IMetaSchedulerTransactorRaw) Transact(opts *bind.Transact
 	return _IMetaScheduler.Contract.contract.Transact(opts, method, params...)
 }
 
-// HasCancellingJob is a free data retrieval call binding the contract method 0x20a5f919.
+// GetJob is a free data retrieval call binding the contract method 0xf729cf0d.
 //
-// Solidity: function hasCancellingJob(address _providerAddr) view returns(bool)
-func (_IMetaScheduler *IMetaSchedulerCaller) HasCancellingJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
+// Solidity: function getJob(bytes32 _jobId) view returns((bytes32,uint8,address,address,(uint64,uint64,uint64,uint64,string,uint8,(string,string)[]),bool,(uint256,uint256,uint256,bool),(uint256,uint256,uint256,uint256),bytes32,bool))
+func (_IMetaScheduler *IMetaSchedulerCaller) GetJob(opts *bind.CallOpts, _jobId [32]byte) (Job, error) {
 	var out []interface{}
-	err := _IMetaScheduler.contract.Call(opts, &out, "hasCancellingJob", _providerAddr)
+	err := _IMetaScheduler.contract.Call(opts, &out, "getJob", _jobId)
 
 	if err != nil {
-		return *new(bool), err
+		return *new(Job), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+	out0 := *abi.ConvertType(out[0], new(Job)).(*Job)
 
 	return out0, err
 
 }
 
-// HasCancellingJob is a free data retrieval call binding the contract method 0x20a5f919.
+// GetJob is a free data retrieval call binding the contract method 0xf729cf0d.
 //
-// Solidity: function hasCancellingJob(address _providerAddr) view returns(bool)
-func (_IMetaScheduler *IMetaSchedulerSession) HasCancellingJob(_providerAddr common.Address) (bool, error) {
-	return _IMetaScheduler.Contract.HasCancellingJob(&_IMetaScheduler.CallOpts, _providerAddr)
+// Solidity: function getJob(bytes32 _jobId) view returns((bytes32,uint8,address,address,(uint64,uint64,uint64,uint64,string,uint8,(string,string)[]),bool,(uint256,uint256,uint256,bool),(uint256,uint256,uint256,uint256),bytes32,bool))
+func (_IMetaScheduler *IMetaSchedulerSession) GetJob(_jobId [32]byte) (Job, error) {
+	return _IMetaScheduler.Contract.GetJob(&_IMetaScheduler.CallOpts, _jobId)
 }
 
-// HasCancellingJob is a free data retrieval call binding the contract method 0x20a5f919.
+// GetJob is a free data retrieval call binding the contract method 0xf729cf0d.
 //
-// Solidity: function hasCancellingJob(address _providerAddr) view returns(bool)
-func (_IMetaScheduler *IMetaSchedulerCallerSession) HasCancellingJob(_providerAddr common.Address) (bool, error) {
-	return _IMetaScheduler.Contract.HasCancellingJob(&_IMetaScheduler.CallOpts, _providerAddr)
-}
-
-// HasNextJob is a free data retrieval call binding the contract method 0x0797094e.
-//
-// Solidity: function hasNextJob(address _providerAddr) view returns(bool)
-func (_IMetaScheduler *IMetaSchedulerCaller) HasNextJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
-	var out []interface{}
-	err := _IMetaScheduler.contract.Call(opts, &out, "hasNextJob", _providerAddr)
-
-	if err != nil {
-		return *new(bool), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-
-	return out0, err
-
-}
-
-// HasNextJob is a free data retrieval call binding the contract method 0x0797094e.
-//
-// Solidity: function hasNextJob(address _providerAddr) view returns(bool)
-func (_IMetaScheduler *IMetaSchedulerSession) HasNextJob(_providerAddr common.Address) (bool, error) {
-	return _IMetaScheduler.Contract.HasNextJob(&_IMetaScheduler.CallOpts, _providerAddr)
-}
-
-// HasNextJob is a free data retrieval call binding the contract method 0x0797094e.
-//
-// Solidity: function hasNextJob(address _providerAddr) view returns(bool)
-func (_IMetaScheduler *IMetaSchedulerCallerSession) HasNextJob(_providerAddr common.Address) (bool, error) {
-	return _IMetaScheduler.Contract.HasNextJob(&_IMetaScheduler.CallOpts, _providerAddr)
+// Solidity: function getJob(bytes32 _jobId) view returns((bytes32,uint8,address,address,(uint64,uint64,uint64,uint64,string,uint8,(string,string)[]),bool,(uint256,uint256,uint256,bool),(uint256,uint256,uint256,uint256),bytes32,bool))
+func (_IMetaScheduler *IMetaSchedulerCallerSession) GetJob(_jobId [32]byte) (Job, error) {
+	return _IMetaScheduler.Contract.GetJob(&_IMetaScheduler.CallOpts, _jobId)
 }
 
 // CancelJob is a paid mutator transaction binding the contract method 0x5fae1450.
@@ -3327,27 +3999,6 @@ func (_IMetaScheduler *IMetaSchedulerSession) CancelJob(_jobId [32]byte) (*types
 // Solidity: function cancelJob(bytes32 _jobId) returns()
 func (_IMetaScheduler *IMetaSchedulerTransactorSession) CancelJob(_jobId [32]byte) (*types.Transaction, error) {
 	return _IMetaScheduler.Contract.CancelJob(&_IMetaScheduler.TransactOpts, _jobId)
-}
-
-// ClaimJob is a paid mutator transaction binding the contract method 0x8fb70f63.
-//
-// Solidity: function claimJob(bytes32 _jobId, address _providerAddr) returns()
-func (_IMetaScheduler *IMetaSchedulerTransactor) ClaimJob(opts *bind.TransactOpts, _jobId [32]byte, _providerAddr common.Address) (*types.Transaction, error) {
-	return _IMetaScheduler.contract.Transact(opts, "claimJob", _jobId, _providerAddr)
-}
-
-// ClaimJob is a paid mutator transaction binding the contract method 0x8fb70f63.
-//
-// Solidity: function claimJob(bytes32 _jobId, address _providerAddr) returns()
-func (_IMetaScheduler *IMetaSchedulerSession) ClaimJob(_jobId [32]byte, _providerAddr common.Address) (*types.Transaction, error) {
-	return _IMetaScheduler.Contract.ClaimJob(&_IMetaScheduler.TransactOpts, _jobId, _providerAddr)
-}
-
-// ClaimJob is a paid mutator transaction binding the contract method 0x8fb70f63.
-//
-// Solidity: function claimJob(bytes32 _jobId, address _providerAddr) returns()
-func (_IMetaScheduler *IMetaSchedulerTransactorSession) ClaimJob(_jobId [32]byte, _providerAddr common.Address) (*types.Transaction, error) {
-	return _IMetaScheduler.Contract.ClaimJob(&_IMetaScheduler.TransactOpts, _jobId, _providerAddr)
 }
 
 // ClaimNextCancellingJob is a paid mutator transaction binding the contract method 0x5e1b2d65.
@@ -3455,23 +4106,23 @@ func (_IMetaScheduler *IMetaSchedulerTransactorSession) RefuseJob(_jobId [32]byt
 	return _IMetaScheduler.Contract.RefuseJob(&_IMetaScheduler.TransactOpts, _jobId)
 }
 
-// RequestNewJob is a paid mutator transaction binding the contract method 0x3c2fb3da.
+// RequestNewJob is a paid mutator transaction binding the contract method 0x8fac1a8a.
 //
-// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8) _definition, uint256 _maxCost, bytes32 _jobName, bool delegateSpendingAuthority) returns(bytes32)
+// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) _definition, uint256 _maxCost, bytes32 _jobName, bool delegateSpendingAuthority) returns(bytes32)
 func (_IMetaScheduler *IMetaSchedulerTransactor) RequestNewJob(opts *bind.TransactOpts, _definition JobDefinition, _maxCost *big.Int, _jobName [32]byte, delegateSpendingAuthority bool) (*types.Transaction, error) {
 	return _IMetaScheduler.contract.Transact(opts, "requestNewJob", _definition, _maxCost, _jobName, delegateSpendingAuthority)
 }
 
-// RequestNewJob is a paid mutator transaction binding the contract method 0x3c2fb3da.
+// RequestNewJob is a paid mutator transaction binding the contract method 0x8fac1a8a.
 //
-// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8) _definition, uint256 _maxCost, bytes32 _jobName, bool delegateSpendingAuthority) returns(bytes32)
+// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) _definition, uint256 _maxCost, bytes32 _jobName, bool delegateSpendingAuthority) returns(bytes32)
 func (_IMetaScheduler *IMetaSchedulerSession) RequestNewJob(_definition JobDefinition, _maxCost *big.Int, _jobName [32]byte, delegateSpendingAuthority bool) (*types.Transaction, error) {
 	return _IMetaScheduler.Contract.RequestNewJob(&_IMetaScheduler.TransactOpts, _definition, _maxCost, _jobName, delegateSpendingAuthority)
 }
 
-// RequestNewJob is a paid mutator transaction binding the contract method 0x3c2fb3da.
+// RequestNewJob is a paid mutator transaction binding the contract method 0x8fac1a8a.
 //
-// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8) _definition, uint256 _maxCost, bytes32 _jobName, bool delegateSpendingAuthority) returns(bytes32)
+// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) _definition, uint256 _maxCost, bytes32 _jobName, bool delegateSpendingAuthority) returns(bytes32)
 func (_IMetaScheduler *IMetaSchedulerTransactorSession) RequestNewJob(_definition JobDefinition, _maxCost *big.Int, _jobName [32]byte, delegateSpendingAuthority bool) (*types.Transaction, error) {
 	return _IMetaScheduler.Contract.RequestNewJob(&_IMetaScheduler.TransactOpts, _definition, _maxCost, _jobName, delegateSpendingAuthority)
 }
@@ -3752,9 +4403,9 @@ type IMetaSchedulerClaimJobEvent struct {
 	Raw               types.Log // Blockchain specific contextual infos
 }
 
-// FilterClaimJobEvent is a free log retrieval operation binding the contract event 0xc3037ff6238c842f0908a76f68fa0ec2490f1096e61e371d93fe9edca33c3c39.
+// FilterClaimJobEvent is a free log retrieval operation binding the contract event 0x383bf67d02240489b65954716c2ab62f6885953fa40008fde74a7946d202c06c.
 //
-// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8) jobDefinition)
+// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) jobDefinition)
 func (_IMetaScheduler *IMetaSchedulerFilterer) FilterClaimJobEvent(opts *bind.FilterOpts) (*IMetaSchedulerClaimJobEventIterator, error) {
 
 	logs, sub, err := _IMetaScheduler.contract.FilterLogs(opts, "ClaimJobEvent")
@@ -3764,9 +4415,9 @@ func (_IMetaScheduler *IMetaSchedulerFilterer) FilterClaimJobEvent(opts *bind.Fi
 	return &IMetaSchedulerClaimJobEventIterator{contract: _IMetaScheduler.contract, event: "ClaimJobEvent", logs: logs, sub: sub}, nil
 }
 
-// WatchClaimJobEvent is a free log subscription operation binding the contract event 0xc3037ff6238c842f0908a76f68fa0ec2490f1096e61e371d93fe9edca33c3c39.
+// WatchClaimJobEvent is a free log subscription operation binding the contract event 0x383bf67d02240489b65954716c2ab62f6885953fa40008fde74a7946d202c06c.
 //
-// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8) jobDefinition)
+// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) jobDefinition)
 func (_IMetaScheduler *IMetaSchedulerFilterer) WatchClaimJobEvent(opts *bind.WatchOpts, sink chan<- *IMetaSchedulerClaimJobEvent) (event.Subscription, error) {
 
 	logs, sub, err := _IMetaScheduler.contract.WatchLogs(opts, "ClaimJobEvent")
@@ -3801,9 +4452,9 @@ func (_IMetaScheduler *IMetaSchedulerFilterer) WatchClaimJobEvent(opts *bind.Wat
 	}), nil
 }
 
-// ParseClaimJobEvent is a log parse operation binding the contract event 0xc3037ff6238c842f0908a76f68fa0ec2490f1096e61e371d93fe9edca33c3c39.
+// ParseClaimJobEvent is a log parse operation binding the contract event 0x383bf67d02240489b65954716c2ab62f6885953fa40008fde74a7946d202c06c.
 //
-// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8) jobDefinition)
+// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) jobDefinition)
 func (_IMetaScheduler *IMetaSchedulerFilterer) ParseClaimJobEvent(log types.Log) (*IMetaSchedulerClaimJobEvent, error) {
 	event := new(IMetaSchedulerClaimJobEvent)
 	if err := _IMetaScheduler.contract.UnpackLog(event, "ClaimJobEvent", log); err != nil {
@@ -4156,12 +4807,13 @@ func (it *IMetaSchedulerJobRefusedEventIterator) Close() error {
 type IMetaSchedulerJobRefusedEvent struct {
 	JobId        [32]byte
 	ProviderAddr common.Address
+	CustomerAddr common.Address
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
-// FilterJobRefusedEvent is a free log retrieval operation binding the contract event 0x5d0260cf2f490cac7a98928e721dcc1c49f1bcc33458b3103755adfd1c1eada0.
+// FilterJobRefusedEvent is a free log retrieval operation binding the contract event 0x50d9c3fab9ef0192905beb84254b4ffb6fe086795cc23de484ec65947b6615a2.
 //
-// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr)
+// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr, address _customerAddr)
 func (_IMetaScheduler *IMetaSchedulerFilterer) FilterJobRefusedEvent(opts *bind.FilterOpts) (*IMetaSchedulerJobRefusedEventIterator, error) {
 
 	logs, sub, err := _IMetaScheduler.contract.FilterLogs(opts, "JobRefusedEvent")
@@ -4171,9 +4823,9 @@ func (_IMetaScheduler *IMetaSchedulerFilterer) FilterJobRefusedEvent(opts *bind.
 	return &IMetaSchedulerJobRefusedEventIterator{contract: _IMetaScheduler.contract, event: "JobRefusedEvent", logs: logs, sub: sub}, nil
 }
 
-// WatchJobRefusedEvent is a free log subscription operation binding the contract event 0x5d0260cf2f490cac7a98928e721dcc1c49f1bcc33458b3103755adfd1c1eada0.
+// WatchJobRefusedEvent is a free log subscription operation binding the contract event 0x50d9c3fab9ef0192905beb84254b4ffb6fe086795cc23de484ec65947b6615a2.
 //
-// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr)
+// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr, address _customerAddr)
 func (_IMetaScheduler *IMetaSchedulerFilterer) WatchJobRefusedEvent(opts *bind.WatchOpts, sink chan<- *IMetaSchedulerJobRefusedEvent) (event.Subscription, error) {
 
 	logs, sub, err := _IMetaScheduler.contract.WatchLogs(opts, "JobRefusedEvent")
@@ -4208,9 +4860,9 @@ func (_IMetaScheduler *IMetaSchedulerFilterer) WatchJobRefusedEvent(opts *bind.W
 	}), nil
 }
 
-// ParseJobRefusedEvent is a log parse operation binding the contract event 0x5d0260cf2f490cac7a98928e721dcc1c49f1bcc33458b3103755adfd1c1eada0.
+// ParseJobRefusedEvent is a log parse operation binding the contract event 0x50d9c3fab9ef0192905beb84254b4ffb6fe086795cc23de484ec65947b6615a2.
 //
-// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr)
+// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr, address _customerAddr)
 func (_IMetaScheduler *IMetaSchedulerFilterer) ParseJobRefusedEvent(log types.Log) (*IMetaSchedulerJobRefusedEvent, error) {
 	event := new(IMetaSchedulerJobRefusedEvent)
 	if err := _IMetaScheduler.contract.UnpackLog(event, "JobRefusedEvent", log); err != nil {
@@ -4491,9 +5143,557 @@ func (_IMetaScheduler *IMetaSchedulerFilterer) ParseNewJobRequestEvent(log types
 	return event, nil
 }
 
+// IProviderJobQueuesMetaData contains all meta data concerning the IProviderJobQueues contract.
+var IProviderJobQueuesMetaData = &bind.MetaData{
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getCancellingJobQueueSize\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getClaimableJobQueueSize\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getTimeoutQueueSize\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getTopUpJobQueueSize\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"length\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasCancellingJob\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasNextClaimableJob\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasTimeoutJob\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasTopUpJob\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"popNextCancellingJob\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"popNextClaimableJob\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"popNextTimeoutJob\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"popNextTopUpJob\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"pushCancellingJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"pushClaimableJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"pushTimeoutJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"pushTopUpJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIMetaScheduler\",\"name\":\"_metaschedulerAddr\",\"type\":\"address\"}],\"name\":\"setMetascheduler\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+}
+
+// IProviderJobQueuesABI is the input ABI used to generate the binding from.
+// Deprecated: Use IProviderJobQueuesMetaData.ABI instead.
+var IProviderJobQueuesABI = IProviderJobQueuesMetaData.ABI
+
+// IProviderJobQueues is an auto generated Go binding around an Ethereum contract.
+type IProviderJobQueues struct {
+	IProviderJobQueuesCaller     // Read-only binding to the contract
+	IProviderJobQueuesTransactor // Write-only binding to the contract
+	IProviderJobQueuesFilterer   // Log filterer for contract events
+}
+
+// IProviderJobQueuesCaller is an auto generated read-only Go binding around an Ethereum contract.
+type IProviderJobQueuesCaller struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// IProviderJobQueuesTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type IProviderJobQueuesTransactor struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// IProviderJobQueuesFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+type IProviderJobQueuesFilterer struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// IProviderJobQueuesSession is an auto generated Go binding around an Ethereum contract,
+// with pre-set call and transact options.
+type IProviderJobQueuesSession struct {
+	Contract     *IProviderJobQueues // Generic contract binding to set the session for
+	CallOpts     bind.CallOpts       // Call options to use throughout this session
+	TransactOpts bind.TransactOpts   // Transaction auth options to use throughout this session
+}
+
+// IProviderJobQueuesCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// with pre-set call options.
+type IProviderJobQueuesCallerSession struct {
+	Contract *IProviderJobQueuesCaller // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts             // Call options to use throughout this session
+}
+
+// IProviderJobQueuesTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// with pre-set transact options.
+type IProviderJobQueuesTransactorSession struct {
+	Contract     *IProviderJobQueuesTransactor // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts             // Transaction auth options to use throughout this session
+}
+
+// IProviderJobQueuesRaw is an auto generated low-level Go binding around an Ethereum contract.
+type IProviderJobQueuesRaw struct {
+	Contract *IProviderJobQueues // Generic contract binding to access the raw methods on
+}
+
+// IProviderJobQueuesCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type IProviderJobQueuesCallerRaw struct {
+	Contract *IProviderJobQueuesCaller // Generic read-only contract binding to access the raw methods on
+}
+
+// IProviderJobQueuesTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type IProviderJobQueuesTransactorRaw struct {
+	Contract *IProviderJobQueuesTransactor // Generic write-only contract binding to access the raw methods on
+}
+
+// NewIProviderJobQueues creates a new instance of IProviderJobQueues, bound to a specific deployed contract.
+func NewIProviderJobQueues(address common.Address, backend bind.ContractBackend) (*IProviderJobQueues, error) {
+	contract, err := bindIProviderJobQueues(address, backend, backend, backend)
+	if err != nil {
+		return nil, err
+	}
+	return &IProviderJobQueues{IProviderJobQueuesCaller: IProviderJobQueuesCaller{contract: contract}, IProviderJobQueuesTransactor: IProviderJobQueuesTransactor{contract: contract}, IProviderJobQueuesFilterer: IProviderJobQueuesFilterer{contract: contract}}, nil
+}
+
+// NewIProviderJobQueuesCaller creates a new read-only instance of IProviderJobQueues, bound to a specific deployed contract.
+func NewIProviderJobQueuesCaller(address common.Address, caller bind.ContractCaller) (*IProviderJobQueuesCaller, error) {
+	contract, err := bindIProviderJobQueues(address, caller, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &IProviderJobQueuesCaller{contract: contract}, nil
+}
+
+// NewIProviderJobQueuesTransactor creates a new write-only instance of IProviderJobQueues, bound to a specific deployed contract.
+func NewIProviderJobQueuesTransactor(address common.Address, transactor bind.ContractTransactor) (*IProviderJobQueuesTransactor, error) {
+	contract, err := bindIProviderJobQueues(address, nil, transactor, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &IProviderJobQueuesTransactor{contract: contract}, nil
+}
+
+// NewIProviderJobQueuesFilterer creates a new log filterer instance of IProviderJobQueues, bound to a specific deployed contract.
+func NewIProviderJobQueuesFilterer(address common.Address, filterer bind.ContractFilterer) (*IProviderJobQueuesFilterer, error) {
+	contract, err := bindIProviderJobQueues(address, nil, nil, filterer)
+	if err != nil {
+		return nil, err
+	}
+	return &IProviderJobQueuesFilterer{contract: contract}, nil
+}
+
+// bindIProviderJobQueues binds a generic wrapper to an already deployed contract.
+func bindIProviderJobQueues(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := IProviderJobQueuesMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_IProviderJobQueues *IProviderJobQueuesRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _IProviderJobQueues.Contract.IProviderJobQueuesCaller.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_IProviderJobQueues *IProviderJobQueuesRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.IProviderJobQueuesTransactor.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_IProviderJobQueues *IProviderJobQueuesRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.IProviderJobQueuesTransactor.contract.Transact(opts, method, params...)
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_IProviderJobQueues *IProviderJobQueuesCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _IProviderJobQueues.Contract.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_IProviderJobQueues *IProviderJobQueuesTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_IProviderJobQueues *IProviderJobQueuesTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.contract.Transact(opts, method, params...)
+}
+
+// HasCancellingJob is a free data retrieval call binding the contract method 0x20a5f919.
+//
+// Solidity: function hasCancellingJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesCaller) HasCancellingJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
+	var out []interface{}
+	err := _IProviderJobQueues.contract.Call(opts, &out, "hasCancellingJob", _providerAddr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// HasCancellingJob is a free data retrieval call binding the contract method 0x20a5f919.
+//
+// Solidity: function hasCancellingJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesSession) HasCancellingJob(_providerAddr common.Address) (bool, error) {
+	return _IProviderJobQueues.Contract.HasCancellingJob(&_IProviderJobQueues.CallOpts, _providerAddr)
+}
+
+// HasCancellingJob is a free data retrieval call binding the contract method 0x20a5f919.
+//
+// Solidity: function hasCancellingJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesCallerSession) HasCancellingJob(_providerAddr common.Address) (bool, error) {
+	return _IProviderJobQueues.Contract.HasCancellingJob(&_IProviderJobQueues.CallOpts, _providerAddr)
+}
+
+// HasNextClaimableJob is a free data retrieval call binding the contract method 0x6502e50b.
+//
+// Solidity: function hasNextClaimableJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesCaller) HasNextClaimableJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
+	var out []interface{}
+	err := _IProviderJobQueues.contract.Call(opts, &out, "hasNextClaimableJob", _providerAddr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// HasNextClaimableJob is a free data retrieval call binding the contract method 0x6502e50b.
+//
+// Solidity: function hasNextClaimableJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesSession) HasNextClaimableJob(_providerAddr common.Address) (bool, error) {
+	return _IProviderJobQueues.Contract.HasNextClaimableJob(&_IProviderJobQueues.CallOpts, _providerAddr)
+}
+
+// HasNextClaimableJob is a free data retrieval call binding the contract method 0x6502e50b.
+//
+// Solidity: function hasNextClaimableJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesCallerSession) HasNextClaimableJob(_providerAddr common.Address) (bool, error) {
+	return _IProviderJobQueues.Contract.HasNextClaimableJob(&_IProviderJobQueues.CallOpts, _providerAddr)
+}
+
+// HasTimeoutJob is a free data retrieval call binding the contract method 0x5dd0fa10.
+//
+// Solidity: function hasTimeoutJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesCaller) HasTimeoutJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
+	var out []interface{}
+	err := _IProviderJobQueues.contract.Call(opts, &out, "hasTimeoutJob", _providerAddr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// HasTimeoutJob is a free data retrieval call binding the contract method 0x5dd0fa10.
+//
+// Solidity: function hasTimeoutJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesSession) HasTimeoutJob(_providerAddr common.Address) (bool, error) {
+	return _IProviderJobQueues.Contract.HasTimeoutJob(&_IProviderJobQueues.CallOpts, _providerAddr)
+}
+
+// HasTimeoutJob is a free data retrieval call binding the contract method 0x5dd0fa10.
+//
+// Solidity: function hasTimeoutJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesCallerSession) HasTimeoutJob(_providerAddr common.Address) (bool, error) {
+	return _IProviderJobQueues.Contract.HasTimeoutJob(&_IProviderJobQueues.CallOpts, _providerAddr)
+}
+
+// HasTopUpJob is a free data retrieval call binding the contract method 0xc7070e2c.
+//
+// Solidity: function hasTopUpJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesCaller) HasTopUpJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
+	var out []interface{}
+	err := _IProviderJobQueues.contract.Call(opts, &out, "hasTopUpJob", _providerAddr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// HasTopUpJob is a free data retrieval call binding the contract method 0xc7070e2c.
+//
+// Solidity: function hasTopUpJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesSession) HasTopUpJob(_providerAddr common.Address) (bool, error) {
+	return _IProviderJobQueues.Contract.HasTopUpJob(&_IProviderJobQueues.CallOpts, _providerAddr)
+}
+
+// HasTopUpJob is a free data retrieval call binding the contract method 0xc7070e2c.
+//
+// Solidity: function hasTopUpJob(address _providerAddr) view returns(bool)
+func (_IProviderJobQueues *IProviderJobQueuesCallerSession) HasTopUpJob(_providerAddr common.Address) (bool, error) {
+	return _IProviderJobQueues.Contract.HasTopUpJob(&_IProviderJobQueues.CallOpts, _providerAddr)
+}
+
+// GetCancellingJobQueueSize is a paid mutator transaction binding the contract method 0x4c2a0b7b.
+//
+// Solidity: function getCancellingJobQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) GetCancellingJobQueueSize(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "getCancellingJobQueueSize", _providerAddr)
+}
+
+// GetCancellingJobQueueSize is a paid mutator transaction binding the contract method 0x4c2a0b7b.
+//
+// Solidity: function getCancellingJobQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesSession) GetCancellingJobQueueSize(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.GetCancellingJobQueueSize(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// GetCancellingJobQueueSize is a paid mutator transaction binding the contract method 0x4c2a0b7b.
+//
+// Solidity: function getCancellingJobQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) GetCancellingJobQueueSize(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.GetCancellingJobQueueSize(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// GetClaimableJobQueueSize is a paid mutator transaction binding the contract method 0x79490261.
+//
+// Solidity: function getClaimableJobQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) GetClaimableJobQueueSize(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "getClaimableJobQueueSize", _providerAddr)
+}
+
+// GetClaimableJobQueueSize is a paid mutator transaction binding the contract method 0x79490261.
+//
+// Solidity: function getClaimableJobQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesSession) GetClaimableJobQueueSize(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.GetClaimableJobQueueSize(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// GetClaimableJobQueueSize is a paid mutator transaction binding the contract method 0x79490261.
+//
+// Solidity: function getClaimableJobQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) GetClaimableJobQueueSize(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.GetClaimableJobQueueSize(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// GetTimeoutQueueSize is a paid mutator transaction binding the contract method 0x9e488d60.
+//
+// Solidity: function getTimeoutQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) GetTimeoutQueueSize(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "getTimeoutQueueSize", _providerAddr)
+}
+
+// GetTimeoutQueueSize is a paid mutator transaction binding the contract method 0x9e488d60.
+//
+// Solidity: function getTimeoutQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesSession) GetTimeoutQueueSize(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.GetTimeoutQueueSize(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// GetTimeoutQueueSize is a paid mutator transaction binding the contract method 0x9e488d60.
+//
+// Solidity: function getTimeoutQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) GetTimeoutQueueSize(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.GetTimeoutQueueSize(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// GetTopUpJobQueueSize is a paid mutator transaction binding the contract method 0xc3345ca3.
+//
+// Solidity: function getTopUpJobQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) GetTopUpJobQueueSize(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "getTopUpJobQueueSize", _providerAddr)
+}
+
+// GetTopUpJobQueueSize is a paid mutator transaction binding the contract method 0xc3345ca3.
+//
+// Solidity: function getTopUpJobQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesSession) GetTopUpJobQueueSize(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.GetTopUpJobQueueSize(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// GetTopUpJobQueueSize is a paid mutator transaction binding the contract method 0xc3345ca3.
+//
+// Solidity: function getTopUpJobQueueSize(address _providerAddr) returns(uint256 length)
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) GetTopUpJobQueueSize(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.GetTopUpJobQueueSize(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// PopNextCancellingJob is a paid mutator transaction binding the contract method 0xde1a4d46.
+//
+// Solidity: function popNextCancellingJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) PopNextCancellingJob(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "popNextCancellingJob", _providerAddr)
+}
+
+// PopNextCancellingJob is a paid mutator transaction binding the contract method 0xde1a4d46.
+//
+// Solidity: function popNextCancellingJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesSession) PopNextCancellingJob(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PopNextCancellingJob(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// PopNextCancellingJob is a paid mutator transaction binding the contract method 0xde1a4d46.
+//
+// Solidity: function popNextCancellingJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) PopNextCancellingJob(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PopNextCancellingJob(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// PopNextClaimableJob is a paid mutator transaction binding the contract method 0xbd69abf4.
+//
+// Solidity: function popNextClaimableJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) PopNextClaimableJob(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "popNextClaimableJob", _providerAddr)
+}
+
+// PopNextClaimableJob is a paid mutator transaction binding the contract method 0xbd69abf4.
+//
+// Solidity: function popNextClaimableJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesSession) PopNextClaimableJob(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PopNextClaimableJob(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// PopNextClaimableJob is a paid mutator transaction binding the contract method 0xbd69abf4.
+//
+// Solidity: function popNextClaimableJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) PopNextClaimableJob(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PopNextClaimableJob(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// PopNextTimeoutJob is a paid mutator transaction binding the contract method 0x2bea8269.
+//
+// Solidity: function popNextTimeoutJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) PopNextTimeoutJob(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "popNextTimeoutJob", _providerAddr)
+}
+
+// PopNextTimeoutJob is a paid mutator transaction binding the contract method 0x2bea8269.
+//
+// Solidity: function popNextTimeoutJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesSession) PopNextTimeoutJob(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PopNextTimeoutJob(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// PopNextTimeoutJob is a paid mutator transaction binding the contract method 0x2bea8269.
+//
+// Solidity: function popNextTimeoutJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) PopNextTimeoutJob(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PopNextTimeoutJob(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// PopNextTopUpJob is a paid mutator transaction binding the contract method 0x22d398d4.
+//
+// Solidity: function popNextTopUpJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) PopNextTopUpJob(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "popNextTopUpJob", _providerAddr)
+}
+
+// PopNextTopUpJob is a paid mutator transaction binding the contract method 0x22d398d4.
+//
+// Solidity: function popNextTopUpJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesSession) PopNextTopUpJob(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PopNextTopUpJob(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// PopNextTopUpJob is a paid mutator transaction binding the contract method 0x22d398d4.
+//
+// Solidity: function popNextTopUpJob(address _providerAddr) returns(bytes32 jobId)
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) PopNextTopUpJob(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PopNextTopUpJob(&_IProviderJobQueues.TransactOpts, _providerAddr)
+}
+
+// PushCancellingJob is a paid mutator transaction binding the contract method 0x2b72522e.
+//
+// Solidity: function pushCancellingJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) PushCancellingJob(opts *bind.TransactOpts, _providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "pushCancellingJob", _providerAddr, _jobId)
+}
+
+// PushCancellingJob is a paid mutator transaction binding the contract method 0x2b72522e.
+//
+// Solidity: function pushCancellingJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesSession) PushCancellingJob(_providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PushCancellingJob(&_IProviderJobQueues.TransactOpts, _providerAddr, _jobId)
+}
+
+// PushCancellingJob is a paid mutator transaction binding the contract method 0x2b72522e.
+//
+// Solidity: function pushCancellingJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) PushCancellingJob(_providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PushCancellingJob(&_IProviderJobQueues.TransactOpts, _providerAddr, _jobId)
+}
+
+// PushClaimableJob is a paid mutator transaction binding the contract method 0x65b4fc49.
+//
+// Solidity: function pushClaimableJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) PushClaimableJob(opts *bind.TransactOpts, _providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "pushClaimableJob", _providerAddr, _jobId)
+}
+
+// PushClaimableJob is a paid mutator transaction binding the contract method 0x65b4fc49.
+//
+// Solidity: function pushClaimableJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesSession) PushClaimableJob(_providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PushClaimableJob(&_IProviderJobQueues.TransactOpts, _providerAddr, _jobId)
+}
+
+// PushClaimableJob is a paid mutator transaction binding the contract method 0x65b4fc49.
+//
+// Solidity: function pushClaimableJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) PushClaimableJob(_providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PushClaimableJob(&_IProviderJobQueues.TransactOpts, _providerAddr, _jobId)
+}
+
+// PushTimeoutJob is a paid mutator transaction binding the contract method 0xb6f21ba6.
+//
+// Solidity: function pushTimeoutJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) PushTimeoutJob(opts *bind.TransactOpts, _providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "pushTimeoutJob", _providerAddr, _jobId)
+}
+
+// PushTimeoutJob is a paid mutator transaction binding the contract method 0xb6f21ba6.
+//
+// Solidity: function pushTimeoutJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesSession) PushTimeoutJob(_providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PushTimeoutJob(&_IProviderJobQueues.TransactOpts, _providerAddr, _jobId)
+}
+
+// PushTimeoutJob is a paid mutator transaction binding the contract method 0xb6f21ba6.
+//
+// Solidity: function pushTimeoutJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) PushTimeoutJob(_providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PushTimeoutJob(&_IProviderJobQueues.TransactOpts, _providerAddr, _jobId)
+}
+
+// PushTopUpJob is a paid mutator transaction binding the contract method 0x27fed931.
+//
+// Solidity: function pushTopUpJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) PushTopUpJob(opts *bind.TransactOpts, _providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "pushTopUpJob", _providerAddr, _jobId)
+}
+
+// PushTopUpJob is a paid mutator transaction binding the contract method 0x27fed931.
+//
+// Solidity: function pushTopUpJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesSession) PushTopUpJob(_providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PushTopUpJob(&_IProviderJobQueues.TransactOpts, _providerAddr, _jobId)
+}
+
+// PushTopUpJob is a paid mutator transaction binding the contract method 0x27fed931.
+//
+// Solidity: function pushTopUpJob(address _providerAddr, bytes32 _jobId) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) PushTopUpJob(_providerAddr common.Address, _jobId [32]byte) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.PushTopUpJob(&_IProviderJobQueues.TransactOpts, _providerAddr, _jobId)
+}
+
+// SetMetascheduler is a paid mutator transaction binding the contract method 0xaa9a344a.
+//
+// Solidity: function setMetascheduler(address _metaschedulerAddr) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactor) SetMetascheduler(opts *bind.TransactOpts, _metaschedulerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.contract.Transact(opts, "setMetascheduler", _metaschedulerAddr)
+}
+
+// SetMetascheduler is a paid mutator transaction binding the contract method 0xaa9a344a.
+//
+// Solidity: function setMetascheduler(address _metaschedulerAddr) returns()
+func (_IProviderJobQueues *IProviderJobQueuesSession) SetMetascheduler(_metaschedulerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.SetMetascheduler(&_IProviderJobQueues.TransactOpts, _metaschedulerAddr)
+}
+
+// SetMetascheduler is a paid mutator transaction binding the contract method 0xaa9a344a.
+//
+// Solidity: function setMetascheduler(address _metaschedulerAddr) returns()
+func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) SetMetascheduler(_metaschedulerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderJobQueues.Contract.SetMetascheduler(&_IProviderJobQueues.TransactOpts, _metaschedulerAddr)
+}
+
 // IProviderManagerMetaData contains all meta data concerning the IProviderManager contract.
 var IProviderManagerMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"HardwareUpdatedEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"ToBeApproved\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"approve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProvider\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"nodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"gpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"gpuPricePerMin\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPricePerMin\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"mem\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPricePerMin\",\"type\":\"uint64\"}],\"internalType\":\"structProviderDefinition\",\"name\":\"definition\",\"type\":\"tuple\"},{\"internalType\":\"enumProviderStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"bool\",\"name\":\"valid\",\"type\":\"bool\"},{\"internalType\":\"uint64\",\"name\":\"jobCount\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"pointPrevNode\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"pointNextNode\",\"type\":\"uint256\"}],\"internalType\":\"structProvider\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasJoined\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"incJobCount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"kick\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"_nNodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_gpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_cpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_mem\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_gpuPricePerMin\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_cpuPricePerMin\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_memPricePerMin\",\"type\":\"uint64\"}],\"name\":\"register\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"internalType\":\"uint64\",\"name\":\"_nNodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_gpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_cpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_mem\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_gpuPricePerMin\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_cpuPricePerMin\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_memPricePerMin\",\"type\":\"uint64\"}],\"name\":\"registerProvider\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"HardwareUpdatedEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"ToBeApproved\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"approve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"ban\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getAllTag\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getJobCount\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProviderHardware\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"nodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"gpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"mem\",\"type\":\"uint64\"}],\"internalType\":\"structProviderHardware\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProviderPrices\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"memPricePerMin\",\"type\":\"uint256\"}],\"internalType\":\"structProviderPrices\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProviderStatus\",\"outputs\":[{\"internalType\":\"enumProviderStatus\",\"name\":\"_status\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProviderWalletAddr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"_walletAddr\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"tagKey\",\"type\":\"string\"}],\"name\":\"getTag\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasJoined\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"incJobCount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"kick\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"_nNodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_gpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_cpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_mem\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"_gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_memPricePerMin\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"_labels\",\"type\":\"tuple[]\"}],\"name\":\"register\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"internalType\":\"uint64\",\"name\":\"_nNodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_gpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_cpus\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"_mem\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"_gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_memPricePerMin\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"_labels\",\"type\":\"tuple[]\"}],\"name\":\"registerProvider\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"reinstated\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"remove\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IProviderManagerABI is the input ABI used to generate the binding from.
@@ -4642,35 +5842,221 @@ func (_IProviderManager *IProviderManagerTransactorRaw) Transact(opts *bind.Tran
 	return _IProviderManager.Contract.contract.Transact(opts, method, params...)
 }
 
-// GetProvider is a free data retrieval call binding the contract method 0x55f21eb7.
+// GetAllTag is a free data retrieval call binding the contract method 0x035f0ab2.
 //
-// Solidity: function getProvider(address _providerAddr) view returns((address,(uint64,uint64,uint64,uint64,uint64,uint64,uint64),uint8,bool,uint64,uint256,uint256))
-func (_IProviderManager *IProviderManagerCaller) GetProvider(opts *bind.CallOpts, _providerAddr common.Address) (Provider, error) {
+// Solidity: function getAllTag(address _providerAddr) view returns((string,string)[])
+func (_IProviderManager *IProviderManagerCaller) GetAllTag(opts *bind.CallOpts, _providerAddr common.Address) ([]Label, error) {
 	var out []interface{}
-	err := _IProviderManager.contract.Call(opts, &out, "getProvider", _providerAddr)
+	err := _IProviderManager.contract.Call(opts, &out, "getAllTag", _providerAddr)
 
 	if err != nil {
-		return *new(Provider), err
+		return *new([]Label), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(Provider)).(*Provider)
+	out0 := *abi.ConvertType(out[0], new([]Label)).(*[]Label)
 
 	return out0, err
 
 }
 
-// GetProvider is a free data retrieval call binding the contract method 0x55f21eb7.
+// GetAllTag is a free data retrieval call binding the contract method 0x035f0ab2.
 //
-// Solidity: function getProvider(address _providerAddr) view returns((address,(uint64,uint64,uint64,uint64,uint64,uint64,uint64),uint8,bool,uint64,uint256,uint256))
-func (_IProviderManager *IProviderManagerSession) GetProvider(_providerAddr common.Address) (Provider, error) {
-	return _IProviderManager.Contract.GetProvider(&_IProviderManager.CallOpts, _providerAddr)
+// Solidity: function getAllTag(address _providerAddr) view returns((string,string)[])
+func (_IProviderManager *IProviderManagerSession) GetAllTag(_providerAddr common.Address) ([]Label, error) {
+	return _IProviderManager.Contract.GetAllTag(&_IProviderManager.CallOpts, _providerAddr)
 }
 
-// GetProvider is a free data retrieval call binding the contract method 0x55f21eb7.
+// GetAllTag is a free data retrieval call binding the contract method 0x035f0ab2.
 //
-// Solidity: function getProvider(address _providerAddr) view returns((address,(uint64,uint64,uint64,uint64,uint64,uint64,uint64),uint8,bool,uint64,uint256,uint256))
-func (_IProviderManager *IProviderManagerCallerSession) GetProvider(_providerAddr common.Address) (Provider, error) {
-	return _IProviderManager.Contract.GetProvider(&_IProviderManager.CallOpts, _providerAddr)
+// Solidity: function getAllTag(address _providerAddr) view returns((string,string)[])
+func (_IProviderManager *IProviderManagerCallerSession) GetAllTag(_providerAddr common.Address) ([]Label, error) {
+	return _IProviderManager.Contract.GetAllTag(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetJobCount is a free data retrieval call binding the contract method 0x6830cdc4.
+//
+// Solidity: function getJobCount(address _providerAddr) view returns(uint64)
+func (_IProviderManager *IProviderManagerCaller) GetJobCount(opts *bind.CallOpts, _providerAddr common.Address) (uint64, error) {
+	var out []interface{}
+	err := _IProviderManager.contract.Call(opts, &out, "getJobCount", _providerAddr)
+
+	if err != nil {
+		return *new(uint64), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
+
+	return out0, err
+
+}
+
+// GetJobCount is a free data retrieval call binding the contract method 0x6830cdc4.
+//
+// Solidity: function getJobCount(address _providerAddr) view returns(uint64)
+func (_IProviderManager *IProviderManagerSession) GetJobCount(_providerAddr common.Address) (uint64, error) {
+	return _IProviderManager.Contract.GetJobCount(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetJobCount is a free data retrieval call binding the contract method 0x6830cdc4.
+//
+// Solidity: function getJobCount(address _providerAddr) view returns(uint64)
+func (_IProviderManager *IProviderManagerCallerSession) GetJobCount(_providerAddr common.Address) (uint64, error) {
+	return _IProviderManager.Contract.GetJobCount(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetProviderHardware is a free data retrieval call binding the contract method 0xe5500e40.
+//
+// Solidity: function getProviderHardware(address _providerAddr) view returns((uint64,uint64,uint64,uint64))
+func (_IProviderManager *IProviderManagerCaller) GetProviderHardware(opts *bind.CallOpts, _providerAddr common.Address) (ProviderHardware, error) {
+	var out []interface{}
+	err := _IProviderManager.contract.Call(opts, &out, "getProviderHardware", _providerAddr)
+
+	if err != nil {
+		return *new(ProviderHardware), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(ProviderHardware)).(*ProviderHardware)
+
+	return out0, err
+
+}
+
+// GetProviderHardware is a free data retrieval call binding the contract method 0xe5500e40.
+//
+// Solidity: function getProviderHardware(address _providerAddr) view returns((uint64,uint64,uint64,uint64))
+func (_IProviderManager *IProviderManagerSession) GetProviderHardware(_providerAddr common.Address) (ProviderHardware, error) {
+	return _IProviderManager.Contract.GetProviderHardware(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetProviderHardware is a free data retrieval call binding the contract method 0xe5500e40.
+//
+// Solidity: function getProviderHardware(address _providerAddr) view returns((uint64,uint64,uint64,uint64))
+func (_IProviderManager *IProviderManagerCallerSession) GetProviderHardware(_providerAddr common.Address) (ProviderHardware, error) {
+	return _IProviderManager.Contract.GetProviderHardware(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetProviderPrices is a free data retrieval call binding the contract method 0x106859b6.
+//
+// Solidity: function getProviderPrices(address _providerAddr) view returns((uint256,uint256,uint256))
+func (_IProviderManager *IProviderManagerCaller) GetProviderPrices(opts *bind.CallOpts, _providerAddr common.Address) (ProviderPrices, error) {
+	var out []interface{}
+	err := _IProviderManager.contract.Call(opts, &out, "getProviderPrices", _providerAddr)
+
+	if err != nil {
+		return *new(ProviderPrices), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(ProviderPrices)).(*ProviderPrices)
+
+	return out0, err
+
+}
+
+// GetProviderPrices is a free data retrieval call binding the contract method 0x106859b6.
+//
+// Solidity: function getProviderPrices(address _providerAddr) view returns((uint256,uint256,uint256))
+func (_IProviderManager *IProviderManagerSession) GetProviderPrices(_providerAddr common.Address) (ProviderPrices, error) {
+	return _IProviderManager.Contract.GetProviderPrices(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetProviderPrices is a free data retrieval call binding the contract method 0x106859b6.
+//
+// Solidity: function getProviderPrices(address _providerAddr) view returns((uint256,uint256,uint256))
+func (_IProviderManager *IProviderManagerCallerSession) GetProviderPrices(_providerAddr common.Address) (ProviderPrices, error) {
+	return _IProviderManager.Contract.GetProviderPrices(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetProviderStatus is a free data retrieval call binding the contract method 0xd646a1da.
+//
+// Solidity: function getProviderStatus(address _providerAddr) view returns(uint8 _status)
+func (_IProviderManager *IProviderManagerCaller) GetProviderStatus(opts *bind.CallOpts, _providerAddr common.Address) (uint8, error) {
+	var out []interface{}
+	err := _IProviderManager.contract.Call(opts, &out, "getProviderStatus", _providerAddr)
+
+	if err != nil {
+		return *new(uint8), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
+
+	return out0, err
+
+}
+
+// GetProviderStatus is a free data retrieval call binding the contract method 0xd646a1da.
+//
+// Solidity: function getProviderStatus(address _providerAddr) view returns(uint8 _status)
+func (_IProviderManager *IProviderManagerSession) GetProviderStatus(_providerAddr common.Address) (uint8, error) {
+	return _IProviderManager.Contract.GetProviderStatus(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetProviderStatus is a free data retrieval call binding the contract method 0xd646a1da.
+//
+// Solidity: function getProviderStatus(address _providerAddr) view returns(uint8 _status)
+func (_IProviderManager *IProviderManagerCallerSession) GetProviderStatus(_providerAddr common.Address) (uint8, error) {
+	return _IProviderManager.Contract.GetProviderStatus(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetProviderWalletAddr is a free data retrieval call binding the contract method 0xb5d7f1b2.
+//
+// Solidity: function getProviderWalletAddr(address _providerAddr) view returns(address _walletAddr)
+func (_IProviderManager *IProviderManagerCaller) GetProviderWalletAddr(opts *bind.CallOpts, _providerAddr common.Address) (common.Address, error) {
+	var out []interface{}
+	err := _IProviderManager.contract.Call(opts, &out, "getProviderWalletAddr", _providerAddr)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// GetProviderWalletAddr is a free data retrieval call binding the contract method 0xb5d7f1b2.
+//
+// Solidity: function getProviderWalletAddr(address _providerAddr) view returns(address _walletAddr)
+func (_IProviderManager *IProviderManagerSession) GetProviderWalletAddr(_providerAddr common.Address) (common.Address, error) {
+	return _IProviderManager.Contract.GetProviderWalletAddr(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetProviderWalletAddr is a free data retrieval call binding the contract method 0xb5d7f1b2.
+//
+// Solidity: function getProviderWalletAddr(address _providerAddr) view returns(address _walletAddr)
+func (_IProviderManager *IProviderManagerCallerSession) GetProviderWalletAddr(_providerAddr common.Address) (common.Address, error) {
+	return _IProviderManager.Contract.GetProviderWalletAddr(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// GetTag is a free data retrieval call binding the contract method 0x7b8ae930.
+//
+// Solidity: function getTag(address _providerAddr, string tagKey) view returns(string)
+func (_IProviderManager *IProviderManagerCaller) GetTag(opts *bind.CallOpts, _providerAddr common.Address, tagKey string) (string, error) {
+	var out []interface{}
+	err := _IProviderManager.contract.Call(opts, &out, "getTag", _providerAddr, tagKey)
+
+	if err != nil {
+		return *new(string), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
+
+	return out0, err
+
+}
+
+// GetTag is a free data retrieval call binding the contract method 0x7b8ae930.
+//
+// Solidity: function getTag(address _providerAddr, string tagKey) view returns(string)
+func (_IProviderManager *IProviderManagerSession) GetTag(_providerAddr common.Address, tagKey string) (string, error) {
+	return _IProviderManager.Contract.GetTag(&_IProviderManager.CallOpts, _providerAddr, tagKey)
+}
+
+// GetTag is a free data retrieval call binding the contract method 0x7b8ae930.
+//
+// Solidity: function getTag(address _providerAddr, string tagKey) view returns(string)
+func (_IProviderManager *IProviderManagerCallerSession) GetTag(_providerAddr common.Address, tagKey string) (string, error) {
+	return _IProviderManager.Contract.GetTag(&_IProviderManager.CallOpts, _providerAddr, tagKey)
 }
 
 // HasJoined is a free data retrieval call binding the contract method 0x877f4e12.
@@ -4725,6 +6111,27 @@ func (_IProviderManager *IProviderManagerTransactorSession) Approve(_providerAdd
 	return _IProviderManager.Contract.Approve(&_IProviderManager.TransactOpts, _providerAddr)
 }
 
+// Ban is a paid mutator transaction binding the contract method 0x97c3ccd8.
+//
+// Solidity: function ban(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactor) Ban(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.contract.Transact(opts, "ban", _providerAddr)
+}
+
+// Ban is a paid mutator transaction binding the contract method 0x97c3ccd8.
+//
+// Solidity: function ban(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerSession) Ban(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Ban(&_IProviderManager.TransactOpts, _providerAddr)
+}
+
+// Ban is a paid mutator transaction binding the contract method 0x97c3ccd8.
+//
+// Solidity: function ban(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactorSession) Ban(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Ban(&_IProviderManager.TransactOpts, _providerAddr)
+}
+
 // IncJobCount is a paid mutator transaction binding the contract method 0x3f6edb5f.
 //
 // Solidity: function incJobCount(address _providerAddr) returns()
@@ -4767,46 +6174,88 @@ func (_IProviderManager *IProviderManagerTransactorSession) Kick(_providerAddr c
 	return _IProviderManager.Contract.Kick(&_IProviderManager.TransactOpts, _providerAddr)
 }
 
-// Register is a paid mutator transaction binding the contract method 0x6099a872.
+// Register is a paid mutator transaction binding the contract method 0x6ee31815.
 //
-// Solidity: function register(uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint64 _gpuPricePerMin, uint64 _cpuPricePerMin, uint64 _memPricePerMin) returns()
-func (_IProviderManager *IProviderManagerTransactor) Register(opts *bind.TransactOpts, _nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin uint64, _cpuPricePerMin uint64, _memPricePerMin uint64) (*types.Transaction, error) {
-	return _IProviderManager.contract.Transact(opts, "register", _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin)
+// Solidity: function register(uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint256 _gpuPricePerMin, uint256 _cpuPricePerMin, uint256 _memPricePerMin, (string,string)[] _labels) returns()
+func (_IProviderManager *IProviderManagerTransactor) Register(opts *bind.TransactOpts, _nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin *big.Int, _cpuPricePerMin *big.Int, _memPricePerMin *big.Int, _labels []Label) (*types.Transaction, error) {
+	return _IProviderManager.contract.Transact(opts, "register", _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin, _labels)
 }
 
-// Register is a paid mutator transaction binding the contract method 0x6099a872.
+// Register is a paid mutator transaction binding the contract method 0x6ee31815.
 //
-// Solidity: function register(uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint64 _gpuPricePerMin, uint64 _cpuPricePerMin, uint64 _memPricePerMin) returns()
-func (_IProviderManager *IProviderManagerSession) Register(_nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin uint64, _cpuPricePerMin uint64, _memPricePerMin uint64) (*types.Transaction, error) {
-	return _IProviderManager.Contract.Register(&_IProviderManager.TransactOpts, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin)
+// Solidity: function register(uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint256 _gpuPricePerMin, uint256 _cpuPricePerMin, uint256 _memPricePerMin, (string,string)[] _labels) returns()
+func (_IProviderManager *IProviderManagerSession) Register(_nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin *big.Int, _cpuPricePerMin *big.Int, _memPricePerMin *big.Int, _labels []Label) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Register(&_IProviderManager.TransactOpts, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin, _labels)
 }
 
-// Register is a paid mutator transaction binding the contract method 0x6099a872.
+// Register is a paid mutator transaction binding the contract method 0x6ee31815.
 //
-// Solidity: function register(uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint64 _gpuPricePerMin, uint64 _cpuPricePerMin, uint64 _memPricePerMin) returns()
-func (_IProviderManager *IProviderManagerTransactorSession) Register(_nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin uint64, _cpuPricePerMin uint64, _memPricePerMin uint64) (*types.Transaction, error) {
-	return _IProviderManager.Contract.Register(&_IProviderManager.TransactOpts, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin)
+// Solidity: function register(uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint256 _gpuPricePerMin, uint256 _cpuPricePerMin, uint256 _memPricePerMin, (string,string)[] _labels) returns()
+func (_IProviderManager *IProviderManagerTransactorSession) Register(_nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin *big.Int, _cpuPricePerMin *big.Int, _memPricePerMin *big.Int, _labels []Label) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Register(&_IProviderManager.TransactOpts, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin, _labels)
 }
 
-// RegisterProvider is a paid mutator transaction binding the contract method 0xc01aeabb.
+// RegisterProvider is a paid mutator transaction binding the contract method 0x9bb3afe9.
 //
-// Solidity: function registerProvider(address _providerAddr, uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint64 _gpuPricePerMin, uint64 _cpuPricePerMin, uint64 _memPricePerMin) returns()
-func (_IProviderManager *IProviderManagerTransactor) RegisterProvider(opts *bind.TransactOpts, _providerAddr common.Address, _nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin uint64, _cpuPricePerMin uint64, _memPricePerMin uint64) (*types.Transaction, error) {
-	return _IProviderManager.contract.Transact(opts, "registerProvider", _providerAddr, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin)
+// Solidity: function registerProvider(address _providerAddr, uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint256 _gpuPricePerMin, uint256 _cpuPricePerMin, uint256 _memPricePerMin, (string,string)[] _labels) returns()
+func (_IProviderManager *IProviderManagerTransactor) RegisterProvider(opts *bind.TransactOpts, _providerAddr common.Address, _nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin *big.Int, _cpuPricePerMin *big.Int, _memPricePerMin *big.Int, _labels []Label) (*types.Transaction, error) {
+	return _IProviderManager.contract.Transact(opts, "registerProvider", _providerAddr, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin, _labels)
 }
 
-// RegisterProvider is a paid mutator transaction binding the contract method 0xc01aeabb.
+// RegisterProvider is a paid mutator transaction binding the contract method 0x9bb3afe9.
 //
-// Solidity: function registerProvider(address _providerAddr, uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint64 _gpuPricePerMin, uint64 _cpuPricePerMin, uint64 _memPricePerMin) returns()
-func (_IProviderManager *IProviderManagerSession) RegisterProvider(_providerAddr common.Address, _nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin uint64, _cpuPricePerMin uint64, _memPricePerMin uint64) (*types.Transaction, error) {
-	return _IProviderManager.Contract.RegisterProvider(&_IProviderManager.TransactOpts, _providerAddr, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin)
+// Solidity: function registerProvider(address _providerAddr, uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint256 _gpuPricePerMin, uint256 _cpuPricePerMin, uint256 _memPricePerMin, (string,string)[] _labels) returns()
+func (_IProviderManager *IProviderManagerSession) RegisterProvider(_providerAddr common.Address, _nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin *big.Int, _cpuPricePerMin *big.Int, _memPricePerMin *big.Int, _labels []Label) (*types.Transaction, error) {
+	return _IProviderManager.Contract.RegisterProvider(&_IProviderManager.TransactOpts, _providerAddr, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin, _labels)
 }
 
-// RegisterProvider is a paid mutator transaction binding the contract method 0xc01aeabb.
+// RegisterProvider is a paid mutator transaction binding the contract method 0x9bb3afe9.
 //
-// Solidity: function registerProvider(address _providerAddr, uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint64 _gpuPricePerMin, uint64 _cpuPricePerMin, uint64 _memPricePerMin) returns()
-func (_IProviderManager *IProviderManagerTransactorSession) RegisterProvider(_providerAddr common.Address, _nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin uint64, _cpuPricePerMin uint64, _memPricePerMin uint64) (*types.Transaction, error) {
-	return _IProviderManager.Contract.RegisterProvider(&_IProviderManager.TransactOpts, _providerAddr, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin)
+// Solidity: function registerProvider(address _providerAddr, uint64 _nNodes, uint64 _gpus, uint64 _cpus, uint64 _mem, uint256 _gpuPricePerMin, uint256 _cpuPricePerMin, uint256 _memPricePerMin, (string,string)[] _labels) returns()
+func (_IProviderManager *IProviderManagerTransactorSession) RegisterProvider(_providerAddr common.Address, _nNodes uint64, _gpus uint64, _cpus uint64, _mem uint64, _gpuPricePerMin *big.Int, _cpuPricePerMin *big.Int, _memPricePerMin *big.Int, _labels []Label) (*types.Transaction, error) {
+	return _IProviderManager.Contract.RegisterProvider(&_IProviderManager.TransactOpts, _providerAddr, _nNodes, _gpus, _cpus, _mem, _gpuPricePerMin, _cpuPricePerMin, _memPricePerMin, _labels)
+}
+
+// Reinstated is a paid mutator transaction binding the contract method 0x05ff1d4c.
+//
+// Solidity: function reinstated(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactor) Reinstated(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.contract.Transact(opts, "reinstated", _providerAddr)
+}
+
+// Reinstated is a paid mutator transaction binding the contract method 0x05ff1d4c.
+//
+// Solidity: function reinstated(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerSession) Reinstated(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Reinstated(&_IProviderManager.TransactOpts, _providerAddr)
+}
+
+// Reinstated is a paid mutator transaction binding the contract method 0x05ff1d4c.
+//
+// Solidity: function reinstated(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactorSession) Reinstated(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Reinstated(&_IProviderManager.TransactOpts, _providerAddr)
+}
+
+// Remove is a paid mutator transaction binding the contract method 0x29092d0e.
+//
+// Solidity: function remove(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactor) Remove(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.contract.Transact(opts, "remove", _providerAddr)
+}
+
+// Remove is a paid mutator transaction binding the contract method 0x29092d0e.
+//
+// Solidity: function remove(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerSession) Remove(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Remove(&_IProviderManager.TransactOpts, _providerAddr)
+}
+
+// Remove is a paid mutator transaction binding the contract method 0x29092d0e.
+//
+// Solidity: function remove(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactorSession) Remove(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Remove(&_IProviderManager.TransactOpts, _providerAddr)
 }
 
 // IProviderManagerHardwareUpdatedEventIterator is returned from FilterHardwareUpdatedEvent and is used to iterate over the raw logs and unpacked data for HardwareUpdatedEvent events raised by the IProviderManager contract.
@@ -5515,7 +6964,7 @@ func (_Math *MathTransactorRaw) Transact(opts *bind.TransactOpts, method string,
 
 // MetaSchedulerMetaData contains all meta data concerning the MetaScheduler contract.
 var MetaSchedulerMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"Empty\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OutOfBounds\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_billingAmount\",\"type\":\"uint256\"}],\"name\":\"BilledTooMuchEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"maxDurationMinute\",\"type\":\"uint64\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"}],\"indexed\":false,\"internalType\":\"structJobDefinition\",\"name\":\"jobDefinition\",\"type\":\"tuple\"}],\"name\":\"ClaimJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"}],\"name\":\"ClaimNextCancellingJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"maxDurationMinute\",\"type\":\"uint64\"}],\"name\":\"ClaimNextTopUpJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"JobRefusedEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"enumJobStatus\",\"name\":\"_from\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"enumJobStatus\",\"name\":\"_to\",\"type\":\"uint8\"}],\"name\":\"JobTransitionEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_customerAddr\",\"type\":\"address\"}],\"name\":\"NewJobRequestEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"BILL_DURATION_DELTA_MINUTE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BILL_TIME_CONTROL_DELTA_S\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CANCELLATION_FEE_MINUTE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"DEEPSQUARE_CUT\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"METASCHEDULER_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MINIMUM_AMOUNT\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"TOP_UP_SLICE_DURATION_MIN\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"cancelJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"claimJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimJobTimeout\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextCancellingJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextTopUpJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"credit\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"walletAddr\",\"type\":\"address\"}],\"name\":\"getJobs\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasCancellingJob\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasNextJob\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasTopUpJob\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"hotJobList\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"_credit\",\"type\":\"address\"},{\"internalType\":\"contractIProviderManager\",\"name\":\"_providerManager\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"jobIdCounter\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"jobs\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"},{\"internalType\":\"enumJobStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"}],\"internalType\":\"structJobDefinition\",\"name\":\"definition\",\"type\":\"tuple\"},{\"internalType\":\"bool\",\"name\":\"valid\",\"type\":\"bool\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"maxCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"finalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"pendingTopUp\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"delegateSpendingAuthority\",\"type\":\"bool\"}],\"internalType\":\"structJobCost\",\"name\":\"cost\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"end\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cancelRequestTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"blockNumberStateChange\",\"type\":\"uint256\"}],\"internalType\":\"structJobTime\",\"name\":\"time\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"jobName\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"hasCancelRequest\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"metaSchedule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"providerCancellingJobsQueues\",\"outputs\":[{\"internalType\":\"int128\",\"name\":\"_begin\",\"type\":\"int128\"},{\"internalType\":\"int128\",\"name\":\"_end\",\"type\":\"int128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"providerClaimableJobsQueues\",\"outputs\":[{\"internalType\":\"int128\",\"name\":\"_begin\",\"type\":\"int128\"},{\"internalType\":\"int128\",\"name\":\"_end\",\"type\":\"int128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"providerManager\",\"outputs\":[{\"internalType\":\"contractIProviderManager\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"enumJobStatus\",\"name\":\"_nextJobStatus\",\"type\":\"uint8\"},{\"internalType\":\"uint64\",\"name\":\"_jobDurationMinute\",\"type\":\"uint64\"}],\"name\":\"providerSetJobStatus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"providerTimeoutJobsQueues\",\"outputs\":[{\"internalType\":\"int128\",\"name\":\"_begin\",\"type\":\"int128\"},{\"internalType\":\"int128\",\"name\":\"_end\",\"type\":\"int128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"providerTopUpJobsQueues\",\"outputs\":[{\"internalType\":\"int128\",\"name\":\"_begin\",\"type\":\"int128\"},{\"internalType\":\"int128\",\"name\":\"_end\",\"type\":\"int128\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"refuseJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"}],\"internalType\":\"structJobDefinition\",\"name\":\"_definition\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"_lockedCredits\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_jobName\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"_delegateSpendingAuthority\",\"type\":\"bool\"}],\"name\":\"requestNewJob\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"_delegateSpendingAuthority\",\"type\":\"bool\"}],\"name\":\"setDelegateSpendingAuthority\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"topUpJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"topUpJobDelegate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"wallet2JobId\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"withdrawAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"_credit\",\"type\":\"address\"},{\"internalType\":\"contractConstants\",\"name\":\"_constants\",\"type\":\"address\"},{\"internalType\":\"contractIProviderManager\",\"name\":\"_providerManager\",\"type\":\"address\"},{\"internalType\":\"contractIProviderJobQueues\",\"name\":\"_providerJobQueues\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"CreditAddrIsZero\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"CustomerMetaSchedulerProviderOnly\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"current\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"expected\",\"type\":\"address\"}],\"name\":\"CustomerOnly\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"available\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"required\",\"type\":\"uint256\"}],\"name\":\"InsufficientFunds\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidJob\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidJobDefinition\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"enumJobStatus\",\"name\":\"current\",\"type\":\"uint8\"}],\"name\":\"JobHotStatusOnly\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"current\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"expected\",\"type\":\"address\"}],\"name\":\"JobProviderOnly\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"current\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"expected\",\"type\":\"address\"}],\"name\":\"JobProviderThisOnly\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"enumJobStatus\",\"name\":\"current\",\"type\":\"uint8\"}],\"name\":\"MetaScheduledScheduledStatusOnly\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NoSpendingAuthority\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ProviderAddrIsZero\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ProviderNotJoined\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"remaining\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"limit\",\"type\":\"uint256\"}],\"name\":\"RemainingTimeAboveLimit\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"enumJobStatus\",\"name\":\"current\",\"type\":\"uint8\"}],\"name\":\"RunningColdStatusOnly\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"enumJobStatus\",\"name\":\"current\",\"type\":\"uint8\"}],\"name\":\"RunningScheduledStatusOnly\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_billingAmount\",\"type\":\"uint256\"}],\"name\":\"BilledTooMuchEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"maxDurationMinute\",\"type\":\"uint64\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"uses\",\"type\":\"tuple[]\"}],\"indexed\":false,\"internalType\":\"structJobDefinition\",\"name\":\"jobDefinition\",\"type\":\"tuple\"}],\"name\":\"ClaimJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"}],\"name\":\"ClaimNextCancellingJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"maxDurationMinute\",\"type\":\"uint64\"}],\"name\":\"ClaimNextTopUpJobEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_customerAddr\",\"type\":\"address\"}],\"name\":\"JobRefusedEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"enumJobStatus\",\"name\":\"_from\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"enumJobStatus\",\"name\":\"_to\",\"type\":\"uint8\"}],\"name\":\"JobTransitionEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_customerAddr\",\"type\":\"address\"}],\"name\":\"NewJobRequestEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"previousAdminRole\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"newAdminRole\",\"type\":\"bytes32\"}],\"name\":\"RoleAdminChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DEFAULT_ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"METASCHEDULER_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"cancelJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimJobTimeout\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextCancellingJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"claimNextTopUpJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"credit\",\"outputs\":[{\"internalType\":\"contractIERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"getJob\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"},{\"internalType\":\"enumJobStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"uses\",\"type\":\"tuple[]\"}],\"internalType\":\"structJobDefinition\",\"name\":\"definition\",\"type\":\"tuple\"},{\"internalType\":\"bool\",\"name\":\"valid\",\"type\":\"bool\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"maxCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"finalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"pendingTopUp\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"delegateSpendingAuthority\",\"type\":\"bool\"}],\"internalType\":\"structJobCost\",\"name\":\"cost\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"end\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cancelRequestTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"blockNumberStateChange\",\"type\":\"uint256\"}],\"internalType\":\"structJobTime\",\"name\":\"time\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"jobName\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"hasCancelRequest\",\"type\":\"bool\"}],\"internalType\":\"structJob\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"walletAddr\",\"type\":\"address\"}],\"name\":\"getJobs\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"}],\"name\":\"getRoleAdmin\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"hotJobList\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"jobIdCounter\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"jobs\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"jobId\",\"type\":\"bytes32\"},{\"internalType\":\"enumJobStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"customerAddr\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"providerAddr\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"uses\",\"type\":\"tuple[]\"}],\"internalType\":\"structJobDefinition\",\"name\":\"definition\",\"type\":\"tuple\"},{\"internalType\":\"bool\",\"name\":\"valid\",\"type\":\"bool\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"maxCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"finalCost\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"pendingTopUp\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"delegateSpendingAuthority\",\"type\":\"bool\"}],\"internalType\":\"structJobCost\",\"name\":\"cost\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"start\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"end\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cancelRequestTimestamp\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"blockNumberStateChange\",\"type\":\"uint256\"}],\"internalType\":\"structJobTime\",\"name\":\"time\",\"type\":\"tuple\"},{\"internalType\":\"bytes32\",\"name\":\"jobName\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"hasCancelRequest\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"metaSchedule\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"providerJobQueues\",\"outputs\":[{\"internalType\":\"contractIProviderJobQueues\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"providerManager\",\"outputs\":[{\"internalType\":\"contractIProviderManager\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"enumJobStatus\",\"name\":\"_nextJobStatus\",\"type\":\"uint8\"},{\"internalType\":\"uint64\",\"name\":\"_jobDurationMinute\",\"type\":\"uint64\"}],\"name\":\"providerSetJobStatus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"refuseJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"renounceRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"gpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"memPerCpu\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"cpuPerTask\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"ntasks\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"batchLocationHash\",\"type\":\"string\"},{\"internalType\":\"enumStorageType\",\"name\":\"storageType\",\"type\":\"uint8\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"uses\",\"type\":\"tuple[]\"}],\"internalType\":\"structJobDefinition\",\"name\":\"_definition\",\"type\":\"tuple\"},{\"internalType\":\"uint256\",\"name\":\"_lockedCredits\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"_jobName\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"_delegateSpendingAuthority\",\"type\":\"bool\"}],\"name\":\"requestNewJob\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"_delegateSpendingAuthority\",\"type\":\"bool\"}],\"name\":\"setDelegateSpendingAuthority\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes4\",\"name\":\"interfaceId\",\"type\":\"bytes4\"}],\"name\":\"supportsInterface\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"topUpJob\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_jobId\",\"type\":\"bytes32\"}],\"name\":\"topUpJobDelegate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"wallet2JobId\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"withdrawAdmin\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // MetaSchedulerABI is the input ABI used to generate the binding from.
@@ -5664,130 +7113,6 @@ func (_MetaScheduler *MetaSchedulerTransactorRaw) Transact(opts *bind.TransactOp
 	return _MetaScheduler.Contract.contract.Transact(opts, method, params...)
 }
 
-// BILLDURATIONDELTAMINUTE is a free data retrieval call binding the contract method 0x7a9d0df7.
-//
-// Solidity: function BILL_DURATION_DELTA_MINUTE() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCaller) BILLDURATIONDELTAMINUTE(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "BILL_DURATION_DELTA_MINUTE")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// BILLDURATIONDELTAMINUTE is a free data retrieval call binding the contract method 0x7a9d0df7.
-//
-// Solidity: function BILL_DURATION_DELTA_MINUTE() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerSession) BILLDURATIONDELTAMINUTE() (*big.Int, error) {
-	return _MetaScheduler.Contract.BILLDURATIONDELTAMINUTE(&_MetaScheduler.CallOpts)
-}
-
-// BILLDURATIONDELTAMINUTE is a free data retrieval call binding the contract method 0x7a9d0df7.
-//
-// Solidity: function BILL_DURATION_DELTA_MINUTE() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCallerSession) BILLDURATIONDELTAMINUTE() (*big.Int, error) {
-	return _MetaScheduler.Contract.BILLDURATIONDELTAMINUTE(&_MetaScheduler.CallOpts)
-}
-
-// BILLTIMECONTROLDELTAS is a free data retrieval call binding the contract method 0xc51067db.
-//
-// Solidity: function BILL_TIME_CONTROL_DELTA_S() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCaller) BILLTIMECONTROLDELTAS(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "BILL_TIME_CONTROL_DELTA_S")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// BILLTIMECONTROLDELTAS is a free data retrieval call binding the contract method 0xc51067db.
-//
-// Solidity: function BILL_TIME_CONTROL_DELTA_S() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerSession) BILLTIMECONTROLDELTAS() (*big.Int, error) {
-	return _MetaScheduler.Contract.BILLTIMECONTROLDELTAS(&_MetaScheduler.CallOpts)
-}
-
-// BILLTIMECONTROLDELTAS is a free data retrieval call binding the contract method 0xc51067db.
-//
-// Solidity: function BILL_TIME_CONTROL_DELTA_S() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCallerSession) BILLTIMECONTROLDELTAS() (*big.Int, error) {
-	return _MetaScheduler.Contract.BILLTIMECONTROLDELTAS(&_MetaScheduler.CallOpts)
-}
-
-// CANCELLATIONFEEMINUTE is a free data retrieval call binding the contract method 0x374c6e0e.
-//
-// Solidity: function CANCELLATION_FEE_MINUTE() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCaller) CANCELLATIONFEEMINUTE(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "CANCELLATION_FEE_MINUTE")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// CANCELLATIONFEEMINUTE is a free data retrieval call binding the contract method 0x374c6e0e.
-//
-// Solidity: function CANCELLATION_FEE_MINUTE() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerSession) CANCELLATIONFEEMINUTE() (*big.Int, error) {
-	return _MetaScheduler.Contract.CANCELLATIONFEEMINUTE(&_MetaScheduler.CallOpts)
-}
-
-// CANCELLATIONFEEMINUTE is a free data retrieval call binding the contract method 0x374c6e0e.
-//
-// Solidity: function CANCELLATION_FEE_MINUTE() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCallerSession) CANCELLATIONFEEMINUTE() (*big.Int, error) {
-	return _MetaScheduler.Contract.CANCELLATIONFEEMINUTE(&_MetaScheduler.CallOpts)
-}
-
-// DEEPSQUARECUT is a free data retrieval call binding the contract method 0x1df44a3c.
-//
-// Solidity: function DEEPSQUARE_CUT() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCaller) DEEPSQUARECUT(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "DEEPSQUARE_CUT")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// DEEPSQUARECUT is a free data retrieval call binding the contract method 0x1df44a3c.
-//
-// Solidity: function DEEPSQUARE_CUT() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerSession) DEEPSQUARECUT() (*big.Int, error) {
-	return _MetaScheduler.Contract.DEEPSQUARECUT(&_MetaScheduler.CallOpts)
-}
-
-// DEEPSQUARECUT is a free data retrieval call binding the contract method 0x1df44a3c.
-//
-// Solidity: function DEEPSQUARE_CUT() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCallerSession) DEEPSQUARECUT() (*big.Int, error) {
-	return _MetaScheduler.Contract.DEEPSQUARECUT(&_MetaScheduler.CallOpts)
-}
-
 // DEFAULTADMINROLE is a free data retrieval call binding the contract method 0xa217fddf.
 //
 // Solidity: function DEFAULT_ADMIN_ROLE() view returns(bytes32)
@@ -5848,68 +7173,6 @@ func (_MetaScheduler *MetaSchedulerSession) METASCHEDULERROLE() ([32]byte, error
 // Solidity: function METASCHEDULER_ROLE() view returns(bytes32)
 func (_MetaScheduler *MetaSchedulerCallerSession) METASCHEDULERROLE() ([32]byte, error) {
 	return _MetaScheduler.Contract.METASCHEDULERROLE(&_MetaScheduler.CallOpts)
-}
-
-// MINIMUMAMOUNT is a free data retrieval call binding the contract method 0x257d9bb8.
-//
-// Solidity: function MINIMUM_AMOUNT() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCaller) MINIMUMAMOUNT(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "MINIMUM_AMOUNT")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// MINIMUMAMOUNT is a free data retrieval call binding the contract method 0x257d9bb8.
-//
-// Solidity: function MINIMUM_AMOUNT() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerSession) MINIMUMAMOUNT() (*big.Int, error) {
-	return _MetaScheduler.Contract.MINIMUMAMOUNT(&_MetaScheduler.CallOpts)
-}
-
-// MINIMUMAMOUNT is a free data retrieval call binding the contract method 0x257d9bb8.
-//
-// Solidity: function MINIMUM_AMOUNT() view returns(uint256)
-func (_MetaScheduler *MetaSchedulerCallerSession) MINIMUMAMOUNT() (*big.Int, error) {
-	return _MetaScheduler.Contract.MINIMUMAMOUNT(&_MetaScheduler.CallOpts)
-}
-
-// TOPUPSLICEDURATIONMIN is a free data retrieval call binding the contract method 0x1a91c3e9.
-//
-// Solidity: function TOP_UP_SLICE_DURATION_MIN() view returns(uint64)
-func (_MetaScheduler *MetaSchedulerCaller) TOPUPSLICEDURATIONMIN(opts *bind.CallOpts) (uint64, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "TOP_UP_SLICE_DURATION_MIN")
-
-	if err != nil {
-		return *new(uint64), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
-
-	return out0, err
-
-}
-
-// TOPUPSLICEDURATIONMIN is a free data retrieval call binding the contract method 0x1a91c3e9.
-//
-// Solidity: function TOP_UP_SLICE_DURATION_MIN() view returns(uint64)
-func (_MetaScheduler *MetaSchedulerSession) TOPUPSLICEDURATIONMIN() (uint64, error) {
-	return _MetaScheduler.Contract.TOPUPSLICEDURATIONMIN(&_MetaScheduler.CallOpts)
-}
-
-// TOPUPSLICEDURATIONMIN is a free data retrieval call binding the contract method 0x1a91c3e9.
-//
-// Solidity: function TOP_UP_SLICE_DURATION_MIN() view returns(uint64)
-func (_MetaScheduler *MetaSchedulerCallerSession) TOPUPSLICEDURATIONMIN() (uint64, error) {
-	return _MetaScheduler.Contract.TOPUPSLICEDURATIONMIN(&_MetaScheduler.CallOpts)
 }
 
 // ClaimJobTimeout is a free data retrieval call binding the contract method 0xd6aa37a6.
@@ -5974,6 +7237,37 @@ func (_MetaScheduler *MetaSchedulerCallerSession) Credit() (common.Address, erro
 	return _MetaScheduler.Contract.Credit(&_MetaScheduler.CallOpts)
 }
 
+// GetJob is a free data retrieval call binding the contract method 0xf729cf0d.
+//
+// Solidity: function getJob(bytes32 _jobId) view returns((bytes32,uint8,address,address,(uint64,uint64,uint64,uint64,string,uint8,(string,string)[]),bool,(uint256,uint256,uint256,bool),(uint256,uint256,uint256,uint256),bytes32,bool))
+func (_MetaScheduler *MetaSchedulerCaller) GetJob(opts *bind.CallOpts, _jobId [32]byte) (Job, error) {
+	var out []interface{}
+	err := _MetaScheduler.contract.Call(opts, &out, "getJob", _jobId)
+
+	if err != nil {
+		return *new(Job), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(Job)).(*Job)
+
+	return out0, err
+
+}
+
+// GetJob is a free data retrieval call binding the contract method 0xf729cf0d.
+//
+// Solidity: function getJob(bytes32 _jobId) view returns((bytes32,uint8,address,address,(uint64,uint64,uint64,uint64,string,uint8,(string,string)[]),bool,(uint256,uint256,uint256,bool),(uint256,uint256,uint256,uint256),bytes32,bool))
+func (_MetaScheduler *MetaSchedulerSession) GetJob(_jobId [32]byte) (Job, error) {
+	return _MetaScheduler.Contract.GetJob(&_MetaScheduler.CallOpts, _jobId)
+}
+
+// GetJob is a free data retrieval call binding the contract method 0xf729cf0d.
+//
+// Solidity: function getJob(bytes32 _jobId) view returns((bytes32,uint8,address,address,(uint64,uint64,uint64,uint64,string,uint8,(string,string)[]),bool,(uint256,uint256,uint256,bool),(uint256,uint256,uint256,uint256),bytes32,bool))
+func (_MetaScheduler *MetaSchedulerCallerSession) GetJob(_jobId [32]byte) (Job, error) {
+	return _MetaScheduler.Contract.GetJob(&_MetaScheduler.CallOpts, _jobId)
+}
+
 // GetJobs is a free data retrieval call binding the contract method 0x1a3cbef4.
 //
 // Solidity: function getJobs(address walletAddr) view returns(bytes32[])
@@ -6036,68 +7330,6 @@ func (_MetaScheduler *MetaSchedulerCallerSession) GetRoleAdmin(role [32]byte) ([
 	return _MetaScheduler.Contract.GetRoleAdmin(&_MetaScheduler.CallOpts, role)
 }
 
-// HasCancellingJob is a free data retrieval call binding the contract method 0x20a5f919.
-//
-// Solidity: function hasCancellingJob(address _providerAddr) view returns(bool)
-func (_MetaScheduler *MetaSchedulerCaller) HasCancellingJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "hasCancellingJob", _providerAddr)
-
-	if err != nil {
-		return *new(bool), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-
-	return out0, err
-
-}
-
-// HasCancellingJob is a free data retrieval call binding the contract method 0x20a5f919.
-//
-// Solidity: function hasCancellingJob(address _providerAddr) view returns(bool)
-func (_MetaScheduler *MetaSchedulerSession) HasCancellingJob(_providerAddr common.Address) (bool, error) {
-	return _MetaScheduler.Contract.HasCancellingJob(&_MetaScheduler.CallOpts, _providerAddr)
-}
-
-// HasCancellingJob is a free data retrieval call binding the contract method 0x20a5f919.
-//
-// Solidity: function hasCancellingJob(address _providerAddr) view returns(bool)
-func (_MetaScheduler *MetaSchedulerCallerSession) HasCancellingJob(_providerAddr common.Address) (bool, error) {
-	return _MetaScheduler.Contract.HasCancellingJob(&_MetaScheduler.CallOpts, _providerAddr)
-}
-
-// HasNextJob is a free data retrieval call binding the contract method 0x0797094e.
-//
-// Solidity: function hasNextJob(address _providerAddr) view returns(bool)
-func (_MetaScheduler *MetaSchedulerCaller) HasNextJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "hasNextJob", _providerAddr)
-
-	if err != nil {
-		return *new(bool), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-
-	return out0, err
-
-}
-
-// HasNextJob is a free data retrieval call binding the contract method 0x0797094e.
-//
-// Solidity: function hasNextJob(address _providerAddr) view returns(bool)
-func (_MetaScheduler *MetaSchedulerSession) HasNextJob(_providerAddr common.Address) (bool, error) {
-	return _MetaScheduler.Contract.HasNextJob(&_MetaScheduler.CallOpts, _providerAddr)
-}
-
-// HasNextJob is a free data retrieval call binding the contract method 0x0797094e.
-//
-// Solidity: function hasNextJob(address _providerAddr) view returns(bool)
-func (_MetaScheduler *MetaSchedulerCallerSession) HasNextJob(_providerAddr common.Address) (bool, error) {
-	return _MetaScheduler.Contract.HasNextJob(&_MetaScheduler.CallOpts, _providerAddr)
-}
-
 // HasRole is a free data retrieval call binding the contract method 0x91d14854.
 //
 // Solidity: function hasRole(bytes32 role, address account) view returns(bool)
@@ -6127,37 +7359,6 @@ func (_MetaScheduler *MetaSchedulerSession) HasRole(role [32]byte, account commo
 // Solidity: function hasRole(bytes32 role, address account) view returns(bool)
 func (_MetaScheduler *MetaSchedulerCallerSession) HasRole(role [32]byte, account common.Address) (bool, error) {
 	return _MetaScheduler.Contract.HasRole(&_MetaScheduler.CallOpts, role, account)
-}
-
-// HasTopUpJob is a free data retrieval call binding the contract method 0xc7070e2c.
-//
-// Solidity: function hasTopUpJob(address _providerAddr) view returns(bool)
-func (_MetaScheduler *MetaSchedulerCaller) HasTopUpJob(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "hasTopUpJob", _providerAddr)
-
-	if err != nil {
-		return *new(bool), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-
-	return out0, err
-
-}
-
-// HasTopUpJob is a free data retrieval call binding the contract method 0xc7070e2c.
-//
-// Solidity: function hasTopUpJob(address _providerAddr) view returns(bool)
-func (_MetaScheduler *MetaSchedulerSession) HasTopUpJob(_providerAddr common.Address) (bool, error) {
-	return _MetaScheduler.Contract.HasTopUpJob(&_MetaScheduler.CallOpts, _providerAddr)
-}
-
-// HasTopUpJob is a free data retrieval call binding the contract method 0xc7070e2c.
-//
-// Solidity: function hasTopUpJob(address _providerAddr) view returns(bool)
-func (_MetaScheduler *MetaSchedulerCallerSession) HasTopUpJob(_providerAddr common.Address) (bool, error) {
-	return _MetaScheduler.Contract.HasTopUpJob(&_MetaScheduler.CallOpts, _providerAddr)
 }
 
 // HotJobList is a free data retrieval call binding the contract method 0xaef3276f.
@@ -6224,7 +7425,7 @@ func (_MetaScheduler *MetaSchedulerCallerSession) JobIdCounter() (*big.Int, erro
 
 // Jobs is a free data retrieval call binding the contract method 0x38ed7cfc.
 //
-// Solidity: function jobs(bytes32 ) view returns(bytes32 jobId, uint8 status, address customerAddr, address providerAddr, (uint64,uint64,uint64,uint64,string,uint8) definition, bool valid, (uint256,uint256,uint256,bool) cost, (uint256,uint256,uint256,uint256) time, bytes32 jobName, bool hasCancelRequest)
+// Solidity: function jobs(bytes32 ) view returns(bytes32 jobId, uint8 status, address customerAddr, address providerAddr, (uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) definition, bool valid, (uint256,uint256,uint256,bool) cost, (uint256,uint256,uint256,uint256) time, bytes32 jobName, bool hasCancelRequest)
 func (_MetaScheduler *MetaSchedulerCaller) Jobs(opts *bind.CallOpts, arg0 [32]byte) (struct {
 	JobId            [32]byte
 	Status           uint8
@@ -6273,7 +7474,7 @@ func (_MetaScheduler *MetaSchedulerCaller) Jobs(opts *bind.CallOpts, arg0 [32]by
 
 // Jobs is a free data retrieval call binding the contract method 0x38ed7cfc.
 //
-// Solidity: function jobs(bytes32 ) view returns(bytes32 jobId, uint8 status, address customerAddr, address providerAddr, (uint64,uint64,uint64,uint64,string,uint8) definition, bool valid, (uint256,uint256,uint256,bool) cost, (uint256,uint256,uint256,uint256) time, bytes32 jobName, bool hasCancelRequest)
+// Solidity: function jobs(bytes32 ) view returns(bytes32 jobId, uint8 status, address customerAddr, address providerAddr, (uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) definition, bool valid, (uint256,uint256,uint256,bool) cost, (uint256,uint256,uint256,uint256) time, bytes32 jobName, bool hasCancelRequest)
 func (_MetaScheduler *MetaSchedulerSession) Jobs(arg0 [32]byte) (struct {
 	JobId            [32]byte
 	Status           uint8
@@ -6291,7 +7492,7 @@ func (_MetaScheduler *MetaSchedulerSession) Jobs(arg0 [32]byte) (struct {
 
 // Jobs is a free data retrieval call binding the contract method 0x38ed7cfc.
 //
-// Solidity: function jobs(bytes32 ) view returns(bytes32 jobId, uint8 status, address customerAddr, address providerAddr, (uint64,uint64,uint64,uint64,string,uint8) definition, bool valid, (uint256,uint256,uint256,bool) cost, (uint256,uint256,uint256,uint256) time, bytes32 jobName, bool hasCancelRequest)
+// Solidity: function jobs(bytes32 ) view returns(bytes32 jobId, uint8 status, address customerAddr, address providerAddr, (uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) definition, bool valid, (uint256,uint256,uint256,bool) cost, (uint256,uint256,uint256,uint256) time, bytes32 jobName, bool hasCancelRequest)
 func (_MetaScheduler *MetaSchedulerCallerSession) Jobs(arg0 [32]byte) (struct {
 	JobId            [32]byte
 	Status           uint8
@@ -6307,94 +7508,35 @@ func (_MetaScheduler *MetaSchedulerCallerSession) Jobs(arg0 [32]byte) (struct {
 	return _MetaScheduler.Contract.Jobs(&_MetaScheduler.CallOpts, arg0)
 }
 
-// ProviderCancellingJobsQueues is a free data retrieval call binding the contract method 0x407969ae.
+// ProviderJobQueues is a free data retrieval call binding the contract method 0xe2eaf3e7.
 //
-// Solidity: function providerCancellingJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerCaller) ProviderCancellingJobsQueues(opts *bind.CallOpts, arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
+// Solidity: function providerJobQueues() view returns(address)
+func (_MetaScheduler *MetaSchedulerCaller) ProviderJobQueues(opts *bind.CallOpts) (common.Address, error) {
 	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "providerCancellingJobsQueues", arg0)
+	err := _MetaScheduler.contract.Call(opts, &out, "providerJobQueues")
 
-	outstruct := new(struct {
-		Begin *big.Int
-		End   *big.Int
-	})
 	if err != nil {
-		return *outstruct, err
+		return *new(common.Address), err
 	}
 
-	outstruct.Begin = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-	outstruct.End = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
-	return *outstruct, err
-
-}
-
-// ProviderCancellingJobsQueues is a free data retrieval call binding the contract method 0x407969ae.
-//
-// Solidity: function providerCancellingJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerSession) ProviderCancellingJobsQueues(arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	return _MetaScheduler.Contract.ProviderCancellingJobsQueues(&_MetaScheduler.CallOpts, arg0)
-}
-
-// ProviderCancellingJobsQueues is a free data retrieval call binding the contract method 0x407969ae.
-//
-// Solidity: function providerCancellingJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerCallerSession) ProviderCancellingJobsQueues(arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	return _MetaScheduler.Contract.ProviderCancellingJobsQueues(&_MetaScheduler.CallOpts, arg0)
-}
-
-// ProviderClaimableJobsQueues is a free data retrieval call binding the contract method 0x110e87a6.
-//
-// Solidity: function providerClaimableJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerCaller) ProviderClaimableJobsQueues(opts *bind.CallOpts, arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "providerClaimableJobsQueues", arg0)
-
-	outstruct := new(struct {
-		Begin *big.Int
-		End   *big.Int
-	})
-	if err != nil {
-		return *outstruct, err
-	}
-
-	outstruct.Begin = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-	outstruct.End = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
-
-	return *outstruct, err
+	return out0, err
 
 }
 
-// ProviderClaimableJobsQueues is a free data retrieval call binding the contract method 0x110e87a6.
+// ProviderJobQueues is a free data retrieval call binding the contract method 0xe2eaf3e7.
 //
-// Solidity: function providerClaimableJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerSession) ProviderClaimableJobsQueues(arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	return _MetaScheduler.Contract.ProviderClaimableJobsQueues(&_MetaScheduler.CallOpts, arg0)
+// Solidity: function providerJobQueues() view returns(address)
+func (_MetaScheduler *MetaSchedulerSession) ProviderJobQueues() (common.Address, error) {
+	return _MetaScheduler.Contract.ProviderJobQueues(&_MetaScheduler.CallOpts)
 }
 
-// ProviderClaimableJobsQueues is a free data retrieval call binding the contract method 0x110e87a6.
+// ProviderJobQueues is a free data retrieval call binding the contract method 0xe2eaf3e7.
 //
-// Solidity: function providerClaimableJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerCallerSession) ProviderClaimableJobsQueues(arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	return _MetaScheduler.Contract.ProviderClaimableJobsQueues(&_MetaScheduler.CallOpts, arg0)
+// Solidity: function providerJobQueues() view returns(address)
+func (_MetaScheduler *MetaSchedulerCallerSession) ProviderJobQueues() (common.Address, error) {
+	return _MetaScheduler.Contract.ProviderJobQueues(&_MetaScheduler.CallOpts)
 }
 
 // ProviderManager is a free data retrieval call binding the contract method 0x13151ec9.
@@ -6426,96 +7568,6 @@ func (_MetaScheduler *MetaSchedulerSession) ProviderManager() (common.Address, e
 // Solidity: function providerManager() view returns(address)
 func (_MetaScheduler *MetaSchedulerCallerSession) ProviderManager() (common.Address, error) {
 	return _MetaScheduler.Contract.ProviderManager(&_MetaScheduler.CallOpts)
-}
-
-// ProviderTimeoutJobsQueues is a free data retrieval call binding the contract method 0x31c3b874.
-//
-// Solidity: function providerTimeoutJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerCaller) ProviderTimeoutJobsQueues(opts *bind.CallOpts, arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "providerTimeoutJobsQueues", arg0)
-
-	outstruct := new(struct {
-		Begin *big.Int
-		End   *big.Int
-	})
-	if err != nil {
-		return *outstruct, err
-	}
-
-	outstruct.Begin = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-	outstruct.End = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
-
-	return *outstruct, err
-
-}
-
-// ProviderTimeoutJobsQueues is a free data retrieval call binding the contract method 0x31c3b874.
-//
-// Solidity: function providerTimeoutJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerSession) ProviderTimeoutJobsQueues(arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	return _MetaScheduler.Contract.ProviderTimeoutJobsQueues(&_MetaScheduler.CallOpts, arg0)
-}
-
-// ProviderTimeoutJobsQueues is a free data retrieval call binding the contract method 0x31c3b874.
-//
-// Solidity: function providerTimeoutJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerCallerSession) ProviderTimeoutJobsQueues(arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	return _MetaScheduler.Contract.ProviderTimeoutJobsQueues(&_MetaScheduler.CallOpts, arg0)
-}
-
-// ProviderTopUpJobsQueues is a free data retrieval call binding the contract method 0xbc8f18fb.
-//
-// Solidity: function providerTopUpJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerCaller) ProviderTopUpJobsQueues(opts *bind.CallOpts, arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	var out []interface{}
-	err := _MetaScheduler.contract.Call(opts, &out, "providerTopUpJobsQueues", arg0)
-
-	outstruct := new(struct {
-		Begin *big.Int
-		End   *big.Int
-	})
-	if err != nil {
-		return *outstruct, err
-	}
-
-	outstruct.Begin = *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-	outstruct.End = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
-
-	return *outstruct, err
-
-}
-
-// ProviderTopUpJobsQueues is a free data retrieval call binding the contract method 0xbc8f18fb.
-//
-// Solidity: function providerTopUpJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerSession) ProviderTopUpJobsQueues(arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	return _MetaScheduler.Contract.ProviderTopUpJobsQueues(&_MetaScheduler.CallOpts, arg0)
-}
-
-// ProviderTopUpJobsQueues is a free data retrieval call binding the contract method 0xbc8f18fb.
-//
-// Solidity: function providerTopUpJobsQueues(address ) view returns(int128 _begin, int128 _end)
-func (_MetaScheduler *MetaSchedulerCallerSession) ProviderTopUpJobsQueues(arg0 common.Address) (struct {
-	Begin *big.Int
-	End   *big.Int
-}, error) {
-	return _MetaScheduler.Contract.ProviderTopUpJobsQueues(&_MetaScheduler.CallOpts, arg0)
 }
 
 // SupportsInterface is a free data retrieval call binding the contract method 0x01ffc9a7.
@@ -6599,27 +7651,6 @@ func (_MetaScheduler *MetaSchedulerSession) CancelJob(_jobId [32]byte) (*types.T
 // Solidity: function cancelJob(bytes32 _jobId) returns()
 func (_MetaScheduler *MetaSchedulerTransactorSession) CancelJob(_jobId [32]byte) (*types.Transaction, error) {
 	return _MetaScheduler.Contract.CancelJob(&_MetaScheduler.TransactOpts, _jobId)
-}
-
-// ClaimJob is a paid mutator transaction binding the contract method 0x8fb70f63.
-//
-// Solidity: function claimJob(bytes32 _jobId, address _providerAddr) returns()
-func (_MetaScheduler *MetaSchedulerTransactor) ClaimJob(opts *bind.TransactOpts, _jobId [32]byte, _providerAddr common.Address) (*types.Transaction, error) {
-	return _MetaScheduler.contract.Transact(opts, "claimJob", _jobId, _providerAddr)
-}
-
-// ClaimJob is a paid mutator transaction binding the contract method 0x8fb70f63.
-//
-// Solidity: function claimJob(bytes32 _jobId, address _providerAddr) returns()
-func (_MetaScheduler *MetaSchedulerSession) ClaimJob(_jobId [32]byte, _providerAddr common.Address) (*types.Transaction, error) {
-	return _MetaScheduler.Contract.ClaimJob(&_MetaScheduler.TransactOpts, _jobId, _providerAddr)
-}
-
-// ClaimJob is a paid mutator transaction binding the contract method 0x8fb70f63.
-//
-// Solidity: function claimJob(bytes32 _jobId, address _providerAddr) returns()
-func (_MetaScheduler *MetaSchedulerTransactorSession) ClaimJob(_jobId [32]byte, _providerAddr common.Address) (*types.Transaction, error) {
-	return _MetaScheduler.Contract.ClaimJob(&_MetaScheduler.TransactOpts, _jobId, _providerAddr)
 }
 
 // ClaimNextCancellingJob is a paid mutator transaction binding the contract method 0x5e1b2d65.
@@ -6706,27 +7737,6 @@ func (_MetaScheduler *MetaSchedulerTransactorSession) GrantRole(role [32]byte, a
 	return _MetaScheduler.Contract.GrantRole(&_MetaScheduler.TransactOpts, role, account)
 }
 
-// Initialize is a paid mutator transaction binding the contract method 0x485cc955.
-//
-// Solidity: function initialize(address _credit, address _providerManager) returns()
-func (_MetaScheduler *MetaSchedulerTransactor) Initialize(opts *bind.TransactOpts, _credit common.Address, _providerManager common.Address) (*types.Transaction, error) {
-	return _MetaScheduler.contract.Transact(opts, "initialize", _credit, _providerManager)
-}
-
-// Initialize is a paid mutator transaction binding the contract method 0x485cc955.
-//
-// Solidity: function initialize(address _credit, address _providerManager) returns()
-func (_MetaScheduler *MetaSchedulerSession) Initialize(_credit common.Address, _providerManager common.Address) (*types.Transaction, error) {
-	return _MetaScheduler.Contract.Initialize(&_MetaScheduler.TransactOpts, _credit, _providerManager)
-}
-
-// Initialize is a paid mutator transaction binding the contract method 0x485cc955.
-//
-// Solidity: function initialize(address _credit, address _providerManager) returns()
-func (_MetaScheduler *MetaSchedulerTransactorSession) Initialize(_credit common.Address, _providerManager common.Address) (*types.Transaction, error) {
-	return _MetaScheduler.Contract.Initialize(&_MetaScheduler.TransactOpts, _credit, _providerManager)
-}
-
 // MetaSchedule is a paid mutator transaction binding the contract method 0xd1cee546.
 //
 // Solidity: function metaSchedule(bytes32 _jobId, address _providerAddr) returns()
@@ -6811,23 +7821,23 @@ func (_MetaScheduler *MetaSchedulerTransactorSession) RenounceRole(role [32]byte
 	return _MetaScheduler.Contract.RenounceRole(&_MetaScheduler.TransactOpts, role, account)
 }
 
-// RequestNewJob is a paid mutator transaction binding the contract method 0x3c2fb3da.
+// RequestNewJob is a paid mutator transaction binding the contract method 0x8fac1a8a.
 //
-// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8) _definition, uint256 _lockedCredits, bytes32 _jobName, bool _delegateSpendingAuthority) returns(bytes32)
+// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) _definition, uint256 _lockedCredits, bytes32 _jobName, bool _delegateSpendingAuthority) returns(bytes32)
 func (_MetaScheduler *MetaSchedulerTransactor) RequestNewJob(opts *bind.TransactOpts, _definition JobDefinition, _lockedCredits *big.Int, _jobName [32]byte, _delegateSpendingAuthority bool) (*types.Transaction, error) {
 	return _MetaScheduler.contract.Transact(opts, "requestNewJob", _definition, _lockedCredits, _jobName, _delegateSpendingAuthority)
 }
 
-// RequestNewJob is a paid mutator transaction binding the contract method 0x3c2fb3da.
+// RequestNewJob is a paid mutator transaction binding the contract method 0x8fac1a8a.
 //
-// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8) _definition, uint256 _lockedCredits, bytes32 _jobName, bool _delegateSpendingAuthority) returns(bytes32)
+// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) _definition, uint256 _lockedCredits, bytes32 _jobName, bool _delegateSpendingAuthority) returns(bytes32)
 func (_MetaScheduler *MetaSchedulerSession) RequestNewJob(_definition JobDefinition, _lockedCredits *big.Int, _jobName [32]byte, _delegateSpendingAuthority bool) (*types.Transaction, error) {
 	return _MetaScheduler.Contract.RequestNewJob(&_MetaScheduler.TransactOpts, _definition, _lockedCredits, _jobName, _delegateSpendingAuthority)
 }
 
-// RequestNewJob is a paid mutator transaction binding the contract method 0x3c2fb3da.
+// RequestNewJob is a paid mutator transaction binding the contract method 0x8fac1a8a.
 //
-// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8) _definition, uint256 _lockedCredits, bytes32 _jobName, bool _delegateSpendingAuthority) returns(bytes32)
+// Solidity: function requestNewJob((uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) _definition, uint256 _lockedCredits, bytes32 _jobName, bool _delegateSpendingAuthority) returns(bytes32)
 func (_MetaScheduler *MetaSchedulerTransactorSession) RequestNewJob(_definition JobDefinition, _lockedCredits *big.Int, _jobName [32]byte, _delegateSpendingAuthority bool) (*types.Transaction, error) {
 	return _MetaScheduler.Contract.RequestNewJob(&_MetaScheduler.TransactOpts, _definition, _lockedCredits, _jobName, _delegateSpendingAuthority)
 }
@@ -7150,9 +8160,9 @@ type MetaSchedulerClaimJobEvent struct {
 	Raw               types.Log // Blockchain specific contextual infos
 }
 
-// FilterClaimJobEvent is a free log retrieval operation binding the contract event 0xc3037ff6238c842f0908a76f68fa0ec2490f1096e61e371d93fe9edca33c3c39.
+// FilterClaimJobEvent is a free log retrieval operation binding the contract event 0x383bf67d02240489b65954716c2ab62f6885953fa40008fde74a7946d202c06c.
 //
-// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8) jobDefinition)
+// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) jobDefinition)
 func (_MetaScheduler *MetaSchedulerFilterer) FilterClaimJobEvent(opts *bind.FilterOpts) (*MetaSchedulerClaimJobEventIterator, error) {
 
 	logs, sub, err := _MetaScheduler.contract.FilterLogs(opts, "ClaimJobEvent")
@@ -7162,9 +8172,9 @@ func (_MetaScheduler *MetaSchedulerFilterer) FilterClaimJobEvent(opts *bind.Filt
 	return &MetaSchedulerClaimJobEventIterator{contract: _MetaScheduler.contract, event: "ClaimJobEvent", logs: logs, sub: sub}, nil
 }
 
-// WatchClaimJobEvent is a free log subscription operation binding the contract event 0xc3037ff6238c842f0908a76f68fa0ec2490f1096e61e371d93fe9edca33c3c39.
+// WatchClaimJobEvent is a free log subscription operation binding the contract event 0x383bf67d02240489b65954716c2ab62f6885953fa40008fde74a7946d202c06c.
 //
-// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8) jobDefinition)
+// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) jobDefinition)
 func (_MetaScheduler *MetaSchedulerFilterer) WatchClaimJobEvent(opts *bind.WatchOpts, sink chan<- *MetaSchedulerClaimJobEvent) (event.Subscription, error) {
 
 	logs, sub, err := _MetaScheduler.contract.WatchLogs(opts, "ClaimJobEvent")
@@ -7199,9 +8209,9 @@ func (_MetaScheduler *MetaSchedulerFilterer) WatchClaimJobEvent(opts *bind.Watch
 	}), nil
 }
 
-// ParseClaimJobEvent is a log parse operation binding the contract event 0xc3037ff6238c842f0908a76f68fa0ec2490f1096e61e371d93fe9edca33c3c39.
+// ParseClaimJobEvent is a log parse operation binding the contract event 0x383bf67d02240489b65954716c2ab62f6885953fa40008fde74a7946d202c06c.
 //
-// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8) jobDefinition)
+// Solidity: event ClaimJobEvent(address customerAddr, address providerAddr, bytes32 jobId, uint64 maxDurationMinute, (uint64,uint64,uint64,uint64,string,uint8,(string,string)[]) jobDefinition)
 func (_MetaScheduler *MetaSchedulerFilterer) ParseClaimJobEvent(log types.Log) (*MetaSchedulerClaimJobEvent, error) {
 	event := new(MetaSchedulerClaimJobEvent)
 	if err := _MetaScheduler.contract.UnpackLog(event, "ClaimJobEvent", log); err != nil {
@@ -7688,12 +8698,13 @@ func (it *MetaSchedulerJobRefusedEventIterator) Close() error {
 type MetaSchedulerJobRefusedEvent struct {
 	JobId        [32]byte
 	ProviderAddr common.Address
+	CustomerAddr common.Address
 	Raw          types.Log // Blockchain specific contextual infos
 }
 
-// FilterJobRefusedEvent is a free log retrieval operation binding the contract event 0x5d0260cf2f490cac7a98928e721dcc1c49f1bcc33458b3103755adfd1c1eada0.
+// FilterJobRefusedEvent is a free log retrieval operation binding the contract event 0x50d9c3fab9ef0192905beb84254b4ffb6fe086795cc23de484ec65947b6615a2.
 //
-// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr)
+// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr, address _customerAddr)
 func (_MetaScheduler *MetaSchedulerFilterer) FilterJobRefusedEvent(opts *bind.FilterOpts) (*MetaSchedulerJobRefusedEventIterator, error) {
 
 	logs, sub, err := _MetaScheduler.contract.FilterLogs(opts, "JobRefusedEvent")
@@ -7703,9 +8714,9 @@ func (_MetaScheduler *MetaSchedulerFilterer) FilterJobRefusedEvent(opts *bind.Fi
 	return &MetaSchedulerJobRefusedEventIterator{contract: _MetaScheduler.contract, event: "JobRefusedEvent", logs: logs, sub: sub}, nil
 }
 
-// WatchJobRefusedEvent is a free log subscription operation binding the contract event 0x5d0260cf2f490cac7a98928e721dcc1c49f1bcc33458b3103755adfd1c1eada0.
+// WatchJobRefusedEvent is a free log subscription operation binding the contract event 0x50d9c3fab9ef0192905beb84254b4ffb6fe086795cc23de484ec65947b6615a2.
 //
-// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr)
+// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr, address _customerAddr)
 func (_MetaScheduler *MetaSchedulerFilterer) WatchJobRefusedEvent(opts *bind.WatchOpts, sink chan<- *MetaSchedulerJobRefusedEvent) (event.Subscription, error) {
 
 	logs, sub, err := _MetaScheduler.contract.WatchLogs(opts, "JobRefusedEvent")
@@ -7740,9 +8751,9 @@ func (_MetaScheduler *MetaSchedulerFilterer) WatchJobRefusedEvent(opts *bind.Wat
 	}), nil
 }
 
-// ParseJobRefusedEvent is a log parse operation binding the contract event 0x5d0260cf2f490cac7a98928e721dcc1c49f1bcc33458b3103755adfd1c1eada0.
+// ParseJobRefusedEvent is a log parse operation binding the contract event 0x50d9c3fab9ef0192905beb84254b4ffb6fe086795cc23de484ec65947b6615a2.
 //
-// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr)
+// Solidity: event JobRefusedEvent(bytes32 _jobId, address _providerAddr, address _customerAddr)
 func (_MetaScheduler *MetaSchedulerFilterer) ParseJobRefusedEvent(log types.Log) (*MetaSchedulerJobRefusedEvent, error) {
 	event := new(MetaSchedulerJobRefusedEvent)
 	if err := _MetaScheduler.contract.UnpackLog(event, "JobRefusedEvent", log); err != nil {
@@ -8509,6 +9520,383 @@ func (_MetaScheduler *MetaSchedulerFilterer) ParseRoleRevoked(log types.Log) (*M
 	return event, nil
 }
 
+// OwnableMetaData contains all meta data concerning the Ownable contract.
+var OwnableMetaData = &bind.MetaData{
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+}
+
+// OwnableABI is the input ABI used to generate the binding from.
+// Deprecated: Use OwnableMetaData.ABI instead.
+var OwnableABI = OwnableMetaData.ABI
+
+// Ownable is an auto generated Go binding around an Ethereum contract.
+type Ownable struct {
+	OwnableCaller     // Read-only binding to the contract
+	OwnableTransactor // Write-only binding to the contract
+	OwnableFilterer   // Log filterer for contract events
+}
+
+// OwnableCaller is an auto generated read-only Go binding around an Ethereum contract.
+type OwnableCaller struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// OwnableTransactor is an auto generated write-only Go binding around an Ethereum contract.
+type OwnableTransactor struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// OwnableFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
+type OwnableFilterer struct {
+	contract *bind.BoundContract // Generic contract wrapper for the low level calls
+}
+
+// OwnableSession is an auto generated Go binding around an Ethereum contract,
+// with pre-set call and transact options.
+type OwnableSession struct {
+	Contract     *Ownable          // Generic contract binding to set the session for
+	CallOpts     bind.CallOpts     // Call options to use throughout this session
+	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
+}
+
+// OwnableCallerSession is an auto generated read-only Go binding around an Ethereum contract,
+// with pre-set call options.
+type OwnableCallerSession struct {
+	Contract *OwnableCaller // Generic contract caller binding to set the session for
+	CallOpts bind.CallOpts  // Call options to use throughout this session
+}
+
+// OwnableTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
+// with pre-set transact options.
+type OwnableTransactorSession struct {
+	Contract     *OwnableTransactor // Generic contract transactor binding to set the session for
+	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
+}
+
+// OwnableRaw is an auto generated low-level Go binding around an Ethereum contract.
+type OwnableRaw struct {
+	Contract *Ownable // Generic contract binding to access the raw methods on
+}
+
+// OwnableCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
+type OwnableCallerRaw struct {
+	Contract *OwnableCaller // Generic read-only contract binding to access the raw methods on
+}
+
+// OwnableTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
+type OwnableTransactorRaw struct {
+	Contract *OwnableTransactor // Generic write-only contract binding to access the raw methods on
+}
+
+// NewOwnable creates a new instance of Ownable, bound to a specific deployed contract.
+func NewOwnable(address common.Address, backend bind.ContractBackend) (*Ownable, error) {
+	contract, err := bindOwnable(address, backend, backend, backend)
+	if err != nil {
+		return nil, err
+	}
+	return &Ownable{OwnableCaller: OwnableCaller{contract: contract}, OwnableTransactor: OwnableTransactor{contract: contract}, OwnableFilterer: OwnableFilterer{contract: contract}}, nil
+}
+
+// NewOwnableCaller creates a new read-only instance of Ownable, bound to a specific deployed contract.
+func NewOwnableCaller(address common.Address, caller bind.ContractCaller) (*OwnableCaller, error) {
+	contract, err := bindOwnable(address, caller, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &OwnableCaller{contract: contract}, nil
+}
+
+// NewOwnableTransactor creates a new write-only instance of Ownable, bound to a specific deployed contract.
+func NewOwnableTransactor(address common.Address, transactor bind.ContractTransactor) (*OwnableTransactor, error) {
+	contract, err := bindOwnable(address, nil, transactor, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &OwnableTransactor{contract: contract}, nil
+}
+
+// NewOwnableFilterer creates a new log filterer instance of Ownable, bound to a specific deployed contract.
+func NewOwnableFilterer(address common.Address, filterer bind.ContractFilterer) (*OwnableFilterer, error) {
+	contract, err := bindOwnable(address, nil, nil, filterer)
+	if err != nil {
+		return nil, err
+	}
+	return &OwnableFilterer{contract: contract}, nil
+}
+
+// bindOwnable binds a generic wrapper to an already deployed contract.
+func bindOwnable(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
+	parsed, err := OwnableMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_Ownable *OwnableRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _Ownable.Contract.OwnableCaller.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_Ownable *OwnableRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Ownable.Contract.OwnableTransactor.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_Ownable *OwnableRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _Ownable.Contract.OwnableTransactor.contract.Transact(opts, method, params...)
+}
+
+// Call invokes the (constant) contract method with params as input values and
+// sets the output to result. The result type might be a single field for simple
+// returns, a slice of interfaces for anonymous returns and a struct for named
+// returns.
+func (_Ownable *OwnableCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
+	return _Ownable.Contract.contract.Call(opts, result, method, params...)
+}
+
+// Transfer initiates a plain transaction to move funds to the contract, calling
+// its default method if one is available.
+func (_Ownable *OwnableTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Ownable.Contract.contract.Transfer(opts)
+}
+
+// Transact invokes the (paid) contract method with params as input values.
+func (_Ownable *OwnableTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
+	return _Ownable.Contract.contract.Transact(opts, method, params...)
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() view returns(address)
+func (_Ownable *OwnableCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Ownable.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() view returns(address)
+func (_Ownable *OwnableSession) Owner() (common.Address, error) {
+	return _Ownable.Contract.Owner(&_Ownable.CallOpts)
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() view returns(address)
+func (_Ownable *OwnableCallerSession) Owner() (common.Address, error) {
+	return _Ownable.Contract.Owner(&_Ownable.CallOpts)
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_Ownable *OwnableTransactor) RenounceOwnership(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Ownable.contract.Transact(opts, "renounceOwnership")
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_Ownable *OwnableSession) RenounceOwnership() (*types.Transaction, error) {
+	return _Ownable.Contract.RenounceOwnership(&_Ownable.TransactOpts)
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_Ownable *OwnableTransactorSession) RenounceOwnership() (*types.Transaction, error) {
+	return _Ownable.Contract.RenounceOwnership(&_Ownable.TransactOpts)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_Ownable *OwnableTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
+	return _Ownable.contract.Transact(opts, "transferOwnership", newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_Ownable *OwnableSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+	return _Ownable.Contract.TransferOwnership(&_Ownable.TransactOpts, newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_Ownable *OwnableTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+	return _Ownable.Contract.TransferOwnership(&_Ownable.TransactOpts, newOwner)
+}
+
+// OwnableOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the Ownable contract.
+type OwnableOwnershipTransferredIterator struct {
+	Event *OwnableOwnershipTransferred // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *OwnableOwnershipTransferredIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(OwnableOwnershipTransferred)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(OwnableOwnershipTransferred)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *OwnableOwnershipTransferredIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *OwnableOwnershipTransferredIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// OwnableOwnershipTransferred represents a OwnershipTransferred event raised by the Ownable contract.
+type OwnableOwnershipTransferred struct {
+	PreviousOwner common.Address
+	NewOwner      common.Address
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// FilterOwnershipTransferred is a free log retrieval operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_Ownable *OwnableFilterer) FilterOwnershipTransferred(opts *bind.FilterOpts, previousOwner []common.Address, newOwner []common.Address) (*OwnableOwnershipTransferredIterator, error) {
+
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _Ownable.contract.FilterLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return &OwnableOwnershipTransferredIterator{contract: _Ownable.contract, event: "OwnershipTransferred", logs: logs, sub: sub}, nil
+}
+
+// WatchOwnershipTransferred is a free log subscription operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_Ownable *OwnableFilterer) WatchOwnershipTransferred(opts *bind.WatchOpts, sink chan<- *OwnableOwnershipTransferred, previousOwner []common.Address, newOwner []common.Address) (event.Subscription, error) {
+
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _Ownable.contract.WatchLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(OwnableOwnershipTransferred)
+				if err := _Ownable.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseOwnershipTransferred is a log parse operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_Ownable *OwnableFilterer) ParseOwnershipTransferred(log types.Log) (*OwnableOwnershipTransferred, error) {
+	event := new(OwnableOwnershipTransferred)
+	if err := _Ownable.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
 // ReentrancyGuardUpgradeableMetaData contains all meta data concerning the ReentrancyGuardUpgradeable contract.
 var ReentrancyGuardUpgradeableMetaData = &bind.MetaData{
 	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"}]",
@@ -9094,488 +10482,4 @@ func (_Strings *StringsTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.
 // Transact invokes the (paid) contract method with params as input values.
 func (_Strings *StringsTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _Strings.Contract.contract.Transact(opts, method, params...)
-}
-
-// TimeoutManagementMetaData contains all meta data concerning the TimeoutManagement contract.
-var TimeoutManagementMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_blockOrigin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_timeout\",\"type\":\"uint256\"}],\"name\":\"stillAlive\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
-}
-
-// TimeoutManagementABI is the input ABI used to generate the binding from.
-// Deprecated: Use TimeoutManagementMetaData.ABI instead.
-var TimeoutManagementABI = TimeoutManagementMetaData.ABI
-
-// TimeoutManagement is an auto generated Go binding around an Ethereum contract.
-type TimeoutManagement struct {
-	TimeoutManagementCaller     // Read-only binding to the contract
-	TimeoutManagementTransactor // Write-only binding to the contract
-	TimeoutManagementFilterer   // Log filterer for contract events
-}
-
-// TimeoutManagementCaller is an auto generated read-only Go binding around an Ethereum contract.
-type TimeoutManagementCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// TimeoutManagementTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type TimeoutManagementTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// TimeoutManagementFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type TimeoutManagementFilterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// TimeoutManagementSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type TimeoutManagementSession struct {
-	Contract     *TimeoutManagement // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts      // Call options to use throughout this session
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// TimeoutManagementCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type TimeoutManagementCallerSession struct {
-	Contract *TimeoutManagementCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts            // Call options to use throughout this session
-}
-
-// TimeoutManagementTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type TimeoutManagementTransactorSession struct {
-	Contract     *TimeoutManagementTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts            // Transaction auth options to use throughout this session
-}
-
-// TimeoutManagementRaw is an auto generated low-level Go binding around an Ethereum contract.
-type TimeoutManagementRaw struct {
-	Contract *TimeoutManagement // Generic contract binding to access the raw methods on
-}
-
-// TimeoutManagementCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type TimeoutManagementCallerRaw struct {
-	Contract *TimeoutManagementCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// TimeoutManagementTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type TimeoutManagementTransactorRaw struct {
-	Contract *TimeoutManagementTransactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewTimeoutManagement creates a new instance of TimeoutManagement, bound to a specific deployed contract.
-func NewTimeoutManagement(address common.Address, backend bind.ContractBackend) (*TimeoutManagement, error) {
-	contract, err := bindTimeoutManagement(address, backend, backend, backend)
-	if err != nil {
-		return nil, err
-	}
-	return &TimeoutManagement{TimeoutManagementCaller: TimeoutManagementCaller{contract: contract}, TimeoutManagementTransactor: TimeoutManagementTransactor{contract: contract}, TimeoutManagementFilterer: TimeoutManagementFilterer{contract: contract}}, nil
-}
-
-// NewTimeoutManagementCaller creates a new read-only instance of TimeoutManagement, bound to a specific deployed contract.
-func NewTimeoutManagementCaller(address common.Address, caller bind.ContractCaller) (*TimeoutManagementCaller, error) {
-	contract, err := bindTimeoutManagement(address, caller, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &TimeoutManagementCaller{contract: contract}, nil
-}
-
-// NewTimeoutManagementTransactor creates a new write-only instance of TimeoutManagement, bound to a specific deployed contract.
-func NewTimeoutManagementTransactor(address common.Address, transactor bind.ContractTransactor) (*TimeoutManagementTransactor, error) {
-	contract, err := bindTimeoutManagement(address, nil, transactor, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &TimeoutManagementTransactor{contract: contract}, nil
-}
-
-// NewTimeoutManagementFilterer creates a new log filterer instance of TimeoutManagement, bound to a specific deployed contract.
-func NewTimeoutManagementFilterer(address common.Address, filterer bind.ContractFilterer) (*TimeoutManagementFilterer, error) {
-	contract, err := bindTimeoutManagement(address, nil, nil, filterer)
-	if err != nil {
-		return nil, err
-	}
-	return &TimeoutManagementFilterer{contract: contract}, nil
-}
-
-// bindTimeoutManagement binds a generic wrapper to an already deployed contract.
-func bindTimeoutManagement(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := TimeoutManagementMetaData.GetAbi()
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_TimeoutManagement *TimeoutManagementRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _TimeoutManagement.Contract.TimeoutManagementCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_TimeoutManagement *TimeoutManagementRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _TimeoutManagement.Contract.TimeoutManagementTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_TimeoutManagement *TimeoutManagementRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _TimeoutManagement.Contract.TimeoutManagementTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_TimeoutManagement *TimeoutManagementCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _TimeoutManagement.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_TimeoutManagement *TimeoutManagementTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _TimeoutManagement.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_TimeoutManagement *TimeoutManagementTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _TimeoutManagement.Contract.contract.Transact(opts, method, params...)
-}
-
-// StillAlive is a free data retrieval call binding the contract method 0x15a945ce.
-//
-// Solidity: function stillAlive(uint256 _blockOrigin, uint256 _timeout) view returns(bool)
-func (_TimeoutManagement *TimeoutManagementCaller) StillAlive(opts *bind.CallOpts, _blockOrigin *big.Int, _timeout *big.Int) (bool, error) {
-	var out []interface{}
-	err := _TimeoutManagement.contract.Call(opts, &out, "stillAlive", _blockOrigin, _timeout)
-
-	if err != nil {
-		return *new(bool), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
-
-	return out0, err
-
-}
-
-// StillAlive is a free data retrieval call binding the contract method 0x15a945ce.
-//
-// Solidity: function stillAlive(uint256 _blockOrigin, uint256 _timeout) view returns(bool)
-func (_TimeoutManagement *TimeoutManagementSession) StillAlive(_blockOrigin *big.Int, _timeout *big.Int) (bool, error) {
-	return _TimeoutManagement.Contract.StillAlive(&_TimeoutManagement.CallOpts, _blockOrigin, _timeout)
-}
-
-// StillAlive is a free data retrieval call binding the contract method 0x15a945ce.
-//
-// Solidity: function stillAlive(uint256 _blockOrigin, uint256 _timeout) view returns(bool)
-func (_TimeoutManagement *TimeoutManagementCallerSession) StillAlive(_blockOrigin *big.Int, _timeout *big.Int) (bool, error) {
-	return _TimeoutManagement.Contract.StillAlive(&_TimeoutManagement.CallOpts, _blockOrigin, _timeout)
-}
-
-// ToolsMetaData contains all meta data concerning the Tools contract.
-var ToolsMetaData = &bind.MetaData{
-	ABI: "[]",
-}
-
-// ToolsABI is the input ABI used to generate the binding from.
-// Deprecated: Use ToolsMetaData.ABI instead.
-var ToolsABI = ToolsMetaData.ABI
-
-// Tools is an auto generated Go binding around an Ethereum contract.
-type Tools struct {
-	ToolsCaller     // Read-only binding to the contract
-	ToolsTransactor // Write-only binding to the contract
-	ToolsFilterer   // Log filterer for contract events
-}
-
-// ToolsCaller is an auto generated read-only Go binding around an Ethereum contract.
-type ToolsCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ToolsTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type ToolsTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ToolsFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type ToolsFilterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ToolsSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ToolsSession struct {
-	Contract     *Tools            // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ToolsCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ToolsCallerSession struct {
-	Contract *ToolsCaller  // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts // Call options to use throughout this session
-}
-
-// ToolsTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ToolsTransactorSession struct {
-	Contract     *ToolsTransactor  // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ToolsRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ToolsRaw struct {
-	Contract *Tools // Generic contract binding to access the raw methods on
-}
-
-// ToolsCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ToolsCallerRaw struct {
-	Contract *ToolsCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ToolsTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ToolsTransactorRaw struct {
-	Contract *ToolsTransactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewTools creates a new instance of Tools, bound to a specific deployed contract.
-func NewTools(address common.Address, backend bind.ContractBackend) (*Tools, error) {
-	contract, err := bindTools(address, backend, backend, backend)
-	if err != nil {
-		return nil, err
-	}
-	return &Tools{ToolsCaller: ToolsCaller{contract: contract}, ToolsTransactor: ToolsTransactor{contract: contract}, ToolsFilterer: ToolsFilterer{contract: contract}}, nil
-}
-
-// NewToolsCaller creates a new read-only instance of Tools, bound to a specific deployed contract.
-func NewToolsCaller(address common.Address, caller bind.ContractCaller) (*ToolsCaller, error) {
-	contract, err := bindTools(address, caller, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &ToolsCaller{contract: contract}, nil
-}
-
-// NewToolsTransactor creates a new write-only instance of Tools, bound to a specific deployed contract.
-func NewToolsTransactor(address common.Address, transactor bind.ContractTransactor) (*ToolsTransactor, error) {
-	contract, err := bindTools(address, nil, transactor, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &ToolsTransactor{contract: contract}, nil
-}
-
-// NewToolsFilterer creates a new log filterer instance of Tools, bound to a specific deployed contract.
-func NewToolsFilterer(address common.Address, filterer bind.ContractFilterer) (*ToolsFilterer, error) {
-	contract, err := bindTools(address, nil, nil, filterer)
-	if err != nil {
-		return nil, err
-	}
-	return &ToolsFilterer{contract: contract}, nil
-}
-
-// bindTools binds a generic wrapper to an already deployed contract.
-func bindTools(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := ToolsMetaData.GetAbi()
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Tools *ToolsRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Tools.Contract.ToolsCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Tools *ToolsRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Tools.Contract.ToolsTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Tools *ToolsRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Tools.Contract.ToolsTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Tools *ToolsCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Tools.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Tools *ToolsTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Tools.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Tools *ToolsTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Tools.Contract.contract.Transact(opts, method, params...)
-}
-
-// ConsoleMetaData contains all meta data concerning the Console contract.
-var ConsoleMetaData = &bind.MetaData{
-	ABI: "[]",
-}
-
-// ConsoleABI is the input ABI used to generate the binding from.
-// Deprecated: Use ConsoleMetaData.ABI instead.
-var ConsoleABI = ConsoleMetaData.ABI
-
-// Console is an auto generated Go binding around an Ethereum contract.
-type Console struct {
-	ConsoleCaller     // Read-only binding to the contract
-	ConsoleTransactor // Write-only binding to the contract
-	ConsoleFilterer   // Log filterer for contract events
-}
-
-// ConsoleCaller is an auto generated read-only Go binding around an Ethereum contract.
-type ConsoleCaller struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ConsoleTransactor is an auto generated write-only Go binding around an Ethereum contract.
-type ConsoleTransactor struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ConsoleFilterer is an auto generated log filtering Go binding around an Ethereum contract events.
-type ConsoleFilterer struct {
-	contract *bind.BoundContract // Generic contract wrapper for the low level calls
-}
-
-// ConsoleSession is an auto generated Go binding around an Ethereum contract,
-// with pre-set call and transact options.
-type ConsoleSession struct {
-	Contract     *Console          // Generic contract binding to set the session for
-	CallOpts     bind.CallOpts     // Call options to use throughout this session
-	TransactOpts bind.TransactOpts // Transaction auth options to use throughout this session
-}
-
-// ConsoleCallerSession is an auto generated read-only Go binding around an Ethereum contract,
-// with pre-set call options.
-type ConsoleCallerSession struct {
-	Contract *ConsoleCaller // Generic contract caller binding to set the session for
-	CallOpts bind.CallOpts  // Call options to use throughout this session
-}
-
-// ConsoleTransactorSession is an auto generated write-only Go binding around an Ethereum contract,
-// with pre-set transact options.
-type ConsoleTransactorSession struct {
-	Contract     *ConsoleTransactor // Generic contract transactor binding to set the session for
-	TransactOpts bind.TransactOpts  // Transaction auth options to use throughout this session
-}
-
-// ConsoleRaw is an auto generated low-level Go binding around an Ethereum contract.
-type ConsoleRaw struct {
-	Contract *Console // Generic contract binding to access the raw methods on
-}
-
-// ConsoleCallerRaw is an auto generated low-level read-only Go binding around an Ethereum contract.
-type ConsoleCallerRaw struct {
-	Contract *ConsoleCaller // Generic read-only contract binding to access the raw methods on
-}
-
-// ConsoleTransactorRaw is an auto generated low-level write-only Go binding around an Ethereum contract.
-type ConsoleTransactorRaw struct {
-	Contract *ConsoleTransactor // Generic write-only contract binding to access the raw methods on
-}
-
-// NewConsole creates a new instance of Console, bound to a specific deployed contract.
-func NewConsole(address common.Address, backend bind.ContractBackend) (*Console, error) {
-	contract, err := bindConsole(address, backend, backend, backend)
-	if err != nil {
-		return nil, err
-	}
-	return &Console{ConsoleCaller: ConsoleCaller{contract: contract}, ConsoleTransactor: ConsoleTransactor{contract: contract}, ConsoleFilterer: ConsoleFilterer{contract: contract}}, nil
-}
-
-// NewConsoleCaller creates a new read-only instance of Console, bound to a specific deployed contract.
-func NewConsoleCaller(address common.Address, caller bind.ContractCaller) (*ConsoleCaller, error) {
-	contract, err := bindConsole(address, caller, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &ConsoleCaller{contract: contract}, nil
-}
-
-// NewConsoleTransactor creates a new write-only instance of Console, bound to a specific deployed contract.
-func NewConsoleTransactor(address common.Address, transactor bind.ContractTransactor) (*ConsoleTransactor, error) {
-	contract, err := bindConsole(address, nil, transactor, nil)
-	if err != nil {
-		return nil, err
-	}
-	return &ConsoleTransactor{contract: contract}, nil
-}
-
-// NewConsoleFilterer creates a new log filterer instance of Console, bound to a specific deployed contract.
-func NewConsoleFilterer(address common.Address, filterer bind.ContractFilterer) (*ConsoleFilterer, error) {
-	contract, err := bindConsole(address, nil, nil, filterer)
-	if err != nil {
-		return nil, err
-	}
-	return &ConsoleFilterer{contract: contract}, nil
-}
-
-// bindConsole binds a generic wrapper to an already deployed contract.
-func bindConsole(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := ConsoleMetaData.GetAbi()
-	if err != nil {
-		return nil, err
-	}
-	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Console *ConsoleRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Console.Contract.ConsoleCaller.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Console *ConsoleRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Console.Contract.ConsoleTransactor.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Console *ConsoleRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Console.Contract.ConsoleTransactor.contract.Transact(opts, method, params...)
-}
-
-// Call invokes the (constant) contract method with params as input values and
-// sets the output to result. The result type might be a single field for simple
-// returns, a slice of interfaces for anonymous returns and a struct for named
-// returns.
-func (_Console *ConsoleCallerRaw) Call(opts *bind.CallOpts, result *[]interface{}, method string, params ...interface{}) error {
-	return _Console.Contract.contract.Call(opts, result, method, params...)
-}
-
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (_Console *ConsoleTransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-	return _Console.Contract.contract.Transfer(opts)
-}
-
-// Transact invokes the (paid) contract method with params as input values.
-func (_Console *ConsoleTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
-	return _Console.Contract.contract.Transact(opts, method, params...)
 }

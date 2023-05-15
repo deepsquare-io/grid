@@ -52,32 +52,25 @@ func (w *Watcher) Watch(parent context.Context) error {
 	queryTicker := time.NewTicker(w.pollingTime)
 	defer queryTicker.Stop()
 
-	claimNextJobEvents := make(chan *metascheduler.MetaSchedulerClaimJobEvent)
+	claimNextJobEvents := make(chan *metascheduler.MetaSchedulerClaimJobEvent, 100)
 	defer close(claimNextJobEvents)
-	subClaimNextJobEvents, err := w.metaQueue.WatchClaimNextJobEvent(parent, claimNextJobEvents)
-	if err != nil {
-		return err
-	}
-	defer subClaimNextJobEvents.Unsubscribe()
-	logger.I.Debug("Watching ClaimNextJobEvents...")
-
-	claimNextCancellingJobEvents := make(chan *metascheduler.MetaSchedulerClaimNextCancellingJobEvent)
+	claimNextCancellingJobEvents := make(
+		chan *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
+		100,
+	)
 	defer close(claimNextCancellingJobEvents)
-	subClaimNextCancellingJobEvents, err := w.metaQueue.WatchClaimNextCancellingJobEvent(parent, claimNextCancellingJobEvents)
-	if err != nil {
-		return err
-	}
-	defer subClaimNextCancellingJobEvents.Unsubscribe()
-	logger.I.Debug("Watching ClaimNextCancellingJobEvents...")
-
-	claimNextTopUpJobEvents := make(chan *metascheduler.MetaSchedulerClaimNextTopUpJobEvent)
+	claimNextTopUpJobEvents := make(chan *metascheduler.MetaSchedulerClaimNextTopUpJobEvent, 100)
 	defer close(claimNextTopUpJobEvents)
-	subClaimNextTopUpJobEvents, err := w.metaQueue.WatchClaimNextTopUpJobEvent(parent, claimNextTopUpJobEvents)
+	sub, err := w.metaQueue.WatchEvents(
+		parent,
+		claimNextTopUpJobEvents,
+		claimNextCancellingJobEvents,
+		claimNextJobEvents,
+	)
 	if err != nil {
 		return err
 	}
-	defer subClaimNextTopUpJobEvents.Unsubscribe()
-	logger.I.Debug("Watching ClaimNextTopUpJobEvents...")
+	logger.I.Debug("Watching events...")
 
 	for {
 		select {
@@ -85,11 +78,11 @@ func (w *Watcher) Watch(parent context.Context) error {
 			return parent.Err()
 
 		// ClaimNextJobEvents handling
-		case err := <-subClaimNextJobEvents.Err():
-			logger.I.Error("WatchClaimNextJobEvent thrown an error", zap.Error(err))
-			return err
 		case event := <-claimNextJobEvents:
-			if !strings.EqualFold(event.ProviderAddr.Hex(), w.metaQueue.GetProviderAddress().Hex()) {
+			if !strings.EqualFold(
+				event.ProviderAddr.Hex(),
+				w.metaQueue.GetProviderAddress().Hex(),
+			) {
 				// Ignore event
 				logger.I.Debug("ignore event", zap.Any("event", event))
 				continue
@@ -97,11 +90,11 @@ func (w *Watcher) Watch(parent context.Context) error {
 			go w.handleClaimNextJob(parent, event)
 
 		// ClaimNextCancellingJobEvents handling
-		case err := <-subClaimNextCancellingJobEvents.Err():
-			logger.I.Error("WatchClaimNextCancellingJobEvent thrown an error", zap.Error(err))
-			return err
 		case event := <-claimNextCancellingJobEvents:
-			if !strings.EqualFold(event.ProviderAddr.Hex(), w.metaQueue.GetProviderAddress().Hex()) {
+			if !strings.EqualFold(
+				event.ProviderAddr.Hex(),
+				w.metaQueue.GetProviderAddress().Hex(),
+			) {
 				// Ignore event
 				logger.I.Debug("ignore event", zap.Any("event", event))
 				continue
@@ -109,11 +102,11 @@ func (w *Watcher) Watch(parent context.Context) error {
 			go w.handleClaimNextCancellingJobEvent(parent, event)
 
 		// ClaimNextTopUpJobEvents handling
-		case err := <-subClaimNextTopUpJobEvents.Err():
-			logger.I.Error("WatchClaimNextTopUpJobEvent thrown an error", zap.Error(err))
-			return err
 		case event := <-claimNextTopUpJobEvents:
-			if !strings.EqualFold(event.ProviderAddr.Hex(), w.metaQueue.GetProviderAddress().Hex()) {
+			if !strings.EqualFold(
+				event.ProviderAddr.Hex(),
+				w.metaQueue.GetProviderAddress().Hex(),
+			) {
 				// Ignore event
 				logger.I.Debug("ignore event", zap.Any("event", event))
 				continue
@@ -123,6 +116,9 @@ func (w *Watcher) Watch(parent context.Context) error {
 		// Claim indefinitely
 		case <-queryTicker.C:
 			go w.handleClaimIndefinitely(parent)
+
+		case err := <-sub.Err():
+			return err
 		}
 	}
 }
@@ -173,7 +169,10 @@ func (w *Watcher) handleClaimIndefinitely(parent context.Context) {
 	}
 }
 
-func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.MetaSchedulerClaimJobEvent) {
+func (w *Watcher) handleClaimNextJob(
+	ctx context.Context,
+	event *metascheduler.MetaSchedulerClaimJobEvent,
+) {
 	if event == nil {
 		logger.I.Error(
 			"job is nil, we didn't find a job",
@@ -225,10 +224,16 @@ func (w *Watcher) handleClaimNextJob(ctx context.Context, event *metascheduler.M
 	)
 }
 
-func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) {
+func (w *Watcher) handleClaimNextCancellingJobEvent(
+	ctx context.Context,
+	event *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
+) {
 	status, err := w.metaQueue.GetJobStatus(ctx, event.JobId)
 	if err != nil {
-		logger.I.Error("GetJobStatus failed, abort handleClaimNextCancellingJobEvent", zap.Error(err))
+		logger.I.Error(
+			"GetJobStatus failed, abort handleClaimNextCancellingJobEvent",
+			zap.Error(err),
+		)
 		return
 	}
 	if err := try.Do(
@@ -266,7 +271,10 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(ctx context.Context, event *
 	}
 }
 
-func (w *Watcher) handleClaimNextTopUpEvent(ctx context.Context, event *metascheduler.MetaSchedulerClaimNextTopUpJobEvent) {
+func (w *Watcher) handleClaimNextTopUpEvent(
+	ctx context.Context,
+	event *metascheduler.MetaSchedulerClaimNextTopUpJobEvent,
+) {
 	if err := try.Do(5, 5*time.Second, func(_ int) error {
 		return w.scheduler.TopUp(ctx, &TopUpRequest{
 			Name:           hexutil.Encode(event.JobId[:]),

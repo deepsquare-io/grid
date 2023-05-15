@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/debug"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/middleware"
 	pkgsbatch "github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server"
@@ -17,6 +19,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 )
@@ -242,7 +246,7 @@ type Container struct {
 	jobWatcher *job.Watcher
 }
 
-func Init() *Container {
+func Init(ctx context.Context) *Container {
 	sbatchAPI := pkgsbatch.NewAPI(
 		sbatchEndpoint,
 		sbatchTLS,
@@ -250,19 +254,32 @@ func Init() *Container {
 		sbatchCAFile,
 		sbatchServerHostOverride,
 	)
-	ethClientRPC, err := ethclient.Dial(ethEndpointRPC)
+	client := &http.Client{
+		Transport: &middleware.LoggingTransport{
+			Transport: http.DefaultTransport,
+		},
+	}
+	rpcClient, err := rpc.DialOptions(ctx, ethEndpointRPC, rpc.WithHTTPClient(client))
 	if err != nil {
 		logger.I.Fatal("ethclientRPC dial failed", zap.Error(err))
 	}
-	msRPC, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerSmartContract), ethClientRPC)
+	ethClientRPC := ethclient.NewClient(rpcClient)
+	msRPC, err := metascheduler.NewMetaScheduler(
+		common.HexToAddress(metaschedulerSmartContract),
+		ethClientRPC,
+	)
 	if err != nil {
 		logger.I.Fatal("metaschedulerRPC dial failed", zap.Error(err))
 	}
-	ethClientWS, err := ethclient.Dial(ethEndpointWS)
+	wsClient, err := rpc.DialOptions(ctx, ethEndpointWS, rpc.WithHTTPClient(client))
 	if err != nil {
-		logger.I.Fatal("ethClientWS dial failed", zap.Error(err))
+		logger.I.Fatal("ethclientWS dial failed", zap.Error(err))
 	}
-	msWS, err := metascheduler.NewMetaScheduler(common.HexToAddress(metaschedulerSmartContract), ethClientWS)
+	ethClientWS := ethclient.NewClient(wsClient)
+	msWS, err := metascheduler.NewMetaScheduler(
+		common.HexToAddress(metaschedulerSmartContract),
+		ethClientWS,
+	)
 	if err != nil {
 		logger.I.Fatal("metaschedulerWS dial failed", zap.Error(err))
 	}
@@ -270,9 +287,16 @@ func Init() *Container {
 	if err != nil {
 		logger.I.Fatal("couldn't decode private key", zap.Error(err))
 	}
+	chainID, err := ethClientRPC.ChainID(ctx)
+	if err != nil {
+		logger.I.Fatal("couldn't fetch chainID", zap.Error(err))
+	}
 	ethDataSource := eth.New(
+		chainID,
+		common.HexToAddress(metaschedulerSmartContract),
 		ethClientRPC,
 		ethClientRPC,
+		ethClientWS,
 		msRPC,
 		msWS,
 		pk,
@@ -321,7 +345,7 @@ var app = &cli.App{
 	Flags:   flags,
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context
-		container := Init()
+		container := Init(ctx)
 
 		// Register the cluster with the declared resources
 		// TODO: automatically fetch the resources limit
@@ -343,7 +367,11 @@ var app = &cli.App{
 			}
 		}(ctx)
 
-		logger.I.Info("listening", zap.String("address", listenAddress), zap.String("version", version))
+		logger.I.Info(
+			"listening",
+			zap.String("address", listenAddress),
+			zap.String("version", version),
+		)
 
 		// gRPC server
 		return container.server.ListenAndServe(listenAddress)
@@ -351,6 +379,8 @@ var app = &cli.App{
 }
 
 func main() {
+	_ = godotenv.Load(".env.local")
+	_ = godotenv.Load(".env")
 	if err := app.Run(os.Args); err != nil {
 		logger.I.Fatal("app crashed", zap.Error(err))
 	}

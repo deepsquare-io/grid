@@ -53,14 +53,24 @@ func DoWithContextTimeout(
 			select {
 			case err = <-errChan:
 				if err != nil {
-					logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
+					logger.I.Warn(
+						"try failed",
+						zap.Error(err),
+						zap.Int("try", try),
+						zap.Int("maxTries", tries),
+					)
 				}
 				if err == nil {
 					return nil
 				}
 			case <-ctx.Done():
 				err = ctx.Err()
-				logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
+				logger.I.Warn(
+					"try failed",
+					zap.Error(err),
+					zap.Int("try", try),
+					zap.Int("maxTries", tries),
+				)
 			}
 			return err
 		}()

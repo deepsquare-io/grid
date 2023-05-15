@@ -71,7 +71,11 @@ func (d *API) dial() (sbatchv1alpha1.SBatchAPIClient, *grpc.ClientConn, error) {
 func (d *API) Fetch(ctx context.Context, hash string) (string, error) {
 	res, err := d.grpcFetch(ctx, hash)
 	if err != nil {
-		logger.I.Error("Failed to fetch sbatch from sbatch API, trying with transfer.sh", zap.Error(err), zap.String("hash", hash))
+		logger.I.Error(
+			"Failed to fetch sbatch from sbatch API, trying with transfer.sh",
+			zap.Error(err),
+			zap.String("hash", hash),
+		)
 		return d.transfershFetch(ctx, hash)
 	}
 	return res, nil
@@ -99,7 +103,10 @@ func (d *API) grpcFetch(ctx context.Context, hash string) (string, error) {
 
 // transfershFetch a sbatch script based on the hash from transfer.sh.
 func (d *API) transfershFetch(ctx context.Context, hash string) (string, error) {
-	logger.I.Warn("Calling transfershFetch. Fetching via transfer.sh is deprecated!", zap.String("hash", hash))
+	logger.I.Warn(
+		"Calling transfershFetch. Fetching via transfer.sh is deprecated!",
+		zap.String("hash", hash),
+	)
 	req, err := http.NewRequestWithContext(ctx, "GET", hash, nil)
 	if err != nil {
 		return "", err

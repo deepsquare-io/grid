@@ -7,51 +7,97 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	"go.uber.org/zap"
 )
 
+var (
+	MetaschedulerABI            *abi.ABI
+	claimNextTopUpJobEvent      abi.Event
+	claimNextCancellingJobEvent abi.Event
+	claimJobEvent               abi.Event
+)
+
+func init() {
+	var err error
+	MetaschedulerABI, err = metascheduler.MetaSchedulerMetaData.GetAbi()
+	if err != nil {
+		logger.I.Fatal("failed to parse contract ABI", zap.Error(err))
+	}
+
+	// Find the event signature dynamically
+	var ok bool
+	claimNextTopUpJobEvent, ok = MetaschedulerABI.Events["ClaimNextTopUpJobEvent"]
+	if !ok {
+		logger.I.Fatal("failed to find ClaimNextTopUpJobEvent in contract ABI")
+	}
+
+	claimNextCancellingJobEvent, ok = MetaschedulerABI.Events["ClaimNextCancellingJobEvent"]
+	if !ok {
+		logger.I.Fatal("failed to find ClaimNextCancellingJobEvent in contract ABI")
+	}
+
+	claimJobEvent, ok = MetaschedulerABI.Events["ClaimJobEvent"]
+	if !ok {
+		logger.I.Fatal("failed to find ClaimJobEvent in contract ABI")
+	}
+}
+
 // DataSource handles communications with the smart contract.
 type DataSource struct {
-	authenticator    EthereumAuthenticator
-	deployBackend    bind.DeployBackend
-	metaschedulerRPC MetaSchedulerRPC
-	metaschedulerWS  MetaSchedulerWS
-	pk               *ecdsa.PrivateKey
-	fromAddress      common.Address
+	bind.DeployBackend
+	chainID              *big.Int
+	metaschedulerAddress common.Address
+	contractBackendRPC   bind.ContractBackend
+	metaschedulerRPC     *metascheduler.MetaScheduler
+	contractBackendWS    bind.ContractBackend
+	metaschedulerWS      *metascheduler.MetaScheduler
+	jobQueues            *metascheduler.IProviderJobQueues
+	pk                   *ecdsa.PrivateKey
+	fromAddress          common.Address
 }
 
 func New(
-	a EthereumAuthenticator,
+	chainID *big.Int,
+	metaschedulerAddress common.Address,
 	deployBackend bind.DeployBackend,
-	msRPC MetaSchedulerRPC,
-	msWS MetaSchedulerWS,
+	contractBackendRPC bind.ContractBackend,
+	contractBackendWS bind.ContractBackend,
+	msRPC *metascheduler.MetaScheduler,
+	msWS *metascheduler.MetaScheduler,
 	pk *ecdsa.PrivateKey,
 ) *DataSource {
-	if a == nil {
-		logger.I.Fatal("EthereumAuthenticator is nil")
-	}
-	if deployBackend == nil {
-		logger.I.Fatal("DeployBackend is nil")
-	}
-	if msRPC == nil {
-		logger.I.Fatal("MetaSchedulerRPC is nil")
-	}
-	if msWS == nil {
-		logger.I.Fatal("metaschedulerWS is nil")
-	}
-
 	fromAddress := crypto.PubkeyToAddress(pk.PublicKey)
+
+	address, err := msRPC.ProviderJobQueues(&bind.CallOpts{})
+	if err != nil {
+		logger.I.Panic("failed to fetch provider job queues smart-contract address", zap.Error(err))
+	}
+	jobQueues, err := metascheduler.NewIProviderJobQueues(address, contractBackendRPC)
+	if err != nil {
+		logger.I.Panic(
+			"failed to instanciate provider job queues smart-contract address",
+			zap.Error(err),
+			zap.String("address", address.Hex()),
+		)
+	}
 	return &DataSource{
-		authenticator:    a,
-		deployBackend:    deployBackend,
-		metaschedulerRPC: msRPC,
-		metaschedulerWS:  msWS,
-		pk:               pk,
-		fromAddress:      fromAddress,
+		DeployBackend:        deployBackend,
+		metaschedulerAddress: metaschedulerAddress,
+		contractBackendRPC:   contractBackendRPC,
+		contractBackendWS:    contractBackendWS,
+		chainID:              chainID,
+		metaschedulerRPC:     msRPC,
+		metaschedulerWS:      msWS,
+		jobQueues:            jobQueues,
+		pk:                   pk,
+		fromAddress:          fromAddress,
 	}
 }
 
@@ -60,22 +106,17 @@ func (s *DataSource) GetProviderAddress() common.Address {
 }
 
 func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
-	nonce, err := s.authenticator.PendingNonceAt(ctx, s.fromAddress)
+	nonce, err := s.contractBackendRPC.PendingNonceAt(ctx, s.fromAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	gasPrice, err := s.authenticator.SuggestGasPrice(ctx)
+	gasPrice, err := s.contractBackendRPC.SuggestGasPrice(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	chainID, err := s.authenticator.ChainID(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	auth, err := bind.NewKeyedTransactorWithChainID(s.pk, chainID)
+	auth, err := bind.NewKeyedTransactorWithChainID(s.pk, s.chainID)
 	if err != nil {
 		return nil, err
 	}
@@ -93,11 +134,11 @@ func (s *DataSource) auth(ctx context.Context) (*bind.TransactOpts, error) {
 // Else, it will return false.
 // Else, it will return false and an error.
 func (s *DataSource) Claim(ctx context.Context) error {
-	ok, err := s.metaschedulerRPC.HasNextJob(&bind.CallOpts{
+	ok, err := s.jobQueues.HasNextClaimableJob(&bind.CallOpts{
 		Context: ctx,
 	}, s.fromAddress)
 	if err != nil {
-		logger.I.Error("HasNextJob failed", zap.Error(err))
+		logger.I.Error("HasNextClaimableJob failed", zap.Error(err))
 		return err
 	}
 	if !ok {
@@ -112,7 +153,7 @@ func (s *DataSource) Claim(ctx context.Context) error {
 
 	tx, err := s.metaschedulerRPC.ClaimNextJob(auth)
 	if err != nil {
-		return err
+		return WrapError(err)
 	}
 	logger.I.Debug("called ClaimNextJob", zap.String("tx", tx.Hash().String()))
 
@@ -171,24 +212,24 @@ func (s *DataSource) SetJobStatus(
 		jobDurationMinute,
 	)
 	if err != nil {
-		return err
+		return WrapError(err)
 	}
 	logger.Debug(
 		"called set job status, waiting for transaction",
 		zap.String("tx", tx.Hash().String()),
 		zap.Uint8("status", uint8(status)),
 	)
-	_, err = bind.WaitMined(ctx, s.deployBackend, tx)
+	_, err = bind.WaitMined(ctx, s.DeployBackend, tx)
 	if err != nil {
 		logger.Error("failed to wait mined", zap.Error(err))
-		return err
+		return WrapError(err)
 	}
 	logger.Debug(
 		"set job status success",
 		zap.String("tx", tx.Hash().String()),
 		zap.Uint8("status", uint8(status)),
 	)
-	return err
+	return nil
 }
 
 // RefuseJob rejects a job from the metascheduler.
@@ -207,40 +248,96 @@ func (s *DataSource) RefuseJob(
 		jobID,
 	)
 	if err != nil {
-		return err
+		return WrapError(err)
 	}
 	logger.Debug("called refuse job", zap.String("tx", tx.Hash().String()))
-	return err
+	return nil
 }
 
-// WatchClaimNextJobEvent observes the incoming ClaimNextJobEvents.
-func (s *DataSource) WatchClaimNextJobEvent(
+// WatchEvents observes the incoming ClaimNextTopUpJobEvent, ClaimNextCancellingJobEvent and ClaimJobEvent.
+func (s *DataSource) WatchEvents(
 	ctx context.Context,
-	sink chan<- *metascheduler.MetaSchedulerClaimJobEvent,
+	claimNextTopUpJobEvents chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent,
+	claimNextCancellingJobEvents chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
+	claimJobEvents chan<- *metascheduler.MetaSchedulerClaimJobEvent,
 ) (event.Subscription, error) {
-	return s.metaschedulerWS.WatchClaimJobEvent(&bind.WatchOpts{
-		Context: ctx,
-	}, sink)
-}
+	logs := make(chan types.Log)
+	defer close(logs)
 
-// WatchClaimNextCancellingJobEvent observes the incoming ClaimNextCancellingJobEvents.
-func (s *DataSource) WatchClaimNextCancellingJobEvent(
-	ctx context.Context,
-	sink chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
-) (event.Subscription, error) {
-	return s.metaschedulerWS.WatchClaimNextCancellingJobEvent(&bind.WatchOpts{
-		Context: ctx,
-	}, sink)
-}
+	query := ethereum.FilterQuery{
+		Addresses: []common.Address{s.metaschedulerAddress},
+		Topics: [][]common.Hash{
+			{
+				claimNextTopUpJobEvent.ID,
+				claimNextCancellingJobEvent.ID,
+				claimJobEvent.ID,
+			},
+		},
+	}
 
-// WatchClaimNextTopUpJobEvent observes the incoming ClaimNextTopUpJobEvent.
-func (s *DataSource) WatchClaimNextTopUpJobEvent(
-	ctx context.Context,
-	sink chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent,
-) (event.Subscription, error) {
-	return s.metaschedulerWS.WatchClaimNextTopUpJobEvent(&bind.WatchOpts{
-		Context: ctx,
-	}, sink)
+	sub, err := s.contractBackendWS.SubscribeFilterLogs(ctx, query, logs)
+	if err != nil {
+		logger.I.Error("failed to subscribe", zap.Error(err))
+		return nil, WrapError(err)
+	}
+
+	go func() {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log, ok := <-logs:
+				if !ok {
+					return
+				}
+				switch log.Topics[0].Hex() {
+				case claimNextTopUpJobEvent.ID.Hex():
+					event, err := s.metaschedulerRPC.ParseClaimNextTopUpJobEvent(log)
+					if err != nil {
+						logger.I.Panic("failed to parse event", zap.Error(err))
+					}
+
+					select {
+					case claimNextTopUpJobEvents <- event:
+					case err := <-sub.Err():
+						logger.I.Error("subscription thrown an error", zap.Error(err))
+						return
+					}
+
+				case claimNextCancellingJobEvent.ID.Hex():
+					event, err := s.metaschedulerRPC.ParseClaimNextCancellingJobEvent(log)
+					if err != nil {
+						logger.I.Panic("failed to parse event", zap.Error(err))
+					}
+
+					select {
+					case claimNextCancellingJobEvents <- event:
+					case err := <-sub.Err():
+						logger.I.Error("subscription thrown an error", zap.Error(err))
+						return
+					}
+
+				case claimJobEvent.ID.Hex():
+					event, err := s.metaschedulerRPC.ParseClaimJobEvent(log)
+					if err != nil {
+						logger.I.Panic("failed to parse event", zap.Error(err))
+					}
+
+					select {
+					case claimJobEvents <- event:
+					case err := <-sub.Err():
+						logger.I.Error("subscription thrown an error", zap.Error(err))
+						return
+					}
+				}
+
+			case err := <-sub.Err():
+				logger.I.Error("subscription thrown an error", zap.Error(err))
+				return
+			}
+		}
+	}()
+
+	return sub, nil
 }
 
 // GetJobStatus fetches the job status.
@@ -249,19 +346,19 @@ func (s *DataSource) GetJobStatus(ctx context.Context, jobID [32]byte) (JobStatu
 		Context: ctx,
 	}, jobID)
 	if err != nil {
-		return 0, err
+		return 0, WrapError(err)
 	}
 	return JobStatus(status.Status), nil
 }
 
 // ClaimCancelling a cancelling call.
 func (s *DataSource) ClaimCancelling(ctx context.Context) error {
-	ok, err := s.metaschedulerRPC.HasCancellingJob(&bind.CallOpts{
+	ok, err := s.jobQueues.HasCancellingJob(&bind.CallOpts{
 		Context: ctx,
 	}, s.fromAddress)
 	if err != nil {
 		logger.I.Error("HasCancellingJob failed", zap.Error(err))
-		return err
+		return WrapError(err)
 	}
 	if !ok {
 		logger.I.Debug("No cancelling call")
@@ -275,7 +372,7 @@ func (s *DataSource) ClaimCancelling(ctx context.Context) error {
 
 	tx, err := s.metaschedulerRPC.ClaimNextCancellingJob(auth)
 	if err != nil {
-		return err
+		return WrapError(err)
 	}
 	logger.I.Debug("called ClaimNextCancellingJob", zap.String("tx", tx.Hash().String()))
 
@@ -284,12 +381,12 @@ func (s *DataSource) ClaimCancelling(ctx context.Context) error {
 
 // ClaimTopUp a top up call.
 func (s *DataSource) ClaimTopUp(ctx context.Context) error {
-	ok, err := s.metaschedulerRPC.HasTopUpJob(&bind.CallOpts{
+	ok, err := s.jobQueues.HasTopUpJob(&bind.CallOpts{
 		Context: ctx,
 	}, s.fromAddress)
 	if err != nil {
 		logger.I.Error("HasTopUpJob failed", zap.Error(err))
-		return err
+		return WrapError(err)
 	}
 	if !ok {
 		logger.I.Debug("No top up call")
@@ -303,7 +400,7 @@ func (s *DataSource) ClaimTopUp(ctx context.Context) error {
 
 	tx, err := s.metaschedulerRPC.ClaimNextTopUpJob(auth)
 	if err != nil {
-		return err
+		return WrapError(err)
 	}
 	logger.I.Debug("called ClaimNextTopUpJob", zap.String("tx", tx.Hash().String()))
 

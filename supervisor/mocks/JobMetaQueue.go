@@ -131,77 +131,25 @@ func (_m *JobMetaQueue) SetJobStatus(ctx context.Context, jobID [32]byte, status
 	return r0
 }
 
-// WatchClaimNextCancellingJobEvent provides a mock function with given fields: ctx, sink
-func (_m *JobMetaQueue) WatchClaimNextCancellingJobEvent(ctx context.Context, sink chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) (event.Subscription, error) {
-	ret := _m.Called(ctx, sink)
+// WatchEvents provides a mock function with given fields: ctx, claimNextTopUpJobEvents, claimNextCancellingJobEvents, claimJobEvents
+func (_m *JobMetaQueue) WatchEvents(ctx context.Context, claimNextTopUpJobEvents chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent, claimNextCancellingJobEvents chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent, claimJobEvents chan<- *metascheduler.MetaSchedulerClaimJobEvent) (event.Subscription, error) {
+	ret := _m.Called(ctx, claimNextTopUpJobEvents, claimNextCancellingJobEvents, claimJobEvents)
 
 	var r0 event.Subscription
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) (event.Subscription, error)); ok {
-		return rf(ctx, sink)
+	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent, chan<- *metascheduler.MetaSchedulerClaimJobEvent) (event.Subscription, error)); ok {
+		return rf(ctx, claimNextTopUpJobEvents, claimNextCancellingJobEvents, claimJobEvents)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) event.Subscription); ok {
-		r0 = rf(ctx, sink)
+	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent, chan<- *metascheduler.MetaSchedulerClaimJobEvent) event.Subscription); ok {
+		r0 = rf(ctx, claimNextTopUpJobEvents, claimNextCancellingJobEvents, claimJobEvents)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(event.Subscription)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent) error); ok {
-		r1 = rf(ctx, sink)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// WatchClaimNextJobEvent provides a mock function with given fields: ctx, sink
-func (_m *JobMetaQueue) WatchClaimNextJobEvent(ctx context.Context, sink chan<- *metascheduler.MetaSchedulerClaimJobEvent) (event.Subscription, error) {
-	ret := _m.Called(ctx, sink)
-
-	var r0 event.Subscription
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimJobEvent) (event.Subscription, error)); ok {
-		return rf(ctx, sink)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimJobEvent) event.Subscription); ok {
-		r0 = rf(ctx, sink)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(event.Subscription)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimJobEvent) error); ok {
-		r1 = rf(ctx, sink)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// WatchClaimNextTopUpJobEvent provides a mock function with given fields: ctx, sink
-func (_m *JobMetaQueue) WatchClaimNextTopUpJobEvent(ctx context.Context, sink chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent) (event.Subscription, error) {
-	ret := _m.Called(ctx, sink)
-
-	var r0 event.Subscription
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent) (event.Subscription, error)); ok {
-		return rf(ctx, sink)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent) event.Subscription); ok {
-		r0 = rf(ctx, sink)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(event.Subscription)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent) error); ok {
-		r1 = rf(ctx, sink)
+	if rf, ok := ret.Get(1).(func(context.Context, chan<- *metascheduler.MetaSchedulerClaimNextTopUpJobEvent, chan<- *metascheduler.MetaSchedulerClaimNextCancellingJobEvent, chan<- *metascheduler.MetaSchedulerClaimJobEvent) error); ok {
+		r1 = rf(ctx, claimNextTopUpJobEvents, claimNextCancellingJobEvents, claimJobEvents)
 	} else {
 		r1 = ret.Error(1)
 	}
