@@ -263,7 +263,6 @@ func (suite *DataSourceTestSuite) TestWatchEvents() {
 	errChan := make(chan error)
 	var rErrChan <-chan error = errChan
 	sub.On("Err").Return(rErrChan)
-	sub.On("Unsubscribe")
 	suite.contractBackend.On(
 		"SubscribeFilterLogs",
 		mock.Anything,
