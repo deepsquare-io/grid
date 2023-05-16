@@ -262,8 +262,6 @@ func (s *DataSource) WatchEvents(
 	claimJobEvents chan<- *metascheduler.MetaSchedulerClaimJobEvent,
 ) (event.Subscription, error) {
 	logs := make(chan types.Log)
-	defer close(logs)
-
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{s.metaschedulerAddress},
 		Topics: [][]common.Hash{

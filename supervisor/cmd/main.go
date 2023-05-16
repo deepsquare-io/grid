@@ -57,6 +57,8 @@ var (
 	cpus  uint64
 	gpus  uint64
 	mem   uint64
+
+	trace bool
 )
 
 var flags = []cli.Flag{
@@ -235,6 +237,12 @@ var flags = []cli.Flag{
 		Required:    true,
 		EnvVars:     []string{"TOTAL_MEMORY"},
 	},
+	&cli.BoolFlag{
+		Name:        "trace",
+		Usage:       "Trace logging",
+		Destination: &trace,
+		EnvVars:     []string{"TRACE"},
+	},
 }
 
 // Container stores the instances for dependency injection.
@@ -254,11 +262,18 @@ func Init(ctx context.Context) *Container {
 		sbatchCAFile,
 		sbatchServerHostOverride,
 	)
-	client := &http.Client{
-		Transport: &middleware.LoggingTransport{
-			Transport: http.DefaultTransport,
-		},
+
+	var client *http.Client
+	if trace {
+		client = &http.Client{
+			Transport: &middleware.LoggingTransport{
+				Transport: http.DefaultTransport,
+			},
+		}
+	} else {
+		client = http.DefaultClient
 	}
+
 	rpcClient, err := rpc.DialOptions(ctx, ethEndpointRPC, rpc.WithHTTPClient(client))
 	if err != nil {
 		logger.I.Fatal("ethclientRPC dial failed", zap.Error(err))

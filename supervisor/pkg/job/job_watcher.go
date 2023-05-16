@@ -83,10 +83,9 @@ func (w *Watcher) Watch(parent context.Context) error {
 				event.ProviderAddr.Hex(),
 				w.metaQueue.GetProviderAddress().Hex(),
 			) {
-				// Ignore event
-				logger.I.Debug("ignore event", zap.Any("event", event))
 				continue
 			}
+			logger.I.Debug("Received claimNextJobEvent...", zap.Any("event", event))
 			go w.handleClaimNextJob(parent, event)
 
 		// ClaimNextCancellingJobEvents handling
@@ -95,10 +94,9 @@ func (w *Watcher) Watch(parent context.Context) error {
 				event.ProviderAddr.Hex(),
 				w.metaQueue.GetProviderAddress().Hex(),
 			) {
-				// Ignore event
-				logger.I.Debug("ignore event", zap.Any("event", event))
 				continue
 			}
+			logger.I.Debug("Received claimNextCancellingJobEvent...", zap.Any("event", event))
 			go w.handleClaimNextCancellingJobEvent(parent, event)
 
 		// ClaimNextTopUpJobEvents handling
@@ -107,10 +105,9 @@ func (w *Watcher) Watch(parent context.Context) error {
 				event.ProviderAddr.Hex(),
 				w.metaQueue.GetProviderAddress().Hex(),
 			) {
-				// Ignore event
-				logger.I.Debug("ignore event", zap.Any("event", event))
 				continue
 			}
+			logger.I.Debug("Received claimNextTopUpJobEvent...", zap.Any("event", event))
 			go w.handleClaimNextTopUpEvent(parent, event)
 
 		// Claim indefinitely
