@@ -32,8 +32,8 @@
   "devDependencies": {
     "@docusaurus/module-type-aliases": "2.4.1",
     "@docusaurus/types": "2.4.1",
-    "@graphql-tools/graphql-file-loader": "^7.5.16",
-    "@graphql-tools/load": "^7.8.12",
+    "@graphql-tools/graphql-file-loader": "^8.0.0",
+    "@graphql-tools/load": "^8.0.0",
     "@tsconfig/docusaurus": "1.0.7",
     "@types/react": "18.0.37",
     "graphql": "^16.6.0",
