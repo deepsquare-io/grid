@@ -1747,8 +1747,6 @@ Go name: "TargetPort".
 }
 ```
 
-Will results in 3 steps.
-
 </details>
 
 ### `.steps[].for` _StepFor_

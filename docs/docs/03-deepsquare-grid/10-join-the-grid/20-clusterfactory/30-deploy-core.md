@@ -239,6 +239,24 @@ For the sake of simplicity, we will use the **ARP (L2) method**. Do note that **
    spec:
      addresses:
        - 192.168.0.100/32
+   ---
+   apiVersion: metallb.io/v1beta1
+   kind: IPAddressPool
+   metadata:
+     name: slurm-controller-example-1-pool
+     namespace: metallb
+   spec:
+     addresses:
+       - 192.168.0.4/32
+   ---
+   apiVersion: metallb.io/v1beta1
+   kind: IPAddressPool
+   metadata:
+     name: slurm-login-example-1-pool
+     namespace: metallb
+   spec:
+     addresses:
+       - 192.168.0.5/32
    ```
 
 2. Configure MetalLB to use ARP (L2) to advertize the IP:
@@ -252,6 +270,8 @@ For the sake of simplicity, we will use the **ARP (L2) method**. Do note that **
    spec:
      ipAddressPools:
        - main-pool
+       - slurm-controller-example-1-pool
+       - slurm-login-example-1-pool
    ```
 
 Notice that `addresses` is inside our `192.168.0.0/24` subnet. This is so that we don't need to create a route from the router. If you want to use an IP outside this range, use BGP or L2 with a static route.
@@ -394,9 +414,9 @@ data:
     192.168.0.100 supervisor.example.com
 
     192.168.0.2 mn1.example.com
-    # The slurm controller is using hostPort
-    192.168.0.2 slurm-cluster-satoshi-1-controller-0.example.com
     192.168.0.3 grendel.example.com
+    192.168.0.4 slurm-cluster-satoshi-1-controller-0.example.com
+    192.168.0.5 slurm-cluster-satoshi-1-login.example.com
 
     192.168.0.51 cn1.example.com
 ```
