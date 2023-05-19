@@ -280,6 +280,7 @@ func (s *DataSource) WatchEvents(
 	}
 
 	go func() {
+		defer close(logs)
 		defer sub.Unsubscribe()
 		for {
 			select {
