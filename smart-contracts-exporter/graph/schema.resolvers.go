@@ -19,7 +19,7 @@ import (
 
 // Max is the resolver for the max field.
 func (r *jobDurationMetricsResolver) Max(ctx context.Context, obj *model.JobDurationMetrics, days int) (float64, error) {
-	query := fmt.Sprintf("scalar(max(max by (wallet_address) (rate(metascheduler_jobs_duration_total_minutes{metascheduler_address=\"%s\"}[%dd]) * 86400 * %d)))", r.metaschedulerAddress, days, days)
+	query := fmt.Sprintf("scalar(max(max by (wallet_address) (rate(metascheduler_jobs_duration_total_minutes{metascheduler_address=\"%s\"}[%dd]) * 86400 * %d)) or vector(0))", r.metaschedulerAddress, days, days)
 	val, warnings, err := r.PromAPI.Query(ctx, query, time.Now(), v1.WithTimeout(10*time.Second))
 	if len(warnings) > 0 {
 		logger.I.Warn("Metrics thrown warnings", zap.Any("warnings", warnings))
@@ -39,7 +39,7 @@ func (r *jobDurationMetricsResolver) Max(ctx context.Context, obj *model.JobDura
 
 // Average is the resolver for the average field.
 func (r *jobDurationMetricsResolver) Average(ctx context.Context, obj *model.JobDurationMetrics, days int) (float64, error) {
-	query := fmt.Sprintf("scalar(avg(max by (wallet_address) (rate(metascheduler_jobs_duration_total_minutes{metascheduler_address=\"%s\"}[%dd]) * 86400 * %d)) > 0)", r.metaschedulerAddress, days, days)
+	query := fmt.Sprintf("scalar(avg(max by (wallet_address) (rate(metascheduler_jobs_duration_total_minutes{metascheduler_address=\"%s\"}[%dd]) * 86400 * %d)) > 0 or vector(0))", r.metaschedulerAddress, days, days)
 	val, warnings, err := r.PromAPI.Query(ctx, query, time.Now(), v1.WithTimeout(10*time.Second))
 	if len(warnings) > 0 {
 		logger.I.Warn("Metrics thrown warnings", zap.Any("warnings", warnings))
@@ -59,7 +59,7 @@ func (r *jobDurationMetricsResolver) Average(ctx context.Context, obj *model.Job
 
 // Total is the resolver for the total field.
 func (r *jobMetricsResolver) Total(ctx context.Context, obj *model.JobMetrics) (float64, error) {
-	query := fmt.Sprintf("scalar(sum(avg by (wallet_address) (metascheduler_jobs_total{metascheduler_address=\"%s\"})))", r.metaschedulerAddress)
+	query := fmt.Sprintf("scalar(sum(avg by (wallet_address) (metascheduler_jobs_total{metascheduler_address=\"%s\"})) or vector(0))", r.metaschedulerAddress)
 	val, warnings, err := r.PromAPI.Query(ctx, query, time.Now(), v1.WithTimeout(10*time.Second))
 	if len(warnings) > 0 {
 		logger.I.Warn("Metrics thrown warnings", zap.Any("warnings", warnings))
@@ -79,7 +79,7 @@ func (r *jobMetricsResolver) Total(ctx context.Context, obj *model.JobMetrics) (
 
 // RateRange is the resolver for the rateRange field.
 func (r *jobMetricsResolver) RateRange(ctx context.Context, obj *model.JobMetrics, days int, startTime time.Time, endTime time.Time) ([]*model.TimestampValue, error) {
-	query := fmt.Sprintf("sum(max by (wallet_address) (rate(metascheduler_jobs_total{metascheduler_address=\"%s\"}[%dd]) * 86400 * %d))", r.metaschedulerAddress, days, days)
+	query := fmt.Sprintf("sum(max by (wallet_address) (rate(metascheduler_jobs_total{metascheduler_address=\"%s\"}[%dd]) * 86400 * %d) or vector(0))", r.metaschedulerAddress, days, days)
 	val, warnings, err := r.PromAPI.QueryRange(ctx, query, v1.Range{
 		Start: startTime,
 		End:   endTime,
@@ -113,7 +113,7 @@ func (r *jobMetricsResolver) RateRange(ctx context.Context, obj *model.JobMetric
 
 // CreditsMetrics is the resolver for the creditsMetrics field.
 func (r *queryResolver) CreditsMetrics(ctx context.Context) (*model.CreditsMetrics, error) {
-	query := fmt.Sprintf("scalar(sum(avg by (wallet_address) (metascheduler_credits_total{metascheduler_address=\"%s\"})))", r.metaschedulerAddress)
+	query := fmt.Sprintf("scalar(sum(avg by (wallet_address) (metascheduler_credits_total{metascheduler_address=\"%s\"})) or vector(0))", r.metaschedulerAddress)
 	val, warnings, err := r.PromAPI.Query(ctx, query, time.Now(), v1.WithTimeout(10*time.Second))
 	if len(warnings) > 0 {
 		logger.I.Warn("CreditsSpent thrown warnings", zap.Any("warnings", warnings))
@@ -133,7 +133,7 @@ func (r *queryResolver) CreditsMetrics(ctx context.Context) (*model.CreditsMetri
 
 // GpuTimeMetrics is the resolver for the gpuTimeMetrics field.
 func (r *queryResolver) GpuTimeMetrics(ctx context.Context) (*model.GpuTimeMetrics, error) {
-	query := fmt.Sprintf("scalar(sum(avg by (wallet_address) (metascheduler_gpu_total_minutes{metascheduler_address=\"%s\"})))", r.metaschedulerAddress)
+	query := fmt.Sprintf("scalar(sum(avg by (wallet_address) (metascheduler_gpu_total_minutes{metascheduler_address=\"%s\"})) or vector(0))", r.metaschedulerAddress)
 	val, warnings, err := r.PromAPI.Query(ctx, query, time.Now(), v1.WithTimeout(10*time.Second))
 	if len(warnings) > 0 {
 		logger.I.Warn("GpuTime thrown warnings", zap.Any("warnings", warnings))
@@ -153,7 +153,7 @@ func (r *queryResolver) GpuTimeMetrics(ctx context.Context) (*model.GpuTimeMetri
 
 // CPUTimeMetrics is the resolver for the cpuTimeMetrics field.
 func (r *queryResolver) CPUTimeMetrics(ctx context.Context) (*model.CPUTimeMetrics, error) {
-	query := fmt.Sprintf("scalar(sum(avg by (wallet_address) (metascheduler_cpu_total_minutes{metascheduler_address=\"%s\"})))", r.metaschedulerAddress)
+	query := fmt.Sprintf("scalar(sum(avg by (wallet_address) (metascheduler_cpu_total_minutes{metascheduler_address=\"%s\"})) or vector(0))", r.metaschedulerAddress)
 	val, warnings, err := r.PromAPI.Query(ctx, query, time.Now(), v1.WithTimeout(10*time.Second))
 	if len(warnings) > 0 {
 		logger.I.Warn("CPUTime thrown warnings", zap.Any("warnings", warnings))
@@ -180,7 +180,7 @@ func (r *queryResolver) JobMetrics(ctx context.Context) (*model.JobMetrics, erro
 
 // WalletMetrics is the resolver for the walletMetrics field.
 func (r *queryResolver) WalletMetrics(ctx context.Context) (*model.WalletMetrics, error) {
-	query := fmt.Sprintf("scalar(count(avg by (wallet_address) (metascheduler_jobs_total{metascheduler_address=\"%s\"})))", r.metaschedulerAddress)
+	query := fmt.Sprintf("scalar(count(avg by (wallet_address) (metascheduler_jobs_total{metascheduler_address=\"%s\"})) or vector(0))", r.metaschedulerAddress)
 	val, warnings, err := r.PromAPI.Query(ctx, query, time.Now(), v1.WithTimeout(10*time.Second))
 	if len(warnings) > 0 {
 		logger.I.Warn("WalletMetrics thrown warnings", zap.Any("warnings", warnings))
