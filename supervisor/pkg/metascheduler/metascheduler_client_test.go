@@ -1,6 +1,6 @@
 // go:build unit
 
-package eth_test
+package metascheduler_test
 
 import (
 	"bytes"
@@ -10,26 +10,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"go.uber.org/zap"
-
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
 )
 
-type DataSourceTestSuite struct {
+type ClientTestSuite struct {
 	suite.Suite
-	msRPC           *metascheduler.MetaScheduler
-	msWS            *metascheduler.MetaScheduler
 	deployBackend   *mocks.DeployBackend
 	contractBackend *mocks.ContractBackend
-	impl            *eth.DataSource
+	impl            *metascheduler.Client
 }
 
 var (
@@ -44,11 +41,11 @@ var (
 	providerJobQueuesAddress = common.HexToAddress("0x2")
 )
 
-func (suite *DataSourceTestSuite) mockProviderJobQueue() {
+func (suite *ClientTestSuite) mockProviderJobQueue() {
 	// Pack input
-	input, err := eth.MetaschedulerABI.Pack("providerJobQueues")
+	input, err := metascheduler.MetaschedulerABI.Pack("providerJobQueues")
 	suite.Require().NoError(err)
-	output, err := eth.MetaschedulerABI.Methods["providerJobQueues"].Outputs.Pack(
+	output, err := metascheduler.MetaschedulerABI.Methods["providerJobQueues"].Outputs.Pack(
 		providerJobQueuesAddress,
 	)
 	suite.Require().NoError(err)
@@ -60,13 +57,13 @@ func (suite *DataSourceTestSuite) mockProviderJobQueue() {
 	}, mock.Anything).Return(output, nil)
 }
 
-func (suite *DataSourceTestSuite) mockProviderJobQueuesContractCall(
+func (suite *ClientTestSuite) mockProviderJobQueuesContractCall(
 	name string,
 	inputs []interface{},
 	outputs []interface{},
 ) {
 	// Pack input
-	abi, err := metascheduler.IProviderJobQueuesMetaData.GetAbi()
+	abi, err := metaschedulerabi.IProviderJobQueuesMetaData.GetAbi()
 	suite.Require().NoError(err)
 	input, err := abi.Pack(name, inputs...)
 	suite.Require().NoError(err)
@@ -80,15 +77,15 @@ func (suite *DataSourceTestSuite) mockProviderJobQueuesContractCall(
 	}, mock.Anything).Return(output, nil)
 }
 
-func (suite *DataSourceTestSuite) mockContractCall(
+func (suite *ClientTestSuite) mockContractCall(
 	name string,
 	inputs []interface{},
 	outputs []interface{},
 ) {
 	// Pack input
-	input, err := eth.MetaschedulerABI.Pack(name, inputs...)
+	input, err := metascheduler.MetaschedulerABI.Pack(name, inputs...)
 	suite.Require().NoError(err)
-	output, err := eth.MetaschedulerABI.Methods[name].Outputs.Pack(outputs...)
+	output, err := metascheduler.MetaschedulerABI.Methods[name].Outputs.Pack(outputs...)
 	suite.Require().NoError(err)
 
 	// Mock
@@ -98,7 +95,7 @@ func (suite *DataSourceTestSuite) mockContractCall(
 	}, mock.Anything).Return(output, nil)
 }
 
-func (suite *DataSourceTestSuite) mockContractTransaction(name string, args ...interface{}) {
+func (suite *ClientTestSuite) mockContractTransaction(name string, args ...interface{}) {
 	// Mock code presence
 	suite.contractBackend.On(
 		"PendingCodeAt",
@@ -110,7 +107,7 @@ func (suite *DataSourceTestSuite) mockContractTransaction(name string, args ...i
 	)
 
 	// Pack input
-	abi, err := metascheduler.MetaSchedulerMetaData.GetAbi()
+	abi, err := metaschedulerabi.MetaSchedulerMetaData.GetAbi()
 	suite.Require().NoError(err)
 	input, err := abi.Pack(name, args...)
 	suite.Require().NoError(err)
@@ -144,44 +141,36 @@ func init() {
 	privateKey, fromAddress = generateAddress()
 }
 
-func (suite *DataSourceTestSuite) BeforeTest(suiteName, testName string) {
+func (suite *ClientTestSuite) BeforeTest(suiteName, testName string) {
 	suite.contractBackend = mocks.NewContractBackend(suite.T())
 
 	// Assert calling providerJobQueues
 	suite.mockProviderJobQueue()
 
-	msRPC, err := metascheduler.NewMetaScheduler(metaschedulerAddress, suite.contractBackend)
-	suite.Require().NoError(err)
-	suite.msRPC = msRPC
-	msWS, err := metascheduler.NewMetaScheduler(metaschedulerAddress, suite.contractBackend)
-	suite.Require().NoError(err)
-	suite.msWS = msWS
 	suite.deployBackend = mocks.NewDeployBackend(suite.T())
-	suite.impl = eth.New(
+	suite.impl = metascheduler.NewClient(
 		chainID,
 		metaschedulerAddress,
 		suite.deployBackend,
 		suite.contractBackend,
 		suite.contractBackend,
-		suite.msRPC,
-		suite.msWS,
 		privateKey,
 	)
 }
 
-func (suite *DataSourceTestSuite) assertMocksExpectations() {
+func (suite *ClientTestSuite) assertMocksExpectations() {
 	suite.contractBackend.AssertExpectations(suite.T())
 	suite.deployBackend.AssertExpectations(suite.T())
 }
 
-func (suite *DataSourceTestSuite) mustAuthenticate() {
+func (suite *ClientTestSuite) mustAuthenticate() {
 	// Must fetch nonce
 	suite.contractBackend.On("PendingNonceAt", mock.Anything, fromAddress).Return(nonce, nil)
 	// Must fetch gas price
 	suite.contractBackend.On("SuggestGasPrice", mock.Anything).Return(gasPrice, nil)
 }
 
-func (suite *DataSourceTestSuite) TestClaim() {
+func (suite *ClientTestSuite) TestClaim() {
 	// Arrange
 	suite.mustAuthenticate()
 	suite.mockProviderJobQueuesContractCall(
@@ -199,7 +188,7 @@ func (suite *DataSourceTestSuite) TestClaim() {
 	suite.assertMocksExpectations()
 }
 
-func (suite *DataSourceTestSuite) TestClaimNoJob() {
+func (suite *ClientTestSuite) TestClaimNoJob() {
 	// Arrange
 	// Must call ClaimNextJob
 	suite.mockProviderJobQueuesContractCall(
@@ -216,28 +205,33 @@ func (suite *DataSourceTestSuite) TestClaimNoJob() {
 	suite.assertMocksExpectations()
 }
 
-func (suite *DataSourceTestSuite) TestSetJobStatus() {
+func (suite *ClientTestSuite) TestSetJobStatus() {
 	// Arrange
 	suite.mustAuthenticate()
 	// Must call StartJob
 	suite.mockContractTransaction(
 		"providerSetJobStatus",
 		jobID,
-		uint8(eth.JobStatusFailed),
+		uint8(metascheduler.JobStatusFailed),
 		jobDuration,
 	)
 	// Must wait
 	suite.deployBackend.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, nil)
 
 	// Act
-	err := suite.impl.SetJobStatus(context.Background(), jobID, eth.JobStatusFailed, jobDuration)
+	err := suite.impl.SetJobStatus(
+		context.Background(),
+		jobID,
+		metascheduler.JobStatusFailed,
+		jobDuration,
+	)
 
 	// Assert
 	suite.NoError(err)
 	suite.assertMocksExpectations()
 }
 
-func (suite *DataSourceTestSuite) TestRefuseJob() {
+func (suite *ClientTestSuite) TestRefuseJob() {
 	// Arrange
 	suite.mustAuthenticate()
 	// Must call RefuseJob
@@ -251,14 +245,17 @@ func (suite *DataSourceTestSuite) TestRefuseJob() {
 	suite.assertMocksExpectations()
 }
 
-func (suite *DataSourceTestSuite) TestWatchEvents() {
+func (suite *ClientTestSuite) TestWatchEvents() {
 	// Arrange
-	claimNextJobEvents := make(chan *metascheduler.MetaSchedulerClaimJobEvent, 100)
+	claimNextJobEvents := make(chan *metaschedulerabi.MetaSchedulerClaimJobEvent, 100)
 	claimNextCancellingJobEvents := make(
-		chan *metascheduler.MetaSchedulerClaimNextCancellingJobEvent,
+		chan *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent,
 		100,
 	)
-	claimNextTopUpJobEvents := make(chan *metascheduler.MetaSchedulerClaimNextTopUpJobEvent, 100)
+	claimNextTopUpJobEvents := make(
+		chan *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent,
+		100,
+	)
 	sub := mocks.NewSubscription(suite.T())
 	errChan := make(chan error)
 	var rErrChan <-chan error = errChan
@@ -289,7 +286,7 @@ func (suite *DataSourceTestSuite) TestWatchEvents() {
 	suite.assertMocksExpectations()
 }
 
-func (suite *DataSourceTestSuite) TestClaimCancelling() {
+func (suite *ClientTestSuite) TestClaimCancelling() {
 	// Arrange
 	suite.mustAuthenticate()
 	suite.mockProviderJobQueuesContractCall(
@@ -307,7 +304,7 @@ func (suite *DataSourceTestSuite) TestClaimCancelling() {
 	suite.assertMocksExpectations()
 }
 
-func (suite *DataSourceTestSuite) TestClaimTopUp() {
+func (suite *ClientTestSuite) TestClaimTopUp() {
 	// Arrange
 	suite.mustAuthenticate()
 	suite.mockProviderJobQueuesContractCall(
@@ -325,22 +322,22 @@ func (suite *DataSourceTestSuite) TestClaimTopUp() {
 	suite.assertMocksExpectations()
 }
 
-func (suite *DataSourceTestSuite) TestGetJobStatus() {
+func (suite *ClientTestSuite) TestGetJobStatus() {
 	// Arrange
-	fixtureStatus := eth.JobStatusRunning
+	fixtureStatus := metascheduler.JobStatusRunning
 	suite.mockContractCall("jobs", []interface{}{jobID}, []interface{}{
 		jobID,
 		uint8(fixtureStatus),
 		common.HexToAddress("0xdeadface"),
 		common.HexToAddress("0xdeadface"),
-		metascheduler.JobDefinition{},
+		metaschedulerabi.JobDefinition{},
 		false,
-		metascheduler.JobCost{
+		metaschedulerabi.JobCost{
 			MaxCost:      new(big.Int),
 			FinalCost:    new(big.Int),
 			PendingTopUp: new(big.Int),
 		},
-		metascheduler.JobTime{
+		metaschedulerabi.JobTime{
 			Start:                  new(big.Int),
 			End:                    new(big.Int),
 			CancelRequestTimestamp: new(big.Int),
@@ -356,7 +353,7 @@ func (suite *DataSourceTestSuite) TestGetJobStatus() {
 	suite.Equal(fixtureStatus, status)
 }
 
-func (suite *DataSourceTestSuite) TestClaimCancellingNoCancelling() {
+func (suite *ClientTestSuite) TestClaimCancellingNoCancelling() {
 	// Arrange
 	suite.mockProviderJobQueuesContractCall(
 		"hasCancellingJob",
@@ -372,6 +369,6 @@ func (suite *DataSourceTestSuite) TestClaimCancellingNoCancelling() {
 	suite.assertMocksExpectations()
 }
 
-func TestDataSourceTestSuite(t *testing.T) {
-	suite.Run(t, &DataSourceTestSuite{})
+func TestClientTestSuite(t *testing.T) {
+	suite.Run(t, &ClientTestSuite{})
 }

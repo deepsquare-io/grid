@@ -10,8 +10,7 @@ import (
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/scheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -46,7 +45,7 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 func (suite *ServiceTestSuite) TestCancel() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
-	req := &job.CancelRequest{
+	req := &scheduler.CancelRequest{
 		Name: name,
 		User: user,
 	}
@@ -73,10 +72,10 @@ func (suite *ServiceTestSuite) TestSubmit() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	expectedJobID := "123"
-	req := &job.SubmitRequest{
+	req := &scheduler.SubmitRequest{
 		Name: name,
 		User: user,
-		Definition: &job.Definition{
+		JobDefinition: &scheduler.JobDefinition{
 			TimeLimit:    uint64(5),
 			NTasks:       1,
 			GPUsPerTask:  0,
@@ -118,7 +117,7 @@ func (suite *ServiceTestSuite) TestTopUp() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	jobID := "123"
-	req := &job.TopUpRequest{
+	req := &scheduler.TopUpRequest{
 		Name:           name,
 		AdditionalTime: 30,
 	}
@@ -173,7 +172,7 @@ func (suite *ServiceTestSuite) TestFindRunningJobByName() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	jobID := 123
-	req := &job.FindRunningJobByNameRequest{
+	req := &scheduler.FindRunningJobByNameRequest{
 		Name: name,
 		User: user,
 	}

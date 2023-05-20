@@ -10,7 +10,7 @@ import (
 	"encoding/pem"
 	"testing"
 
-	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
+	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/sshapi"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/crypto/ssh"

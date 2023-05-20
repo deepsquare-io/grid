@@ -1,4 +1,4 @@
-package eth
+package metascheduler
 
 type JobStatus uint8
 

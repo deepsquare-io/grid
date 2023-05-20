@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	healthv1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/grpc/health/v1"
+	healthv1 "github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1"
 	mock "github.com/stretchr/testify/mock"
 )
 

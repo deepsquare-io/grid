@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	healthv1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/grpc/health/v1"
+	healthv1 "github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/health"
 	"github.com/stretchr/testify/mock"

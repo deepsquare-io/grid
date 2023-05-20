@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
+	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
@@ -18,7 +18,7 @@ type JobHandler interface {
 	SetJobStatus(
 		ctx context.Context,
 		jobID [32]byte,
-		jobStatus eth.JobStatus,
+		jobStatus metascheduler.JobStatus,
 		jobDuration uint64,
 	) error
 }
@@ -44,16 +44,16 @@ func New(
 	}
 }
 
-var gRPCToEthJobStatus = map[supervisorv1alpha1.JobStatus]eth.JobStatus{
-	supervisorv1alpha1.JobStatus_JOB_STATUS_PENDING:        eth.JobStatusPending,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_META_SCHEDULED: eth.JobStatusMetaScheduled,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_SCHEDULED:      eth.JobStatusScheduled,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING:        eth.JobStatusRunning,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLING:     eth.JobStatusUnknown,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLED:      eth.JobStatusCancelled,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_FINISHED:       eth.JobStatusFinished,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_FAILED:         eth.JobStatusFailed,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_OUT_OF_CREDITS: eth.JobStatusOutOfCredits,
+var gRPCToEthJobStatus = map[supervisorv1alpha1.JobStatus]metascheduler.JobStatus{
+	supervisorv1alpha1.JobStatus_JOB_STATUS_PENDING:        metascheduler.JobStatusPending,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_META_SCHEDULED: metascheduler.JobStatusMetaScheduled,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_SCHEDULED:      metascheduler.JobStatusScheduled,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING:        metascheduler.JobStatusRunning,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLING:     metascheduler.JobStatusUnknown,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLED:      metascheduler.JobStatusCancelled,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_FINISHED:       metascheduler.JobStatusFinished,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_FAILED:         metascheduler.JobStatusFailed,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_OUT_OF_CREDITS: metascheduler.JobStatusOutOfCredits,
 }
 
 // SetJobStatus to the ethereum network
@@ -76,7 +76,7 @@ func (s *Server) SetJobStatus(
 
 	if status, ok := gRPCToEthJobStatus[req.Status]; ok {
 		// Ignore unknown status transition, this is for backward compatilibility
-		if status == eth.JobStatusUnknown {
+		if status == metascheduler.JobStatusUnknown {
 			logger.I.Warn(
 				"status unknown (if the status is deprecated, ignore this warning)",
 				zap.Error(err),
@@ -99,7 +99,7 @@ func (s *Server) SetJobStatus(
 					req.Duration/60,
 				)
 				if err != nil {
-					if errors.Is(err, &eth.SameStatusError{}) {
+					if errors.Is(err, &metascheduler.SameStatusError{}) {
 						logger.I.Warn(
 							"Cannot change status to itself",
 							zap.Error(err),
@@ -109,7 +109,7 @@ func (s *Server) SetJobStatus(
 						)
 						return nil
 					}
-					if errors.Is(err, &eth.InvalidTransitionFromScheduled{}) {
+					if errors.Is(err, &metascheduler.InvalidTransitionFromScheduled{}) {
 						logger.I.Warn(
 							"Invalid state transition from SCHEDULED.",
 							zap.Error(err),
@@ -120,7 +120,7 @@ func (s *Server) SetJobStatus(
 						if err := s.jobHandler.SetJobStatus(
 							ctx,
 							jobNameFixedLength,
-							eth.JobStatusRunning,
+							metascheduler.JobStatusRunning,
 							req.Duration/60,
 						); err != nil {
 							logger.I.Error(

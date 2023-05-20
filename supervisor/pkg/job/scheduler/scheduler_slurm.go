@@ -6,12 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 )
 
 type Slurm struct {
-	executor                Executor
+	Executor
 	adminUser               string
 	scancel                 string
 	sbatch                  string
@@ -30,7 +29,7 @@ func NewSlurm(
 	supervisorPublicAddress string,
 ) *Slurm {
 	return &Slurm{
-		executor:                executor,
+		Executor:                executor,
 		adminUser:               adminUser,
 		scancel:                 scancel,
 		sbatch:                  sbatch,
@@ -41,14 +40,14 @@ func NewSlurm(
 }
 
 // CancelJob kills a job using scancel command.
-func (s *Slurm) CancelJob(ctx context.Context, req *job.CancelRequest) error {
+func (s *Slurm) CancelJob(ctx context.Context, req *CancelRequest) error {
 	cmd := fmt.Sprintf("%s --name=%s --me", s.scancel, req.Name)
-	_, err := s.executor.ExecAs(ctx, req.User, cmd)
+	_, err := s.ExecAs(ctx, req.User, cmd)
 	return err
 }
 
 // Submit a sbatch definition script to the SLURM controller using the sbatch command.
-func (s *Slurm) Submit(ctx context.Context, req *job.SubmitRequest) (string, error) {
+func (s *Slurm) Submit(ctx context.Context, req *SubmitRequest) (string, error) {
 	eof := utils.GenerateRandomString(10)
 
 	cmd := fmt.Sprintf(`%s \
@@ -79,7 +78,7 @@ true
 		req.Body,
 		eof,
 	)
-	out, err := s.executor.ExecAs(ctx, req.User, cmd)
+	out, err := s.ExecAs(ctx, req.User, cmd)
 	if err != nil {
 		return strings.TrimSpace(strings.TrimRight(string(out), "\n")), err
 	}
@@ -88,9 +87,9 @@ true
 }
 
 // TopUp add additional time to a SLURM job
-func (s *Slurm) TopUp(ctx context.Context, req *job.TopUpRequest) error {
+func (s *Slurm) TopUp(ctx context.Context, req *TopUpRequest) error {
 	// Fetch jobID
-	jobID, err := s.FindRunningJobByName(ctx, &job.FindRunningJobByNameRequest{
+	jobID, err := s.FindRunningJobByName(ctx, &FindRunningJobByNameRequest{
 		Name: req.Name,
 		User: s.adminUser,
 	})
@@ -99,23 +98,23 @@ func (s *Slurm) TopUp(ctx context.Context, req *job.TopUpRequest) error {
 	}
 
 	cmd := fmt.Sprintf("%s update job %d TimeLimit+=%d", s.scontrol, jobID, req.AdditionalTime)
-	_, err = s.executor.ExecAs(ctx, s.adminUser, cmd)
+	_, err = s.ExecAs(ctx, s.adminUser, cmd)
 	return err
 }
 
 // HealthCheck runs squeue to check if the queue is running
 func (s *Slurm) HealthCheck(ctx context.Context) error {
-	_, err := s.executor.ExecAs(ctx, s.adminUser, s.squeue)
+	_, err := s.ExecAs(ctx, s.adminUser, s.squeue)
 	return err
 }
 
 // FindRunningJobByName find a running job using squeue.
 func (s *Slurm) FindRunningJobByName(
 	ctx context.Context,
-	req *job.FindRunningJobByNameRequest,
+	req *FindRunningJobByNameRequest,
 ) (int, error) {
 	cmd := fmt.Sprintf("%s --name %s -O JobId:256 --noheader", s.squeue, req.Name)
-	out, err := s.executor.ExecAs(ctx, req.User, cmd)
+	out, err := s.ExecAs(ctx, req.User, cmd)
 	if err != nil {
 		return 0, err
 	}

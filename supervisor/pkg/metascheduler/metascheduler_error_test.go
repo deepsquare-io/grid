@@ -1,4 +1,4 @@
-package eth_test
+package metascheduler_test
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
+	errorsabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/errors"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
@@ -20,7 +21,7 @@ import (
 type ErrorTestSuite struct {
 	suite.Suite
 	contractAddress common.Address
-	contract        *eth.ErrorContract
+	contract        *errorsabi.ErrorContract
 	backend         *backends.SimulatedBackend
 }
 
@@ -33,7 +34,7 @@ func (suite *ErrorTestSuite) BeforeTest(suiteName, testName string) {
 
 	// Create a simulated Ethereum backend
 	balance := new(big.Int)
-	balance.SetString("10000000000000000000", 10) // 10 eth in wei
+	balance.SetString("10000000000000000000", 10) // 10 metascheduler in wei
 
 	address := auth.From
 	genesisAlloc := map[common.Address]core.GenesisAccount{
@@ -46,7 +47,7 @@ func (suite *ErrorTestSuite) BeforeTest(suiteName, testName string) {
 	suite.backend = backend
 
 	// Deploy contract
-	contractAddress, tx, contract, err := eth.DeployErrorContract(auth, backend)
+	contractAddress, tx, contract, err := errorsabi.DeployErrorContract(auth, backend)
 	suite.Require().NoError(err)
 	backend.Commit()
 
@@ -70,7 +71,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowEmpty(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.DoubleEndedQueueEmpty{}
+				return &metascheduler.DoubleEndedQueueEmpty{}
 			},
 		},
 		{
@@ -79,7 +80,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowOutOfBounds(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.DoubleEndedQueueOutOfBounds{}
+				return &metascheduler.DoubleEndedQueueOutOfBounds{}
 			},
 		},
 		{
@@ -96,7 +97,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InsufficientFunds{
+				return &metascheduler.InsufficientFunds{
 					r[0].(*big.Int),
 					r[1].(*big.Int),
 				}
@@ -108,7 +109,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowNoJob(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.NoJob{}
+				return &metascheduler.NoJob{}
 			},
 		},
 		{
@@ -117,7 +118,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowInvalidJob(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InvalidJob{}
+				return &metascheduler.InvalidJob{}
 			},
 		},
 		{
@@ -126,74 +127,74 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowInvalidJobDefinition(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InvalidJobDefinition{}
+				return &metascheduler.InvalidJobDefinition{}
 			},
 		},
 		{
 			name: "ParseJobHotStatusOnly",
 			arrange: []interface{}{
-				eth.JobStatus(1),
+				metascheduler.JobStatus(1),
 			},
 			act: func(r []interface{}) error {
 				return suite.contract.ThrowJobHotStatusOnly(
 					&bind.CallOpts{},
-					uint8(r[0].(eth.JobStatus)),
+					uint8(r[0].(metascheduler.JobStatus)),
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.JobHotStatusOnly{
-					r[0].(eth.JobStatus),
+				return &metascheduler.JobHotStatusOnly{
+					r[0].(metascheduler.JobStatus),
 				}
 			},
 		},
 		{
 			name: "ParseRunningScheduledStatusOnly",
 			arrange: []interface{}{
-				eth.JobStatus(1),
+				metascheduler.JobStatus(1),
 			},
 			act: func(r []interface{}) error {
 				return suite.contract.ThrowRunningScheduledStatusOnly(
 					&bind.CallOpts{},
-					uint8(r[0].(eth.JobStatus)),
+					uint8(r[0].(metascheduler.JobStatus)),
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.RunningScheduledStatusOnly{
-					r[0].(eth.JobStatus),
+				return &metascheduler.RunningScheduledStatusOnly{
+					r[0].(metascheduler.JobStatus),
 				}
 			},
 		},
 		{
 			name: "ParseRunningColdStatusOnly",
 			arrange: []interface{}{
-				eth.JobStatus(1),
+				metascheduler.JobStatus(1),
 			},
 			act: func(r []interface{}) error {
 				return suite.contract.ThrowMetaScheduledScheduledStatusOnly(
 					&bind.CallOpts{},
-					uint8(r[0].(eth.JobStatus)),
+					uint8(r[0].(metascheduler.JobStatus)),
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.MetaScheduledScheduledStatusOnly{
-					r[0].(eth.JobStatus),
+				return &metascheduler.MetaScheduledScheduledStatusOnly{
+					r[0].(metascheduler.JobStatus),
 				}
 			},
 		},
 		{
 			name: "ParseRunningColdStatusOnly",
 			arrange: []interface{}{
-				eth.JobStatus(1),
+				metascheduler.JobStatus(1),
 			},
 			act: func(r []interface{}) error {
 				return suite.contract.ThrowRunningColdStatusOnly(
 					&bind.CallOpts{},
-					uint8(r[0].(eth.JobStatus)),
+					uint8(r[0].(metascheduler.JobStatus)),
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.RunningColdStatusOnly{
-					r[0].(eth.JobStatus),
+				return &metascheduler.RunningColdStatusOnly{
+					r[0].(metascheduler.JobStatus),
 				}
 			},
 		},
@@ -209,7 +210,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InvalidNNodes{
+				return &metascheduler.InvalidNNodes{
 					r[0].(*big.Int),
 				}
 			},
@@ -226,7 +227,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InvalidNCpu{
+				return &metascheduler.InvalidNCpu{
 					r[0].(*big.Int),
 				}
 			},
@@ -243,7 +244,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InvalidNMem{
+				return &metascheduler.InvalidNMem{
 					r[0].(*big.Int),
 				}
 			},
@@ -262,7 +263,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.CustomerOnly{
+				return &metascheduler.CustomerOnly{
 					r[0].(common.Address),
 					r[1].(common.Address),
 				}
@@ -282,7 +283,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.JobProviderOnly{
+				return &metascheduler.JobProviderOnly{
 					r[0].(common.Address),
 					r[1].(common.Address),
 				}
@@ -302,7 +303,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.JobProviderThisOnly{
+				return &metascheduler.JobProviderThisOnly{
 					r[0].(common.Address),
 					r[1].(common.Address),
 				}
@@ -322,7 +323,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.OwnerOnly{
+				return &metascheduler.OwnerOnly{
 					r[0].(common.Address),
 					r[1].(common.Address),
 				}
@@ -337,7 +338,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.CustomerMetaSchedulerProviderOnly{}
+				return &metascheduler.CustomerMetaSchedulerProviderOnly{}
 			},
 		},
 		{
@@ -349,7 +350,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.MetashedulerProviderOnly{}
+				return &metascheduler.MetashedulerProviderOnly{}
 			},
 		},
 		{
@@ -358,7 +359,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowProviderAddrIsZero(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.ProviderAddrIsZero{}
+				return &metascheduler.ProviderAddrIsZero{}
 			},
 		},
 		{
@@ -367,7 +368,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowProviderNotJoined(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.ProviderNotJoined{}
+				return &metascheduler.ProviderNotJoined{}
 			},
 		},
 		{
@@ -376,7 +377,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowNoProvider(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.NoProvider{}
+				return &metascheduler.NoProvider{}
 			},
 		},
 		{
@@ -385,7 +386,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowWaitingApprovalOnly(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.WaitingApprovalOnly{}
+				return &metascheduler.WaitingApprovalOnly{}
 			},
 		},
 		{
@@ -394,7 +395,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowBanned(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.Banned{}
+				return &metascheduler.Banned{}
 			},
 		},
 		{
@@ -411,7 +412,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				)
 			},
 			expected: func(r []interface{}) error {
-				return &eth.RemainingTimeAboveLimit{
+				return &metascheduler.RemainingTimeAboveLimit{
 					r[0].(*big.Int),
 					r[1].(*big.Int),
 				}
@@ -423,7 +424,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowCreditAddrIsZero(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.CreditAddrIsZero{}
+				return &metascheduler.CreditAddrIsZero{}
 			},
 		},
 		{
@@ -432,7 +433,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowNoSpendingAuthority(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.NoSpendingAuthority{}
+				return &metascheduler.NoSpendingAuthority{}
 			},
 		},
 		{
@@ -441,7 +442,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowDivisionByZeroError(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.DivisionByZeroError{}
+				return &metascheduler.DivisionByZeroError{}
 			},
 		},
 		{
@@ -450,7 +451,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowUninitialized(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.Uninitialized{}
+				return &metascheduler.Uninitialized{}
 			},
 		},
 		{
@@ -459,7 +460,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowSameStatusError(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.SameStatusError{}
+				return &metascheduler.SameStatusError{}
 			},
 		},
 		{
@@ -468,7 +469,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowInvalidTransitionFromPending(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InvalidTransitionFromPending{}
+				return &metascheduler.InvalidTransitionFromPending{}
 			},
 		},
 		{
@@ -477,7 +478,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowInvalidTransitionFromMetascheduled(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InvalidTransitionFromMetascheduled{}
+				return &metascheduler.InvalidTransitionFromMetascheduled{}
 			},
 		},
 		{
@@ -486,7 +487,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowInvalidTransitionFromScheduled(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InvalidTransitionFromScheduled{}
+				return &metascheduler.InvalidTransitionFromScheduled{}
 			},
 		},
 		{
@@ -495,7 +496,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 				return suite.contract.ThrowInvalidTransitionFromRunning(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &eth.InvalidTransitionFromRunning{}
+				return &metascheduler.InvalidTransitionFromRunning{}
 			},
 		},
 	}
@@ -515,7 +516,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 
 			// Assert
 			suite.Error(err)
-			err = eth.WrapError(err)
+			err = metascheduler.WrapError(err)
 			out := reflect.New(reflect.TypeOf(test.expected(r)).Elem()).Interface()
 			ok := errors.As(err, &out)
 			suite.NotEmpty(err.Error())

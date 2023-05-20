@@ -1,10 +1,11 @@
-package eth
+package metascheduler
 
 import (
 	"errors"
 	"fmt"
 	"math/big"
 
+	errorsabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/errors"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -573,7 +574,7 @@ func (e *InvalidTransitionFromRunning) Error() string {
 
 func init() {
 	var err error
-	errorsABI, err = ErrorContractMetaData.GetAbi()
+	errorsABI, err = errorsabi.ErrorContractMetaData.GetAbi()
 	if err != nil {
 		logger.I.Panic("failed to read abi", zap.Error(err))
 	}

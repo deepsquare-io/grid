@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	sbatchapiv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/sbatchapi/v1alpha1"
+	sbatchapiv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/sbatchapi/v1alpha1"
 	mock "github.com/stretchr/testify/mock"
 )
 

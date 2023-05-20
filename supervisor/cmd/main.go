@@ -6,14 +6,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/supervisor/gen/go/contracts/metascheduler"
+	cryptotls "crypto/tls"
+	"crypto/x509"
+
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/debug"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/watcher"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/middleware"
 	pkgsbatch "github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
 	"github.com/ethereum/go-ethereum/common"
@@ -23,6 +25,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var (
@@ -38,7 +42,6 @@ var (
 	sbatchTLS                  bool
 	sbatchTLSInsecure          bool
 	sbatchCAFile               string
-	sbatchServerHostOverride   string
 	ethEndpointRPC             string
 	ethEndpointWS              string
 	ethHexPK                   string
@@ -140,13 +143,6 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"SBATCH_CA"},
 	},
 	&cli.StringFlag{
-		Name:        "sbatch.tls.server-host-override",
-		Value:       "sbatch.deepsquare.io",
-		Usage:       "The server name used to verify the hostname returned by the TLS handshake.",
-		Destination: &sbatchServerHostOverride,
-		EnvVars:     []string{"SBATCH_SERVER_HOST_OVERRIDE"},
-	},
-	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
 		Value:       "0x",
 		Usage:       "Metascheduler smart-contract address.",
@@ -154,7 +150,7 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
 	},
 	&cli.StringFlag{
-		Name:        "eth.private-key",
+		Name:        "metascheduler.private-key",
 		Usage:       "An hexadecimal private key for ethereum transactions.",
 		Required:    true,
 		Destination: &ethHexPK,
@@ -247,20 +243,44 @@ var flags = []cli.Flag{
 
 // Container stores the instances for dependency injection.
 type Container struct {
-	server     *server.Server
-	sbatchAPI  *pkgsbatch.API
-	eth        *eth.DataSource
-	slurm      *scheduler.Slurm
-	jobWatcher *job.Watcher
+	server        *server.Server
+	sbatchAPI     pkgsbatch.Client
+	metascheduler *metascheduler.Client
+	slurm         *scheduler.Slurm
+	jobWatcher    *watcher.Watcher
 }
 
 func Init(ctx context.Context) *Container {
-	sbatchAPI := pkgsbatch.NewAPI(
+	var err error
+	var sbatchOpts []grpc.DialOption
+	var tlsConfig = &cryptotls.Config{}
+	if sbatchTLS {
+		if !sbatchTLSInsecure {
+			// Fetch the CA
+			func() {
+				b, err := os.ReadFile(certFile)
+				if err != nil {
+					logger.I.Warn("failed to read TLS CA file", zap.Error(err))
+					return
+				}
+				cp := x509.NewCertPool()
+				if !cp.AppendCertsFromPEM(b) {
+					logger.I.Warn("failed to append certificates", zap.Error(err))
+					return
+				}
+				tlsConfig.RootCAs = cp
+			}()
+		}
+		tlsConfig.InsecureSkipVerify = sbatchTLSInsecure
+		sbatchOpts = append(
+			sbatchOpts,
+			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+		)
+	}
+
+	sbatchClient := pkgsbatch.NewClient(
 		sbatchEndpoint,
-		sbatchTLS,
-		sbatchTLSInsecure,
-		sbatchCAFile,
-		sbatchServerHostOverride,
+		sbatchOpts...,
 	)
 
 	var client *http.Client
@@ -279,25 +299,11 @@ func Init(ctx context.Context) *Container {
 		logger.I.Fatal("ethclientRPC dial failed", zap.Error(err))
 	}
 	ethClientRPC := ethclient.NewClient(rpcClient)
-	msRPC, err := metascheduler.NewMetaScheduler(
-		common.HexToAddress(metaschedulerSmartContract),
-		ethClientRPC,
-	)
-	if err != nil {
-		logger.I.Fatal("metaschedulerRPC dial failed", zap.Error(err))
-	}
 	wsClient, err := rpc.DialOptions(ctx, ethEndpointWS, rpc.WithHTTPClient(client))
 	if err != nil {
 		logger.I.Fatal("ethclientWS dial failed", zap.Error(err))
 	}
 	ethClientWS := ethclient.NewClient(wsClient)
-	msWS, err := metascheduler.NewMetaScheduler(
-		common.HexToAddress(metaschedulerSmartContract),
-		ethClientWS,
-	)
-	if err != nil {
-		logger.I.Fatal("metaschedulerWS dial failed", zap.Error(err))
-	}
 	pk, err := crypto.HexToECDSA(ethHexPK)
 	if err != nil {
 		logger.I.Fatal("couldn't decode private key", zap.Error(err))
@@ -306,14 +312,12 @@ func Init(ctx context.Context) *Container {
 	if err != nil {
 		logger.I.Fatal("couldn't fetch chainID", zap.Error(err))
 	}
-	ethDataSource := eth.New(
+	metascheduler := metascheduler.NewClient(
 		chainID,
 		common.HexToAddress(metaschedulerSmartContract),
 		ethClientRPC,
 		ethClientRPC,
 		ethClientWS,
-		msRPC,
-		msWS,
 		pk,
 	)
 	sshService := ssh.New(
@@ -329,27 +333,26 @@ func Init(ctx context.Context) *Container {
 		scontrol,
 		publicAddress,
 	)
-	watcher := job.New(
-		ethDataSource,
+	watcher := watcher.New(
+		metascheduler,
 		slurmJobService,
-		sbatchAPI,
+		sbatchClient,
 		time.Duration(5*time.Second),
 	)
 	server := server.New(
 		tls,
 		keyFile,
 		certFile,
-		ethDataSource,
-		slurmJobService,
+		metascheduler,
 		slurmSSHB64PK,
 	)
 
 	return &Container{
-		sbatchAPI:  sbatchAPI,
-		eth:        ethDataSource,
-		slurm:      slurmJobService,
-		jobWatcher: watcher,
-		server:     server,
+		sbatchAPI:     sbatchClient,
+		metascheduler: metascheduler,
+		slurm:         slurmJobService,
+		jobWatcher:    watcher,
+		server:        server,
 	}
 }
 
@@ -364,7 +367,7 @@ var app = &cli.App{
 
 		// Register the cluster with the declared resources
 		// TODO: automatically fetch the resources limit
-		if err := container.eth.Register(
+		if err := container.metascheduler.Register(
 			ctx,
 			nodes,
 			cpus,

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	healthv1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/grpc/health/v1"
+	healthv1 "github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"go.uber.org/zap"
 )

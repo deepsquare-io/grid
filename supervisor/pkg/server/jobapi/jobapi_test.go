@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
+	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -115,7 +115,7 @@ func (suite *ServerTestSuite) TestSetJobStatusThrowSameStatusError() {
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,
-	).Return(&eth.SameStatusError{})
+	).Return(&metascheduler.SameStatusError{})
 
 	// Act
 	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
@@ -140,7 +140,7 @@ func (suite *ServerTestSuite) TestSetJobStatusThrowTransitionError() {
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,
-	).Return(&eth.InvalidTransitionFromScheduled{})
+	).Return(&metascheduler.InvalidTransitionFromScheduled{})
 
 	// Act
 	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
@@ -149,7 +149,7 @@ func (suite *ServerTestSuite) TestSetJobStatusThrowTransitionError() {
 		Duration: 1,
 		Status:   supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING,
 	})
-	suite.Equal(err, &eth.InvalidTransitionFromScheduled{})
+	suite.Equal(err, &metascheduler.InvalidTransitionFromScheduled{})
 	suite.Nil(resp)
 
 	suite.jobHandler.AssertExpectations(suite.T())
