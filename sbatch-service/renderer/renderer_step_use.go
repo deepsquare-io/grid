@@ -92,16 +92,36 @@ func (r *StepUseRenderer) Render(
 
 func assertRequirements(j *model.Job, u *model.StepUse, m *model.Module) error {
 	if j.Resources.CpusPerTask < m.MinimumResources.CpusPerTask {
-		return fmt.Errorf("not enough cpu per task to use the module %s, minimum=%d, actual=%d", u.Source, m.MinimumResources.CpusPerTask, j.Resources.CpusPerTask)
+		return fmt.Errorf(
+			"not enough cpu per task to use the module %s, minimum=%d, actual=%d",
+			u.Source,
+			m.MinimumResources.CpusPerTask,
+			j.Resources.CpusPerTask,
+		)
 	}
 	if j.Resources.MemPerCPU < m.MinimumResources.MemPerCPU {
-		return fmt.Errorf("not enough mem per cpu to use the module %s, minimum=%d, actual=%d", u.Source, m.MinimumResources.MemPerCPU, j.Resources.MemPerCPU)
+		return fmt.Errorf(
+			"not enough mem per cpu to use the module %s, minimum=%d, actual=%d",
+			u.Source,
+			m.MinimumResources.MemPerCPU,
+			j.Resources.MemPerCPU,
+		)
 	}
 	if j.Resources.GpusPerTask < m.MinimumResources.GpusPerTask {
-		return fmt.Errorf("not enough gpu per task to use the module %s, minimum=%d, actual=%d", u.Source, m.MinimumResources.GpusPerTask, j.Resources.GpusPerTask)
+		return fmt.Errorf(
+			"not enough gpu per task to use the module %s, minimum=%d, actual=%d",
+			u.Source,
+			m.MinimumResources.GpusPerTask,
+			j.Resources.GpusPerTask,
+		)
 	}
 	if j.Resources.Tasks < m.MinimumResources.Tasks {
-		return fmt.Errorf("not enough tasks to use the module %s, minimum=%d, actual=%d", u.Source, m.MinimumResources.Tasks, j.Resources.Tasks)
+		return fmt.Errorf(
+			"not enough tasks to use the module %s, minimum=%d, actual=%d",
+			u.Source,
+			m.MinimumResources.Tasks,
+			j.Resources.Tasks,
+		)
 	}
 	return nil
 }

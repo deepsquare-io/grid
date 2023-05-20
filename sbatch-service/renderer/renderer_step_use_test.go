@@ -1,7 +1,6 @@
 package renderer_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
@@ -87,8 +86,8 @@ export "HELLO_WORLD_$(/usr/bin/grep "^RESULT" "$DEEPSQUARE_ENV")"
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
 			// Act
-			actual, err := renderer.NewStepUseRenderer(base58.FakeEncoder{}).Render(&cleanJob, cleanStepWithUse(&tt.input), &tt.input)
-			fmt.Println(actual)
+			actual, err := renderer.NewStepUseRenderer(base58.FakeEncoder{}).
+				Render(&cleanJob, cleanStepWithUse(&tt.input), &tt.input)
 
 			// Assert
 			if tt.isError {

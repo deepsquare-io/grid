@@ -60,7 +60,12 @@ func quoteEscape(str ...interface{}) string {
 	return strings.Join(out, " ")
 }
 
-func FormatImageURL(registry *string, image string, apptainer *bool, deepsquareHosted *bool) string {
+func FormatImageURL(
+	registry *string,
+	image string,
+	apptainer *bool,
+	deepsquareHosted *bool,
+) string {
 	// Is absolute path
 	if strings.HasPrefix(image, "/") {
 		return filepath.Clean(image)

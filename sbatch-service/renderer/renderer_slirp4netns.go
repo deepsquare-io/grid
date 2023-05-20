@@ -12,7 +12,12 @@ import (
 //go:embed renderer_slirp4netns.sh.tpl
 var slirp4netnsTpl string
 
-func RenderSlirp4NetNS(i []*model.NetworkInterface, dns []string, command string, shell *string) (string, error) {
+func RenderSlirp4NetNS(
+	i []*model.NetworkInterface,
+	dns []string,
+	command string,
+	shell *string,
+) (string, error) {
 	for _, nic := range i {
 		if err := validate.I.Struct(nic); err != nil {
 			return "", err

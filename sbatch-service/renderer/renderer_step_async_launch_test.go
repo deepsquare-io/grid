@@ -1,7 +1,6 @@
 package renderer_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
@@ -159,7 +158,6 @@ export PID_ASYNC_LAUNCH="$asynclaunchpid"`,
 		t.Run(tt.title, func(t *testing.T) {
 			// Act
 			actual, err := renderer.RenderStepAsyncLaunch(&tt.input.Job, &tt.input.StepAsyncLaunch)
-			fmt.Println(actual)
 			// Assert
 			if tt.isError {
 				assert.Error(t, err)
