@@ -73,11 +73,11 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"STORAGE_PATH"},
 	},
 	&cli.BoolFlag{
-		Name:        "pprof.enablePProf",
+		Name:        "pprof",
 		Usage:       "Enable pprof",
 		Value:       false,
 		Destination: &pprofEnabled,
-		EnvVars:     []string{"PPROF_ENABLED"},
+		EnvVars:     []string{"PPROF_ENABLE"},
 	},
 	&cli.StringFlag{
 		Name:        "pprof.listen-address",
