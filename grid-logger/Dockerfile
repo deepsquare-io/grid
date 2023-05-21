@@ -17,7 +17,7 @@ FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/alpine as certs
 RUN apk update && apk add ca-certificates
 
 # ---
-FROM registry-1.docker.io/library/busybox:1.36.0
+FROM registry-1.docker.io/library/busybox:1.36.1
 
 ARG TARGETOS TARGETARCH
 ENV TINI_VERSION v0.19.0
