@@ -1,7 +1,10 @@
 package main
 
 import (
+	_ "log"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	healthv1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/grpc/health/v1"
@@ -28,6 +31,9 @@ var (
 	storagePath string
 
 	secret []byte
+
+	pprofListenAddress string
+	pprofEnabled       bool
 )
 
 var flags = []cli.Flag{
@@ -65,6 +71,20 @@ var flags = []cli.Flag{
 		Value:       "./db",
 		Destination: &storagePath,
 		EnvVars:     []string{"STORAGE_PATH"},
+	},
+	&cli.BoolFlag{
+		Name:        "pprof.enablePProf",
+		Usage:       "Enable pprof",
+		Value:       false,
+		Destination: &pprofEnabled,
+		EnvVars:     []string{"PPROF_ENABLED"},
+	},
+	&cli.StringFlag{
+		Name:        "pprof.listen-address",
+		Usage:       "Address to listen on for pprof",
+		Value:       ":9000",
+		Destination: &pprofListenAddress,
+		EnvVars:     []string{"PPROF_LISTEN_ADDRESS"},
 	},
 	&cli.StringFlag{
 		Name:     "secret-path",
@@ -127,6 +147,14 @@ var app = &cli.App{
 		)
 
 		logger.I.Info("listening")
+
+		if pprofEnabled {
+			go func() {
+				if err := http.ListenAndServe(pprofListenAddress, nil); err != nil {
+					logger.I.Warn("pprof crashed", zap.Error(err))
+				}
+			}()
+		}
 
 		return server.Serve(lis)
 	},
