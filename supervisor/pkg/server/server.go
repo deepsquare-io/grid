@@ -5,13 +5,10 @@ import (
 
 	healthv1 "github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1"
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/health"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/sshapi"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 type Server struct {
@@ -19,21 +16,10 @@ type Server struct {
 }
 
 func New(
-	tls bool,
-	keyFile string,
-	certFile string,
 	jobHandler jobapi.JobHandler,
 	pkB64 string,
+	opts ...grpc.ServerOption,
 ) *Server {
-	opts := []grpc.ServerOption{}
-	if tls {
-		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
-		if err != nil {
-			logger.I.Fatal("failed to load certificates", zap.Error(err))
-		}
-		opts = append(opts, grpc.Creds(creds))
-	}
-
 	grpcServer := grpc.NewServer(opts...)
 	supervisorv1alpha1.RegisterJobAPIServer(
 		grpcServer,

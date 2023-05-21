@@ -258,7 +258,7 @@ func Init(ctx context.Context) *Container {
 		if !sbatchTLSInsecure {
 			// Fetch the CA
 			func() {
-				b, err := os.ReadFile(certFile)
+				b, err := os.ReadFile(sbatchCAFile)
 				if err != nil {
 					logger.I.Warn("failed to read TLS CA file", zap.Error(err))
 					return
@@ -339,12 +339,19 @@ func Init(ctx context.Context) *Container {
 		sbatchClient,
 		time.Duration(5*time.Second),
 	)
+
+	opts := []grpc.ServerOption{}
+	if tls {
+		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
+		if err != nil {
+			logger.I.Fatal("failed to load certificates", zap.Error(err))
+		}
+		opts = append(opts, grpc.Creds(creds))
+	}
 	server := server.New(
-		tls,
-		keyFile,
-		certFile,
 		metascheduler,
 		slurmSSHB64PK,
+		opts...,
 	)
 
 	return &Container{
