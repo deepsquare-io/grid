@@ -267,7 +267,7 @@ func (c *Client) WatchEvents(
 	claimNextCancellingJobEvents chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent,
 	claimJobEvents chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent,
 ) (event.Subscription, error) {
-	logs := make(chan types.Log)
+	logs := make(chan types.Log, 1)
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{c.metaschedulerAddress},
 		Topics: [][]common.Hash{

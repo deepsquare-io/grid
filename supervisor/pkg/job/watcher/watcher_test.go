@@ -73,7 +73,7 @@ func (suite *WatcherTestSuite) arrangeNoEvent() {
 	sub := mocks.NewSubscription(suite.T())
 	suite.metaScheduler.On("WatchEvents", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(sub, nil)
-	errChan := make(chan error)
+	errChan := make(chan error, 1)
 	var rErrChan <-chan error = errChan
 	sub.On("Err").Return(rErrChan)
 }
@@ -92,7 +92,7 @@ func (suite *WatcherTestSuite) arrangeEmitClaimNextJobEvent(
 			}()
 		}).
 		Return(sub, nil)
-	errChan := make(chan error)
+	errChan := make(chan error, 1)
 	var rErrChan <-chan error = errChan
 	sub.On("Err").Return(rErrChan)
 
@@ -114,7 +114,7 @@ func (suite *WatcherTestSuite) arrangeEmitClaimNextCancellingJobEvent(
 			}()
 		}).
 		Return(sub, nil)
-	errChan := make(chan error)
+	errChan := make(chan error, 1)
 	var rErrChan <-chan error = errChan
 	sub.On("Err").Return(rErrChan)
 
@@ -136,7 +136,7 @@ func (suite *WatcherTestSuite) arrangeEmitClaimNextTopUpJobEvent(
 			}()
 		}).
 		Return(sub, nil)
-	errChan := make(chan error)
+	errChan := make(chan error, 1)
 	var rErrChan <-chan error = errChan
 	sub.On("Err").Return(rErrChan)
 
