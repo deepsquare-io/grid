@@ -172,8 +172,8 @@ var app = &cli.App{
 			return err
 		}
 
-		readerChan := make(chan *loggerv1alpha1.WriteRequest)
-		readerErrChan := make(chan error)
+		readerChan := make(chan *loggerv1alpha1.WriteRequest, 100)
+		readerErrChan := make(chan error, 1)
 		pipe, err := os.OpenFile(pipeFile, os.O_RDWR, os.ModeNamedPipe)
 		if err != nil {
 			logger.I.Error("pipe open failed", zap.Error(err))
@@ -188,7 +188,10 @@ var app = &cli.App{
 				line, err := reader.ReadBytes('\n')
 				if err != nil {
 					readerErrChan <- err
-					logger.I.Error("reader thread receive a reading error, exiting...", zap.Error(err))
+					logger.I.Error(
+						"reader thread receive a reading error, exiting...",
+						zap.Error(err),
+					)
 					return
 				}
 				req := &loggerv1alpha1.WriteRequest{
@@ -200,7 +203,10 @@ var app = &cli.App{
 				readerChan <- req
 
 				if ctx.Err() != nil {
-					logger.I.Warn("reader thread receive a context error, exiting...", zap.Error(err))
+					logger.I.Warn(
+						"reader thread receive a context error, exiting...",
+						zap.Error(err),
+					)
 					return
 				}
 			}
@@ -226,8 +232,10 @@ var app = &cli.App{
 						return err
 					}
 					_ = stream.Send(&loggerv1alpha1.WriteRequest{
-						LogName:   logName,
-						Data:      []byte("Logger was disconnected temporarly, some logs may be lost."),
+						LogName: logName,
+						Data: []byte(
+							"Logger was disconnected temporarly, some logs may be lost.",
+						),
 						User:      userString,
 						Timestamp: time.Now().Unix(),
 					})
@@ -267,7 +275,10 @@ var app = &cli.App{
 	},
 }
 
-func openGRPCConn(ctx context.Context, opts []grpc.DialOption) (loggerv1alpha1.LoggerAPI_WriteClient, *grpc.ClientConn, error) {
+func openGRPCConn(
+	ctx context.Context,
+	opts []grpc.DialOption,
+) (loggerv1alpha1.LoggerAPI_WriteClient, *grpc.ClientConn, error) {
 	conn, err := grpc.Dial(serverEndpoint, opts...)
 	if err != nil {
 		logger.I.Error("grpc dial failed", zap.Error(err))
