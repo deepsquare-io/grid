@@ -69,6 +69,8 @@ If you are using an another distributed file system, you can check the available
 
 ## 1. Deploy the LDAP server 389ds
 
+![architecture-cf-de-Page-5-389ds.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-389ds.drawio.svg)
+
 1. Deploy Namespace and AppProject
 
    ```shell title="user@local:/ClusterFactory"
@@ -201,14 +203,14 @@ If you are using an another distributed file system, you can check the available
 
    Initialize the database:
 
-   ```shell title="pod: dirsrv-389ds-0 (namespace: ldap)
+   ```shell title="pod: dirsrv-389ds-0 (namespace: ldap)"
    dsconf localhost backend create --suffix dc=example,dc=com --be-name example_backend
    dsidm localhost initialise
    ```
 
    Add plugins:
 
-   ```shell title="pod: dirsrv-389ds-0 (namespace: ldap)
+   ```shell title="pod: dirsrv-389ds-0 (namespace: ldap)"
    # Unique mail
    dsconf localhost plugin attr-uniq add "mail attribute uniqueness" --attr-name mail --subtree "ou=people,dc=example,dc=com"
    # Unique uid
@@ -280,6 +282,8 @@ If you are using an another distributed file system, you can check the available
 
 ## 2. Deploy LDAP connector
 
+![architecture-cf-de-Page-5-Ldap-connector.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-Ldap-connector.drawio.svg)
+
 1. Configure LDAP connector secret. Create a `-secret.yaml.local` file:
 
    ```yaml title="argo/ldap/secrets/ldap-connector-env-secret.yaml.local"
@@ -291,7 +295,8 @@ If you are using an another distributed file system, you can check the available
    type: Opaque
    stringData:
      AVAX_ENDPOINT_WS: wss://testnet.deepsquare.run/ws
-     JOBMANAGER_SMART_CONTRACT: '0xCD563d4704e8B1Cd9b6F1BE398f4A0921aB2A3b2' # DeepSquare MetaScheduler smart contract
+     # DeepSquare MetaScheduler smart contract, check [`the-grid` releases](https://github.com/deepsquare-io/the-grid/releases)
+     JOBMANAGER_SMART_CONTRACT: '0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0'
 
      LDAP_URL: ldaps://dirsrv-389ds.ldap.svc.cluster.local:3636 # Kubernetes LDAP service domain name, change it if needed
      LDAP_CA_PATH: /tls/ca.crt
@@ -308,7 +313,7 @@ If you are using an another distributed file system, you can check the available
 
 2. Configure the `others/ldap-connector/overlays/production` overlay:
 
-   Edit the `configmap.yaml` accordingly (`peopleDN` and `groupDN`) and edit the `deployment.yaml` (`secretName` for the CA).
+   Edit the `configmap.yaml` accordingly (`peopleDN` and `groupDN`) and edit the `deployment.yaml` to mount the secret and ldap CA secret.
 
    ```yaml title="others/ldap-connector/overlays/production/configmap.yaml"
    peopleDN: ou=people,dc=example,dc=com
@@ -336,6 +341,31 @@ If you are using an another distributed file system, you can check the available
          - '-1'
    ```
 
+   ```yaml title="others/ldap-connector/overlays/production/configmap.yaml"
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: ldap-connector
+     labels:
+       app: ldap-connector
+   spec:
+     template:
+       spec:
+         containers:
+           - name: ldap-connector
+             volumeMounts:
+               - mountPath: /tls
+                 name: ca
+             envFrom:
+               - secretRef:
+                   name: ldap-connector-env
+                   optional: false
+         volumes:
+           - name: ca
+             secret:
+               secretName: ldap.example.com-secret
+   ```
+
 3. Commit and push:
 
    ```shell title="user@local:/ClusterFactory"
@@ -353,6 +383,8 @@ If you are using an another distributed file system, you can check the available
    Check the [ArgoCD dashboard](https://argocd.internal) to see if everything went well.
 
 ## 3. Deploy MariaDB
+
+![architecture-cf-de-Page-5-Mariadb.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-Mariadb.drawio.svg)
 
 1. Deploy Namespace and AppProject
 
@@ -521,6 +553,8 @@ If you are using an another distributed file system, you can check the available
    Rememeber the **slurmdb** password to deploy SLURM.
 
 ## 4. Deploy SLURM
+
+![architecture-cf-de-Page-5-SLURM.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-SLURM.drawio.svg)
 
 ### a. Secrets
 
@@ -754,7 +788,7 @@ If you are using an another distributed file system, you can check the available
    kubectl apply -f argo/slurm-cluster/secrets/local-ca-sealed-secret.yaml
    ```
 
-7. The SLURM login node is running an SSH server. Therefore, we need to add SSH Host Keys and a SSH configuration. Generate the keys with:
+7. The SLURM login is running an SSH server. Therefore, we need to add SSH Host Keys and a SSH configuration. Generate the keys with:
 
    ```shell title="user@local:/ClusterFactory"
    mkdir -p ./etc/ssh
@@ -844,7 +878,75 @@ If you are using an another distributed file system, you can check the available
    kubectl apply -f argo/slurm-cluster/secrets/login-sshd-sealed-secret.yaml
    ```
 
-### b. Configuring the SLURM `values.yaml` file
+### b. Configuring the shared filesystem and volume
+
+On your NFS server (or any other type of shared filesystem), you have to create a home for the LDAP users. Let's assume you are using a NFSv4 server.
+
+Create a volume/directory on the NFS server `nfs.example.com`:
+
+```shell title="root@nfs.example.com:/"
+mkdir -p /srv/nfs/ldap-users
+echo "/srv/nfs/ldap-users *(rw,sync,no_root_squash,no_subtree_check)" > /etc/exports
+exportfs -arv
+```
+
+Let's get back to Kubernetes. Since we have already deployed the [CSI NFS driver](https://github.com/kubernetes-csi/csi-driver-nfs), you can create a [PersistentVolume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistent-volumes) and [PersistentVolumeClaim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims) to mount `nfs.example.com:/srv/nfs/ldap-users` on the pods.
+
+A PersistentVolume is non-namespaced resource used for static provisioning and represents a storage element in the cluster as an NFS volume. A PersistentVolumeClaim is namespaced resource which requests for a specific amount of storage. It is used by a pod to claim and use a PersistentVolume.
+
+Let's create and apply the PersistentVolume:
+
+```yaml title="argo/slurm-cluster/volumes/example-1/ldap-users-storage.yaml"
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ldap-users-example-1-pv
+  labels:
+    app: slurm-login
+    topology.kubernetes.io/region: ch-sion
+    topology.kubernetes.io/zone: ch-sion-1
+spec:
+  capacity:
+    storage: 1000Gi
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+    - nodiratime
+  csi:
+    driver: nfs.csi.k8s.io
+    readOnly: false
+    volumeHandle: 4c9cf7fe-6751-422e-baa9-e4d3c2fb9767
+    volumeAttributes:
+      server: nfs.example.com
+      share: '/srv/nfs/ldap-users'
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ldap-users-example-1-pvc
+  namespace: slurm-cluster
+  labels:
+    app: slurm-login
+    topology.kubernetes.io/region: ch-sion
+    topology.kubernetes.io/zone: ch-sion-1
+spec:
+  volumeName: ldap-users-example-1-pv
+  accessModes: [ReadWriteMany]
+  storageClassName: ''
+  resources:
+    requests:
+      storage: 1000Gi
+```
+
+```shell title="user@local:/ClusterFactory"
+kubectl apply -f argo/slurm-cluster/volumes/example-1/ldap-users-storage.yaml
+```
+
+### c. Configuring the SLURM `values.yaml` file
 
 1. "example-1" will be the name of our SLURM cluster. Create a `helm/slurm-cluster/values-example-1.yaml`. You can use `helm/slurm-cluster/values.yaml` to see the default values.
 
@@ -1049,7 +1151,7 @@ If you are using an another distributed file system, you can check the available
          metallb.universe.tf/address-pool: slurm-controller-example-1-pool
    ```
 
-6. Let's configure the login node. **For stability reasons, we will choose to use a LoadBalancer service from Kubernetes to expose the SLURM login to the local network. This disables the `srun` command (run a command interactively) in the login node but does not block the `sbatch` command. If you want to launch jobs quickly on the login node, you can use `sbatch --wrap "command args"`.**
+6. Let's configure the SLURM login. **For stability reasons, we will choose to use a LoadBalancer service from Kubernetes to expose the SLURM login to the local network. This disables the `srun` command (run a command interactively) in the pod but does not block the `sbatch` command. If you want to launch jobs quickly on the SLURM login, you can use `sbatch --wrap "command args"`.**
 
    Add the following in the values file:
 
@@ -1146,9 +1248,464 @@ If you are using an another distributed file system, you can check the available
        enabled: false
    ```
 
+   The `initContainers` retrieve the `provider-ssh-authorized-keys` and install them on the SLURM login container, allowing the supervisor to impersonate a UNIX user and log in via SSH.
+
+   We mount the LDAP user home via the PersistentVolumeClaim `ldap-users-example-1-pvc` that we defined.
+
+   We exposed the SLURM login via the Kubernetes LoadBalancer service and with MetalLB.
+
+### d. Deploy
+
+1. Create an ArgoCD Application at `argo/slurm-cluster/apps/slurm-cluster-example-1-app.yaml` with the following content:
+
+   ```yaml
+   apiVersion: argoproj.io/v1alpha1
+   kind: Application
+   metadata:
+     name: slurm-cluster-example-1-app
+     namespace: argocd
+     finalizers:
+       - resources-finalizer.argocd.argoproj.io
+   spec:
+     project: slurm-cluster
+     source:
+       # You should have forked this repo. Change the URL to your fork.
+       repoURL: git@github.com:<your account>/ClusterFactory.git
+       # You should use your branch too.
+       targetRevision: <your branch>
+       path: helm/slurm-cluster
+       helm:
+         releaseName: slurm-cluster-example-1
+
+         # Create a values file inside your fork and change the values.
+         valueFiles:
+           - values-example-1.yaml
+
+     destination:
+       server: 'https://kubernetes.default.svc'
+       namespace: slurm-cluster
+
+     syncPolicy:
+       automated:
+         prune: true # Specifies if resources should be pruned during auto-syncing ( false by default ).
+         selfHeal: true # Specifies if partial app sync should be executed when resources are changed only in target Kubernetes cluster and no git change detected ( false by default ).
+         allowEmpty: false # Allows deleting all application resources during automatic syncing ( false by default ).
+       syncOptions: []
+       retry:
+         limit: 5 # number of failed sync attempt retries; unlimited number of attempts if less than 0
+         backoff:
+           duration: 5s # the amount to back off. Default unit is seconds, but could also be a duration (e.g. "2m", "1h")
+           factor: 2 # a factor to multiply the base duration after each failed retry
+           maxDuration: 3m # the maximum amount of time allowed for the backoff strategy
+   ```
+
+2. Commit and push:
+
+   ```shell title="user@local:/ClusterFactory"
+   git add .
+   git commit -m "Added SLURM services"
+   git push
+   ```
+
+3. Deploy SLURM:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl apply -f argo/slurm-cluster/apps/slurm-cluster-example-1-app.yaml
+   ```
+
+   Check the [ArgoCD dashboard](https://argocd.internal) to see if everything went well.
+
+From this point on, you should check the health of your SLURM DB, controller and login. Check the health by doing the following:
+
+1. Fetch the summary, run:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl get pods -n slurm-cluster
+   ```
+
+   Look for **`STATUS`**, make sure everything is `Running`. If it's `CrashLoopBackOff`, you'll have to check the logs of the pod. If it's stuck in `Pending` or `Error`, check the pod **`Conditions`** and **`Events`**.
+
+2. To check the **`Conditions`** and **`Events`**, run:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl describe pod -n slurm-cluster <pod_name>
+   ```
+
+   Look for **`Conditions`**, make sure everything is `True`. Also look for **`Events`**, make sure there is nothing alarming.
+
+3. To check the logs of the pod, run:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl logs -n slurm-cluster <pod_name> -c <container_name>
+   ```
+
+4. Lastly, check the health of the SLURM cluster, enter the login node or controller node via kubectl:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl exec -it -n slurm-cluster <pod_name> -c <container_name> -- sh -c "clear; (bash || ash || sh)"
+   ```
+
+   ```shell title="pod: slurm-cluster-example-1-login-<hash> (namespace: ldap)"
+   sinfo
+   # PARTITION   AVAIL  TIMELIMIT  NODES  STATE NODELIST
+   # main*          up   infinite      1   down cn1
+   ```
+
+Common issues are often:
+
+- The containers are stuck in a `id slurm` loop: Check the LDAP connectivity and check the `slurm` LDAP user in the 389ds server.
+- If the SLURM DB is crashing: check the logs, check the connectivity between MariaDB and the SLURM DB, check the credentials (LDAP, MariaDB, Munge) too.
+- If the SLURM controller is crashing: check the logs, check the connectivity between the SLURM DB and the SLURM Controller, check the permissions inside the SLURM Controller state PersistentVolume, check the credentials (LDAP, Munge).
+- If the SLURM login is crashing: check the connectivity between the SLURM login and the SLURM controller, check the Munge key.
+
 ## 5. Deploy the Supervisor
 
+![architecture-cf-de-Page-5-Supervisor.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-Supervisor.drawio.svg)
+
+The supervisor is configured in the `slurm-cluster` AppProject.
+
+1. Start with the secrets. Create a ethereum wallet and fetch its private key. **It is a hexadecimal string of 64 characters.** Create a Secret at `argo/slurm-cluster/secrets/provider-wallet-secret.yaml.local`:
+
+   ```yaml title="argo/slurm-cluster/secrets/provider-wallet-secret.yaml.local"
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: provider-wallet-secret
+     namespace: slurm-cluster
+   type: Opaque
+   stringData:
+     wallet-private-key: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+   ```
+
+   Create a base64 encoded private SSH key, **this is used by the SLURM login so that the supervisor can impersonate a user**:
+
+   ```shell
+   yes 'y' | ssh-keygen -N '' -f key -t ed25519 -C supervisor
+   cat key | base64 -w 0
+   ```
+
+   Then create a Secret at `argo/slurm-cluster/secrets/supervisor-ssh-key-secret.yaml.local`:
+
+   ```yaml title="argo/slurm-cluster/secrets/supervisor-ssh-key-secret.yaml.local"
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: supervisor-ssh-key-secret
+     namespace: slurm-cluster
+   type: Opaque
+   stringData:
+     ssh-private-key: LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNDcXZKbktYcnVLOEhNMlVtTVREQ1VBYkJ5bEd4OFFPVi9YbzBsN1F6aUo5QUFBQUpCRmZaQ2RSWDJRCm5RQUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQ3F2Sm5LWHJ1SzhITTJVbU1URENVQWJCeWxHeDhRT1YvWG8wbDdRemlKOUEKQUFBRUQ4bWFsOUtjOW4xZnEwRDNiS1UvY0xiU3YyZ21CVFFWeGE2bSt2d0RZV2dLcThtY3BldTRyd2N6WlNZeE1NSlFCcwpIS1ViSHhBNVg5ZWpTWHRET0luMEFBQUFDbk4xY0dWeWRtbHpiM0lCQWdNPQotLS0tLUVORCBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0K
+   ```
+
+   Seal and apply them:
+
+   ```shell
+   cfctl kubeseal
+   kubectl apply -f argo/slurm-cluster/secrets/supervisor-ssh-key-sealed-secret.yaml
+   kubectl apply -f argo/slurm-cluster/secrets/provider-wallet-sealed-secret.yaml
+   ```
+
+2. Create a Helm subchart at `helm-subcharts/supervisor`:
+
+   ```yaml title="helm-subcharts/supervisor/Chart.yaml"
+   apiVersion: v2
+   name: supervisor-subchart
+   description: supervisor subchart
+   type: application
+   version: 0.2.0
+   appVersion: '0.2.0'
+
+   dependencies:
+     - name: supervisor
+       version: 0.2.0
+       repository: https://deepsquare-io.github.io/helm-charts/
+   ```
+
+   You can check the last releases [here](https://github.com/deepsquare-io/helm-charts/tree/gh-pages).
+
+   Create a values file at `helm-subcharts/supervisor/values-example-1.yaml`, and fill it with:
+
+   ```yaml title="helm-subcharts/supervisor/values-example-1.yaml"
+   supervisor:
+     # Use dev image
+     image:
+       repository: ghcr.io/deepsquare-io/supervisor
+       tag: dev
+     imagePullPolicy: Always
+
+     config:
+       publicAddress: 'supervisor.example.com:443'
+       provider:
+         privateKeyRef:
+           secretName: provider-wallet-secret
+           key: wallet-private-key
+
+       metascheduler:
+         endpoint:
+           rpc: 'https://testnet.deepsquare.run/rpc'
+           ws: 'wss://testnet.deepsquare.run/ws'
+         # DeepSquare MetaScheduler smart contract, check [`the-grid` releases](https://github.com/deepsquare-io/the-grid/releases)
+         smartContract: '0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0'
+
+       sbatchService:
+         # DeepSquare SBatch service, use `sbatch.dev.deepsquare.run` (dev) or `sbatch.deepsquare.run` (prod).
+         endpoint: 'sbatch.dev.deepsquare.run:443'
+         tls:
+           enable: true
+           insecure: false
+           ca: /etc/ssl/certs/ca-certificates.crt
+           serverHostOverride: 'sbatch.dev.deepsquare.run'
+
+       slurm:
+         ssh:
+           adminUser: slurm
+           address: slurm-cluster-example-1-login.slurm-cluster.svc.cluster.local:22
+
+           privateKeyRef:
+             secretName: supervisor-ssh-key-secret
+             key: ssh-private-key
+
+       # This is useless for now. You don't have to fill it.
+       spec:
+         nodes: 4
+         cpus: 64
+         gpus: 8
+         memory: 513840
+
+     nodeSelector:
+       topology.kubernetes.io/region: ch-sion
+
+     service:
+       enabled: true
+       type: ClusterIP
+
+     extra:
+       - apiVersion: cert-manager.io/v1
+         kind: Certificate
+         metadata:
+           name: supervisor.example.com-cert
+         spec:
+           secretName: supervisor.example.com-secret
+           issuerRef:
+             name: private-cluster-issuer
+             kind: ClusterIssuer
+           commonName: supervisor.example.com
+           subject:
+             countries: [CH]
+             localities: [Lonay]
+             organizationalUnits: []
+             organizations: [Example Org]
+             postalCodes: ['1027']
+             provinces: [Laud]
+             streetAddresses: [Chemin des Mouettes 1]
+           dnsNames:
+             - supervisor.example.com
+
+       - apiVersion: traefik.containo.us/v1alpha1
+         kind: IngressRoute
+         metadata:
+           name: supervisor-https
+         spec:
+           entryPoints:
+             - websecure
+           routes:
+             - kind: Rule
+               match: Host(`supervisor.example.com`)
+               priority: 10
+               services:
+                 - name: supervisor-example-1
+                   port: 3000
+             - kind: Rule
+               match: Host(`supervisor.example.com`) && HeadersRegexp(`Content-Type`, `^application/grpc.*$`)
+               priority: 11
+               services:
+                 - name: supervisor-example-1
+                   port: 3000
+                   scheme: h2c
+           tls:
+             secretName: supervisor.example.com-secret
+   ```
+
+3. Edit the ArgoCD Application to use our private fork:
+
+   ```yaml title="argo/slurm-cluster/apps/supervisor-app.yaml > spec > source"
+   source:
+     # You should have forked this repo. Change the URL to your fork.
+     repoURL: git@github.com:<your account>/ClusterFactory.git
+     # You should use your branch too.
+     targetRevision: <your branch>
+     path: helm-subcharts/supervisor
+     helm:
+       releaseName: supervisor
+
+       # Create a values file inside your fork and change the values.
+       valueFiles:
+         - values-example-1.yaml
+   ```
+
+4. Commit and push:
+
+   ```shell title="user@local:/ClusterFactory"
+   git add .
+   git commit -m "Added supervisor service"
+   git push
+   ```
+
+   And deploy the Argo CD application:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl apply -f argo/slurm-cluster/apps/supervisor-app.yaml
+   ```
+
+   Check the [ArgoCD dashboard](https://argocd.internal) to see if everything went well.
+
 ## 6. Deploy CVMFS Stratum 1
+
+![architecture-cf-de-Page-5-CVMFS.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-CVMFS.drawio.svg)
+
+1. Start by creating the namespace and AppProject:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl apply -f ./argo/cvmfs
+   ```
+
+2. Start with the secrets. Create a secret containing the CVMFS repository keys:
+
+   ```yaml title="argo/cvmfs/secrets/cvmfs-deepsquare-run-keys-secret.yaml.local"
+   apiVersion: v1
+   kind: Secret
+   metadata:
+     name: cvmfs-deepsquare-run-keys-secret
+     namespace: cvmfs
+   type: Opaque
+   stringData:
+     models.library.deepsquare.run.pub: |
+       -----BEGIN PUBLIC KEY-----
+       MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwWI9Dm1uNzOGEJ3PEXoR
+       rpuGdSlL3U7fstpQBTXSv09NtxTrm65mTa6Er1IGkMFZOL3F5vL9ozilvQTcyd7U
+       MG794Ij7ME9WpnTMrl77Iprxy1q2+Ey1yKpzXC/9P0Zm5h4Xgt/Trl9qacjpDusK
+       NLFg7DKWDZ/HiurYG3zSWKMRVlIA2T9UC7kSpsKriYkTK9FTABExB71W4AvCDzOw
+       XZgqEamSD9fJ0GftlZPMP03O1eAfoIg676O7FWUPxdBa+y74rtwcJH38E2nLm85v
+       OPSiNG8+vJT8jD9T7xHreiPgvllzwxV7picbkv8AilFcgCqUmF9sqplksCP3oLhT
+       jwIDAQAB
+       -----END PUBLIC KEY-----
+     software.library.deepsquare.run.pub: |
+       -----BEGIN PUBLIC KEY-----
+       MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApZb5bVK7tjeuyPMVxVZJ
+       80NtvuqxzKvZ6JTZdORmXKYMt8ZIzDFOqNjmlh/xDzmL1k3siTGQ/9GeDxydxa/e
+       1e2+1+dZeTd+oP0hD0ooIDGWOzbBg7SCUUhFjfYrQCA04gFwce3+ICulKB2CC517
+       3aKbRNmhH6zdEpjmJshsFKEp1BdSL9mMXKoPYlGo8/ymw2cBB4hJKqoy4NS1c6GX
+       idnxy+Y+EUk73Gic2jg6sak86aIdqIdRr8BFSz7a+Sc8ojGGZFThyUqEyW7SKrkD
+       G5wFRi3ODl/hCWYYEQVKPFkhAn/L77eP3V23/2uvc9UcsVHV07eR1/q+GxCSeEnd
+       WwIDAQAB
+       -----END PUBLIC KEY-----
+   ```
+
+   Seal and apply it:
+
+   ```shell
+   cfctl kubeseal
+   kubectl apply -f argo/cvmfs/secrets/cvmfs-deepsquare-run-keys-sealed-secret.yaml
+   ```
+
+3. Configure the values. Create a values file at `helm/cvmfs-server/values-production.yaml` and fill it with:
+
+   ```yaml title="helm/cvmfs-server/values-production.yaml"
+   replicas: 1
+
+   dnsPolicy: 'None'
+   dnsConfig:
+     nameservers:
+       - 10.96.0.10
+     options:
+       - name: ndots
+         value: '0'
+
+   nodeSelector:
+     kubernetes.io/hostname: mn1.example.com
+     topology.kubernetes.io/region: ch-sion
+     topology.kubernetes.io/zone: ch-sion-1
+
+   config:
+     replicas:
+       - name: software.library.deepsquare.run
+         url: https://cvmfs-0.deepsquare.run/cvmfs/software.library.deepsquare.run
+         keys: /etc/cvmfs/keys/library.deepsquare.run
+         options: '-o root'
+       - name: models.library.deepsquare.run
+         url: https://cvmfs-0.deepsquare.run/cvmfs/models.library.deepsquare.run
+         keys: /etc/cvmfs/keys/library.deepsquare.run
+         options: '-o root'
+
+   volumeMounts:
+     - name: cvmfs-deepsquare-run-keys
+       mountPath: /etc/cvmfs/keys/library.deepsquare.run
+       readOnly: true
+
+   volumes:
+     - name: cvmfs-deepsquare-run-keys
+       secret:
+         secretName: cvmfs-deepsquare-run-keys-secret
+         defaultMode: 256
+
+   state:
+     storageClassName: 'local-path'
+
+   storage:
+     storageClassName: 'local-path'
+
+   ingress:
+     enabled: true
+     annotations:
+       cert-manager.io/cluster-issuer: private-cluster-issuer
+       traefik.ingress.kubernetes.io/router.entrypoints: websecure
+       traefik.ingress.kubernetes.io/router.tls: 'true'
+
+     ingressClass: 'traefik'
+
+     hosts:
+       - cvmfs.example.com
+
+     tls:
+       - secretName: cvmfs.example.com-secret
+         hosts:
+           - cvmfs.example.com
+   ```
+
+   **Notice that we are using `local-path` as our storage provisioner. This means we must stuck our pod to a node by using a `nodeSelector`. We've stuck our pod by selecting the node with the label `kubernetes.io/hostname=mn1.example.com`. Since the CVMFS server is a replica and we wast fast storage, there is no need to use a shared storage. Instead, we use the local disk. `local-path` stores its data at `/opt/local-path-provisioner/`.**
+
+4. Edit the ArgoCD Application to use our private fork:
+
+   ```yaml title="argo/cvmfs/apps/cvmfs-server-app.yaml > spec > source"
+   source:
+     # You should have forked this repo. Change the URL to your fork.
+     repoURL: git@github.com:<your account>/ClusterFactory.git
+     # You should use your branch too.
+     targetRevision: <your branch>
+     path: helm/cvmfs-server
+     helm:
+      releaseName: cvmfs-server
+
+       # Create a values file inside your fork and change the values.
+       valueFiles:
+         - values-production.yaml
+   ```
+
+5. Commit and push:
+
+   ```shell title="user@local:/ClusterFactory"
+   git add .
+   git commit -m "Added cvmfs service"
+   git push
+   ```
+
+   And deploy the Argo CD application:
+
+   ```shell title="user@local:/ClusterFactory"
+   kubectl apply -f argo/cvmfs/apps/cvmfs-server-app.yaml
+   ```
+
+   Check the [ArgoCD dashboard](https://argocd.internal) to see if everything went well.
 
 ## 7. Deploy Grendel
 
