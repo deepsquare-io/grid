@@ -565,7 +565,7 @@ nameserver 192.168.0.2
 
 ## What's next
 
-We've deployed a Kubernetes "Cluster"! To join the grid, you must deploy our software stack. This includes:
+We've deployed a Kubernetes Cluster! To join the grid, you must deploy our software stack. This includes:
 
 - 389ds
 - The DeepSquare Provider LDAP connector
@@ -573,7 +573,6 @@ We've deployed a Kubernetes "Cluster"! To join the grid, you must deploy our sof
 - The SLURM cluster (login, controller and database)
 - CVMFS Stratum 1
 - The DeepSquare Supervisor
-- Grendel
 
 ![architecture-cf-de-Copy of Page-4.drawio](./30-deploy-core.assets/architecture-cf-de-Page-4-next.drawio.svg)
 

@@ -69,7 +69,11 @@ If you are using an another distributed file system, you can check the available
 
 ## 1. Deploy the LDAP server 389ds
 
+<div style={{textAlign: 'center'}}>
+
 ![architecture-cf-de-Page-5-389ds.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-389ds.drawio.svg)
+
+</div>
 
 1. Deploy Namespace and AppProject
 
@@ -282,7 +286,11 @@ If you are using an another distributed file system, you can check the available
 
 ## 2. Deploy LDAP connector
 
+<div style={{textAlign: 'center'}}>
+
 ![architecture-cf-de-Page-5-Ldap-connector.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-Ldap-connector.drawio.svg)
+
+</div>
 
 1. Configure LDAP connector secret. Create a `-secret.yaml.local` file:
 
@@ -384,7 +392,11 @@ If you are using an another distributed file system, you can check the available
 
 ## 3. Deploy MariaDB
 
+<div style={{textAlign: 'center'}}>
+
 ![architecture-cf-de-Page-5-Mariadb.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-Mariadb.drawio.svg)
+
+</div>
 
 1. Deploy Namespace and AppProject
 
@@ -554,7 +566,11 @@ If you are using an another distributed file system, you can check the available
 
 ## 4. Deploy SLURM
 
+<div style={{textAlign: 'center'}}>
+
 ![architecture-cf-de-Page-5-SLURM.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-SLURM.drawio.svg)
+
+</div>
 
 ### a. Secrets
 
@@ -795,7 +811,7 @@ If you are using an another distributed file system, you can check the available
    ssh-keygen -A -f $(pwd) -C login
    mv ./etc/ssh/* .
    rmdir ./etc/ssh
-   rmdir /etc
+   rmdir ./etc
    ```
 
    And put the content of the keys inside a new secret at:
@@ -886,7 +902,7 @@ Create a volume/directory on the NFS server `nfs.example.com`:
 
 ```shell title="root@nfs.example.com:/"
 mkdir -p /srv/nfs/ldap-users
-echo "/srv/nfs/ldap-users *(rw,sync,no_root_squash,no_subtree_check)" > /etc/exports
+echo "/srv/nfs *(rw,sync,no_root_squash,no_subtree_check)" > /etc/exports
 exportfs -arv
 ```
 
@@ -1346,9 +1362,18 @@ From this point on, you should check the health of your SLURM DB, controller and
    ```
 
    ```shell title="pod: slurm-cluster-example-1-login-<hash> (namespace: ldap)"
+   # Check the SLURM controller
    sinfo
    # PARTITION   AVAIL  TIMELIMIT  NODES  STATE NODELIST
    # main*          up   infinite      1   down cn1
+   ```
+
+   ```shell title="pod: slurm-cluster-example-1-login-<hash> (namespace: ldap)"
+   # Check the SLURM DB
+   sacctmgr show Cluster
+   #    Cluster     ControlHost  ControlPort   RPC     Share GrpJobs       GrpTRES GrpSubmit MaxJobs       MaxTRES MaxSubmit     MaxWall                  QOS   Def QOS
+   # ---------- --------------- ------------ ----- --------- ------- ------------- --------- ------- ------------- --------- ----------- -------------------- ---------
+   #  example-1     10.244.22.0         6817  9728         1                                                                                           normal
    ```
 
 Common issues are often:
@@ -1360,7 +1385,11 @@ Common issues are often:
 
 ## 5. Deploy the Supervisor
 
+<div style={{textAlign: 'center'}}>
+
 ![architecture-cf-de-Page-5-Supervisor.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-Supervisor.drawio.svg)
+
+</div>
 
 The supervisor is configured in the `slurm-cluster` AppProject.
 
@@ -1561,7 +1590,11 @@ The supervisor is configured in the `slurm-cluster` AppProject.
 
 ## 6. Deploy CVMFS Stratum 1
 
+<div style={{textAlign: 'center'}}>
+
 ![architecture-cf-de-Page-5-CVMFS.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-5-CVMFS.drawio.svg)
+
+</div>
 
 1. Start by creating the namespace and AppProject:
 
@@ -1707,6 +1740,12 @@ The supervisor is configured in the `slurm-cluster` AppProject.
 
    Check the [ArgoCD dashboard](https://argocd.internal) to see if everything went well.
 
-## 7. Deploy Grendel
-
 ## What's next
+
+We've deployed the complete control plane. All that remains is to deploy and configure the compute plane.
+
+<div style={{textAlign: 'center'}}>
+
+![architecture-cf-de-Page-4-grendel.drawio](./40-control-plane-configuration.assets/architecture-cf-de-Page-4-grendel.drawio.svg)
+
+</div>
