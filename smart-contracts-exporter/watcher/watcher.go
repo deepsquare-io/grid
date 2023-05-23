@@ -354,13 +354,6 @@ func (w *Watcher) handleBilledTooMuch(
 	ctx context.Context,
 	event *metascheduler.MetaSchedulerBilledTooMuchEvent,
 ) error {
-	job, err := w.contractRPC.Jobs(&bind.CallOpts{
-		Context: ctx,
-	}, event.JobId)
-	if err != nil {
-		return err
-	}
-
-	metricsv1.TotalBilledTooMuch(job.ProviderAddr.Hex()).Inc()
+	metricsv1.TotalBilledTooMuch(event.ProviderAddr.Hex()).Inc()
 	return nil
 }
