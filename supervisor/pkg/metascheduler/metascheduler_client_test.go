@@ -257,9 +257,7 @@ func (suite *ClientTestSuite) TestWatchEvents() {
 		100,
 	)
 	sub := mocks.NewSubscription(suite.T())
-	errChan := make(chan error, 1)
-	var rErrChan <-chan error = errChan
-	sub.On("Err").Return(rErrChan)
+	sub.On("Unsubscribe")
 	suite.contractBackend.On(
 		"SubscribeFilterLogs",
 		mock.Anything,
