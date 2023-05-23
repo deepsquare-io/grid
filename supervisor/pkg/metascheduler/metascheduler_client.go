@@ -306,8 +306,8 @@ func (c *Client) WatchEvents(
 
 					select {
 					case claimNextTopUpJobEvents <- event:
-					case err := <-sub.Err():
-						logger.I.Error("subscription thrown an error", zap.Error(err))
+					case <-ctx.Done():
+						logger.I.Error("subscription canceled", zap.Error(ctx.Err()))
 						return
 					}
 
@@ -319,8 +319,8 @@ func (c *Client) WatchEvents(
 
 					select {
 					case claimNextCancellingJobEvents <- event:
-					case err := <-sub.Err():
-						logger.I.Error("subscription thrown an error", zap.Error(err))
+					case <-ctx.Done():
+						logger.I.Error("subscription canceled", zap.Error(ctx.Err()))
 						return
 					}
 
@@ -332,14 +332,13 @@ func (c *Client) WatchEvents(
 
 					select {
 					case claimJobEvents <- event:
-					case err := <-sub.Err():
-						logger.I.Error("subscription thrown an error", zap.Error(err))
+					case <-ctx.Done():
+						logger.I.Error("subscription canceled", zap.Error(ctx.Err()))
 						return
 					}
 				}
-
-			case err := <-sub.Err():
-				logger.I.Error("subscription thrown an error", zap.Error(err))
+			case <-ctx.Done():
+				logger.I.Error("subscription canceled", zap.Error(ctx.Err()))
 				return
 			}
 		}
