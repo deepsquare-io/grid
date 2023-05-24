@@ -27,19 +27,35 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          routeBasePath: 'workflow',
+          path: 'workflow',
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
-          editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/docs/',
+          editUrl:
+            'https://github.com/deepsquare-io/the-grid/tree/main/workflow/',
         },
         blog: {
           showReadingTime: true,
           // Please change this to your repo.
-          editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/docs/',
+          editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/blog/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
       }),
+    ],
+  ],
+  plugins: [
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'deepsquare-grid',
+        path: 'deepsquare-grid',
+        routeBasePath: 'deepsquare-grid',
+        sidebarPath: require.resolve('./sidebars.js'),
+        editUrl:
+          'https://github.com/deepsquare-io/the-grid/tree/main/deepsquare-grid/',
+      },
     ],
   ],
   themeConfig:
@@ -54,12 +70,22 @@ const config = {
         },
       },
       navbar: {
-        title: 'DeepSquare Documentation',
+        title: 'DeepSquare',
         logo: {
           alt: 'DeepSquare logo',
           src: 'img/logo.png',
         },
         items: [
+          {
+            href: '/workflow/introduction/overview',
+            label: 'Workflow Documentation',
+            position: 'left',
+          },
+          {
+            href: '/deepsquare-grid/join/overview',
+            label: 'Infrastructure Documentation',
+            position: 'left',
+          },
           {
             href: 'https://discord.gg/zvFnqVHmJh',
             label: 'Discord',

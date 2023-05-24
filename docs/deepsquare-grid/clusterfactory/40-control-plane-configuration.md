@@ -1,4 +1,4 @@
-# 2. Deploying the control plane services
+# Part 2: Deploying the control plane services
 
 This guide will only indicates how to deploy the software stack. It won't help you to learn what one software do. Please read the documentation of each software if you wish to learn more.
 

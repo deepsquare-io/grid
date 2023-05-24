@@ -10,7 +10,7 @@ A workflow file is a [JSON](https://developer.mozilla.org/en-US/docs/Web/JavaScr
 
 ## Understanding the workflow format
 
-We recommend to use the [DeepSquare sandbox page](https://app.deepsquare.run/sandbox) to write workflow file and the [reference API](/docs/deploy-deepsquare/workflow-api-reference/job).
+We recommend to use the [DeepSquare sandbox page](https://app.deepsquare.run/sandbox) to write workflow file and the [reference API](/workflow/workflow-api-reference/job).
 
 The sandbox should be filled with:
 
@@ -97,7 +97,7 @@ However, since our infrastructure already integrates OpenMPI using [PMIx](https:
 
 Notice the `tasks` and `cpusPerTask`. We specify the resource allocation using the `resources` block and use these resources during the steps.
 
-The `.resources` block indicates the **allocation** but not the actual **use** by the step. Here, the execution of the step **implicitly uses** 16 CPUs per task, 1024 MB of memory per CPU, and no GPUs per task and **explicitly uses** 16 tasks. Default values for `.steps[].run.resources` are specified in the [reference](/docs/deploy-deepsquare/workflow-api-reference/job#stepsrunresources-steprunresources).
+The `.resources` block indicates the **allocation** but not the actual **use** by the step. Here, the execution of the step **implicitly uses** 16 CPUs per task, 1024 MB of memory per CPU, and no GPUs per task and **explicitly uses** 16 tasks. Default values for `.steps[].run.resources` are specified in the [reference](/workflow/workflow-api-reference/job#stepsrunresources-steprunresources).
 
 By enabling `enableLogging`, you allow the application to send logs to the DeepSquare logging system, which allows you to read the logs on the [DeepSquare Grid Portal](https://app.deepsquare.run).
 

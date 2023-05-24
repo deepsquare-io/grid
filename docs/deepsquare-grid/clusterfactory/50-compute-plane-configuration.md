@@ -1,4 +1,4 @@
-# 3. Deploying the compute plane
+# Part 3: Deploying the compute plane
 
 ## About network booting, postscripts and BMC
 

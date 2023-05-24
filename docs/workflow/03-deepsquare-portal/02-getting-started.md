@@ -1,4 +1,4 @@
-# Getting Started
+# Quick start
 
 In this section, we'll guide you through the process of setting up your account and launching applications on the DeepSquare Customer Portal.
 

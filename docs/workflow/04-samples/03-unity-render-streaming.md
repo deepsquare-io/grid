@@ -113,5 +113,5 @@ However, most of the settings depends on how you have configured your Unity appl
 While this isn't an HPC application, this sample can guide you on how to launch graphical application. To access to the graphical session, you may:
 
 - Use WebRTC like Unity Render Streaming.
-- Use [wireguard](/docs/deploy-deepsquare/guides/connecting-wireguard) to expose a VNC server which requires the port 5900 TCP and UDP.
-- Use [bore](/docs/deploy-deepsquare/guides/connecting-bore) and a noVNC server, which is a web server which act as a VNC client.
+- Use [wireguard](/workflow/guides/connecting-wireguard) to expose a VNC server which requires the port 5900 TCP and UDP.
+- Use [bore](/workflow/guides/connecting-bore) and a noVNC server, which is a web server which act as a VNC client.

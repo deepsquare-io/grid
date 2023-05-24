@@ -30,7 +30,7 @@ A workflow file is a JSON-formatted file that defines resource allocation and ex
 }
 ```
 
-To learn more about Workflow files, read [Deploy On DeepSquare / Part 2: Writing a workflow file](../05-deploy-deepsquare/02-getting-started/part-2.md).
+To learn more about Workflow files, read [Part 2: Writing a workflow file](/workflow/getting-started/part-2).
 
 ## Running a Workflow in the Dev Application
 
