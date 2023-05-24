@@ -4,9 +4,9 @@ As you could see, ClusterFactory is quite heavy so these are the recommended pra
 
 ## Updating, Backup, Restore, Ejecting a controller
 
-About maintauning the Kubernetes Cluster, read that [here](https://docs.clusterfactory.io/docs/guides/maintenance/updating-k0s-cluster). 
+About maintaining the Kubernetes Cluster, read that [here](https://docs.clusterfactory.io/docs/guides/maintenance/updating-k0s-cluster).
 
-Upgrading is safe and seamless so don't hesitate. 
+Upgrading is safe and seamless so don't hesitate.
 
 To update ClusterFactory, `git fetch upstream` and `git merge upstream/<ref>`. **Always solve the merge conflits. Updates to the `core` and `argo` directories will go to `core.example` and `argo.example`.**
 
@@ -14,7 +14,7 @@ To update ClusterFactory, `git fetch upstream` and `git merge upstream/<ref>`. *
 
 **To update the containers:**
 
-In each `values.yaml` file, you can override the tag of the container. 
+In each `values.yaml` file, you can override the tag of the container.
 
 If you are using `dev` containers, just kill the pods. If the `imagePullPolicy` is `Always`, it will pull a new image.
 
