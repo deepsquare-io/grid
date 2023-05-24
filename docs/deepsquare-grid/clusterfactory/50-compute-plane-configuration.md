@@ -171,7 +171,20 @@ If your servers are equipped with a Baseboard Management Controller (BMC), Grend
    PMIX_MCA_gds=hash
    ```
 
-8. Lastly, verify the `./postscripts/fs_mount` file. Make sure the NFS (or other shared filesystem) mounts are correct. There is also a disk mount, **comment that line for now**.
+8. Lastly, **correct the `./postscripts/fs_mount` file.** Make sure the NFS (or other shared filesystem) mounts are correct. There is also a disk mount, **comment that line for now**.
+
+   These are the required storage layout:
+
+   | Path                                         | Description                                                  |
+   | -------------------------------------------- | ------------------------------------------------------------ |
+   | /home/ldap-users                             | A shared volume hosting the home of the users.               |
+   | (optional but recommended) /opt/cache/enroot | A shared volume for Enroot, which is storing container layers. |
+   | /opt/cache/shared                            | A shared scratch volume for jobs. Must be a fast shared/distributed storage. Contains the jobs working directories. |
+   | /opt/cache/persistent                        | A shared cache volume for jobs. It must be cleaned up after 7 days or more. Users can use this volume to temporarily host large data such as ML models or datasets. |
+   | /mnt/persistent                              | A persistent volume on disk. It should be fast. It will be used by users to temporarily host large data such as ML models or datasets. |
+   | /mnt/scratch                                 | A persistent volume on disk. It should be fast. It will be used by the container runtimes Apptainer and Enroot to create the runtime container filesystem. |
+
+   To help you get organized, we recommend creating directories inside `/mnt` like `/mnt/nfs` or `/mnt/disk`, and then making a symbolic link from the required path like `/opt/cache/shared` to your storage provisioner, like `/mnt/nfs/cache/shared`.
 
 9. Commit and push:
 
@@ -403,17 +416,17 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
         ingress:
           enabled: true
           ingressClass: 'traefik'
-
+   
           annotations:
             cert-manager.io/cluster-issuer: private-cluster-issuer
             traefik.ingress.kubernetes.io/router.entrypoints: websecure
             traefik.ingress.kubernetes.io/router.tls: 'true'
-
+   
           hosts:
             - ipmi.example.com
-
+   
           path: /
-
+   
           tls:
             - secretName: ipmi.example.com-secret
               hosts:
