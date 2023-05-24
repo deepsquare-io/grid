@@ -2,6 +2,10 @@
 
 The guides lead you through the advanced features of DeepSquare.
 
+## Modules development
+
+Want to develop modules for the community? Then, you are welcome to continue to the ["Module Development" section](/workflow/guides/module-development/about).
+
 ## Container specific features
 
 Containers running on DeepSquare can be configured! You might want to see:
