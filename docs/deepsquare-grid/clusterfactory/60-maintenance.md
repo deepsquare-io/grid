@@ -1,6 +1,6 @@
 # Part 4: Maintaining a DeepSquare cluster
 
-As you could see, ClusterFactory is quite heavy so these are the recommended practices to maintain your cluster with ClusterFactory.
+As you can see, ClusterFactory is quite heavy. So here are the recommended practices to maintain your cluster with ClusterFactory.
 
 ## Updating, Backup, Restore, Ejecting a controller
 
