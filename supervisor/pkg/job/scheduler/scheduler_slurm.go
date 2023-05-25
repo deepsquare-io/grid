@@ -6,7 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
+	"go.uber.org/zap"
 )
 
 type Slurm struct {
@@ -42,7 +44,10 @@ func NewSlurm(
 // CancelJob kills a job using scancel command.
 func (s *Slurm) CancelJob(ctx context.Context, req *CancelRequest) error {
 	cmd := fmt.Sprintf("%s --name=%s --me", s.scancel, req.Name)
-	_, err := s.ExecAs(ctx, req.User, cmd)
+	out, err := s.ExecAs(ctx, req.User, cmd)
+	if err != nil {
+		logger.I.Error("CancelJob failed with error", zap.Error(err), zap.String("out", out))
+	}
 	return err
 }
 
@@ -80,6 +85,7 @@ true
 	)
 	out, err := s.ExecAs(ctx, req.User, cmd)
 	if err != nil {
+		logger.I.Error("Submit failed with error", zap.Error(err), zap.String("out", out))
 		return strings.TrimSpace(strings.TrimRight(string(out), "\n")), err
 	}
 
@@ -105,6 +111,9 @@ func (s *Slurm) TopUp(ctx context.Context, req *TopUpRequest) error {
 // HealthCheck runs squeue to check if the queue is running
 func (s *Slurm) HealthCheck(ctx context.Context) error {
 	_, err := s.ExecAs(ctx, s.adminUser, s.squeue)
+	if err != nil {
+		logger.I.Error("HealthCheck failed with error", zap.Error(err), zap.String("out", out))
+	}
 	return err
 }
 
@@ -116,6 +125,11 @@ func (s *Slurm) FindRunningJobByName(
 	cmd := fmt.Sprintf("%s --name %s -O JobId:256 --noheader", s.squeue, req.Name)
 	out, err := s.ExecAs(ctx, req.User, cmd)
 	if err != nil {
+		logger.I.Error(
+			"FindRunningJobByName failed with error",
+			zap.Error(err),
+			zap.String("out", out),
+		)
 		return 0, err
 	}
 

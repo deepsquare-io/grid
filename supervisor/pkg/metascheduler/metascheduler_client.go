@@ -231,7 +231,7 @@ func (c *Client) SetJobStatus(
 		return WrapError(err)
 	}
 	logger.Debug(
-		"set job status success",
+		"set job status",
 		zap.String("tx", tx.Hash().String()),
 		zap.Uint8("status", uint8(status)),
 	)
