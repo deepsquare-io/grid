@@ -104,13 +104,16 @@ func (s *Slurm) TopUp(ctx context.Context, req *TopUpRequest) error {
 	}
 
 	cmd := fmt.Sprintf("%s update job %d TimeLimit+=%d", s.scontrol, jobID, req.AdditionalTime)
-	_, err = s.ExecAs(ctx, s.adminUser, cmd)
+	out, err := s.ExecAs(ctx, s.adminUser, cmd)
+	if err != nil {
+		logger.I.Error("TopUp failed with error", zap.Error(err), zap.String("out", out))
+	}
 	return err
 }
 
 // HealthCheck runs squeue to check if the queue is running
 func (s *Slurm) HealthCheck(ctx context.Context) error {
-	_, err := s.ExecAs(ctx, s.adminUser, s.squeue)
+	out, err := s.ExecAs(ctx, s.adminUser, s.squeue)
 	if err != nil {
 		logger.I.Error("HealthCheck failed with error", zap.Error(err), zap.String("out", out))
 	}
