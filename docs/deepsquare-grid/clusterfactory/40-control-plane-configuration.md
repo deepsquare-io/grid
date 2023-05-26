@@ -1036,7 +1036,7 @@ kubectl apply -f argo/slurm-cluster/volumes/example-1/ldap-users-storage.yaml
        #NodeName=cn[2-8] CPUs=64 Boards=1 SocketsPerBoard=1 CoresPerSocket=32 ThreadsPerCore=2 RealMemory=125000 Gres=gpu:3
 
      partitions: |
-       PartitionName=main Nodes=cn1 Default=YES MaxTime=INFINITE State=UP OverSubscribe=EXCLUSIVE
+       PartitionName=main Nodes=cn1 Default=YES MaxTime=INFINITE State=UP
 
      gres: |
        NodeName=cn1 File=/dev/nvidia[0-1] AutoDetect=nvml
