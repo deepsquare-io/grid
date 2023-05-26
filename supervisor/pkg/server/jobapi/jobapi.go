@@ -69,6 +69,20 @@ func (s *Server) SetJobStatus(
 	req *supervisorv1alpha1.SetJobStatusRequest,
 ) (*supervisorv1alpha1.SetJobStatusResponse, error) {
 	logger.I.Info("grpc received job result", zap.Any("job_result", req))
+	go func() {
+		logger.I.Info("launched setJobStatusTask", zap.Any("job_result", req))
+		if err := s.setJobStatusTask(context.Background(), req); err != nil {
+			logger.I.Error("setJobStatusTask failed", zap.Error(err))
+		}
+	}()
+	return &supervisorv1alpha1.SetJobStatusResponse{}, nil
+}
+
+func (s *Server) setJobStatusTask(
+	ctx context.Context,
+	req *supervisorv1alpha1.SetJobStatusRequest,
+) error {
+
 	jobName, err := hexutil.Decode(req.Name)
 	if err != nil {
 		logger.I.Warn(
@@ -76,7 +90,7 @@ func (s *Server) SetJobStatus(
 			zap.Error(err),
 			zap.String("name", req.Name),
 		)
-		return nil, err
+		return err
 	}
 	var jobNameFixedLength [32]byte
 	copy(jobNameFixedLength[:], jobName)
@@ -95,7 +109,7 @@ func (s *Server) SetJobStatus(
 				zap.String("name", req.Name),
 				zap.Uint64("duration", req.Duration/60),
 			)
-			return &supervisorv1alpha1.SetJobStatusResponse{}, nil
+			return nil
 		}
 
 		// Do set job status
@@ -156,12 +170,11 @@ func (s *Server) SetJobStatus(
 				zap.String("name", req.Name),
 				zap.Uint64("duration", req.Duration/60),
 			)
-			return nil, err
+			return err
 		}
-		return &supervisorv1alpha1.SetJobStatusResponse{}, nil
+		return nil
 	} else {
 		logger.I.Error("SetJobStatus unknown job status", zap.Error(err), zap.String("status", req.Status.String()))
-		return nil, fmt.Errorf("unknown job status %s", req.Status.String())
+		return fmt.Errorf("unknown job status %s", req.Status.String())
 	}
-
 }
