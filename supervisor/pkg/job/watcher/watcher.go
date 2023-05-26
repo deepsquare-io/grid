@@ -8,6 +8,7 @@ import (
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
@@ -19,10 +20,11 @@ import (
 const claimJobMaxTimeout = time.Duration(60 * time.Second)
 
 type Watcher struct {
-	metascheduler metascheduler.MetaScheduler
-	scheduler     scheduler.Scheduler
-	sbatch        sbatch.Client
-	pollingTime   time.Duration
+	metascheduler   metascheduler.MetaScheduler
+	scheduler       scheduler.Scheduler
+	sbatch          sbatch.Client
+	pollingTime     time.Duration
+	resourceManager lock.ResourceManager
 }
 
 func New(
@@ -206,6 +208,10 @@ func (w *Watcher) handleClaimNextJob(
 		User:          strings.ToLower(event.CustomerAddr.Hex()),
 		JobDefinition: &definition,
 	}
+
+	// Lock the job: avoid any mutation of the job until we receive a response from sbatch
+	w.resourceManager.Lock(hexutil.Encode(event.JobId[:]))
+	defer w.resourceManager.Unlock(hexutil.Encode(event.JobId[:]))
 
 	// Submit the job script
 	resp, err := w.scheduler.Submit(ctx, req)

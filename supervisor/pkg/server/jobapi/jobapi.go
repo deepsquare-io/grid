@@ -8,6 +8,7 @@ import (
 
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -28,7 +29,8 @@ type Server struct {
 	jobHandler JobHandler
 	Timeout    time.Duration
 	// Delay between tries
-	Delay time.Duration
+	Delay           time.Duration
+	resourceManager lock.ResourceManager
 }
 
 func New(
@@ -73,6 +75,10 @@ func (s *Server) SetJobStatus(
 	}
 	var jobNameFixedLength [32]byte
 	copy(jobNameFixedLength[:], jobName)
+
+	// Lock the job: avoid any mutation of the job until a setjob is perfectly sent
+	s.resourceManager.Lock(string(jobName))
+	defer s.resourceManager.Unlock(string(jobName))
 
 	if status, ok := gRPCToEthJobStatus[req.Status]; ok {
 		// Ignore unknown status transition, this is for backward compatilibility
