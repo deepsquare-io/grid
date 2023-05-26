@@ -10,6 +10,7 @@ import (
 
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
 	"github.com/stretchr/testify/mock"
@@ -24,7 +25,7 @@ type ServerTestSuite struct {
 
 func (suite *ServerTestSuite) BeforeTest(suiteName, testName string) {
 	suite.jobHandler = mocks.NewJobHandler(suite.T())
-	suite.impl = jobapi.New(suite.jobHandler)
+	suite.impl = jobapi.New(suite.jobHandler, lock.NewResourceManager())
 	suite.impl.Timeout = time.Second
 	suite.impl.Delay = time.Second
 }

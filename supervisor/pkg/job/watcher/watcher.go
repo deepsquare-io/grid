@@ -24,7 +24,7 @@ type Watcher struct {
 	scheduler       scheduler.Scheduler
 	sbatch          sbatch.Client
 	pollingTime     time.Duration
-	resourceManager lock.ResourceManager
+	resourceManager *lock.ResourceManager
 }
 
 func New(
@@ -32,6 +32,7 @@ func New(
 	scheduler scheduler.Scheduler,
 	sbatch sbatch.Client,
 	pollingTime time.Duration,
+	resourceManager *lock.ResourceManager,
 ) *Watcher {
 	if metascheduler == nil {
 		logger.I.Panic("metascheduler is nil")
@@ -42,11 +43,15 @@ func New(
 	if sbatch == nil {
 		logger.I.Panic("sbatch is nil")
 	}
+	if resourceManager == nil {
+		logger.I.Panic("resourceManager is nil")
+	}
 	return &Watcher{
-		metascheduler: metascheduler,
-		scheduler:     scheduler,
-		sbatch:        sbatch,
-		pollingTime:   pollingTime,
+		metascheduler:   metascheduler,
+		scheduler:       scheduler,
+		sbatch:          sbatch,
+		pollingTime:     pollingTime,
+		resourceManager: resourceManager,
 	}
 }
 

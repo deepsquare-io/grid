@@ -10,29 +10,29 @@ type ResourceManager struct {
 	mutex sync.Mutex
 }
 
-func NewNamedLock() *ResourceManager {
+func NewResourceManager() *ResourceManager {
 	return &ResourceManager{
 		locks: make(map[string]*sync.Mutex),
 	}
 }
 
-func (nl *ResourceManager) Lock(name string) {
-	nl.mutex.Lock()
-	defer nl.mutex.Unlock()
+func (rm *ResourceManager) Lock(name string) {
+	rm.mutex.Lock()
+	defer rm.mutex.Unlock()
 
-	lock, ok := nl.locks[name]
+	lock, ok := rm.locks[name]
 	if !ok {
 		lock = &sync.Mutex{}
-		nl.locks[name] = lock
+		rm.locks[name] = lock
 	}
 	lock.Lock()
 }
 
-func (nl *ResourceManager) Unlock(name string) {
-	nl.mutex.Lock()
-	defer nl.mutex.Unlock()
+func (rm *ResourceManager) Unlock(name string) {
+	rm.mutex.Lock()
+	defer rm.mutex.Unlock()
 
-	lock, ok := nl.locks[name]
+	lock, ok := rm.locks[name]
 	if !ok {
 		panic(fmt.Sprintf("Unlock called on non-existing lock: %s", name))
 	}

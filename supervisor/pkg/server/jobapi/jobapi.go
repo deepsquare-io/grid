@@ -30,19 +30,24 @@ type Server struct {
 	Timeout    time.Duration
 	// Delay between tries
 	Delay           time.Duration
-	resourceManager lock.ResourceManager
+	resourceManager *lock.ResourceManager
 }
 
 func New(
 	jobHandler JobHandler,
+	resourceManager *lock.ResourceManager,
 ) *Server {
 	if jobHandler == nil {
 		logger.I.Fatal("jobHandler is nil")
 	}
+	if resourceManager == nil {
+		logger.I.Fatal("resourceManager is nil")
+	}
 	return &Server{
-		jobHandler: jobHandler,
-		Timeout:    15 * time.Second,
-		Delay:      3 * time.Second,
+		jobHandler:      jobHandler,
+		Timeout:         15 * time.Second,
+		Delay:           3 * time.Second,
+		resourceManager: resourceManager,
 	}
 }
 

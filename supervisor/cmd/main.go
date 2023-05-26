@@ -11,6 +11,7 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/debug"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/watcher"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
@@ -333,11 +334,13 @@ func Init(ctx context.Context) *Container {
 		scontrol,
 		publicAddress,
 	)
+	resourceManager := lock.NewResourceManager()
 	watcher := watcher.New(
 		metascheduler,
 		slurmJobService,
 		sbatchClient,
 		time.Duration(5*time.Second),
+		resourceManager,
 	)
 
 	opts := []grpc.ServerOption{}
@@ -350,6 +353,7 @@ func Init(ctx context.Context) *Container {
 	}
 	server := server.New(
 		metascheduler,
+		resourceManager,
 		slurmSSHB64PK,
 		opts...,
 	)

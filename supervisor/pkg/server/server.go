@@ -5,6 +5,7 @@ import (
 
 	healthv1 "github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1"
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/health"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/sshapi"
@@ -17,13 +18,14 @@ type Server struct {
 
 func New(
 	jobHandler jobapi.JobHandler,
+	resourceManager *lock.ResourceManager,
 	pkB64 string,
 	opts ...grpc.ServerOption,
 ) *Server {
 	grpcServer := grpc.NewServer(opts...)
 	supervisorv1alpha1.RegisterJobAPIServer(
 		grpcServer,
-		jobapi.New(jobHandler),
+		jobapi.New(jobHandler, resourceManager),
 	)
 	supervisorv1alpha1.RegisterSshAPIServer(
 		grpcServer,

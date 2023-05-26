@@ -13,6 +13,7 @@ import (
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/watcher"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
@@ -65,6 +66,7 @@ func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
 		suite.scheduler,
 		suite.sbatch,
 		pollingTime,
+		lock.NewResourceManager(),
 	)
 }
 
