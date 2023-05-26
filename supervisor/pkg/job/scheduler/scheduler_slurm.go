@@ -58,7 +58,7 @@ func (s *Slurm) Submit(ctx context.Context, req *SubmitRequest) (string, error) 
 	cmd := fmt.Sprintf(`%s \
   --parsable \
   --job-name=%s \
-	--comment="supervisor %s" \
+  --comment="supervisor %s" \
   --time=%d \
   --ntasks=%d \
   --cpus-per-task=%d \
