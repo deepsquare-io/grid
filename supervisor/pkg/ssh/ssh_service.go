@@ -94,8 +94,5 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 		zap.String("user", user),
 	)
 	out, err := sess.CombinedOutput(cmd)
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
+	return string(out), err
 }
