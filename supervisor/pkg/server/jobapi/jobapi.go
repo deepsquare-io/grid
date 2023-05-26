@@ -82,8 +82,8 @@ func (s *Server) SetJobStatus(
 	copy(jobNameFixedLength[:], jobName)
 
 	// Lock the job: avoid any mutation of the job until a setjob is perfectly sent
-	s.resourceManager.Lock(string(jobName))
-	defer s.resourceManager.Unlock(string(jobName))
+	s.resourceManager.Lock(req.Name)
+	defer s.resourceManager.Unlock(req.Name)
 
 	if status, ok := gRPCToEthJobStatus[req.Status]; ok {
 		// Ignore unknown status transition, this is for backward compatilibility
@@ -92,7 +92,7 @@ func (s *Server) SetJobStatus(
 				"status unknown (if the status is deprecated, ignore this warning)",
 				zap.Error(err),
 				zap.String("status", req.Status.String()),
-				zap.String("name", string(jobName)),
+				zap.String("name", req.Name),
 				zap.Uint64("duration", req.Duration/60),
 			)
 			return &supervisorv1alpha1.SetJobStatusResponse{}, nil
@@ -115,7 +115,7 @@ func (s *Server) SetJobStatus(
 							"Cannot change status to itself",
 							zap.Error(err),
 							zap.String("status", req.Status.String()),
-							zap.String("name", string(jobName)),
+							zap.String("name", req.Name),
 							zap.Uint64("duration", req.Duration/60),
 						)
 						return nil
@@ -125,7 +125,7 @@ func (s *Server) SetJobStatus(
 							"Invalid state transition from SCHEDULED.",
 							zap.Error(err),
 							zap.String("status", req.Status.String()),
-							zap.String("name", string(jobName)),
+							zap.String("name", req.Name),
 							zap.Uint64("duration", req.Duration/60),
 						)
 						if err := s.jobHandler.SetJobStatus(
@@ -138,7 +138,7 @@ func (s *Server) SetJobStatus(
 								"Failed to put the job in RUNNING",
 								zap.Error(err),
 								zap.String("status", req.Status.String()),
-								zap.String("name", string(jobName)),
+								zap.String("name", req.Name),
 								zap.Uint64("duration", req.Duration/60),
 							)
 							return err
@@ -153,7 +153,7 @@ func (s *Server) SetJobStatus(
 				"SetJobStatus failed",
 				zap.Error(err),
 				zap.String("status", req.Status.String()),
-				zap.String("name", string(jobName)),
+				zap.String("name", req.Name),
 				zap.Uint64("duration", req.Duration/60),
 			)
 			return nil, err
