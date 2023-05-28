@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ethereum/go-ethereum v1.11.6
 	github.com/joho/godotenv v1.5.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/urfave/cli/v2 v2.25.4
 	github.com/vektra/mockery/v2 v2.22.1
 	go.uber.org/zap v1.24.0
