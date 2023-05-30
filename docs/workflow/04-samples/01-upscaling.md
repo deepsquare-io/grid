@@ -178,25 +178,25 @@ Let's implement the second step. We need to launch multiple substeps in parallel
 steps:
   # ...
   - name: upscaling-loop
-      for:
-        parallel: true
-        range:
-          begin: 1
-          end: 4 # NTASKS
-        steps:
-          - name: upscale
-            run:
-              container:
-                deepsquareHosted: true
-                apptainer: true
-                registry: registry-1.deepsquare.run
-                image: library/upscaling:latest
-              shell: /bin/bash
-              command: |-
-                set -e
+    for:
+      parallel: true
+      range:
+        begin: 1
+        end: 4 # NTASKS
+      steps:
+        - name: upscale
+          run:
+            container:
+              deepsquareHosted: true
+              apptainer: true
+              registry: registry-1.deepsquare.run
+              image: library/upscaling:latest
+            shell: /bin/bash
+            command: |-
+              set -e
 
-                echo "Upscaling batch ${index}"
-                /opt/Real-ESRGAN/upscale.sh  "${STORAGE_PATH}/input_frames/batch-${index}"
+              echo "Upscaling batch ${index}"
+              /opt/Real-ESRGAN/upscale.sh  "${STORAGE_PATH}/input_frames/batch-${index}"
 ```
 
 After executing the `upscale.sh` script, the frames will be generated inside the `output_frames` directory.
@@ -362,25 +362,25 @@ steps:
           cd -
         done
   - name: upscaling-loop
-      for:
-        parallel: true
-        range:
-          begin: 1
-          end: 4 # NTASKS
-        steps:
-          - name: upscale
-            run:
-              container:
-                deepsquareHosted: true
-                apptainer: true
-                registry: registry-1.deepsquare.run
-                image: library/upscaling:latest
-              shell: /bin/bash
-              command: |-
-                set -e
+    for:
+      parallel: true
+      range:
+        begin: 1
+        end: 4 # NTASKS
+      steps:
+        - name: upscale
+          run:
+            container:
+              deepsquareHosted: true
+              apptainer: true
+              registry: registry-1.deepsquare.run
+              image: library/upscaling:latest
+            shell: /bin/bash
+            command: |-
+              set -e
 
-                echo "Upscaling batch ${index}"
-                /opt/Real-ESRGAN/upscale.sh  "${STORAGE_PATH}/input_frames/batch-${index}"
+              echo "Upscaling batch ${index}"
+              /opt/Real-ESRGAN/upscale.sh  "${STORAGE_PATH}/input_frames/batch-${index}"
   - name: re-encode-video
     run:
       container:
