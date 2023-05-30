@@ -96,50 +96,49 @@ steps:
       range:
         begin: 1
         end: 4
-      steps:
-        - name: generate image
-          run:
-            container:
-              deepsquareHosted: true,
-              apptainer: true,
-              registry: 'registry-1.deepsquare.run',
-              image: 'library/stable-diffusion:latest',
-              mounts:
-                - hostDir: '/data/beegfs/cache/persistent',
-                  containerDir: '/cache',
-                  options: 'rw',
-                - hostDir: '/opt/models/stable-diffusion',
-                  containerDir: '/models',
-                  options: 'ro',
-            env:
-              - key: HF_HOME
-                value: /cache
-            shell: '/bin/bash'
-            command: |
-              set -e
+    steps:
+      - name: generate image
+        run:
+          container:
+            deepsquareHosted: true
+            apptainer: true
+            registry: 'registry-1.deepsquare.run'
+            image: 'library/stable-diffusion:latest'
+          mounts:
+            - hostDir: '/data/beegfs/cache/persistent'
+              containerDir: '/cache'
+              options: 'rw'
+            - hostDir: '/opt/models/stable-diffusion'
+              containerDir: '/models'
+              options: 'ro'
+          env:
+            - key: HF_HOME
+              value: /cache
+          shell: '/bin/bash'
+          command: |
+            set -e
 
-              mkdir -p "${STORAGE_PATH}/batch-${index}"
-              params=(
-                "--ckpt" "/models/$MODEL/model.ckpt"
-                "--outdir" "${STORAGE_PATH}/batch-${index}"
-                "--H" "$HEIGHT"
-                "--W" "$WIDTH"
-                "--steps" "$STEPS"
-                "--n_iter" "$ITER"
-                "--device" "cuda"
-                "--n_samples" "$SAMPLES"
-                "--seed" "$(od -N 4 -t uL -An /dev/urandom | tr -d " ")"
-                "--prompt" "$PROMPT"
-              )
-              if [ -f "/models/$MODEL/config.yaml" ]; then
-                params+=("--config" "/models/$MODEL/config.yaml")
-              fi
+            mkdir -p "${STORAGE_PATH}/batch-${index}"
+            params=(
+              "--ckpt" "/models/$MODEL/model.ckpt"
+              "--outdir" "${STORAGE_PATH}/batch-${index}"
+              "--H" "$HEIGHT"
+              "--W" "$WIDTH"
+              "--steps" "$STEPS"
+              "--n_iter" "$ITER"
+              "--device" "cuda"
+              "--n_samples" "$SAMPLES"
+              "--seed" "$(od -N 4 -t uL -An /dev/urandom | tr -d " ")"
+              "--prompt" "$PROMPT"
+            )
+            if [ -f "/models/$MODEL/config.yaml" ]; then
+              params+=("--config" "/models/$MODEL/config.yaml")
+            fi
 
-              python /stablediffusion/scripts/txt2img.py "${params[@]}"
-              cd "${STORAGE_PATH}/batch-${index}"
-              find . -type f -not -name "grid*.png" -exec sh -c 'i="$1"; mv "$i" "$(md5sum "$i" | cut -d " " -f 1 | cut -c -12).png"' shell "{}" \\;
-              mv grid*.png "grid_${index}.png"
-
+            python /stablediffusion/scripts/txt2img.py "${params[@]}"
+            cd "${STORAGE_PATH}/batch-${index}"
+            find . -type f -not -name "grid*.png" -exec sh -c 'i="$1"; mv "$i" "$(md5sum "$i" | cut -d " " -f 1 | cut -c -12).png"' shell "{}" \\;
+            mv grid*.png "grid_${index}.png"
 ```
 
 DeepSquare already hosts its own models at `/opt/models`. If you plan to use your own model, you should import the model using the `input` directive.
@@ -153,13 +152,13 @@ Our docker image already includes ImageMagick, meaning we can compose a new imag
 ```yaml
 steps:
   # ...
-  - name: combine-images
+    - name: combine-images
     run:
       container:
-        deepsquareHosted: true,
-        apptainer: true,
-        registry: 'registry-1.deepsquare.run',
-        image: 'library/stable-diffusion:latest',
+        deepsquareHosted: true
+        apptainer: true
+        registry: 'registry-1.deepsquare.run'
+        image: 'library/stable-diffusion:latest'
       shell: '/bin/bash'
       command: |
         set -e
@@ -230,56 +229,56 @@ steps:
       range:
         begin: 1
         end: 4
-      steps:
-        - name: generate image
-          run:
-            container:
-              deepsquareHosted: true,
-              apptainer: true,
-              registry: 'registry-1.deepsquare.run',
-              image: 'library/stable-diffusion:latest',
-              mounts:
-                - hostDir: '/data/beegfs/cache/persistent',
-                  containerDir: '/cache',
-                  options: 'rw',
-                - hostDir: '/opt/models/stable-diffusion',
-                  containerDir: '/models',
-                  options: 'ro',
-            env:
-              - key: HF_HOME
-                value: /cache
-            shell: '/bin/bash'
-            command: |
-              set -e
+    steps:
+      - name: generate image
+        run:
+          container:
+            deepsquareHosted: true
+            apptainer: true
+            registry: 'registry-1.deepsquare.run'
+            image: 'library/stable-diffusion:latest'
+          mounts:
+            - hostDir: '/data/beegfs/cache/persistent'
+              containerDir: '/cache'
+              options: 'rw'
+            - hostDir: '/opt/models/stable-diffusion'
+              containerDir: '/models'
+              options: 'ro'
+          env:
+            - key: HF_HOME
+              value: /cache
+          shell: '/bin/bash'
+          command: |
+            set -e
 
-              mkdir -p "${STORAGE_PATH}/batch-${index}"
-              params=(
-                "--ckpt" "/models/$MODEL/model.ckpt"
-                "--outdir" "${STORAGE_PATH}/batch-${index}"
-                "--H" "$HEIGHT"
-                "--W" "$WIDTH"
-                "--steps" "$STEPS"
-                "--n_iter" "$ITER"
-                "--device" "cuda"
-                "--n_samples" "$SAMPLES"
-                "--seed" "$(od -N 4 -t uL -An /dev/urandom | tr -d " ")"
-                "--prompt" "$PROMPT"
-              )
-              if [ -f "/models/$MODEL/config.yaml" ]; then
-                params+=("--config" "/models/$MODEL/config.yaml")
-              fi
+            mkdir -p "${STORAGE_PATH}/batch-${index}"
+            params=(
+              "--ckpt" "/models/$MODEL/model.ckpt"
+              "--outdir" "${STORAGE_PATH}/batch-${index}"
+              "--H" "$HEIGHT"
+              "--W" "$WIDTH"
+              "--steps" "$STEPS"
+              "--n_iter" "$ITER"
+              "--device" "cuda"
+              "--n_samples" "$SAMPLES"
+              "--seed" "$(od -N 4 -t uL -An /dev/urandom | tr -d " ")"
+              "--prompt" "$PROMPT"
+            )
+            if [ -f "/models/$MODEL/config.yaml" ]; then
+              params+=("--config" "/models/$MODEL/config.yaml")
+            fi
 
-              python /stablediffusion/scripts/txt2img.py "${params[@]}"
-              cd "${STORAGE_PATH}/batch-${index}"
-              find . -type f -not -name "grid*.png" -exec sh -c 'i="$1"; mv "$i" "$(md5sum "$i" | cut -d " " -f 1 | cut -c -12).png"' shell "{}" \\;
-              mv grid*.png "grid_${index}.png"
+            python /stablediffusion/scripts/txt2img.py "${params[@]}"
+            cd "${STORAGE_PATH}/batch-${index}"
+            find . -type f -not -name "grid*.png" -exec sh -c 'i="$1"; mv "$i" "$(md5sum "$i" | cut -d " " -f 1 | cut -c -12).png"' shell "{}" \\;
+            mv grid*.png "grid_${index}.png"
   - name: combine-images
     run:
       container:
-        deepsquareHosted: true,
-        apptainer: true,
-        registry: 'registry-1.deepsquare.run',
-        image: 'library/stable-diffusion:latest',
+        deepsquareHosted: true
+        apptainer: true
+        registry: 'registry-1.deepsquare.run'
+        image: 'library/stable-diffusion:latest'
       shell: '/bin/bash'
       command: |
         set -e
