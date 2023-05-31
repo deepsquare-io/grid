@@ -12,10 +12,10 @@ mkdir -p "${PROJECTPATH}/gen/go/contracts/metascheduler"
 solc --optimize --optimize-runs=200 ./contracts/Metascheduler.sol \
   --base-path . \
   --include-path "node_modules/" \
-  --combined-json abi | abigen --pkg metashechdulerabi \
+  --combined-json abi | abigen --pkg metaschedulerabi \
   --combined-json - \
   --exc "contracts/Tools.sol:Tools" \
-  --out "${PROJECTPATH}/generated/metascheduler/abi/metascheduler.go"
+  --out "${PROJECTPATH}/generated/abi/metascheduler/metascheduler.go"
 
 cd "${PROJECTPATH}"
 
@@ -25,4 +25,4 @@ solc --optimize --optimize-runs=200 ./pkg/metascheduler/ErrorContract.sol \
   --include-path "${CONTRACTSPATH}/node_modules/" \
   --combined-json abi,bin | abigen --pkg errorsabi \
   --combined-json - \
-  --out "${PROJECTPATH}/generated/errors/abi/errors.go"
+  --out "${PROJECTPATH}/generated/abi/errors/errors.go"
