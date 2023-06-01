@@ -1,4 +1,4 @@
-ARG rocky_version=8.6
+ARG rocky_version=8.8
 
 FROM docker.io/rockylinux/rockylinux:${rocky_version} as builder
 
