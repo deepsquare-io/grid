@@ -39,7 +39,10 @@ func New(
 	}
 }
 
-func (s *Service) establish(ctx context.Context, user string) (session *ssh.Session, close func(), err error) {
+func (s *Service) establish(
+	ctx context.Context,
+	user string,
+) (session *ssh.Session, close func(), err error) {
 	config := &ssh.ClientConfig{
 		User:            user,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
@@ -91,8 +94,5 @@ func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, 
 		zap.String("user", user),
 	)
 	out, err := sess.CombinedOutput(cmd)
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
+	return string(out), err
 }

@@ -1,17 +1,16 @@
-import { introspectionFromSchema } from 'graphql';
-import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
-import { loadSchemaSync } from '@graphql-tools/load';
+import { buildSchema, introspectionFromSchema } from 'graphql';
 import fs from 'fs';
 
-const options = {
-  ignoreInternals: true,
-  nullableArrayItems: true,
-};
+const schemaFile = fs.readFileSync(
+  '../schemas/sbatchapi/schema.graphqls',
+  'utf8'
+);
 
-const schema = loadSchemaSync('../schemas/sbatchapi/schema.graphqls', {
-  loaders: [new GraphQLFileLoader()],
-});
-const introspection = introspectionFromSchema(schema);
+const introspection = introspectionFromSchema(
+  buildSchema(schemaFile, {
+    assumeValid: true,
+  })
+);
 
 let jsonSchemaString = JSON.stringify(introspection, null, 2);
 

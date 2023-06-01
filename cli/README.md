@@ -1,6 +1,6 @@
-# The GRID CLI
+# The Grid CLI
 
-Submit directly jobs to the DeepSquare GRID!
+Submit directly jobs to the DeepSquare Grid!
 
 ## Usage
 

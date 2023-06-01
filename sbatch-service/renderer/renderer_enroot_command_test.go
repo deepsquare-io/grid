@@ -47,7 +47,7 @@ func TestRenderEnrootCommand(t *testing.T) {
 	}{
 		{
 			input: *cleanEnrootStepRun("hostname"),
-			expected: `/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=y
@@ -59,16 +59,18 @@ environ() {
   /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
 
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
   /usr/bin/echo "test='value'"
 }
 
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_TMP /deepsquare/tmp none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container bind,ro'
+  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
 }
 
 hooks() {
@@ -90,7 +92,7 @@ EOFenroot
 				r.MapRoot = utils.Ptr(true)
 				return r
 			}(),
-			expected: `/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=y
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=y
@@ -102,16 +104,18 @@ environ() {
   /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
 
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
   /usr/bin/echo "test='value'"
 }
 
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_TMP /deepsquare/tmp none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container bind,ro'
+  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
 }
 
 hooks() {
@@ -133,7 +137,7 @@ EOFenroot
 				r.Container.Image = "/test/my.sqshfs"
 				return r
 			}(),
-			expected: `/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=y
@@ -145,16 +149,18 @@ environ() {
   /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
 
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
   /usr/bin/echo "test='value'"
 }
 
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_TMP /deepsquare/tmp none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container bind,ro'
+  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
 }
 
 hooks() {
@@ -176,7 +182,7 @@ EOFenroot
 				r.WorkDir = utils.Ptr("/dir")
 				return r
 			}(),
-			expected: `/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=y
@@ -188,16 +194,18 @@ environ() {
   /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
 
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
   /usr/bin/echo "test='value'"
 }
 
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_TMP /deepsquare/tmp none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container bind,ro'
+  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
 }
 
 hooks() {

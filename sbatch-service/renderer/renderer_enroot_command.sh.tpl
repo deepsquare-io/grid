@@ -1,4 +1,4 @@
-/usr/bin/cat << 'EOFenroot' > "$STORAGE_PATH/enroot.conf"
+/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 {{- if and .Run.MapRoot (derefBool .Run.MapRoot ) }}
 #ENROOT_REMAP_ROOT=y
 {{- else }}
@@ -14,9 +14,10 @@ environ() {
   /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
 
   /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/env"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
 {{- range $env := .Run.Env }}
   /usr/bin/echo "{{ $env.Key }}={{ $env.Value | squote }}"
 {{- end }}
@@ -24,11 +25,12 @@ environ() {
 
 mounts() {
   /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_TMP /deepsquare/tmp none x-create=dir,bind,rw"
 {{- if and .Run.Container.X11 (derefBool .Run.Container.X11 ) }}
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
 {{- end }}
 {{- range $mount := .Run.Container.Mounts }}
-  /usr/bin/echo '{{ $mount.HostDir }} {{ $mount.ContainerDir }} bind,{{ $mount.Options }}'
+  /usr/bin/echo '{{ $mount.HostDir }} {{ $mount.ContainerDir }} none x-create=auto,bind,{{ $mount.Options }}'
 {{- end }}
 }
 

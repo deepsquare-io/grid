@@ -8,6 +8,8 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/the-grid/sbatch-service/utils/base58"
 )
 
 func squote(str ...interface{}) string {
@@ -58,7 +60,12 @@ func quoteEscape(str ...interface{}) string {
 	return strings.Join(out, " ")
 }
 
-func FormatImageURL(registry *string, image string, apptainer *bool, deepsquareHosted *bool) string {
+func FormatImageURL(
+	registry *string,
+	image string,
+	apptainer *bool,
+	deepsquareHosted *bool,
+) string {
 	// Is absolute path
 	if strings.HasPrefix(image, "/") {
 		return filepath.Clean(image)
@@ -100,6 +107,13 @@ func funcMap() template.FuncMap {
 	f["renderSlirp4NetNS"] = RenderSlirp4NetNS
 	f["renderEnrootCommand"] = RenderEnrootCommand
 	f["renderStepAsyncLaunch"] = RenderStepAsyncLaunch
+	f["renderStepUse"] = func(
+		j *model.Job,
+		s *model.Step,
+		u *model.StepUse,
+	) (string, error) {
+		return NewStepUseRenderer(base58.Encoder{}).Render(j, s, u)
+	}
 	f["squote"] = squote
 	f["escapeSQuote"] = escapeSQuote
 	f["quoteEscape"] = quoteEscape

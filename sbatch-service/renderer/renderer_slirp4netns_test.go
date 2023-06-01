@@ -293,7 +293,12 @@ wait $child
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
 			// Act
-			actual, err := renderer.RenderSlirp4NetNS(tt.input.NICs, tt.input.DNS, tt.input.Command, tt.input.Shell)
+			actual, err := renderer.RenderSlirp4NetNS(
+				tt.input.NICs,
+				tt.input.DNS,
+				tt.input.Command,
+				tt.input.Shell,
+			)
 
 			// Assert
 			if tt.isError {

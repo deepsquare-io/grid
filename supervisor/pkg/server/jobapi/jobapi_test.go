@@ -8,28 +8,33 @@ import (
 	"testing"
 	"time"
 
-	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
+	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
 
-type JobHandlerTestSuite struct {
+type ServerTestSuite struct {
 	suite.Suite
 	jobHandler *mocks.JobHandler
-	impl       *jobapi.JobAPIServer
+	impl       *jobapi.Server
 }
 
-func (suite *JobHandlerTestSuite) BeforeTest(suiteName, testName string) {
+func (suite *ServerTestSuite) BeforeTest(suiteName, testName string) {
 	suite.jobHandler = mocks.NewJobHandler(suite.T())
-	suite.impl = jobapi.New(suite.jobHandler)
+	suite.impl = jobapi.New(suite.jobHandler, lock.NewResourceManager())
 	suite.impl.Timeout = time.Second
 	suite.impl.Delay = time.Second
 }
 
-func (suite *JobHandlerTestSuite) TestSetJobStatus() {
+func (suite *ServerTestSuite) TestSetJobStatus() {
 	ctx := context.Background()
+
+	done := make(chan struct{})
+	defer close(done)
 
 	suite.jobHandler.On(
 		"SetJobStatus",
@@ -37,7 +42,9 @@ func (suite *JobHandlerTestSuite) TestSetJobStatus() {
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,
-	).Return(nil)
+	).Run(func(_ mock.Arguments) {
+		done <- struct{}{}
+	}).Return(nil)
 
 	// Act
 	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
@@ -46,15 +53,24 @@ func (suite *JobHandlerTestSuite) TestSetJobStatus() {
 		Duration: 1,
 		Status:   supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING,
 	})
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second): // Set an appropriate timeout duration
+		suite.T().Error("Timed out waiting for goroutine to complete")
+	}
 	suite.Require().NoError(err)
 	suite.Require().NotNil(resp)
 
 	suite.jobHandler.AssertExpectations(suite.T())
 }
 
-func (suite *JobHandlerTestSuite) TestSetJobStatusFailure() {
+func (suite *ServerTestSuite) TestSetJobStatusFailure() {
 	ctx := context.Background()
 	err := errors.New("problem")
+
+	done := make(chan struct{})
+	defer close(done)
 
 	suite.jobHandler.On(
 		"SetJobStatus",
@@ -62,7 +78,9 @@ func (suite *JobHandlerTestSuite) TestSetJobStatusFailure() {
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,
-	).Return(err)
+	).Run(func(_ mock.Arguments) {
+		done <- struct{}{}
+	}).Return(err)
 
 	// Act
 	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
@@ -71,15 +89,24 @@ func (suite *JobHandlerTestSuite) TestSetJobStatusFailure() {
 		Duration: 1,
 		Status:   supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING,
 	})
-	suite.Require().Error(err)
-	suite.Require().Nil(resp)
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second): // Set an appropriate timeout duration
+		suite.T().Error("Timed out waiting for goroutine to complete")
+	}
+	suite.Require().NoError(err)
+	suite.Require().NotNil(resp)
 
 	suite.jobHandler.AssertExpectations(suite.T())
 }
 
-func (suite *JobHandlerTestSuite) TestSetJobStatusBlocking() {
+func (suite *ServerTestSuite) TestSetJobStatusBlocking() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	done := make(chan struct{})
+	defer close(done)
 
 	suite.jobHandler.On(
 		"SetJobStatus",
@@ -89,6 +116,8 @@ func (suite *JobHandlerTestSuite) TestSetJobStatusBlocking() {
 		mock.Anything,
 	).Run(func(args mock.Arguments) {
 		<-args[0].(context.Context).Done()
+	}).Run(func(_ mock.Arguments) {
+		done <- struct{}{}
 	}).Return(context.Canceled)
 
 	// Act
@@ -98,12 +127,92 @@ func (suite *JobHandlerTestSuite) TestSetJobStatusBlocking() {
 		Duration: 1,
 		Status:   supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING,
 	})
-	suite.Require().Error(err)
-	suite.Require().Nil(resp)
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second): // Set an appropriate timeout duration
+		suite.T().Error("Timed out waiting for goroutine to complete")
+	}
+	suite.Require().NoError(err)
+	suite.Require().NotNil(resp)
 
 	suite.jobHandler.AssertExpectations(suite.T())
 }
 
-func TestJobHandlerTestSuite(t *testing.T) {
-	suite.Run(t, &JobHandlerTestSuite{})
+func (suite *ServerTestSuite) TestSetJobStatusThrowSameStatusError() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan struct{})
+	defer close(done)
+
+	suite.jobHandler.On(
+		"SetJobStatus",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Run(func(_ mock.Arguments) {
+		done <- struct{}{}
+	}).Return(&metascheduler.SameStatusError{})
+
+	// Act
+	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
+		Name:     "0xb7b91cfc7853b6ec7115c5f33e092fd0",
+		Id:       1,
+		Duration: 1,
+		Status:   supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING,
+	})
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second): // Set an appropriate timeout duration
+		suite.T().Error("Timed out waiting for goroutine to complete")
+	}
+	suite.Require().Nil(err)
+	suite.Require().NotNil(resp)
+
+	suite.jobHandler.AssertExpectations(suite.T())
+}
+
+func (suite *ServerTestSuite) TestSetJobStatusThrowTransitionError() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan struct{})
+	defer close(done)
+
+	suite.jobHandler.On(
+		"SetJobStatus",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Run(func(_ mock.Arguments) {
+		done <- struct{}{}
+	}).Return(&metascheduler.InvalidTransitionFromScheduled{})
+
+	// Act
+	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
+		Name:     "0xb7b91cfc7853b6ec7115c5f33e092fd0",
+		Id:       1,
+		Duration: 1,
+		Status:   supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING,
+	})
+
+	for range [2]struct{}{} {
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second): // Set an appropriate timeout duration
+			suite.T().Error("Timed out waiting for goroutine to complete")
+		}
+	}
+
+	suite.NoError(err)
+	suite.NotNil(resp)
+
+	suite.jobHandler.AssertExpectations(suite.T())
+}
+
+func TestServerTestSuite(t *testing.T) {
+	suite.Run(t, &ServerTestSuite{})
 }

@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -40,25 +42,38 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 
 	for {
 		req, err := stream.Recv()
-		if err == io.EOF {
+		if err == io.EOF || errors.Is(err, context.Canceled) {
 			logger.I.Info("writer closed", zap.String("IP", p.Addr.String()))
-			return stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
+			_ = stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
+			return nil
 		}
 		if err != nil {
-			logger.I.Error("writer closed with error", zap.String("IP", p.Addr.String()), zap.Error(err))
+			logger.I.Error(
+				"writer closed with error",
+				zap.String("IP", p.Addr.String()),
+				zap.Error(err),
+			)
 			return err
 		}
 
-		_, err = s.db.Append(req.GetLogName(), strings.ToLower(req.GetUser()), req.GetData())
+		_, err = s.db.Append(req)
 		if err != nil {
-			logger.I.Error("writer failed to write", zap.Any("req", req), zap.String("IP", p.Addr.String()), zap.Error(err))
+			logger.I.Error(
+				"writer failed to write",
+				zap.Any("req", req),
+				zap.String("IP", p.Addr.String()),
+				zap.Error(err),
+			)
 			_ = stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
 			return err
 		}
 	}
 }
 
-func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1alpha1.LoggerAPI_ReadServer) error {
+func (s *loggerAPIServer) Read(
+	req *loggerv1alpha1.ReadRequest,
+	stream loggerv1alpha1.LoggerAPI_ReadServer,
+) error {
 	ctx := stream.Context()
 	if p, ok := peer.FromContext(ctx); ok {
 		logger.I.Info("reader connected", zap.String("IP", p.Addr.String()), zap.Any("req", req))
@@ -76,9 +91,9 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 	}
 	logger.I.Info("reader authenticated", zap.String("user", address), zap.Any("req", req))
 
-	logs := make(chan string)
-	defer close(logs)
+	logs := make(chan *loggerv1alpha1.ReadResponse, 100)
 	go func() {
+		defer close(logs)
 		if err := s.db.ReadAndWatch(ctx, address, req.GetLogName(), logs); err != nil {
 			logger.I.Error("read and watch failed", zap.Error(err))
 		}
@@ -90,19 +105,24 @@ func (s *loggerAPIServer) Read(req *loggerv1alpha1.ReadRequest, stream loggerv1a
 			return nil
 		case log, ok := <-logs:
 			if !ok {
-				logger.I.Error("logs closed (read and watch the database might have closed)", zap.String("user", address), zap.Error(ctx.Err()))
+				logger.I.Error(
+					"logs closed (read and watch the database might have closed)",
+					zap.String("user", address),
+					zap.Error(ctx.Err()),
+				)
 				return nil
 			}
-			if err := stream.Send(&loggerv1alpha1.ReadResponse{
-				Data: []byte(log),
-			}); err != nil {
+			if err := stream.Send(log); err != nil {
 				return err
 			}
 		}
 	}
 }
 
-func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream loggerv1alpha1.LoggerAPI_WatchListServer) error {
+func (s *loggerAPIServer) WatchList(
+	req *loggerv1alpha1.WatchListRequest,
+	stream loggerv1alpha1.LoggerAPI_WatchListServer,
+) error {
 	ctx := stream.Context()
 	address := strings.ToLower(req.GetAddress())
 
@@ -114,7 +134,7 @@ func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream
 		return status.Errorf(codes.Unauthenticated, "failed to authenticate: %v", err)
 	}
 
-	lists := make(chan []string)
+	lists := make(chan []string, 100)
 	defer close(lists)
 	go func() {
 		if err := s.db.ListAndWatch(ctx, address, lists); err != nil {
@@ -128,7 +148,11 @@ func (s *loggerAPIServer) WatchList(req *loggerv1alpha1.WatchListRequest, stream
 			return nil
 		case list, ok := <-lists:
 			if !ok {
-				logger.I.Error("logs closed (read and watch the database might have closed)", zap.String("user", address), zap.Error(ctx.Err()))
+				logger.I.Error(
+					"logs closed (read and watch the database might have closed)",
+					zap.String("user", address),
+					zap.Error(ctx.Err()),
+				)
 				return nil
 			}
 			if err := stream.Send(&loggerv1alpha1.WatchListResponse{

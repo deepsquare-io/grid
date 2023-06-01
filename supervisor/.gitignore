@@ -32,3 +32,6 @@ go.work
 
 app
 coverage*
+*.local
+/supervisor
+testnet/

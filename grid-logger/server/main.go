@@ -1,7 +1,10 @@
 package main
 
 import (
+	_ "log"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	healthv1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/grpc/health/v1"
@@ -26,6 +29,11 @@ var (
 	certFile string
 
 	storagePath string
+
+	secret []byte
+
+	pprofListenAddress string
+	pprofEnabled       bool
 )
 
 var flags = []cli.Flag{
@@ -63,6 +71,33 @@ var flags = []cli.Flag{
 		Value:       "./db",
 		Destination: &storagePath,
 		EnvVars:     []string{"STORAGE_PATH"},
+	},
+	&cli.BoolFlag{
+		Name:        "pprof",
+		Usage:       "Enable pprof",
+		Value:       false,
+		Destination: &pprofEnabled,
+		EnvVars:     []string{"PPROF_ENABLE"},
+	},
+	&cli.StringFlag{
+		Name:        "pprof.listen-address",
+		Usage:       "Address to listen on for pprof",
+		Value:       ":9000",
+		Destination: &pprofListenAddress,
+		EnvVars:     []string{"PPROF_LISTEN_ADDRESS"},
+	},
+	&cli.StringFlag{
+		Name:     "secret-path",
+		Usage:    "Path to a 32 bytes AES-256 secret used to encrypt logs. (use openssl rand -out secret.key 32)",
+		Required: true,
+		EnvVars:  []string{"SECRET_PATH"},
+		Action: func(ctx *cli.Context, s string) (err error) {
+			secret, err = os.ReadFile(s)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
 	},
 	&cli.BoolFlag{
 		Name:    "debug",
@@ -103,7 +138,7 @@ var app = &cli.App{
 		loggerv1alpha1.RegisterLoggerAPIServer(
 			server,
 			api.NewLoggerAPIServer(
-				db.NewFileDB(storagePath),
+				db.NewFileDB(storagePath, secret),
 			),
 		)
 		healthv1.RegisterHealthServer(
@@ -112,6 +147,14 @@ var app = &cli.App{
 		)
 
 		logger.I.Info("listening")
+
+		if pprofEnabled {
+			go func() {
+				if err := http.ListenAndServe(pprofListenAddress, nil); err != nil {
+					logger.I.Warn("pprof crashed", zap.Error(err))
+				}
+			}()
+		}
 
 		return server.Serve(lis)
 	},

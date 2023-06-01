@@ -19,6 +19,7 @@ export MEM='{{ mul .Job.Resources.MemPerCPU .Job.Resources.CpusPerTask .Job.Reso
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
@@ -48,6 +49,8 @@ export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
 ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
 export ENROOT_RUNTIME_PATH
 ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
@@ -55,9 +58,10 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 cleanup() {

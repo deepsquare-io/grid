@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
-FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/golang:1.20.2 as builder
+FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/golang:1.20.4 as builder
 WORKDIR /build
 COPY go.mod go.sum ./
+ENV GOPROXY=https://goproxy.io,https://proxy.golang.org,direct
 RUN go mod download
 
 COPY . /build/
@@ -9,14 +10,14 @@ COPY . /build/
 ARG TARGETOS TARGETARCH
 RUN --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/go/pkg \
-  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -o /out/app ./server.go
+  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w" -a -o /out/app ./server.go
 
 # ---
 FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/alpine as certs
 RUN apk update && apk add ca-certificates
 
 # ---
-FROM registry-1.docker.io/library/busybox:1.36.0
+FROM registry-1.docker.io/library/busybox:1.36.1
 
 ARG TARGETOS TARGETARCH
 ENV TINI_VERSION v0.19.0

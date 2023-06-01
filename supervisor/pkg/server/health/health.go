@@ -4,35 +4,36 @@ import (
 	"context"
 	"time"
 
-	healthv1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/grpc/health/v1"
+	healthv1 "github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"go.uber.org/zap"
 )
 
-type health struct {
+type Server struct {
 	healthv1.UnimplementedHealthServer
 }
 
-func New() *health {
-	return &health{}
+func New() *Server {
+	return &Server{}
 }
 
-func (h *health) Check(ctx context.Context, req *healthv1.HealthCheckRequest) (*healthv1.HealthCheckResponse, error) {
+func (h *Server) Check(
+	ctx context.Context,
+	req *healthv1.HealthCheckRequest,
+) (*healthv1.HealthCheckResponse, error) {
 	return &healthv1.HealthCheckResponse{
 		Status: healthv1.HealthCheckResponse_SERVING,
 	}, nil
 }
 
-func (h *health) Watch(
+func (h *Server) Watch(
 	req *healthv1.HealthCheckRequest,
 	stream healthv1.Health_WatchServer,
 ) error {
-	ctx := context.Background()
+	ctx := stream.Context()
 	ticker := time.NewTicker(10 * time.Second)
-	done := make(chan bool)
-	defer close(done)
 
-	go func(ctx context.Context) {
+	go func() {
 		for {
 			if err := stream.Send(&healthv1.HealthCheckResponse{
 				Status: healthv1.HealthCheckResponse_SERVING,
@@ -41,12 +42,12 @@ func (h *health) Watch(
 			}
 
 			select {
-			case <-done:
+			case <-ctx.Done():
 				return
 			case <-ticker.C:
 			}
 		}
-	}(ctx)
+	}()
 
 	return nil
 }

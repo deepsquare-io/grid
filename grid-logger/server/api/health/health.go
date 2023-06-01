@@ -17,7 +17,10 @@ func New() *health {
 	return &health{}
 }
 
-func (h *health) Check(ctx context.Context, req *healthv1.HealthCheckRequest) (*healthv1.HealthCheckResponse, error) {
+func (h *health) Check(
+	ctx context.Context,
+	req *healthv1.HealthCheckRequest,
+) (*healthv1.HealthCheckResponse, error) {
 	return &healthv1.HealthCheckResponse{
 		Status: healthv1.HealthCheckResponse_SERVING,
 	}, nil

@@ -44,7 +44,7 @@ func DoWithContextTimeout(
 			ctx, cancel := context.WithTimeout(parent, timeout)
 			defer cancel()
 
-			errChan := make(chan error)
+			errChan := make(chan error, 1)
 			go func(try int) {
 				defer close(errChan)
 				errChan <- fn(ctx, try)
@@ -53,14 +53,24 @@ func DoWithContextTimeout(
 			select {
 			case err = <-errChan:
 				if err != nil {
-					logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
+					logger.I.Warn(
+						"try failed",
+						zap.Error(err),
+						zap.Int("try", try),
+						zap.Int("maxTries", tries),
+					)
 				}
 				if err == nil {
 					return nil
 				}
 			case <-ctx.Done():
 				err = ctx.Err()
-				logger.I.Warn("try failed", zap.Error(err), zap.Int("try", try), zap.Int("maxTries", tries))
+				logger.I.Warn(
+					"try failed",
+					zap.Error(err),
+					zap.Int("try", try),
+					zap.Int("maxTries", tries),
+				)
 			}
 			return err
 		}()

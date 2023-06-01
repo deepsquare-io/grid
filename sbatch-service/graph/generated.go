@@ -45,7 +45,8 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		Submit func(childComplexity int, job model.Job) int
+		Submit   func(childComplexity int, job model.Job) int
+		Validate func(childComplexity int, module model.Module) int
 	}
 
 	Query struct {
@@ -55,6 +56,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	Submit(ctx context.Context, job model.Job) (string, error)
+	Validate(ctx context.Context, module model.Module) (string, error)
 }
 type QueryResolver interface {
 	Job(ctx context.Context, batchLocationHash string) (string, error)
@@ -87,6 +89,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Submit(childComplexity, args["job"].(model.Job)), true
 
+	case "Mutation.validate":
+		if e.complexity.Mutation.Validate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_validate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Validate(childComplexity, args["module"].(model.Module)), true
+
 	case "Query.job":
 		if e.complexity.Query.Job == nil {
 			break
@@ -114,6 +128,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputHTTPData,
 		ec.unmarshalInputJob,
 		ec.unmarshalInputJobResources,
+		ec.unmarshalInputModule,
+		ec.unmarshalInputModuleInput,
+		ec.unmarshalInputModuleOutput,
 		ec.unmarshalInputMount,
 		ec.unmarshalInputNetworkInterface,
 		ec.unmarshalInputS3Data,
@@ -122,6 +139,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputStepFor,
 		ec.unmarshalInputStepRun,
 		ec.unmarshalInputStepRunResources,
+		ec.unmarshalInputStepUse,
 		ec.unmarshalInputTransportData,
 		ec.unmarshalInputWireguard,
 		ec.unmarshalInputWireguardPeer,
@@ -185,21 +203,57 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../../schemas/sbatchapi/schema.graphqls", Input: `"""
+	{Name: "../../schemas/sbatchapi/schema.graphqls", Input: `directive @goModel(
+  model: String
+  models: [String!]
+) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
+
+directive @goField(
+  forceResolver: Boolean
+  name: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+directive @goTag(
+  key: String!
+  value: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+directive @constraint(
+  format: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+"""
 An environment variable.
 
 Accessible via: "$key". "Key" name must follows the POSIX specifications (alphanumeric with underscore).
 """
 input EnvVar {
+  """
+  Key of the environment variable.
+
+  Go name: "Key".
+  """
   key: String!
-  value: String!
+    @goTag(key: "yaml")
+    @constraint(format: "required,valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH")
+  """
+  Value of the environment variable.
+
+  Go name: "Value".
+  """
+  value: String! @goTag(key: "yaml")
 }
 
 """
 HTTPData describes the necessary variables to connect to a HTTP storage.
 """
 input HTTPData {
-  url: String!
+  """
+  HTTP or HTTPS URL to a file.
+
+  Go name: "URL".
+  """
+  url: String! @goTag(key: "yaml") @constraint(format: "url")
 }
 
 """
@@ -208,30 +262,44 @@ S3Data describes the necessary variables to connect to a S3 storage.
 input S3Data {
   """
   S3 region. Example: "us‑east‑2".
+
+  Go name: "Region".
   """
-  region: String!
+  region: String! @goTag(key: "yaml")
   """
   The S3 Bucket URL. Must not end with "/".
 
   Example: "s3://my-bucket".
+
+  Go name: "BucketURL".
   """
   bucketUrl: String!
+    @goTag(key: "yaml")
+    @constraint(format: "url,startswith=s3://,endsnotwith=/")
   """
   The absolute path to a directory/file inside the bucket. Must start with "/".
+
+  Go name: "Path".
   """
-  path: String!
+  path: String! @goTag(key: "yaml") @constraint(format: "startswith=/")
   """
   An access key ID for the S3 endpoint.
+
+  Go name: "AccessKeyID".
   """
-  accessKeyId: String!
+  accessKeyId: String! @goTag(key: "yaml")
   """
   A secret access key for the S3 endpoint.
+
+  Go name: "SecretAccessKey".
   """
-  secretAccessKey: String!
+  secretAccessKey: String! @goTag(key: "yaml")
   """
   A S3 Endpoint URL used for authentication. Example: https://s3.us‑east‑2.amazonaws.com
+
+  Go name: "EndpointURL".
   """
-  endpointUrl: String!
+  endpointUrl: String! @goTag(key: "yaml") @constraint(format: "url")
   """
   DeleteSync removes destination files that doesn't correspond to the source.
 
@@ -240,19 +308,25 @@ input S3Data {
   See: s5cmd sync --delete.
 
   If null, defaults to false.
+
+  Go name: "DeleteSync".
   """
-  deleteSync: Boolean
+  deleteSync: Boolean @goTag(key: "yaml", value: "deleteSync,omitempty")
 }
 
 input TransportData {
   """
   Use http to download a file or archive, which will be autoextracted.
+
+  Go name: "HTTP".
   """
-  http: HTTPData
+  http: HTTPData @goTag(key: "yaml", value: "http,omitempty")
   """
   Use s3 to sync a file or directory.
+
+  Go name: "S3".
   """
-  s3: S3Data
+  s3: S3Data @goTag(key: "yaml", value: "s3,omitempty")
 }
 
 """
@@ -263,26 +337,34 @@ input JobResources {
   Number of tasks which are run in parallel.
 
   Can be greater or equal to 1.
+
+  Go name: "Tasks".
   """
-  tasks: Int!
+  tasks: Int! @goTag(key: "yaml") @constraint(format: "gte=1")
   """
   Allocated CPUs per task.
 
   Can be greater or equal to 1.
+
+  Go name: "CpusPerTask".
   """
-  cpusPerTask: Int!
+  cpusPerTask: Int! @goTag(key: "yaml") @constraint(format: "gte=1")
   """
   Allocated memory (MB) per task.
 
   Can be greater or equal to 1.
+
+  Go name: "MemPerCPU".
   """
-  memPerCpu: Int!
+  memPerCpu: Int! @goTag(key: "yaml") @constraint(format: "gte=1")
   """
   Allocated GPUs per task.
 
   Can be greater or equal to 0.
+
+  Go name: "GpusPerTask".
   """
-  gpusPerTask: Int!
+  gpusPerTask: Int! @goTag(key: "yaml") @constraint(format: "gte=0")
 }
 
 """
@@ -300,22 +382,32 @@ input Job {
   - $GPUS: total number of GPUS
   - $CPUS: total number of CPUS
   - $MEM: total number of memory in MB
+
+  Go name: "Resources".
   """
-  resources: JobResources!
+  resources: JobResources! @goTag(key: "yaml") @constraint(format: "required")
   """
   Environment variables accessible for the entire job.
+
+  Go name: "Env".
   """
   env: [EnvVar!]
+    @goTag(key: "yaml", value: "env,omitempty")
+    @constraint(format: "dive,required")
   """
-  EnableLogging enables the DeepSquare GRID Logger.
+  EnableLogging enables the DeepSquare Grid Logger.
+
+  Go name: "EnableLogging".
   """
-  enableLogging: Boolean
+  enableLogging: Boolean @goTag(key: "yaml", value: "enableLogging,omitempty")
   """
   Pull data at the start of the job.
 
   It is recommended to set the mode of the data by filling the ` + "`" + `inputMode` + "`" + ` field.
+
+  Go name: "Input".
   """
-  input: TransportData
+  input: TransportData @goTag(key: "yaml", value: "input,omitempty")
   """
   InputMode takes an integer that will be used to change the mode recursively (chmod -R) of the input data.
 
@@ -327,23 +419,37 @@ input Job {
     - 448 (user:rwx group:--- world:---)
 
   If null, the mode won't change and will default to the source.
+
+  Go name: "InputMode".
   """
   inputMode: Int
-  steps: [Step!]!
+    @goTag(key: "yaml", value: "inputMode,omitempty")
+    @constraint(format: "omitempty,lt=512")
+  """
+  Group of steps that will be run sequentially.
+
+  Go name: "Steps".
+  """
+  steps: [Step!]! @goTag(key: "yaml") @constraint(format: "dive,required")
   """
   Push data at the end of the job.
 
   Continuous sync/push can be enabled using the ` + "`" + `continuousOutputSync` + "`" + ` flag.
+
+  Go name: "Output".
   """
-  output: TransportData
+  output: TransportData @goTag(key: "yaml", value: "output,omitempty")
   """
   ContinuousOutputSync will push data during the whole job.
 
   This is useful when it is not desired to lose data when the job is suddenly stopped.
 
   ContinousOutputSync is not available with HTTP.
+
+  Go name: "ContinuousOutputSync".
   """
   continuousOutputSync: Boolean
+    @goTag(key: "yaml", value: "continuousOutputSync,omitempty")
 }
 
 """
@@ -354,8 +460,10 @@ input Step {
   Name of the instruction.
 
   Is used for debugging.
+
+  Go name: "Name".
   """
-  name: String
+  name: String @goTag(key: "yaml", value: "name,omitempty")
   """
   Depends on wait for async tasks to end before launching this step.
 
@@ -364,26 +472,73 @@ input Step {
   Only steps at the same level can be awaited.
 
   BE WARNED: Uncontrolled ` + "`" + `dependsOn` + "`" + ` may results in dead locks.
+
+  Go name: "DependsOn".
   """
   dependsOn: [String!]
+    @goTag(key: "yaml", value: "dependsOn,omitempty")
+    @constraint(format: "dive,alphanum_underscore")
   """
   Run a command if not null.
 
-  Is exclusive with "for", "launch".
+  Is exclusive with "for", "launch", "use".
+
+  Go name: "Run".
   """
-  run: StepRun
+  run: StepRun @goTag(key: "yaml", value: "run,omitempty")
   """
   Run a for loop if not null.
 
-  Is exclusive with "run", "launch".
+  Is exclusive with "run", "launch", "use".
+
+  Go name: "For".
   """
-  for: StepFor
+  for: StepFor @goTag(key: "yaml", value: "for,omitempty")
   """
   Launch a background process to run a group of commands if not null.
 
-  Is exclusive with "run", "for".
+  Is exclusive with "run", "for", "use".
+
+  Go name: "Launch".
   """
-  launch: StepAsyncLaunch
+  launch: StepAsyncLaunch @goTag(key: "yaml", value: "launch,omitempty")
+  """
+  Use a third-party group of steps.
+
+  Is exclusive with "run", "for", "launch".
+
+  Go name: "Use".
+  """
+  use: StepUse @goTag(key: "yaml", value: "use,omitempty")
+}
+
+input StepUse {
+  """
+  Source of the group of steps.
+
+  Syntax: <url>@<tag/hash>
+
+  Example: github.com/example/my-module@v1
+
+  Go name: "Source".
+  """
+  source: String! @goTag(key: "yaml")
+  """
+  Arguments to be passed as inputs to the group of steps.
+
+  Go name: "Args".
+  """
+  args: [EnvVar!] @goTag(key: "yaml", value: "args,omitempty")
+  """
+  Environment variables exported with be prefixed with the value of this field.
+
+  Exemple: If exportEnvAs=MY_MODULE, and KEY is exported. Then you can invoke ${MY_MODULE_KEY} environment variable.
+
+  Go name: "ExportEnvAs".
+  """
+  exportEnvAs: String
+    @goTag(key: "yaml", value: "exportEnvAs,omitempty")
+    @constraint(format: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH")
 }
 
 """
@@ -396,46 +551,78 @@ input StepRunResources {
   Can be greater or equal to 1.
 
   If null, default to 1.
+
+  Go name: "Tasks".
   """
   tasks: Int
+    @goTag(key: "yaml", value: "tasks,omitempty")
+    @constraint(format: "omitempty,gte=1")
   """
   Allocated CPUs per task.
 
   Can be greater or equal to 1.
 
   If null, defaults to the job resources.
+
+  Go name: "CpusPerTask".
   """
   cpusPerTask: Int
+    @goTag(key: "yaml", value: "cpusPerTask,omitempty")
+    @constraint(format: "omitempty,gte=1")
   """
   Allocated memory (MB) per task.
 
   Can be greater or equal to 1.
 
   If null, defaults to the job resources.
+
+  Go name: "MemPerCPU".
   """
   memPerCpu: Int
+    @goTag(key: "yaml", value: "memPerCpu,omitempty")
+    @constraint(format: "omitempty,gte=1")
   """
   Allocated GPUs per task.
 
   Can be greater or equal to 0.
 
   If null, defaults to the job resources.
+
+  Go name: "GpusPerTask".
   """
   gpusPerTask: Int
+    @goTag(key: "yaml", value: "gpusPerTask,omitempty")
+    @constraint(format: "omitempty,gte=0")
 }
 
 """
-Mount decribes a Bind Mount.
+DEPRECATED: Mount decribes a Bind Mount.
+
+Mount is now deprecated. Please use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ...
 """
 input Mount {
-  hostDir: String!
-  containerDir: String!
+  """
+  Directory on the host to be mounted inside the container.
+
+  Go name: "HostDir".
+  """
+  hostDir: String! @goTag(key: "yaml") @constraint(format: "startswith=/")
+  """
+  Target directory inside the container.
+
+  Go name: "ContainerDir".
+  """
+  containerDir: String! @goTag(key: "yaml") @constraint(format: "startswith=/")
   """
   Options modifies the mount options.
 
   Accepted: ro, rw
+
+  Go name: "Options".
   """
   options: String!
+    @goTag(key: "yaml")
+    @constraint(format: "omitempty,oneof=rw ro")
 }
 
 input ContainerRun {
@@ -456,26 +643,44 @@ input ContainerRun {
 
     - library/ubuntu:latest
     - /my.squashfs
+
+  Go name: "Image".
   """
   image: String!
+    @goTag(key: "yaml")
+    @constraint(format: "valid_container_image_url")
   """
-  Mount decribes a Bind Mount.
+  [DEPRECATED] Mounts decribes a Bind Mount.
+
+  Please use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ...
+
+  Go name: "Mounts".
   """
   mounts: [Mount!]
+    @goTag(key: "yaml", value: "mounts,omitempty")
+    @constraint(format: "dive,required")
   """
   Username of a basic authentication.
+
+  Go name: "Username".
   """
-  username: String
+  username: String @goTag(key: "yaml", value: "username,omitempty")
   """
   Password of a basic authentication.
+
+  Go name: "Password".
   """
-  password: String
+  password: String @goTag(key: "yaml", value: "password,omitempty")
   """
   Container registry host.
 
-  Defaults to registry-1.docker.io
+  Defaults to registry-1.docker.io.
+
+  Go name: "Registry".
   """
   registry: String
+    @goTag(key: "yaml", value: "registry,omitempty")
+    @constraint(format: "omitempty,hostname")
   """
   Run with Apptainer as Container runtime instead of Enroot.
 
@@ -484,18 +689,25 @@ input ContainerRun {
   When running Apptainer, the container file system is read-only.
 
   Defaults to false.
+
+  Go name: "Apptainer".
   """
-  apptainer: Boolean
+  apptainer: Boolean @goTag(key: "yaml", value: "apptainer,omitempty")
   """
   Use DeepSquare-hosted images.
 
   By setting to true, apptainer will be set to true.
+
+  Go name: "DeepsquareHosted".
   """
   deepsquareHosted: Boolean
+    @goTag(key: "yaml", value: "deepsquareHosted,omitempty")
   """
   X11 mounts /tmp/.X11-unix in the container.
+
+  Go name: "X11".
   """
-  x11: Boolean
+  x11: Boolean @goTag(key: "yaml", value: "x11,omitempty")
 }
 
 """
@@ -504,12 +716,16 @@ A Wireguard Peer.
 input WireguardPeer {
   """
   The peer private key.
+
+  Go name: "PublicKey".
   """
-  publicKey: String!
+  publicKey: String! @goTag(key: "yaml")
   """
   The peer pre-shared key.
+
+  Go name: "PreSharedKey".
   """
-  preSharedKey: String
+  preSharedKey: String @goTag(key: "yaml", value: "preSharedKey,omitempty")
   """
   Configuration of wireguard routes.
 
@@ -520,24 +736,35 @@ input WireguardPeer {
   <server internal IP>/32 (not the server's public IP) would forward all packets to the tunnel with the server IP as the destination. MUST be set.
 
   <VPN IP range> would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other and want the gateway to act as a router.
+
+  Go name: "AllowedIPs".
   """
   allowedIPs: [String!]
+    @goTag(key: "yaml", value: "allowedIPs,omitempty")
+    @constraint(format: "dive,cidr")
   """
   The peer endpoint.
 
   Format is IP:port.
 
   This would be the Wireguard server.
+
+  Go name: "Endpoint".
   """
   endpoint: String
+    @goTag(key: "yaml", value: "endpoint,omitempty")
+    @constraint(format: "omitempty,hostname_port")
   """
   Initiate the handshake and re-initiate regularly.
 
   Takes seconds as parameter. 25 seconds is recommended.
 
   You MUST set the persistent keepalive to enables UDP hole-punching.
+
+  Go name: "PersistentKeepalive".
   """
   persistentKeepalive: Int
+    @goTag(key: "yaml", value: "persistentKeepalive,omitempty")
 }
 
 """
@@ -558,16 +785,26 @@ input Wireguard {
   Format is a CIDRv4 (X.X.X.X/X) or CIDRv6.
 
   Recommendation is to take one IP from the 10.0.0.0/24 range (example: 10.0.0.2/24).
+
+  Go name: "Address".
   """
   address: [String!]
+    @goTag(key: "yaml", value: "address,omitempty")
+    @constraint(format: "dive,cidr")
   """
   The client private key.
+
+  Go name: "PrivateKey".
   """
-  privateKey: String!
+  privateKey: String! @goTag(key: "yaml")
   """
   The peers connected to the wireguard interface.
+
+  Go name: "Peers".
   """
   peers: [WireguardPeer!]
+    @goTag(key: "yaml", value: "peers,omitempty")
+    @constraint(format: "dive,required")
 }
 
 """
@@ -578,16 +815,22 @@ Bore is a proxy to expose TCP sockets.
 input Bore {
   """
   Bore server IP/Address.
+
+  Go name: "Address".
   """
-  address: String!
+  address: String! @goTag(key: "yaml") @constraint(format: "ip|fqdn")
   """
   The bore server port.
+
+  Go name: "Port".
   """
-  port: Int!
+  port: Int! @goTag(key: "yaml")
   """
   Target port.
+
+  Go name: "TargetPort".
   """
-  targetPort: Int!
+  targetPort: Int! @goTag(key: "yaml")
 }
 
 """
@@ -598,18 +841,24 @@ The network interface is connected via slirp4netns.
 input NetworkInterface {
   """
   Use the wireguard transport.
+
+  Go name: "Wireguard".
   """
-  wireguard: Wireguard
+  wireguard: Wireguard @goTag(key: "yaml", value: "wireguard,omitempty")
   """
   Use the bore transport.
+
+  Go name: "Bore".
   """
-  bore: Bore
+  bore: Bore @goTag(key: "yaml", value: "bore,omitempty")
 }
 
 """
 StepRun is one script executed with the shell.
 
-Shared storage is accessible through the $STORAGE_PATH environment variable.
+A temporary shared storage is accessible through the $STORAGE_PATH environment variable.
+
+A shared cache per site is accessible via the $DEEPSQUARE_TMP environment variable. The $DEEPSQUARE_TMP directory is cleared periodically.
 
 echo "KEY=value" >> "$DEEPSQUARE_ENV" can be used to share environment variables between steps.
 
@@ -626,41 +875,59 @@ input StepRun {
   You can install and use skopeo to inspect an image without having to pull it.
 
   Example: skopeo inspect --config docker://curlimages/curl:latest will gives "/entrypoint.sh" as ENTRYPOINT and "curl" as CMD. Therefore command="/entrypoint.sh curl".
+
+  Go name: "Command".
   """
-  command: String!
+  command: String! @goTag(key: "yaml")
   """
   Shell to use.
 
   Accepted: /bin/bash, /bin/ash, /bin/sh
   Default: /bin/sh
+
+  Go name: "Shell".
   """
   shell: String
+    @goTag(key: "yaml", value: "shell,omitempty")
+    @constraint(format: "omitempty,oneof=/bin/bash /bin/ash /bin/sh")
   """
   Allocated resources for the command.
+
+  Go name: "Resources".
   """
-  resources: StepRunResources
+  resources: StepRunResources @goTag(key: "yaml", value: "resources,omitempty")
   """
   Container definition.
 
   If null, run on the host.
+
+  Go name: "Container".
   """
-  container: ContainerRun
+  container: ContainerRun @goTag(key: "yaml", value: "container,omitempty")
   """
   Type of core networking functionality.
 
   Either: "host" (default) or "slirp4netns" (rootless network namespace).
 
   Using "slirp4netns" will automatically enables mapRoot.
+
+  Go name: "Network".
   """
   network: String
+    @goTag(key: "yaml", value: "network,omitempty")
+    @constraint(format: "omitempty,oneof=host slirp4netns")
   """
   Configuration for the DNS in "slirp4netns" mode.
 
   ONLY enabled if network is "slirp4netns".
 
   A comma-separated list of DNS IP.
+
+  Go name: "DNS".
   """
   dns: [String!]
+    @goTag(key: "yaml", value: "dns,omitempty")
+    @constraint(format: "dive,ip")
   """
   Add custom network interfaces.
 
@@ -671,12 +938,20 @@ input StepRun {
   The tunnel interfaces will be named net0, net1, ... netX.
 
   The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
+
+  Go name: "CustomNetworkInterfaces".
   """
   customNetworkInterfaces: [NetworkInterface!]
+    @goTag(key: "yaml", value: "customNetworkInterfaces,omitempty")
+    @constraint(format: "dive,required")
   """
   Environment variables accessible over the command.
+
+  Go name: "Env".
   """
   env: [EnvVar!]
+    @goTag(key: "yaml", value: "env,omitempty")
+    @constraint(format: "dive,required")
   """
   Remap UID to root. Does not grant elevated system permissions, despite appearances.
 
@@ -689,8 +964,10 @@ input StepRun {
   It is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).
 
   If null, default to false.
+
+  Go name: "MapRoot".
   """
-  mapRoot: Boolean
+  mapRoot: Boolean @goTag(key: "yaml", value: "mapRoot,omitempty")
   """
   Working directory.
 
@@ -701,24 +978,35 @@ input StepRun {
   If no container runtime is used, ` + "`" + `cd` + "`" + ` will be executed first.
 
   If null, default to use $STORAGE_PATH as working directory.
+
+  Go name: "WorkDir".
   """
   workDir: String
+    @goTag(key: "yaml", value: "workDir,omitempty")
+    @constraint(format: "omitempty,startswith=/")
   """
   DisableCPUBinding disables process affinity binding to tasks.
 
   Can be useful when running MPI jobs.
 
   If null, defaults to false.
+
+  Go name: "DisableCPUBinding".
   """
   disableCpuBinding: Boolean
+    @goTag(key: "yaml", value: "disableCpuBinding,omitempty")
   """
   MPI selection.
 
   Must be one of: none, pmix_v4, pmi2.
 
   If null, will default to infrastructure provider settings (which may not be what you want).
+
+  Go name: "Mpi".
   """
   mpi: String
+    @goTag(key: "yaml", value: "mpi,omitempty")
+    @constraint(format: "omitempty,oneof=none pmix_v4 pmi2")
 }
 
 """
@@ -727,24 +1015,32 @@ StepFor describes a for loop.
 input StepFor {
   """
   Do a parallel for loop. Each iteration is run in parallel.
+
+  Go name: "Parallel".
   """
-  parallel: Boolean!
+  parallel: Boolean! @goTag(key: "yaml")
   """
   Item accessible via the {{ .Item }} variable. Index accessible via the $item variable.
 
   Exclusive with "range".
+
+  Go name: "Items".
   """
-  items: [String!]
+  items: [String!] @goTag(key: "yaml", value: "items,omitempty")
   """
   Index accessible via the $index variable.
 
   Exclusive with "items".
+
+  Go name: "Range".
   """
-  range: ForRange
+  range: ForRange @goTag(key: "yaml", value: "range,omitempty")
   """
   Steps are run sequentially in one iteration.
+
+  Go name: "Steps".
   """
-  steps: [Step!]!
+  steps: [Step!]! @goTag(key: "yaml") @constraint(format: "dive,required")
 }
 
 """
@@ -753,16 +1049,22 @@ ForRange describes the parameter for a range loop.
 input ForRange {
   """
   Begin is inclusive.
+
+  Go name: "Begin".
   """
-  begin: Int!
+  begin: Int! @goTag(key: "yaml")
   """
   End is inclusive.
+
+  Go name: "End".
   """
-  end: Int!
+  end: Int! @goTag(key: "yaml")
   """
   Increment counter by x count. If null, defaults to 1.
+
+  Go name: "Increment".
   """
-  increment: Int
+  increment: Int @goTag(key: "yaml", value: "increment,omitempty")
 }
 
 """
@@ -775,8 +1077,12 @@ input StepAsyncLaunch {
   HandleName is the name used to await (dependsOn field of the Step).
 
   Naming style is snake_case. Case is insensitive. No symbol allowed.
+
+  Go name: "HandleName".
   """
   handleName: String
+    @goTag(key: "yaml", value: "handleName,omitempty")
+    @constraint(format: "omitempty,alphanum_underscore")
   """
   SignalOnParentStepExit sends a signal to the step and sub-steps when the parent step ends.
 
@@ -799,12 +1105,114 @@ input StepAsyncLaunch {
   If no signal is sent, the asynchronous step will be considered a fire and forget asynchronous step and will have to terminate itself to stop the job.
 
   WARNING: the "no signal sent" option is subject to removal to avoid undefined behavior. Please refrain from using it.
+
+  Go name: "SignalOnParentStepExit".
   """
   signalOnParentStepExit: Int
+    @goTag(key: "yaml", value: "signalOnParentStepExit,omitempty")
   """
   Steps are run sequentially.
+
+  Go name: "Steps".
   """
-  steps: [Step!]!
+  steps: [Step!]! @goTag(key: "yaml")
+}
+
+input ModuleInput {
+  """
+  Name of the input.
+
+  Go name: "Key".
+  """
+  key: String!
+    @goTag(key: "yaml")
+    @constraint(format: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH")
+  """
+  Description of the input.
+
+  Go name: "Description".
+  """
+  description: String! @goTag(key: "yaml")
+  """
+  Default value.
+
+  If not set, will default to empty string.
+
+  Go name: "Default".
+  """
+  default: String @goTag(key: "yaml", value: "default,omitempty")
+}
+
+input ModuleOutput {
+  """
+  Name of the output.
+
+  Go name: "Key".
+  """
+  key: String!
+    @goTag(key: "yaml")
+    @constraint(format: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH")
+  """
+  Description of the output.
+
+  Go name: "Description".
+  """
+  description: String! @goTag(key: "yaml")
+}
+
+"""
+A module is basically a group of steps.
+
+The module.yaml file goes through a templating engine first before getting parsed. So some variables are available:
+
+- {{ .Job }} and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.
+- {{ .Step }} and its childs, which represent the Step object using the module. Can be useful if you want the step name.
+
+Notice that the templating follows the Go format. You can also apply sprig templating functions.
+
+To outputs environment variables, just append KEY=value to the "${DEEPSQUARE_ENV}" file.
+"""
+input Module {
+  """
+  Name of the module.
+
+  Go name: "Name".
+  """
+  name: String! @goTag(key: "yaml")
+  """
+  Description of the module.
+
+  Go name: "Description".
+  """
+  description: String! @goTag(key: "yaml")
+  """
+  Minimum job resources.
+
+  Go name: "MinimumResources".
+  """
+  minimumResources: JobResources! @goTag(key: "yaml")
+  """
+  List of allowed arguments.
+
+  Go name: "Inputs".
+  """
+  inputs: [ModuleInput!]
+    @goTag(key: "yaml", value: "inputs,omitempty")
+    @constraint(format: "dive,required")
+  """
+  List of exported environment variables.
+
+  Go name: "Outputs".
+  """
+  outputs: [ModuleOutput!]
+    @goTag(key: "yaml", value: "outputs,omitempty")
+    @constraint(format: "dive,required")
+  """
+  Steps of the module.
+
+  Go name: "Steps".
+  """
+  steps: [Step!]! @goTag(key: "yaml") @constraint(format: "dive,required")
 }
 
 type Mutation {
@@ -812,6 +1220,10 @@ type Mutation {
   Submit a Job and retrieve the batch location hash.
   """
   submit(job: Job!): String!
+  """
+  Validate a module.
+  """
+  validate(module: Module!): String!
 }
 
 type Query {
@@ -840,6 +1252,21 @@ func (ec *executionContext) field_Mutation_submit_args(ctx context.Context, rawA
 		}
 	}
 	args["job"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_validate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.Module
+	if tmp, ok := rawArgs["module"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("module"))
+		arg0, err = ec.unmarshalNModule2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModule(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["module"] = arg0
 	return args, nil
 }
 
@@ -960,6 +1387,61 @@ func (ec *executionContext) fieldContext_Mutation_submit(ctx context.Context, fi
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_submit_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_validate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_validate(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Validate(rctx, fc.Args["module"].(model.Module))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_validate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_validate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -3295,6 +3777,154 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interface{}) (model.Module, error) {
+	var it model.Module
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "description", "minimumResources", "inputs", "outputs", "steps"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "minimumResources":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minimumResources"))
+			it.MinimumResources, err = ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "inputs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inputs"))
+			it.Inputs, err = ec.unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "outputs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("outputs"))
+			it.Outputs, err = ec.unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "steps":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
+			it.Steps, err = ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputModuleInput(ctx context.Context, obj interface{}) (model.ModuleInput, error) {
+	var it model.ModuleInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"key", "description", "default"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "key":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			it.Key, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "default":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("default"))
+			it.Default, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputModuleOutput(ctx context.Context, obj interface{}) (model.ModuleOutput, error) {
+	var it model.ModuleOutput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"key", "description"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "key":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			it.Key, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "description":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			it.Description, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputMount(ctx context.Context, obj interface{}) (model.Mount, error) {
 	var it model.Mount
 	asMap := map[string]interface{}{}
@@ -3458,7 +4088,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "dependsOn", "run", "for", "launch"}
+	fieldsInOrder := [...]string{"name", "dependsOn", "run", "for", "launch", "use"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3502,6 +4132,14 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("launch"))
 			it.Launch, err = ec.unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "use":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("use"))
+			it.Use, err = ec.unmarshalOStepUse2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepUse(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3775,6 +4413,50 @@ func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj interface{}) (model.StepUse, error) {
+	var it model.StepUse
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"source", "args", "exportEnvAs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "source":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
+			it.Source, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "args":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("args"))
+			it.Args, err = ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "exportEnvAs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exportEnvAs"))
+			it.ExportEnvAs, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputTransportData(ctx context.Context, obj interface{}) (model.TransportData, error) {
 	var it model.TransportData
 	asMap := map[string]interface{}{}
@@ -3946,6 +4628,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_submit(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "validate":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_validate(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -4390,6 +5081,21 @@ func (ec *executionContext) unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquare�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNModule2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModule(ctx context.Context, v interface{}) (model.Module, error) {
+	res, err := ec.unmarshalInputModule(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNModuleInput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInput(ctx context.Context, v interface{}) (*model.ModuleInput, error) {
+	res, err := ec.unmarshalInputModuleInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNModuleOutput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutput(ctx context.Context, v interface{}) (*model.ModuleOutput, error) {
+	res, err := ec.unmarshalInputModuleOutput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx context.Context, v interface{}) (*model.Mount, error) {
 	res, err := ec.unmarshalInputMount(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -4789,6 +5495,46 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
+func (ec *executionContext) unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInputᚄ(ctx context.Context, v interface{}) ([]*model.ModuleInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ModuleInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNModuleInput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutputᚄ(ctx context.Context, v interface{}) ([]*model.ModuleOutput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.ModuleOutput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNModuleOutput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx context.Context, v interface{}) ([]*model.Mount, error) {
 	if v == nil {
 		return nil, nil
@@ -4866,6 +5612,14 @@ func (ec *executionContext) unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsqu
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputStepRunResources(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOStepUse2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepUse(ctx context.Context, v interface{}) (*model.StepUse, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputStepUse(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

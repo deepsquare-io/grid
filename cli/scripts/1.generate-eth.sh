@@ -9,9 +9,10 @@ CONTRACTSPATH="${SCRIPTPATH}/../../smart-contracts"
 cd "${CONTRACTSPATH}"
 
 mkdir -p "${PROJECTPATH}/gen/go/contracts/metascheduler"
-solc ./contracts/Metascheduler.sol \
+solc --optimize --optimize-runs=200 ./contracts/Metascheduler.sol \
   --base-path . \
   --include-path "node_modules/" \
-  --combined-json abi,bin | abigen --pkg metascheduler \
+  --combined-json abi | abigen --pkg metascheduler \
   --combined-json - \
+  --exc "contracts/Tools.sol:Tools" \
   --out "${PROJECTPATH}/gen/go/contracts/metascheduler/metascheduler.go"

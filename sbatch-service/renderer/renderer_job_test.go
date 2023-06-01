@@ -62,6 +62,7 @@ export MEM='16384'
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
@@ -90,6 +91,8 @@ export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
 ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
 export ENROOT_RUNTIME_PATH
 ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
@@ -97,9 +100,10 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 cleanup() {
@@ -118,6 +122,11 @@ export 'key'='test'"'"'test'
 
 declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
+/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine registry login "username" password "password"
@@ -139,9 +148,9 @@ if [ "$tries" -ge 10 ]; then
 	exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -213,6 +222,7 @@ export MEM='16384'
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
@@ -241,6 +251,8 @@ export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
 ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
 export ENROOT_RUNTIME_PATH
 ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
@@ -248,9 +260,10 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 cleanup() {
@@ -291,6 +304,11 @@ export 'key'='test'"'"'test'
 
 declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
+/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine registry login "username" password "password"
@@ -312,9 +330,9 @@ if [ "$tries" -ge 10 ]; then
 	exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -394,6 +412,7 @@ export MEM='16384'
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
@@ -422,6 +441,8 @@ export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
 ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
 export ENROOT_RUNTIME_PATH
 ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
@@ -429,9 +450,10 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 cleanup() {
@@ -458,6 +480,11 @@ export 'key'='test'"'"'test'
 
 declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
+/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine registry login "username" password "password"
@@ -479,9 +506,9 @@ if [ "$tries" -ge 10 ]; then
 	exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -547,6 +574,7 @@ export MEM='16384'
   --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
   --log-name="$SLURM_JOB_NAME" \
   --user="$USER" \
+  --uid-verify \
   >/dev/stdout 2>/dev/stderr &
 LOGGER_PID="$!"
 /usr/bin/sleep 1
@@ -575,6 +603,8 @@ export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
 ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
 export ENROOT_RUNTIME_PATH
 ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
@@ -582,9 +612,10 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 cleanup() {
@@ -623,6 +654,11 @@ export 'key'='test'"'"'test'
 
 declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
+/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine registry login "username" password "password"
@@ -644,9 +680,9 @@ if [ "$tries" -ge 10 ]; then
 	exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -707,6 +743,8 @@ export STORAGE_PATH
 export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
 export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
 export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
 ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
 export ENROOT_RUNTIME_PATH
 ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
@@ -714,9 +752,10 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 cleanup() {
@@ -734,6 +773,11 @@ export 'key'='test'"'"'test'
 
 declare -A EXIT_SIGNALS
 /usr/bin/echo 'Running: ''test'
+/usr/bin/cat << 'EOFmounterror'
+WARNING: Mounts is now deprecated.
+If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+The cache is cleared periodically and only persists on the site.
+EOFmounterror
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
 machine registry login "username" password "password"
@@ -755,9 +799,9 @@ if [ "$tries" -ge 10 ]; then
 	exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV='/deepsquare/env' test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \

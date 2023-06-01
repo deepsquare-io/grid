@@ -2,117 +2,68 @@ package sbatch
 
 import (
 	"context"
-	cryptotls "crypto/tls"
-	"io"
-	"net/http"
 
-	sbatchv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/sbatchapi/v1alpha1"
+	sbatchv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
-type API struct {
-	endpoint string
-	creds    credentials.TransportCredentials
-	insecure bool
+type Client interface {
+	// HealthCheck sends a simple commands to check if the service is alive.
+	HealthCheck(ctx context.Context) error
+	// Fetch a job batch content.
+	Fetch(ctx context.Context, hash string) (string, error)
 }
 
-func NewAPI(
+func NewClient(
 	endpoint string,
-	tls bool,
-	insecure bool,
-	caFile string,
-	serverHostOverride string,
-) *API {
-	var creds credentials.TransportCredentials
-	if tls {
-		if !insecure {
-			c, err := credentials.NewClientTLSFromFile(caFile, serverHostOverride)
-			if err != nil {
-				logger.I.Fatal("Failed to create TLS credentials", zap.Error(err))
-			}
-			creds = c
-		} else {
-			tlsConfig := &cryptotls.Config{
-				InsecureSkipVerify: true,
-			}
-			creds = credentials.NewTLS(tlsConfig)
-		}
-	}
-
-	d := &API{
+	opts ...grpc.DialOption,
+) Client {
+	return &client{
 		endpoint: endpoint,
-		creds:    creds,
-		insecure: insecure,
+		opts:     opts,
 	}
-
-	logger.I.Info("Healthcheck sbatch service")
-	_, conn, err := d.dial()
-	defer func() {
-		_ = conn.Close()
-	}()
-	if err != nil {
-		logger.I.Fatal("sbatch service initial healthcheck failed, exiting...")
-	}
-	return d
 }
 
-func (d *API) dial() (sbatchv1alpha1.SBatchAPIClient, *grpc.ClientConn, error) {
-	opts := []grpc.DialOption{grpc.WithTransportCredentials(d.creds)}
-	conn, err := grpc.Dial(d.endpoint, opts...)
+type client struct {
+	endpoint string
+	opts     []grpc.DialOption
+}
+
+func (s *client) dial(
+	ctx context.Context,
+) (sbatchv1alpha1.SBatchAPIClient, *grpc.ClientConn, error) {
+	conn, err := grpc.DialContext(ctx, s.endpoint, s.opts...)
 	if err != nil {
 		return nil, nil, err
 	}
 	return sbatchv1alpha1.NewSBatchAPIClient(conn), conn, nil
 }
 
-func (d *API) Fetch(ctx context.Context, hash string) (string, error) {
-	res, err := d.grpcFetch(ctx, hash)
+func (s *client) HealthCheck(ctx context.Context) error {
+	logger.I.Info("Healthcheck sbatch service")
+	_, conn, err := s.dial(ctx)
 	if err != nil {
-		logger.I.Error("Failed to fetch sbatch from sbatch API, trying with transfer.sh", zap.Error(err), zap.String("hash", hash))
-		return d.transfershFetch(ctx, hash)
+		return err
 	}
-	return res, nil
+	defer func() {
+		_ = conn.Close()
+	}()
+	return nil
 }
 
-func (d *API) grpcFetch(ctx context.Context, hash string) (string, error) {
-	client, conn, err := d.dial()
+func (s *client) Fetch(ctx context.Context, hash string) (string, error) {
+	logger.I.Info("Fetch sbatch", zap.String("hash", hash))
+	client, conn, err := s.dial(ctx)
 	if err != nil {
 		return "", err
 	}
 	defer func() {
-		if err := conn.Close(); err != nil {
-			if err == io.EOF {
-				logger.I.Debug("sbatchAPI closed", zap.Error(err))
-				return
-			}
-			logger.I.Error("sbatchAPI closed with error", zap.Error(err))
-		}
+		_ = conn.Close()
 	}()
 	resp, err := client.GetSBatch(ctx, &sbatchv1alpha1.GetSBatchRequest{
 		BatchLocationHash: hash,
 	})
 	return resp.GetSbatch(), err
-}
-
-// transfershFetch a sbatch script based on the hash from transfer.sh.
-func (d *API) transfershFetch(ctx context.Context, hash string) (string, error) {
-	logger.I.Warn("Calling transfershFetch. Fetching via transfer.sh is deprecated!", zap.String("hash", hash))
-	req, err := http.NewRequestWithContext(ctx, "GET", hash, nil)
-	if err != nil {
-		return "", err
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			logger.I.Error("resp closed failed", zap.Error(err))
-		}
-	}()
-	body, err := io.ReadAll(resp.Body)
-	return string(body), err
 }

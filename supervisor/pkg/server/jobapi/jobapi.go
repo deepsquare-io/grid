@@ -2,13 +2,14 @@ package jobapi
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/gen/go/supervisor/v1alpha1"
+	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/eth"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
@@ -18,66 +19,97 @@ type JobHandler interface {
 	SetJobStatus(
 		ctx context.Context,
 		jobID [32]byte,
-		jobStatus eth.JobStatus,
+		jobStatus metascheduler.JobStatus,
 		jobDuration uint64,
 	) error
 }
 
-type JobAPIServer struct {
+type Server struct {
 	supervisorv1alpha1.UnimplementedJobAPIServer
 	jobHandler JobHandler
 	Timeout    time.Duration
 	// Delay between tries
-	Delay time.Duration
+	Delay           time.Duration
+	resourceManager *lock.ResourceManager
 }
 
 func New(
 	jobHandler JobHandler,
-) *JobAPIServer {
+	resourceManager *lock.ResourceManager,
+) *Server {
 	if jobHandler == nil {
 		logger.I.Fatal("jobHandler is nil")
 	}
-	return &JobAPIServer{
-		jobHandler: jobHandler,
-		Timeout:    15 * time.Second,
-		Delay:      3 * time.Second,
+	if resourceManager == nil {
+		logger.I.Fatal("resourceManager is nil")
+	}
+	return &Server{
+		jobHandler:      jobHandler,
+		Timeout:         15 * time.Second,
+		Delay:           3 * time.Second,
+		resourceManager: resourceManager,
 	}
 }
 
-var gRPCToEthJobStatus = map[supervisorv1alpha1.JobStatus]eth.JobStatus{
-	supervisorv1alpha1.JobStatus_JOB_STATUS_PENDING:        eth.JobStatusPending,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_META_SCHEDULED: eth.JobStatusMetaScheduled,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_SCHEDULED:      eth.JobStatusScheduled,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING:        eth.JobStatusRunning,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLING:     eth.JobStatusUnknown,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLED:      eth.JobStatusCancelled,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_FINISHED:       eth.JobStatusFinished,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_FAILED:         eth.JobStatusFailed,
-	supervisorv1alpha1.JobStatus_JOB_STATUS_OUT_OF_CREDITS: eth.JobStatusOutOfCredits,
+var gRPCToEthJobStatus = map[supervisorv1alpha1.JobStatus]metascheduler.JobStatus{
+	supervisorv1alpha1.JobStatus_JOB_STATUS_PENDING:        metascheduler.JobStatusPending,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_META_SCHEDULED: metascheduler.JobStatusMetaScheduled,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_SCHEDULED:      metascheduler.JobStatusScheduled,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING:        metascheduler.JobStatusRunning,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLING:     metascheduler.JobStatusUnknown,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_CANCELLED:      metascheduler.JobStatusCancelled,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_FINISHED:       metascheduler.JobStatusFinished,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_FAILED:         metascheduler.JobStatusFailed,
+	supervisorv1alpha1.JobStatus_JOB_STATUS_OUT_OF_CREDITS: metascheduler.JobStatusOutOfCredits,
 }
 
 // SetJobStatus to the ethereum network
-func (s *JobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1.SetJobStatusRequest) (*supervisorv1alpha1.SetJobStatusResponse, error) {
+func (s *Server) SetJobStatus(
+	ctx context.Context,
+	req *supervisorv1alpha1.SetJobStatusRequest,
+) (*supervisorv1alpha1.SetJobStatusResponse, error) {
 	logger.I.Info("grpc received job result", zap.Any("job_result", req))
+	go func() {
+		logger.I.Info("launched setJobStatusTask", zap.Any("job_result", req))
+		if err := s.setJobStatusTask(context.Background(), req); err != nil {
+			logger.I.Error("setJobStatusTask failed", zap.Error(err))
+		}
+	}()
+	return &supervisorv1alpha1.SetJobStatusResponse{}, nil
+}
+
+func (s *Server) setJobStatusTask(
+	ctx context.Context,
+	req *supervisorv1alpha1.SetJobStatusRequest,
+) error {
+
 	jobName, err := hexutil.Decode(req.Name)
 	if err != nil {
-		logger.I.Warn("SetJobStatus: DecodeString failed", zap.Error(err), zap.String("name", req.Name))
-		return nil, err
+		logger.I.Warn(
+			"SetJobStatus: DecodeString failed",
+			zap.Error(err),
+			zap.String("name", req.Name),
+		)
+		return err
 	}
 	var jobNameFixedLength [32]byte
 	copy(jobNameFixedLength[:], jobName)
 
+	// Lock the job: avoid any mutation of the job until a setjob is perfectly sent
+	s.resourceManager.Lock(req.Name)
+	defer s.resourceManager.Unlock(req.Name)
+
 	if status, ok := gRPCToEthJobStatus[req.Status]; ok {
 		// Ignore unknown status transition, this is for backward compatilibility
-		if status == eth.JobStatusUnknown {
+		if status == metascheduler.JobStatusUnknown {
 			logger.I.Warn(
 				"status unknown (if the status is deprecated, ignore this warning)",
 				zap.Error(err),
 				zap.String("status", req.Status.String()),
-				zap.String("name", string(jobName)),
+				zap.String("name", req.Name),
 				zap.Uint64("duration", req.Duration/60),
 			)
-			return &supervisorv1alpha1.SetJobStatusResponse{}, nil
+			return nil
 		}
 
 		// Do set job status
@@ -92,35 +124,35 @@ func (s *JobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 					req.Duration/60,
 				)
 				if err != nil {
-					if strings.Contains(err.Error(), "Cannot change status to itself") || strings.Contains(err.Error(), "trans0") {
+					if errors.Is(err, &metascheduler.SameStatusError{}) {
 						logger.I.Warn(
 							"Cannot change status to itself",
 							zap.Error(err),
 							zap.String("status", req.Status.String()),
-							zap.String("name", string(jobName)),
+							zap.String("name", req.Name),
 							zap.Uint64("duration", req.Duration/60),
 						)
 						return nil
 					}
-					if strings.Contains(err.Error(), "Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only") || strings.Contains(err.Error(), "trans3") {
+					if errors.Is(err, &metascheduler.InvalidTransitionFromScheduled{}) {
 						logger.I.Warn(
-							"Can change from SCHEDULED to PENDING, RUNNING, CANCELLED or FAILED only. Trying to put in RUNNING first.",
+							"Invalid state transition from SCHEDULED.",
 							zap.Error(err),
 							zap.String("status", req.Status.String()),
-							zap.String("name", string(jobName)),
+							zap.String("name", req.Name),
 							zap.Uint64("duration", req.Duration/60),
 						)
 						if err := s.jobHandler.SetJobStatus(
 							ctx,
 							jobNameFixedLength,
-							eth.JobStatusRunning,
+							metascheduler.JobStatusRunning,
 							req.Duration/60,
 						); err != nil {
 							logger.I.Error(
 								"Failed to put the job in RUNNING",
 								zap.Error(err),
 								zap.String("status", req.Status.String()),
-								zap.String("name", string(jobName)),
+								zap.String("name", req.Name),
 								zap.Uint64("duration", req.Duration/60),
 							)
 							return err
@@ -135,15 +167,14 @@ func (s *JobAPIServer) SetJobStatus(ctx context.Context, req *supervisorv1alpha1
 				"SetJobStatus failed",
 				zap.Error(err),
 				zap.String("status", req.Status.String()),
-				zap.String("name", string(jobName)),
+				zap.String("name", req.Name),
 				zap.Uint64("duration", req.Duration/60),
 			)
-			return nil, err
+			return err
 		}
-		return &supervisorv1alpha1.SetJobStatusResponse{}, nil
+		return nil
 	} else {
 		logger.I.Error("SetJobStatus unknown job status", zap.Error(err), zap.String("status", req.Status.String()))
-		return nil, fmt.Errorf("unknown job status %s", req.Status.String())
+		return fmt.Errorf("unknown job status %s", req.Status.String())
 	}
-
 }

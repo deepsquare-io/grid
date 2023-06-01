@@ -24,6 +24,7 @@ var (
 	caFile             string
 	serverHostOverride string
 	supervisorEndpoint string
+	version            string = "dev"
 )
 
 var flags = []cli.Flag{
@@ -65,9 +66,10 @@ var flags = []cli.Flag{
 }
 
 var app = &cli.App{
-	Name:  "provider-ssh-authorized-keys",
-	Usage: "Fetch the public ssh key from the supervisor",
-	Flags: flags,
+	Name:    "provider-ssh-authorized-keys",
+	Usage:   "Fetch the public ssh key from the supervisor",
+	Version: version,
+	Flags:   flags,
 	Action: func(ctx *cli.Context) error {
 		out, err := Fetch(ctx.Context)
 		if err != nil {
