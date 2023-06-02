@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/go-ldap/ldap/v3 v3.4.4
-	github.com/go-playground/validator/v10 v10.13.0
+	github.com/go-playground/validator/v10 v10.14.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.5
@@ -18,13 +18,14 @@ require (
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/VictoriaMetrics/fastcache v1.12.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
-	github.com/cockroachdb/pebble v0.0.0-20230602175216-bceae160ba58 // indirect
+	github.com/cockroachdb/pebble v0.0.0-20230602203259-f98d3df2f002 // indirect
 	github.com/cockroachdb/redact v1.1.4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deckarep/golang-set/v2 v2.3.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gballet/go-libpcsclite v0.0.0-20191108122812-4678299bea08 // indirect
 	github.com/getsentry/sentry-go v0.21.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.4 // indirect
@@ -58,6 +59,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
+	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
