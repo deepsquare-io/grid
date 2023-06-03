@@ -6,11 +6,9 @@ import (
 	"math/big"
 
 	errorsabi "github.com/deepsquare-io/the-grid/cli/deepsquare/generated/abi/errors"
-	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rpc"
-	"go.uber.org/zap"
 )
 
 var (
@@ -576,11 +574,11 @@ func init() {
 	var err error
 	errorsABI, err = errorsabi.ErrorContractMetaData.GetAbi()
 	if err != nil {
-		logger.I.Panic("failed to read abi", zap.Error(err))
+		panic(fmt.Errorf("failed to read abi: %w", err))
 	}
 }
 
-func WrapError(originalErr error) error {
+func WrapError(originalErr error) (newErr error) {
 	// Check if it's an RPC error
 	var target rpc.DataError
 	if ok := errors.As(originalErr, &target); !ok {
@@ -603,9 +601,7 @@ func WrapError(originalErr error) error {
 		return err
 	}
 
-	err := fmt.Errorf("%w, data: %s", originalErr, data)
-	logger.I.Warn("Unhandled error", zap.Error(err))
-	return err
+	return fmt.Errorf("%w, data: %s", originalErr, data)
 }
 
 func parseABIError(
