@@ -17,11 +17,11 @@ type Service interface {
 }
 
 type service struct {
-	http.Client
+	*http.Client
 	endpoint string
 }
 
-func NewService(client http.Client, endpoint string) Service {
+func NewService(client *http.Client, endpoint string) Service {
 	return &service{
 		Client:   client,
 		endpoint: endpoint,

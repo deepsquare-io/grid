@@ -56,34 +56,36 @@ type RPC interface {
 	deepsquare.JobScheduler
 }
 
+type EthereumBackend interface {
+	bind.ContractBackend
+	bind.DeployBackend
+}
+
 type rpcClient struct {
 	*metaschedulerabi.MetaScheduler
-	bind.ContractBackend
+	EthereumBackend
 	metaschedulerAddress common.Address
 	chainID              *big.Int
-	deployBackend        bind.DeployBackend
 	pk                   *ecdsa.PrivateKey
 	sbatch               sbatch.Service
 }
 
 func NewRPC(
 	address common.Address,
-	contractBackend bind.ContractBackend,
+	ethereumBackend EthereumBackend,
 	chainID *big.Int,
-	deployBackend bind.DeployBackend,
 	pk *ecdsa.PrivateKey,
 	sbatch sbatch.Service,
-) (c RPC, err error) {
-	m, err := metaschedulerabi.NewMetaScheduler(address, contractBackend)
+) (client RPC, err error) {
+	m, err := metaschedulerabi.NewMetaScheduler(address, ethereumBackend)
 	if err != nil {
 		return nil, err
 	}
 	return &rpcClient{
 		MetaScheduler:        m,
-		ContractBackend:      contractBackend,
+		EthereumBackend:      ethereumBackend,
 		metaschedulerAddress: address,
 		chainID:              chainID,
-		deployBackend:        deployBackend,
 		pk:                   pk,
 		sbatch:               sbatch,
 	}, err
@@ -142,7 +144,7 @@ func (c *rpcClient) SetAllowance(ctx context.Context, amount *big.Int) error {
 	if err != nil {
 		return fmt.Errorf("failed to approve credit: %w", err)
 	}
-	_, err = bind.WaitMined(ctx, c.deployBackend, tx)
+	_, err = bind.WaitMined(ctx, c, tx)
 	return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
 }
 
@@ -189,13 +191,15 @@ type jobIterator struct {
 	job    *deepsquare.Job
 }
 
-func (it *jobIterator) Next(ctx context.Context) (next deepsquare.JobLazyIterator, err error) {
-	if it.index+1 > it.length {
-		return nil, nil
+func (it *jobIterator) Next(
+	ctx context.Context,
+) (next deepsquare.JobLazyIterator, ok bool, err error) {
+	if it.index+1 >= it.length {
+		return nil, false, nil
 	}
 	job, err := it.GetJob(ctx, it.array[it.index+1])
 	if err != nil {
-		return nil, fmt.Errorf("failed to get job: %w", err)
+		return nil, false, fmt.Errorf("failed to get job: %w", err)
 	}
 
 	return &jobIterator{
@@ -204,16 +208,18 @@ func (it *jobIterator) Next(ctx context.Context) (next deepsquare.JobLazyIterato
 		length:    it.length,
 		index:     it.index + 1,
 		job:       job,
-	}, nil
+	}, true, nil
 }
 
-func (it *jobIterator) Prev(ctx context.Context) (prev deepsquare.JobLazyIterator, err error) {
+func (it *jobIterator) Prev(
+	ctx context.Context,
+) (prev deepsquare.JobLazyIterator, ok bool, err error) {
 	if it.index-1 < 0 {
-		return nil, nil
+		return nil, false, nil
 	}
 	job, err := it.GetJob(ctx, it.array[it.index-1])
 	if err != nil {
-		return nil, fmt.Errorf("failed to get job: %w", err)
+		return nil, false, fmt.Errorf("failed to get job: %w", err)
 	}
 
 	return &jobIterator{
@@ -222,7 +228,7 @@ func (it *jobIterator) Prev(ctx context.Context) (prev deepsquare.JobLazyIterato
 		length:    it.length,
 		index:     it.index - 1,
 		job:       job,
-	}, nil
+	}, true, nil
 }
 
 func (it *jobIterator) Current() *deepsquare.Job {
@@ -239,6 +245,11 @@ func (c *rpcClient) GetJobs(ctx context.Context) (deepsquare.JobLazyIterator, er
 	if len(jobIDs) == 0 {
 		return nil, nil
 	}
+	// Reverse array, from new to old
+	for i, j := 0, len(jobIDs)-1; i < j; i, j = i+1, j-1 {
+		jobIDs[i], jobIDs[j] = jobIDs[j], jobIDs[i]
+	}
+	// Initialize first data
 	job, err := c.GetJob(ctx, jobIDs[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to get job: %w", err)
@@ -275,7 +286,7 @@ func (c *rpcClient) requestNewJob(
 	}
 
 	// Wait for transaction to be mined
-	receipt, err := bind.WaitMined(ctx, c.deployBackend, tx)
+	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
 		return [32]byte{}, fmt.Errorf("failed to create auth options: %w", err)
 	}
@@ -333,30 +344,27 @@ type WS interface {
 
 type wsClient struct {
 	*metaschedulerabi.MetaScheduler
-	bind.ContractBackend
+	EthereumBackend
 	metaschedulerAddress common.Address
 	chainID              *big.Int
-	deployBackend        bind.DeployBackend
 	pk                   *ecdsa.PrivateKey
 }
 
 func NewWS(
 	address common.Address,
+	ethereumBackend EthereumBackend,
 	chainID *big.Int,
-	deployBackend bind.DeployBackend,
-	contractBackend bind.ContractBackend,
 	pk *ecdsa.PrivateKey,
 ) (c WS, err error) {
-	m, err := metaschedulerabi.NewMetaScheduler(address, contractBackend)
+	m, err := metaschedulerabi.NewMetaScheduler(address, ethereumBackend)
 	if err != nil {
 		return nil, err
 	}
 	return &wsClient{
 		MetaScheduler:        m,
+		EthereumBackend:      ethereumBackend,
 		metaschedulerAddress: address,
 		chainID:              chainID,
-		ContractBackend:      contractBackend,
-		deployBackend:        deployBackend,
 		pk:                   pk,
 	}, err
 }
