@@ -2,6 +2,7 @@ package sbatch
 
 import (
 	"context"
+	"time"
 
 	sbatchv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
@@ -34,6 +35,8 @@ type client struct {
 func (s *client) dial(
 	ctx context.Context,
 ) (sbatchv1alpha1.SBatchAPIClient, *grpc.ClientConn, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	conn, err := grpc.DialContext(ctx, s.endpoint, s.opts...)
 	if err != nil {
 		return nil, nil, err
