@@ -2,7 +2,6 @@
 FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/golang:1.20.4 as builder
 WORKDIR /build
 COPY go.mod go.sum ./
-ENV GOPROXY=https://goproxy.io,https://proxy.golang.org,direct
 RUN go mod download
 
 COPY . /build/

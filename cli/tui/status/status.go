@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
 )
 
@@ -25,7 +26,7 @@ var columns = []table.Column{
 	{Title: "Start date", Width: 30},
 }
 
-func (m model) View() string {
+func (m Model) View() string {
 	s := baseStyle.Render(m.table.View()) + "\n"
 	return s
 }
@@ -56,12 +57,13 @@ func Status(ctx context.Context, rpc metascheduler.RPC, ws metascheduler.WS) tea
 	help := help.New()
 	help.ShowAll = true
 
-	return model{
+	return Model{
 		table:   t,
 		idToRow: idToRow,
 		it:      it,
 		help:    help,
 
+		jobs:    make(chan deepsquare.Job, 1),
 		fetcher: rpc,
 		watcher: ws,
 	}

@@ -118,8 +118,8 @@ var app = &cli.App{
 }
 
 func main() {
-	_ = godotenv.Load(".env")
 	_ = godotenv.Load(".env.local")
+	_ = godotenv.Load(".env")
 	if err := app.Run(os.Args); err != nil {
 		logger.I.Fatal("app crashed", zap.Error(err))
 	}

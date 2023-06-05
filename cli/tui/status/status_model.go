@@ -15,11 +15,12 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
-type model struct {
+type Model struct {
 	table   table.Model
 	idToRow map[[32]byte]table.Row
 	it      deepsquare.JobLazyIterator
 	help    help.Model
+	jobs    chan deepsquare.Job
 
 	fetcher deepsquare.JobFetcher
 	watcher deepsquare.JobWatcher
@@ -34,6 +35,10 @@ func jobToRow(job deepsquare.Job) table.Row {
 	}
 }
 
+// initializeRows fetches the last "x" jobs and store an iterator in the model
+// for lazy loading.
+//
+// This method is executed before the loading of the page for SSR.
 func initializeRows(
 	ctx context.Context,
 	fetcher deepsquare.JobFetcher,
@@ -66,49 +71,8 @@ func initializeRows(
 	return rows, idToRow, it
 }
 
-func watchTransition(
-	ctx context.Context,
-	watcher deepsquare.JobWatcher,
-	fetcher deepsquare.JobFetcher,
-) tea.Cmd {
-	out := make(chan deepsquare.Job)
-	logs := make(chan types.Log, 100)
-	sub, err := watcher.SubscribeEvents(ctx, logs)
-	if err != nil {
-		logger.I.Fatal(err.Error())
-		return nil
-	}
-
-	go func() {
-		defer sub.Unsubscribe()
-		transitions := watcher.FilterJobTransition(logs)
-		newJobs := watcher.FilterNewJobRequests(logs)
-		for {
-			select {
-			case transition := <-transitions:
-				job, err := fetcher.GetJob(ctx, transition.JobId)
-				if err != nil {
-					logger.I.Fatal(err.Error())
-					return
-				}
-				out <- *job
-			case newJob := <-newJobs:
-				job, err := fetcher.GetJob(ctx, newJob.JobId)
-				if err != nil {
-					logger.I.Fatal(err.Error())
-					return
-				}
-				out <- *job
-			}
-		}
-	}()
-
-	return func() tea.Msg {
-		return transitionMsg{<-out, out}
-	}
-}
-
-func (m *model) addMoreRows() {
+// addMoreRows fetches the last "x" jobs and add it as row.
+func (m *Model) addMoreRows() {
 	ctx := context.Background()
 	oldRows := m.table.Rows()
 	rows := make([]table.Row, 0, len(oldRows)+tableHeight)
@@ -135,36 +99,76 @@ func (m *model) addMoreRows() {
 	m.table.SetRows(rows)
 }
 
-func (m model) Init() tea.Cmd {
-	return watchTransition(context.Background(), m.watcher, m.fetcher)
+// watchTransition send new jobs object by watching events
+func (m *Model) watchTransition(
+	ctx context.Context,
+) tea.Cmd {
+	return func() tea.Msg {
+		logs := make(chan types.Log, 100)
+		sub, err := m.watcher.SubscribeEvents(ctx, logs)
+		if err != nil {
+			logger.I.Fatal(err.Error())
+			return nil
+		}
+		transitions := m.watcher.FilterJobTransition(logs)
+		newJobs := m.watcher.FilterNewJobRequests(logs)
+
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case transition := <-transitions:
+				job, err := m.fetcher.GetJob(ctx, transition.JobId)
+				if err != nil {
+					logger.I.Fatal(err.Error())
+					return nil
+				}
+				m.jobs <- *job
+			case newJob := <-newJobs:
+				job, err := m.fetcher.GetJob(ctx, newJob.JobId)
+				if err != nil {
+					logger.I.Fatal(err.Error())
+					return nil
+				}
+				m.jobs <- *job
+			}
+		}
+	}
 }
 
-func (m transitionMsg) awaitNext() transitionMsg {
-	return transitionMsg{current: <-m.next, next: m.next}
+type transitionMsg deepsquare.Job
+
+func (m *Model) handleTransition() tea.Cmd {
+	return func() tea.Msg {
+		if job, ok := <-m.jobs; ok {
+			return transitionMsg(job)
+		}
+		return nil
+	}
 }
 
-type transitionMsg struct {
-	current deepsquare.Job
-	next    <-chan deepsquare.Job
+func (m Model) Init() tea.Cmd {
+	return tea.Batch(
+		m.watchTransition(context.Background()),
+		m.handleTransition(),
+	)
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	cmds := make([]tea.Cmd, 0)
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case transitionMsg:
 		rows := m.table.Rows()
-		if row, ok := m.idToRow[msg.current.JobId]; ok {
-			row[2] = metascheduler.JobStatus(msg.current.Status).String()
+		if row, ok := m.idToRow[msg.JobId]; ok {
+			row[2] = metascheduler.JobStatus(msg.Status).String()
 		} else {
-			job := deepsquare.Job(msg.current)
+			job := deepsquare.Job(msg)
 			row = jobToRow(job)
-			m.idToRow[msg.current.JobId] = row
+			m.idToRow[msg.JobId] = row
 			rows = append(rows, table.Row{})
 			copy(rows[1:], rows)
 			rows[0] = row
 		}
 		m.table.SetRows(rows)
-		cmds = append(cmds, func() tea.Msg { return msg.awaitNext() })
 	case tea.KeyMsg:
 		switch {
 		case msg.String() == "q", msg.String() == "ctrl+c":
@@ -177,8 +181,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	table, cmd := m.table.Update(msg)
-	m.table = table
-	cmds = append(cmds, cmd)
-	return m, tea.Batch(cmds...)
+	m.table, cmd = m.table.Update(msg)
+	return m, cmd
 }
