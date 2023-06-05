@@ -12,6 +12,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/logger"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -22,8 +23,9 @@ type Model struct {
 	help    help.Model
 	jobs    chan deepsquare.Job
 
-	fetcher deepsquare.JobFetcher
-	watcher deepsquare.JobWatcher
+	fetcher     deepsquare.JobFetcher
+	watcher     deepsquare.JobWatcher
+	userAddress common.Address
 }
 
 func jobToRow(job deepsquare.Job) table.Row {
@@ -108,28 +110,43 @@ func (m *Model) watchTransition(
 		sub, err := m.watcher.SubscribeEvents(ctx, logs)
 		if err != nil {
 			logger.I.Fatal(err.Error())
-			return nil
 		}
-		transitions := m.watcher.FilterJobTransition(logs)
-		newJobs := m.watcher.FilterNewJobRequests(logs)
+		transitions, rest := m.watcher.FilterJobTransition(logs)
+		newJobs, rest := m.watcher.FilterNewJobRequests(rest)
+		go func() {
+			for range rest {
+				// Do nothing, simply consume the events
+			}
+		}()
 
 		defer sub.Unsubscribe()
 		for {
 			select {
 			case transition := <-transitions:
-				job, err := m.fetcher.GetJob(ctx, transition.JobId)
-				if err != nil {
-					logger.I.Fatal(err.Error())
-					return nil
-				}
-				m.jobs <- *job
+				go func() {
+					job, err := m.fetcher.GetJob(ctx, transition.JobId)
+					if err != nil {
+						logger.I.Error(err.Error())
+						return
+					}
+					if job.CustomerAddr != m.userAddress {
+						return
+					}
+					m.jobs <- *job
+				}()
+
 			case newJob := <-newJobs:
-				job, err := m.fetcher.GetJob(ctx, newJob.JobId)
-				if err != nil {
-					logger.I.Fatal(err.Error())
-					return nil
+				if newJob.CustomerAddr != m.userAddress {
+					continue
 				}
-				m.jobs <- *job
+				go func() {
+					job, err := m.fetcher.GetJob(ctx, newJob.JobId)
+					if err != nil {
+						logger.I.Error(err.Error())
+						return
+					}
+					m.jobs <- *job
+				}()
 			}
 		}
 	}
@@ -139,10 +156,7 @@ type transitionMsg deepsquare.Job
 
 func (m *Model) handleTransition() tea.Cmd {
 	return func() tea.Msg {
-		if job, ok := <-m.jobs; ok {
-			return transitionMsg(job)
-		}
-		return nil
+		return transitionMsg(<-m.jobs)
 	}
 }
 
@@ -154,7 +168,7 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
+	cmds := make([]tea.Cmd, 0)
 	switch msg := msg.(type) {
 	case transitionMsg:
 		rows := m.table.Rows()
@@ -169,6 +183,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			rows[0] = row
 		}
 		m.table.SetRows(rows)
+		cmds = append(cmds, m.handleTransition())
 	case tea.KeyMsg:
 		switch {
 		case msg.String() == "q", msg.String() == "ctrl+c":
@@ -181,6 +196,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	m.table, cmd = m.table.Update(msg)
-	return m, cmd
+	table, cmd := m.table.Update(msg)
+	m.table = table
+	cmds = append(cmds, cmd)
+	return m, tea.Batch(cmds...)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 var (
@@ -31,7 +32,12 @@ func (m Model) View() string {
 	return s
 }
 
-func Status(ctx context.Context, rpc metascheduler.RPC, ws metascheduler.WS) tea.Model {
+func Status(
+	ctx context.Context,
+	rpc metascheduler.RPC,
+	ws metascheduler.WS,
+	userAddress common.Address,
+) tea.Model {
 	// Initialize rows
 	rows, idToRow, it := initializeRows(ctx, rpc)
 
@@ -63,8 +69,9 @@ func Status(ctx context.Context, rpc metascheduler.RPC, ws metascheduler.WS) tea
 		it:      it,
 		help:    help,
 
-		jobs:    make(chan deepsquare.Job, 1),
-		fetcher: rpc,
-		watcher: ws,
+		jobs:        make(chan deepsquare.Job, 100),
+		fetcher:     rpc,
+		watcher:     ws,
+		userAddress: userAddress,
 	}
 }

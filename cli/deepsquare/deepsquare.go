@@ -76,11 +76,11 @@ type JobWatcher interface {
 	// Filter new job requests events.
 	FilterNewJobRequests(
 		ch <-chan types.Log,
-	) <-chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent
+	) (filtered <-chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent, rest <-chan types.Log)
 	// Filter job transition events.
 	FilterJobTransition(
 		ch <-chan types.Log,
-	) <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent
+	) (filtered <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, rest <-chan types.Log)
 }
 
 // AllowanceManager set the allowed quantity of credit for smart-contract interactions.

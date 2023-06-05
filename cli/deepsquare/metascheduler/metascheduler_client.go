@@ -388,11 +388,13 @@ func (c *wsClient) SubscribeEvents(
 
 func (c *wsClient) FilterNewJobRequests(
 	ch <-chan types.Log,
-) <-chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent {
-	events := make(chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent)
+) (filtered <-chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent, rest <-chan types.Log) {
+	fChan := make(chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent)
+	rChan := make(chan types.Log)
 
 	go func() {
-		defer close(events)
+		defer close(fChan)
+		defer close(rChan)
 		for log := range ch {
 			if len(log.Topics) == 0 {
 				return
@@ -403,21 +405,25 @@ func (c *wsClient) FilterNewJobRequests(
 					panic(fmt.Errorf("failed to parse event: %w", err))
 				}
 
-				events <- event
+				fChan <- event
+			} else {
+				rChan <- log
 			}
 		}
 	}()
 
-	return events
+	return fChan, rChan
 }
 
 func (c *wsClient) FilterJobTransition(
 	ch <-chan types.Log,
-) <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent {
-	events := make(chan *metaschedulerabi.MetaSchedulerJobTransitionEvent)
+) (filtered <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, rest <-chan types.Log) {
+	fChan := make(chan *metaschedulerabi.MetaSchedulerJobTransitionEvent)
+	rChan := make(chan types.Log)
 
 	go func() {
-		defer close(events)
+		defer close(fChan)
+		defer close(rChan)
 		for log := range ch {
 			if len(log.Topics) == 0 {
 				return
@@ -428,10 +434,12 @@ func (c *wsClient) FilterJobTransition(
 					panic(fmt.Errorf("failed to parse event: %w", err))
 				}
 
-				events <- event
+				fChan <- event
+			} else {
+				rChan <- log
 			}
 		}
 	}()
 
-	return events
+	return fChan, rChan
 }

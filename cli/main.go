@@ -112,7 +112,15 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
-		_, err = tea.NewProgram(status.Status(ctx, rpc, ws), tea.WithContext(ctx)).Run()
+		_, err = tea.NewProgram(
+			status.Status(
+				ctx,
+				rpc,
+				ws,
+				crypto.PubkeyToAddress(pk.PublicKey),
+			),
+			tea.WithContext(ctx),
+		).Run()
 		return err
 	},
 }
