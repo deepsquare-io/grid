@@ -8,8 +8,7 @@ import (
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/scheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/joho/godotenv"
@@ -26,14 +25,14 @@ type ServiceIntegrationTestSuite struct {
 	impl      *scheduler.Slurm
 }
 
-func (suite *ServiceIntegrationTestSuite) submitJob() *job.SubmitRequest {
+func (suite *ServiceIntegrationTestSuite) submitJob() *scheduler.SubmitRequest {
 	// Arrange
 	ctx := context.Background()
 	name := utils.GenerateRandomString(6)
-	req := &job.SubmitRequest{
+	req := &scheduler.SubmitRequest{
 		Name: name,
 		User: suite.user,
-		Definition: &job.Definition{
+		JobDefinition: &scheduler.JobDefinition{
 			TimeLimit:    uint64(5),
 			NTasks:       1,
 			GPUsPerTask:  0,
@@ -81,7 +80,7 @@ func (suite *ServiceIntegrationTestSuite) TestCancel() {
 	req := suite.submitJob()
 
 	// Act
-	err := suite.impl.CancelJob(ctx, &job.CancelRequest{
+	err := suite.impl.CancelJob(ctx, &scheduler.CancelRequest{
 		Name: req.Name,
 		User: suite.user,
 	})
@@ -96,7 +95,7 @@ func (suite *ServiceIntegrationTestSuite) TestTopUp() {
 	req := suite.submitJob()
 
 	// Act
-	err := suite.impl.TopUp(ctx, &job.TopUpRequest{
+	err := suite.impl.TopUp(ctx, &scheduler.TopUpRequest{
 		Name:           req.Name,
 		AdditionalTime: 5,
 	})

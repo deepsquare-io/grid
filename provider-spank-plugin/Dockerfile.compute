@@ -1,4 +1,4 @@
-FROM quay.io/rockylinux/rockylinux:9.0 as builder
+FROM quay.io/rockylinux/rockylinux:9.2 as builder
 
 ARG slurm_version
 

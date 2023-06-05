@@ -12,7 +12,7 @@ var I *zap.Logger
 var atom = zap.NewAtomicLevel()
 
 func init() {
-	config := zap.NewProductionEncoderConfig() // or zap.NewDevelopmentConfig() or any other zap.Config
+	config := zap.NewProductionEncoderConfig()
 	config.TimeKey = "timestamp"
 	config.EncodeTime = zapcore.ISO8601TimeEncoder
 	config.EncodeLevel = zapcore.CapitalColorLevelEncoder
