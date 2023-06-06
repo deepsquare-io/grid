@@ -27,12 +27,12 @@ var columns = []table.Column{
 	{Title: "Start date", Width: 30},
 }
 
-func (m Model) View() string {
+func (m model) View() string {
 	s := baseStyle.Render(m.table.View()) + "\n"
 	return s
 }
 
-func Status(
+func Model(
 	ctx context.Context,
 	rpc metascheduler.RPC,
 	ws metascheduler.WS,
@@ -63,7 +63,7 @@ func Status(
 	help := help.New()
 	help.ShowAll = true
 
-	return Model{
+	return model{
 		table:   t,
 		idToRow: idToRow,
 		it:      it,

@@ -1,21 +1,30 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"math/big"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/deepsquare-io/the-grid/cli/deepsquare/gridlogger"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/sbatch"
 	"github.com/deepsquare-io/the-grid/cli/logger"
-	"github.com/deepsquare-io/the-grid/cli/tui/status"
+	"github.com/deepsquare-io/the-grid/cli/tui/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var (
@@ -28,7 +37,7 @@ var (
 	ethHexPK                   string
 	metaschedulerSmartContract string
 
-	trace bool
+	debug bool
 )
 
 var flags = []cli.Flag{
@@ -62,7 +71,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "logger.endpoint",
-		Value:       "https://logger.deepsquare.run",
+		Value:       "https://grid-logger.deepsquare.run",
 		Usage:       "Grid Logger endpoint.",
 		Destination: &loggerEndpoint,
 		EnvVars:     []string{"LOGGER_ENDPOINT"},
@@ -75,10 +84,16 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"ETH_PRIVATE_KEY"},
 	},
 	&cli.BoolFlag{
-		Name:        "trace",
-		Usage:       "Trace logging",
-		Destination: &trace,
-		EnvVars:     []string{"TRACE"},
+		Name:        "debug",
+		Usage:       "Debug logging",
+		Destination: &debug,
+		Action: func(ctx *cli.Context, b bool) error {
+			if b {
+				logger.EnableDebug()
+			}
+			return nil
+		},
+		EnvVars: []string{"DEBUG"},
 	},
 }
 
@@ -90,34 +105,91 @@ var app = &cli.App{
 	Suggest: true,
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context
+		// Load the system CA certificates
+		caCertPool, err := x509.SystemCertPool()
+		if err != nil {
+			logger.I.Warn("failed to load system CA certificates", zap.Error(err))
+			caCertPool = x509.NewCertPool()
+		}
+		tlsConfig := &tls.Config{
+			RootCAs: caCertPool,
+		}
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: tlsConfig,
+			},
+		}
+
 		address := common.HexToAddress(metaschedulerSmartContract)
-		ethclientRPC, err := ethclient.Dial(ethEndpointRPC)
+		rpcClient, err := rpc.DialOptions(ctx, ethEndpointRPC, rpc.WithHTTPClient(client))
 		if err != nil {
 			return err
 		}
-		ethclientWS, err := ethclient.Dial(ethEndpointWS)
+		ethClientRPC := ethclient.NewClient(rpcClient)
+		wsClient, err := rpc.DialOptions(ctx, ethEndpointWS, rpc.WithHTTPClient(client))
 		if err != nil {
 			return err
 		}
+		ethClientWS := ethclient.NewClient(wsClient)
 		pk, err := crypto.HexToECDSA(ethHexPK)
 		if err != nil {
 			return err
 		}
 		sbatch := sbatch.NewService(http.DefaultClient, sbatchEndpoint)
-		rpc, err := metascheduler.NewRPC(address, ethclientRPC, big.NewInt(179188), pk, sbatch)
+		_, err = metascheduler.NewRPC(address, ethClientRPC, big.NewInt(179188), pk, sbatch)
 		if err != nil {
 			return err
 		}
-		ws, err := metascheduler.NewWS(address, ethclientWS, big.NewInt(179188), pk)
+		_, err = metascheduler.NewWS(address, ethClientWS, big.NewInt(179188), pk)
 		if err != nil {
 			return err
 		}
+		dialOptions := []grpc.DialOption{
+			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+		}
+		u, err := url.Parse(loggerEndpoint)
+		if err != nil {
+			logger.I.Error("Failed to parse URL", zap.Error(err))
+			return err
+		}
+
+		port := u.Port()
+		if port == "" {
+			// If the URL doesn't explicitly specify a port, use the default port for the scheme.
+			switch strings.ToLower(u.Scheme) {
+			case "http":
+				port = "80"
+			case "https":
+				port = "443"
+			default:
+				logger.I.Fatal("Unknown scheme for logger URL", zap.String("scheme", u.Scheme))
+			}
+		}
+		l, conn, err := gridlogger.DialContext(
+			ctx,
+			net.JoinHostPort(u.Hostname(), port),
+			pk,
+			dialOptions...,
+		)
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+		// status.Model(
+		// 	ctx,
+		// 	rpc,
+		// 	ws,
+		// 	crypto.PubkeyToAddress(pk.PublicKey),
+		// ),
 		_, err = tea.NewProgram(
-			status.Status(
-				ctx,
-				rpc,
-				ws,
+			log.Model(
+				l,
 				crypto.PubkeyToAddress(pk.PublicKey),
+				[32]byte(
+					common.FromHex(
+						"0x00000000000000000000000000000000000000000000000000000000000000a8",
+					),
+				),
 			),
 			tea.WithContext(ctx),
 		).Run()

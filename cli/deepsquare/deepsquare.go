@@ -32,7 +32,7 @@ type Job struct {
 // Logger fetches the logs of a job.
 type Logger interface {
 	// Watch the logs of a job
-	WatchLogs(ctx context.Context, jobName string) (LogStream, error)
+	WatchLogs(ctx context.Context, jobID [32]byte) (LogStream, error)
 }
 
 // JobScheduler schedules and cancels jobs.
@@ -43,10 +43,10 @@ type JobScheduler interface {
 		content string,
 		definition metaschedulerabi.JobDefinition,
 		lockedAmount *big.Int,
-		jobName [32]byte,
+		jobID [32]byte,
 	) ([32]byte, error)
 	// Cancel a job.
-	CancelJob(ctx context.Context, id [32]byte) error
+	CancelJob(ctx context.Context, jobID [32]byte) error
 }
 
 // JobLazyIterator iterates on a lazy list of jobs.

@@ -12,11 +12,13 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/logger"
+	"github.com/deepsquare-io/the-grid/cli/util/channel"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"go.uber.org/zap"
 )
 
-type Model struct {
+type model struct {
 	table   table.Model
 	idToRow map[[32]byte]table.Row
 	it      deepsquare.JobLazyIterator
@@ -47,7 +49,7 @@ func initializeRows(
 ) (rows []table.Row, idToRow map[[32]byte]table.Row, it deepsquare.JobLazyIterator) {
 	it, err := fetcher.GetJobs(ctx)
 	if err != nil {
-		logger.I.Error(err.Error())
+		logger.I.Error("failed to get jobs", zap.Error(err))
 		return nil, nil, it
 	}
 	if it == nil {
@@ -63,7 +65,7 @@ func initializeRows(
 		rows = append(rows, row)
 		it, ok, err = it.Next(ctx)
 		if err != nil {
-			logger.I.Error(err.Error())
+			logger.I.Error("failed to get next job, ignoring...", zap.Error(err))
 			break
 		}
 		if !ok {
@@ -74,7 +76,7 @@ func initializeRows(
 }
 
 // addMoreRows fetches the last "x" jobs and add it as row.
-func (m *Model) addMoreRows() {
+func (m *model) addMoreRows() {
 	ctx := context.Background()
 	oldRows := m.table.Rows()
 	rows := make([]table.Row, 0, len(oldRows)+tableHeight)
@@ -91,7 +93,7 @@ func (m *Model) addMoreRows() {
 		rows = append(rows, row)
 		m.it, ok, err = m.it.Next(ctx)
 		if err != nil {
-			logger.I.Error(err.Error())
+			logger.I.Error("failed to get next job, ignoring...", zap.Error(err))
 			break
 		}
 		if !ok {
@@ -102,7 +104,7 @@ func (m *Model) addMoreRows() {
 }
 
 // watchTransition send new jobs object by watching events
-func (m *Model) watchTransition(
+func (m *model) watchTransition(
 	ctx context.Context,
 ) tea.Cmd {
 	return func() tea.Msg {
@@ -113,11 +115,7 @@ func (m *Model) watchTransition(
 		}
 		transitions, rest := m.watcher.FilterJobTransition(logs)
 		newJobs, rest := m.watcher.FilterNewJobRequests(rest)
-		go func() {
-			for range rest {
-				// Do nothing, simply consume the events
-			}
-		}()
+		go channel.IgnoreElements(rest)
 
 		defer sub.Unsubscribe()
 		for {
@@ -126,13 +124,21 @@ func (m *Model) watchTransition(
 				go func() {
 					job, err := m.fetcher.GetJob(ctx, transition.JobId)
 					if err != nil {
-						logger.I.Error(err.Error())
+						logger.I.Error(
+							"failed to get job from transition, ignoring...",
+							zap.Error(err),
+						)
 						return
 					}
 					if job.CustomerAddr != m.userAddress {
 						return
 					}
-					m.jobs <- *job
+					select {
+					case m.jobs <- *job:
+					case <-ctx.Done():
+						// Context canceled. This is not an error.
+						return
+					}
 				}()
 
 			case newJob := <-newJobs:
@@ -142,11 +148,21 @@ func (m *Model) watchTransition(
 				go func() {
 					job, err := m.fetcher.GetJob(ctx, newJob.JobId)
 					if err != nil {
-						logger.I.Error(err.Error())
+						logger.I.Error(
+							"failed to get new job request event, ignoring...",
+							zap.Error(err),
+						)
 						return
 					}
-					m.jobs <- *job
+					select {
+					case m.jobs <- *job:
+					case <-ctx.Done():
+						// Context canceled. This is not an error.
+						return
+					}
 				}()
+			case <-ctx.Done():
+				return nil
 			}
 		}
 	}
@@ -154,21 +170,23 @@ func (m *Model) watchTransition(
 
 type transitionMsg deepsquare.Job
 
-func (m *Model) handleTransition() tea.Cmd {
-	return func() tea.Msg {
-		return transitionMsg(<-m.jobs)
-	}
+func (m *model) tickTransition() tea.Msg {
+	return transitionMsg(<-m.jobs)
 }
 
-func (m Model) Init() tea.Cmd {
+func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		m.watchTransition(context.Background()),
-		m.handleTransition(),
+		m.tickTransition,
 	)
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	cmds := make([]tea.Cmd, 0)
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var (
+		tbCmd tea.Cmd
+		cmds  = make([]tea.Cmd, 0)
+	)
+
 	switch msg := msg.(type) {
 	case transitionMsg:
 		rows := m.table.Rows()
@@ -183,7 +201,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			rows[0] = row
 		}
 		m.table.SetRows(rows)
-		cmds = append(cmds, m.handleTransition())
+		cmds = append(cmds, m.tickTransition)
 	case tea.KeyMsg:
 		switch {
 		case msg.String() == "q", msg.String() == "ctrl+c":
@@ -196,8 +214,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	table, cmd := m.table.Update(msg)
-	m.table = table
-	cmds = append(cmds, cmd)
+	m.table, tbCmd = m.table.Update(msg)
+	cmds = append(cmds, tbCmd)
 	return m, tea.Batch(cmds...)
 }

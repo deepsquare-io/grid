@@ -1,4 +1,4 @@
-package deepsquare
+package gridlogger
 
 import (
 	"context"
@@ -11,11 +11,12 @@ import (
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/deepsquare/generated/logger/v1alpha1"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"google.golang.org/grpc"
 )
 
-type logger struct {
+type gridlogger struct {
 	loggerv1alpha1.LoggerAPIClient
 	pk *ecdsa.PrivateKey
 }
@@ -27,7 +28,7 @@ func DialContext(
 	target string,
 	pk *ecdsa.PrivateKey,
 	opts ...grpc.DialOption,
-) (l deepsquare.Logger, conn grpc.ClientConnInterface, err error) {
+) (l deepsquare.Logger, conn *grpc.ClientConn, err error) {
 	conn, err = grpc.DialContext(ctx,
 		target,
 		opts...,
@@ -35,25 +36,31 @@ func DialContext(
 	if err != nil {
 		return nil, conn, err
 	}
-	l = &logger{
+	l = &gridlogger{
 		LoggerAPIClient: loggerv1alpha1.NewLoggerAPIClient(conn),
 		pk:              pk,
 	}
 	return l, conn, nil
 }
 
-func (l *logger) from() common.Address {
+func (l *gridlogger) from() common.Address {
 	return crypto.PubkeyToAddress(l.pk.PublicKey)
 }
 
-func (l *logger) WatchLogs(
+func (l *gridlogger) WatchLogs(
 	ctx context.Context,
-	jobName string,
+	jobID [32]byte,
 ) (deepsquare.LogStream, error) {
 	address := l.from().Hex()
 	timestamp := uint64(time.Now().Unix())
+	logName := strings.ToLower(hexutil.Encode(jobID[:]))
 	data := []byte(
-		fmt.Sprintf("read:%s/%s/%d", strings.ToLower(address), jobName, timestamp),
+		fmt.Sprintf(
+			"read:%s/%s/%d",
+			strings.ToLower(address),
+			logName,
+			timestamp,
+		),
 	)
 	hash := accounts.TextHash(data)
 
@@ -63,7 +70,7 @@ func (l *logger) WatchLogs(
 	}
 
 	return l.Read(ctx, &loggerv1alpha1.ReadRequest{
-		LogName:    jobName,
+		LogName:    logName,
 		Address:    address,
 		Timestamp:  timestamp,
 		SignedHash: signedHash,
