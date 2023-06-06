@@ -33,24 +33,25 @@ func NewLoggerAPIServer(db *db.File) *loggerAPIServer {
 
 func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) error {
 	ctx := stream.Context()
+	log := logger.I
 	p, ok := peer.FromContext(ctx)
 	if ok {
-		logger.I.Info("writer connected", zap.String("IP", p.Addr.String()))
+		log = log.With(zap.String("IP", p.Addr.String()))
+		log.Info("writer connected")
 	} else {
-		logger.I.Info("writer connected but was not identified")
+		log.Info("writer connected but was not identified")
 	}
 
 	for {
 		req, err := stream.Recv()
 		if err == io.EOF || errors.Is(err, context.Canceled) {
-			logger.I.Info("writer closed", zap.String("IP", p.Addr.String()))
+			log.Info("writer closed")
 			_ = stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
 			return nil
 		}
 		if err != nil {
-			logger.I.Error(
+			log.Error(
 				"writer closed with error",
-				zap.String("IP", p.Addr.String()),
 				zap.Error(err),
 			)
 			return err
@@ -58,10 +59,9 @@ func (s *loggerAPIServer) Write(stream loggerv1alpha1.LoggerAPI_WriteServer) err
 
 		_, err = s.db.Append(req)
 		if err != nil {
-			logger.I.Error(
+			log.Error(
 				"writer failed to write",
 				zap.Any("req", req),
-				zap.String("IP", p.Addr.String()),
 				zap.Error(err),
 			)
 			_ = stream.SendAndClose(&loggerv1alpha1.WriteResponse{})
@@ -75,10 +75,13 @@ func (s *loggerAPIServer) Read(
 	stream loggerv1alpha1.LoggerAPI_ReadServer,
 ) error {
 	ctx := stream.Context()
-	if p, ok := peer.FromContext(ctx); ok {
-		logger.I.Info("reader connected", zap.String("IP", p.Addr.String()), zap.Any("req", req))
+	log := logger.I.With(zap.Any("req", req))
+	p, ok := peer.FromContext(ctx)
+	if ok {
+		log = log.With(zap.String("IP", p.Addr.String()))
+		log.Info("reader connected")
 	} else {
-		logger.I.Info("reader connected but was not identified", zap.Any("req", req))
+		log.Info("reader connected but was not identified")
 	}
 	address := strings.ToLower(req.GetAddress())
 
@@ -89,30 +92,29 @@ func (s *loggerAPIServer) Read(
 	); err != nil {
 		return status.Errorf(codes.Unauthenticated, "failed to authenticate: %v", err)
 	}
-	logger.I.Info("reader authenticated", zap.String("user", address), zap.Any("req", req))
+	log = log.With(zap.String("user", address))
+	log.Info("reader authenticated")
 
 	logs := make(chan *loggerv1alpha1.ReadResponse, 100)
 	go func() {
 		defer close(logs)
 		if err := s.db.ReadAndWatch(ctx, address, req.GetLogName(), logs); err != nil {
-			logger.I.Error("read and watch failed", zap.Error(err))
+			log.Error("read and watch failed", zap.Error(err))
 		}
 	}()
 	for {
 		select {
 		case <-ctx.Done():
-			logger.I.Info("reader closed", zap.String("user", address), zap.Error(ctx.Err()))
+			log.Info("reader closed", zap.Error(ctx.Err()))
 			return nil
-		case log, ok := <-logs:
+		case l, ok := <-logs:
 			if !ok {
-				logger.I.Error(
+				log.Error(
 					"logs closed (read and watch the database might have closed)",
-					zap.String("user", address),
-					zap.Error(ctx.Err()),
 				)
 				return nil
 			}
-			if err := stream.Send(log); err != nil {
+			if err := stream.Send(l); err != nil {
 				return err
 			}
 		}
