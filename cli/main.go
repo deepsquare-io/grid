@@ -15,7 +15,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/sbatch"
 	"github.com/deepsquare-io/the-grid/cli/logger"
-	"github.com/deepsquare-io/the-grid/cli/tui/log"
+	"github.com/deepsquare-io/the-grid/cli/tui/nav"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -136,11 +136,11 @@ var app = &cli.App{
 			return err
 		}
 		sbatch := sbatch.NewService(http.DefaultClient, sbatchEndpoint)
-		_, err = metascheduler.NewRPC(address, ethClientRPC, big.NewInt(179188), pk, sbatch)
+		rpc, err := metascheduler.NewRPC(address, ethClientRPC, big.NewInt(179188), pk, sbatch)
 		if err != nil {
 			return err
 		}
-		_, err = metascheduler.NewWS(address, ethClientWS, big.NewInt(179188), pk)
+		ws, err := metascheduler.NewWS(address, ethClientWS, big.NewInt(179188), pk)
 		if err != nil {
 			return err
 		}
@@ -175,23 +175,18 @@ var app = &cli.App{
 			return err
 		}
 		defer conn.Close()
-		// status.Model(
-		// 	ctx,
-		// 	rpc,
-		// 	ws,
-		// 	crypto.PubkeyToAddress(pk.PublicKey),
-		// ),
 		_, err = tea.NewProgram(
-			log.Model(
-				l,
+			nav.Model(
+				ctx,
 				crypto.PubkeyToAddress(pk.PublicKey),
-				[32]byte(
-					common.FromHex(
-						"0x00000000000000000000000000000000000000000000000000000000000000a8",
-					),
-				),
+				rpc,
+				ws,
+				l,
+				version,
+				metaschedulerSmartContract,
 			),
 			tea.WithContext(ctx),
+			tea.WithAltScreen(),
 		).Run()
 		return err
 	},

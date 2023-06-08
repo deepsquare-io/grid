@@ -28,12 +28,20 @@ type model struct {
 	messages []string
 	logs     []logMsg
 	logsChan chan logMsg
+	title    string
 
 	showTimestamp bool
 
 	logger      deepsquare.Logger
 	userAddress common.Address
 	jobID       [32]byte
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func (m *model) watchLogs(
@@ -106,11 +114,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.viewport.SetContent(strings.Join(m.messages, "\n"))
 		m.viewport.GotoBottom()
 		cmds = append(cmds, m.tickLog)
-	case tea.KeyMsg:
-		switch {
-		case msg.Type == tea.KeyCtrlC, msg.Type == tea.KeyEsc, msg.String() == "q":
-			return m, tea.Quit
-		}
 	}
 	return m, tea.Batch(cmds...)
 }

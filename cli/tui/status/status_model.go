@@ -12,6 +12,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/logger"
+	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/deepsquare-io/the-grid/cli/util/channel"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -28,6 +29,15 @@ type model struct {
 	fetcher     deepsquare.JobFetcher
 	watcher     deepsquare.JobWatcher
 	userAddress common.Address
+}
+
+// SelectJobMsg is a public msg used to indicate the user selected a job.
+type SelectJobMsg [32]byte
+
+func emitSelectJobMsg(msg [32]byte) tea.Cmd {
+	return func() tea.Msg {
+		return SelectJobMsg(msg)
+	}
 }
 
 func jobToRow(job deepsquare.Job) table.Row {
@@ -55,10 +65,10 @@ func initializeRows(
 	if it == nil {
 		return nil, nil, it
 	}
-	rows = make([]table.Row, 0, tableHeight)
+	rows = make([]table.Row, 0, style.StandardHeight)
 	idToRow = make(map[[32]byte]table.Row)
 	var ok bool
-	for i := 0; i < tableHeight; i++ {
+	for i := 0; i < style.StandardHeight; i++ {
 		job := it.Current()
 		row := jobToRow(*job)
 		idToRow[job.JobId] = row
@@ -79,14 +89,14 @@ func initializeRows(
 func (m *model) addMoreRows() {
 	ctx := context.Background()
 	oldRows := m.table.Rows()
-	rows := make([]table.Row, 0, len(oldRows)+tableHeight)
+	rows := make([]table.Row, 0, len(oldRows)+style.StandardHeight)
 	if m.it == nil {
 		return
 	}
 	rows = append(rows, m.table.Rows()...)
 	var ok bool
 	var err error
-	for i := 0; i < tableHeight; i++ {
+	for i := 0; i < style.StandardHeight; i++ {
 		job := m.it.Current()
 		row := jobToRow(*job)
 		m.idToRow[job.JobId] = row
@@ -204,13 +214,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, m.tickTransition)
 	case tea.KeyMsg:
 		switch {
-		case msg.String() == "q", msg.String() == "ctrl+c":
-			return m, tea.Quit
-		case msg.String() == "enter":
-			return m, tea.Printf("len(rows) %v!", len(m.table.Rows()))
 		case key.Matches(msg, m.table.KeyMap.LineDown):
 			if m.table.Cursor() == len(m.table.Rows())-1 {
 				m.addMoreRows()
+			}
+		case msg.Type == tea.KeyEnter:
+			if len(m.table.SelectedRow()) > 0 {
+				jobIDStr := m.table.SelectedRow()[0]
+				jobIDBig, _ := new(big.Int).SetString(jobIDStr, 10)
+				jobIDBytes := jobIDBig.Bytes()
+				var jobID [32]byte
+				copy(jobID[:], jobIDBytes)
+				// Reverse the byte order in the array for endianess
+				for i, j := 0, len(jobID)-1; i < j; i, j = i+1, j-1 {
+					jobID[i], jobID[j] = jobID[j], jobID[i]
+				}
+				cmds = append(cmds, emitSelectJobMsg(jobID))
 			}
 		}
 	}

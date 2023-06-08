@@ -9,16 +9,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/ethereum/go-ethereum/common"
 )
-
-var (
-	baseStyle = lipgloss.NewStyle().
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("240"))
-)
-
-const tableHeight = 10
 
 var columns = []table.Column{
 	{Title: "Job ID", Width: 6},
@@ -28,8 +21,7 @@ var columns = []table.Column{
 }
 
 func (m model) View() string {
-	s := baseStyle.Render(m.table.View()) + "\n"
-	return s
+	return style.Base.Render(m.table.View())
 }
 
 func Model(
@@ -45,7 +37,7 @@ func Model(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(tableHeight),
+		table.WithHeight(style.StandardHeight),
 	)
 
 	s := table.DefaultStyles()
