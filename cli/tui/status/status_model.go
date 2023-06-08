@@ -41,7 +41,7 @@ func emitSelectJobMsg(msg [32]byte) tea.Cmd {
 
 func jobToRow(job cli.Job) table.Row {
 	return table.Row{
-		new(big.Int).SetBytes(job.JobId[:]).String(),
+		new(big.Int).SetBytes(job.JobID[:]).String(),
 		string(job.JobName[:]),
 		metascheduler.JobStatus(job.Status).String(),
 		(time.UnixMilli(job.Time.Start.Int64() * 1000)).String(),
@@ -70,7 +70,7 @@ func initializeRows(
 	for i := 0; i < style.StandardHeight; i++ {
 		job := it.Current()
 		row := jobToRow(*job)
-		idToRow[job.JobId] = row
+		idToRow[job.JobID] = row
 		rows = append(rows, row)
 		it, ok, err = it.Next(ctx)
 		if err != nil {
@@ -98,7 +98,7 @@ func (m *model) addMoreRows() {
 	for i := 0; i < style.StandardHeight; i++ {
 		job := m.it.Current()
 		row := jobToRow(*job)
-		m.idToRow[job.JobId] = row
+		m.idToRow[job.JobID] = row
 		rows = append(rows, row)
 		m.it, ok, err = m.it.Next(ctx)
 		if err != nil {
@@ -199,12 +199,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case transitionMsg:
 		rows := m.table.Rows()
-		if row, ok := m.idToRow[msg.JobId]; ok {
+		if row, ok := m.idToRow[msg.JobID]; ok {
 			row[2] = metascheduler.JobStatus(msg.Status).String()
 		} else {
 			job := cli.Job(msg)
 			row = jobToRow(job)
-			m.idToRow[msg.JobId] = row
+			m.idToRow[msg.JobID] = row
 			rows = append(rows, table.Row{})
 			copy(rows[1:], rows)
 			rows[0] = row

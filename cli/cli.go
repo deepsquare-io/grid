@@ -16,8 +16,7 @@ type LogStream loggerv1alpha1.LoggerAPI_ReadClient
 
 // Job represents a job object in the smart-contract.
 type Job struct {
-	//lint:ignore ST1003 no need to write ID instead of as we map to the metascheduler structure
-	JobId            [32]byte
+	JobID            [32]byte
 	Status           uint8
 	CustomerAddr     common.Address
 	ProviderAddr     common.Address

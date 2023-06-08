@@ -170,7 +170,7 @@ func (c *rpcClient) GetJob(ctx context.Context, id [32]byte) (*cli.Job, error) {
 		return nil, err
 	}
 	return &cli.Job{
-		JobId:            job.JobId,
+		JobID:            job.JobId,
 		Status:           job.Status,
 		CustomerAddr:     job.CustomerAddr,
 		ProviderAddr:     job.ProviderAddr,
