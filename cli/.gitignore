@@ -33,3 +33,4 @@ go.work
 app
 build/
 *.local
+bin/

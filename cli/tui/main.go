@@ -11,11 +11,11 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/gridlogger"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/sbatch"
-	"github.com/deepsquare-io/the-grid/cli/logger"
-	"github.com/deepsquare-io/the-grid/cli/tui/nav"
+	"github.com/deepsquare-io/the-grid/cli/v1/internal/log"
+	"github.com/deepsquare-io/the-grid/cli/v1/logger"
+	"github.com/deepsquare-io/the-grid/cli/v1/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/v1/sbatch"
+	"github.com/deepsquare-io/the-grid/cli/v1/tui/nav"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -89,7 +89,7 @@ var flags = []cli.Flag{
 		Destination: &debug,
 		Action: func(ctx *cli.Context, b bool) error {
 			if b {
-				logger.EnableDebug()
+				log.EnableDebug()
 			}
 			return nil
 		},
@@ -108,7 +108,7 @@ var app = &cli.App{
 		// Load the system CA certificates
 		caCertPool, err := x509.SystemCertPool()
 		if err != nil {
-			logger.I.Warn("failed to load system CA certificates", zap.Error(err))
+			log.I.Warn("failed to load system CA certificates", zap.Error(err))
 			caCertPool = x509.NewCertPool()
 		}
 		tlsConfig := &tls.Config{
@@ -149,7 +149,7 @@ var app = &cli.App{
 		}
 		u, err := url.Parse(loggerEndpoint)
 		if err != nil {
-			logger.I.Error("Failed to parse URL", zap.Error(err))
+			log.I.Error("Failed to parse URL", zap.Error(err))
 			return err
 		}
 
@@ -162,10 +162,10 @@ var app = &cli.App{
 			case "https":
 				port = "443"
 			default:
-				logger.I.Fatal("Unknown scheme for logger URL", zap.String("scheme", u.Scheme))
+				log.I.Fatal("Unknown scheme for logger URL", zap.String("scheme", u.Scheme))
 			}
 		}
-		l, conn, err := gridlogger.DialContext(
+		l, conn, err := logger.DialContext(
 			ctx,
 			net.JoinHostPort(u.Hostname(), port),
 			pk,
@@ -196,6 +196,6 @@ func main() {
 	_ = godotenv.Load(".env.local")
 	_ = godotenv.Load(".env")
 	if err := app.Run(os.Args); err != nil {
-		logger.I.Fatal("app crashed", zap.Error(err))
+		log.I.Fatal("app crashed", zap.Error(err))
 	}
 }

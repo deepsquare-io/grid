@@ -10,11 +10,11 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
-	"github.com/deepsquare-io/the-grid/cli/tui/log"
-	"github.com/deepsquare-io/the-grid/cli/tui/status"
-	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/the-grid/cli/v1"
+	"github.com/deepsquare-io/the-grid/cli/v1/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/v1/tui/log"
+	"github.com/deepsquare-io/the-grid/cli/v1/tui/status"
+	"github.com/deepsquare-io/the-grid/cli/v1/tui/style"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -29,7 +29,7 @@ type model struct {
 	logModel    tea.Model
 	statusModel tea.Model
 
-	logger      deepsquare.Logger
+	logger      cli.Logger
 	userAddress common.Address
 	keymap      keymap
 }
@@ -119,7 +119,7 @@ func Model(
 	userAddress common.Address,
 	rpc metascheduler.RPC,
 	ws metascheduler.WS,
-	logger deepsquare.Logger,
+	logger cli.Logger,
 	version string,
 	metaschedulerAddress string,
 ) tea.Model {

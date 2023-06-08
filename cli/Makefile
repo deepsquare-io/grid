@@ -24,7 +24,7 @@ build-all: $(addprefix bin/,$(bins)) bin/checksums.md
 
 .PHONY: bin/dps
 bin/dps: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.version=test" -o "$@" ./main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.version=test" -o "$@" ./tui/main.go
 
 .PHONY: unit
 unit:

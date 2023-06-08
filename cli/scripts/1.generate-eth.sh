@@ -6,7 +6,7 @@ SCRIPTPATH=$(dirname "$(realpath "$0")")
 PROJECTPATH="${SCRIPTPATH}/.."
 CONTRACTSPATH="${SCRIPTPATH}/../../smart-contracts"
 
-mkdir -p "${PROJECTPATH}/deepsquare/generated/abi/metascheduler/"
+mkdir -p "${PROJECTPATH}/internal/abi/metascheduler/"
 solc --optimize --optimize-runs=200 "${CONTRACTSPATH}/contracts/Metascheduler.sol" \
   --base-path . \
   --include-path "${CONTRACTSPATH}/node_modules/" \
@@ -14,13 +14,13 @@ solc --optimize --optimize-runs=200 "${CONTRACTSPATH}/contracts/Metascheduler.so
   --combined-json abi | abigen --pkg metaschedulerabi \
   --combined-json - \
   --exc "Tools.sol:Tools" \
-  --out "${PROJECTPATH}/deepsquare/generated/abi/metascheduler/metascheduler.go"
+  --out "${PROJECTPATH}/internal/abi/metascheduler/metascheduler.go"
 
-mkdir -p "${PROJECTPATH}"/deepsquare/generated/abi/errors
-solc --optimize --optimize-runs=200 "${PROJECTPATH}/deepsquare/metascheduler/ErrorContract.sol" \
+mkdir -p "${PROJECTPATH}"/internal/abi/errors
+solc --optimize --optimize-runs=200 "${PROJECTPATH}/metascheduler/ErrorContract.sol" \
   --base-path . \
   --include-path "${CONTRACTSPATH}/contracts/" \
   --include-path "${CONTRACTSPATH}/node_modules/" \
   --combined-json abi,bin | abigen --pkg errorsabi \
   --combined-json - \
-  --out "${PROJECTPATH}/deepsquare/generated/abi/errors/errors.go"
+  --out "${PROJECTPATH}/internal/abi/errors/errors.go"

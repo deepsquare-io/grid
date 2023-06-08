@@ -9,8 +9,8 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/the-grid/cli/v1"
+	"github.com/deepsquare-io/the-grid/cli/v1/tui/style"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -46,7 +46,7 @@ func (m model) View() string {
 	)
 }
 
-func Model(logger deepsquare.Logger, userAddress common.Address, jobID [32]byte) tea.Model {
+func Model(logger cli.Logger, userAddress common.Address, jobID [32]byte) tea.Model {
 	vp := viewport.New(80, style.StandardHeight-2)
 	s := spinner.New()
 	s.Spinner = spinner.Dot

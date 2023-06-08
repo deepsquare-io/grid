@@ -7,9 +7,9 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
-	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/the-grid/cli/v1"
+	"github.com/deepsquare-io/the-grid/cli/v1/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/v1/tui/style"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -61,7 +61,7 @@ func Model(
 		it:      it,
 		help:    help,
 
-		jobs:        make(chan deepsquare.Job, 100),
+		jobs:        make(chan cli.Job, 100),
 		fetcher:     rpc,
 		watcher:     ws,
 		userAddress: userAddress,

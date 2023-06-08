@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/deepsquare/generated/abi/metascheduler"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/sbatch"
+	"github.com/deepsquare-io/the-grid/cli/v1"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/v1/internal/abi/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/v1/sbatch"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -51,9 +51,9 @@ func init() {
 
 // RPC client for metascheduler.
 type RPC interface {
-	deepsquare.JobFetcher
-	deepsquare.AllowanceManager
-	deepsquare.JobScheduler
+	cli.JobFetcher
+	cli.AllowanceManager
+	cli.JobScheduler
 }
 
 type EthereumBackend interface {
@@ -162,14 +162,14 @@ func (c *rpcClient) GetAllowance(ctx context.Context) (*big.Int, error) {
 	}, c.from(), c.metaschedulerAddress)
 }
 
-func (c *rpcClient) GetJob(ctx context.Context, id [32]byte) (*deepsquare.Job, error) {
+func (c *rpcClient) GetJob(ctx context.Context, id [32]byte) (*cli.Job, error) {
 	job, err := c.Jobs(&bind.CallOpts{
 		Context: ctx,
 	}, id)
 	if err != nil {
 		return nil, err
 	}
-	return &deepsquare.Job{
+	return &cli.Job{
 		JobId:            job.JobId,
 		Status:           job.Status,
 		CustomerAddr:     job.CustomerAddr,
@@ -188,12 +188,12 @@ type jobIterator struct {
 	array  [][32]byte
 	length int
 	index  int
-	job    *deepsquare.Job
+	job    *cli.Job
 }
 
 func (it *jobIterator) Next(
 	ctx context.Context,
-) (next deepsquare.JobLazyIterator, ok bool, err error) {
+) (next cli.JobLazyIterator, ok bool, err error) {
 	if it.index+1 >= it.length {
 		return nil, false, nil
 	}
@@ -213,7 +213,7 @@ func (it *jobIterator) Next(
 
 func (it *jobIterator) Prev(
 	ctx context.Context,
-) (prev deepsquare.JobLazyIterator, ok bool, err error) {
+) (prev cli.JobLazyIterator, ok bool, err error) {
 	if it.index-1 < 0 {
 		return nil, false, nil
 	}
@@ -231,11 +231,11 @@ func (it *jobIterator) Prev(
 	}, true, nil
 }
 
-func (it *jobIterator) Current() *deepsquare.Job {
+func (it *jobIterator) Current() *cli.Job {
 	return it.job
 }
 
-func (c *rpcClient) GetJobs(ctx context.Context) (deepsquare.JobLazyIterator, error) {
+func (c *rpcClient) GetJobs(ctx context.Context) (cli.JobLazyIterator, error) {
 	jobIDs, err := c.MetaScheduler.GetJobs(&bind.CallOpts{
 		Context: ctx,
 	}, c.from())
@@ -339,7 +339,7 @@ func (c *rpcClient) CancelJob(ctx context.Context, id [32]byte) error {
 
 // WS client for metascheduler.
 type WS interface {
-	deepsquare.JobWatcher
+	cli.JobWatcher
 }
 
 type wsClient struct {

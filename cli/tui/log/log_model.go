@@ -11,8 +11,8 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	"github.com/deepsquare-io/the-grid/cli/logger"
+	"github.com/deepsquare-io/the-grid/cli/v1"
+	"github.com/deepsquare-io/the-grid/cli/v1/internal/log"
 	"github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
 )
@@ -32,7 +32,7 @@ type model struct {
 
 	showTimestamp bool
 
-	logger      deepsquare.Logger
+	logger      cli.Logger
 	userAddress common.Address
 	jobID       [32]byte
 }
@@ -50,7 +50,7 @@ func (m *model) watchLogs(
 	return func() tea.Msg {
 		stream, err := m.logger.WatchLogs(ctx, m.jobID)
 		if err != nil {
-			logger.I.Error("failed to get logs", zap.Error(err))
+			log.I.Error("failed to get logs", zap.Error(err))
 			return nil
 		}
 		defer stream.CloseSend()
@@ -58,11 +58,11 @@ func (m *model) watchLogs(
 			req, err := stream.Recv()
 			if err == io.EOF || errors.Is(err, context.Canceled) {
 				// TODO: handle closure
-				logger.I.Info("logs closed", zap.Error(err))
+				log.I.Info("logs closed", zap.Error(err))
 				return nil
 			}
 			if err != nil {
-				logger.I.Error("failed to get logs", zap.Error(err))
+				log.I.Error("failed to get logs", zap.Error(err))
 				return nil
 			}
 			select {
