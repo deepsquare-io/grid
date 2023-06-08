@@ -8,7 +8,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli/v1"
-	"github.com/deepsquare-io/the-grid/cli/v1/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/v1/tui/style"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -26,12 +25,12 @@ func (m model) View() string {
 
 func Model(
 	ctx context.Context,
-	rpc metascheduler.RPC,
-	ws metascheduler.WS,
+	fetcher cli.JobFetcher,
+	watcher cli.JobWatcher,
 	userAddress common.Address,
 ) tea.Model {
 	// Initialize rows
-	rows, idToRow, it := initializeRows(ctx, rpc)
+	rows, idToRow, it := initializeRows(ctx, fetcher)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -62,8 +61,8 @@ func Model(
 		help:    help,
 
 		jobs:        make(chan cli.Job, 100),
-		fetcher:     rpc,
-		watcher:     ws,
+		fetcher:     fetcher,
+		watcher:     watcher,
 		userAddress: userAddress,
 	}
 }

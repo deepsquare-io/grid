@@ -14,7 +14,6 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/v1/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/v1/logger"
 	"github.com/deepsquare-io/the-grid/cli/v1/metascheduler"
-	"github.com/deepsquare-io/the-grid/cli/v1/sbatch"
 	"github.com/deepsquare-io/the-grid/cli/v1/tui/nav"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -135,12 +134,26 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
-		sbatch := sbatch.NewService(http.DefaultClient, sbatchEndpoint)
-		rpc, err := metascheduler.NewRPC(address, ethClientRPC, big.NewInt(179188), pk, sbatch)
+		metaschedulerRPC := metascheduler.Client{
+			MetaschedulerAddress: address,
+			ChainID:              big.NewInt(179188),
+			EthereumBackend:      ethClientRPC,
+			UserPrivateKey:       pk,
+		}
+		fetcher, err := metascheduler.NewJobFetcher(metaschedulerRPC)
 		if err != nil {
 			return err
 		}
-		ws, err := metascheduler.NewWS(address, ethClientWS, big.NewInt(179188), pk)
+		credits, err := metascheduler.NewCreditManager(metaschedulerRPC)
+		if err != nil {
+			return err
+		}
+		watcher, err := metascheduler.NewJobWatcher(metascheduler.Client{
+			MetaschedulerAddress: address,
+			ChainID:              big.NewInt(179188),
+			EthereumBackend:      ethClientWS,
+			UserPrivateKey:       pk,
+		})
 		if err != nil {
 			return err
 		}
@@ -179,8 +192,9 @@ var app = &cli.App{
 			nav.Model(
 				ctx,
 				crypto.PubkeyToAddress(pk.PublicKey),
-				rpc,
-				ws,
+				fetcher,
+				watcher,
+				credits,
 				l,
 				version,
 				metaschedulerSmartContract,

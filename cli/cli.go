@@ -82,6 +82,18 @@ type JobWatcher interface {
 	) (filtered <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, rest <-chan types.Log)
 }
 
+// CreditManager handles the credits of the user.
+type CreditManager interface {
+	// Balance fetches the current balance of credits.
+	Balance(ctx context.Context) (*big.Int, error)
+}
+
+// CreditWatcher handles the credits of the user.
+type CreditWatcher interface {
+	// Balance watches the current balance of credits.
+	Balance(ctx context.Context, ch chan<- *big.Int) error
+}
+
 // AllowanceManager set the allowed quantity of credit for smart-contract interactions.
 type AllowanceManager interface {
 	// Set the allowance for smart-contract interactions.

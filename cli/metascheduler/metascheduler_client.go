@@ -27,6 +27,7 @@ var (
 	MetaschedulerABI   *abi.ABI
 	newJobRequestEvent abi.Event
 	jobTransitionEvent abi.Event
+	defaultChainID     = big.NewInt(179188)
 )
 
 func init() {
@@ -49,46 +50,88 @@ func init() {
 	}
 }
 
-// RPC client for metascheduler.
-type RPC interface {
-	cli.JobFetcher
-	cli.AllowanceManager
-	cli.JobScheduler
-}
-
 type EthereumBackend interface {
 	bind.ContractBackend
 	bind.DeployBackend
 }
 
-type rpcClient struct {
-	*metaschedulerabi.MetaScheduler
+type Client struct {
+	// EthereumBackend is the Ethereum Client.
+	//
+	// TODO: check if websocket or rpc.
 	EthereumBackend
-	metaschedulerAddress common.Address
-	chainID              *big.Int
-	pk                   *ecdsa.PrivateKey
-	sbatch               sbatch.Service
+	// Address of the metascheduler smart-contract.
+	MetaschedulerAddress common.Address
+	// ChainID of the blockchain.
+	ChainID *big.Int
+	// PrivateKey of the user.
+	UserPrivateKey *ecdsa.PrivateKey
 }
 
-func NewRPC(
-	address common.Address,
-	ethereumBackend EthereumBackend,
-	chainID *big.Int,
-	pk *ecdsa.PrivateKey,
-	sbatch sbatch.Service,
-) (client RPC, err error) {
-	m, err := metaschedulerabi.NewMetaScheduler(address, ethereumBackend)
+func (c Client) JobScheduler(sbatch sbatch.Service) (client cli.JobScheduler, err error) {
+	c = c.applyDefault()
+	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
 		return nil, err
 	}
 	return &rpcClient{
-		MetaScheduler:        m,
-		EthereumBackend:      ethereumBackend,
-		metaschedulerAddress: address,
-		chainID:              chainID,
-		pk:                   pk,
-		sbatch:               sbatch,
+		MetaScheduler: m,
+		Client:        c,
+		sbatch:        sbatch,
 	}, err
+}
+
+func (c Client) applyDefault() Client {
+	if c.ChainID == nil {
+		c.ChainID = defaultChainID
+	}
+	return c
+}
+
+func NewJobFetcher(c Client) (fetcher cli.JobFetcher, err error) {
+	c = c.applyDefault()
+	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
+	if err != nil {
+		return nil, err
+	}
+	return &rpcClient{
+		MetaScheduler: m,
+		Client:        c,
+	}, err
+}
+
+func NewJobWatcher(c Client) (watcher cli.JobWatcher, err error) {
+	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
+	if err != nil {
+		return nil, err
+	}
+	if c.ChainID == nil {
+		c.ChainID = defaultChainID
+	}
+	return &wsClient{
+		MetaScheduler: m,
+		Client:        c,
+	}, err
+}
+
+func NewCreditManager(c Client) (credits cli.CreditManager, err error) {
+	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
+	if err != nil {
+		return nil, err
+	}
+	if c.ChainID == nil {
+		c.ChainID = defaultChainID
+	}
+	return &rpcClient{
+		MetaScheduler: m,
+		Client:        c,
+	}, err
+}
+
+type rpcClient struct {
+	*metaschedulerabi.MetaScheduler
+	Client
+	sbatch sbatch.Service
 }
 
 // credit fetches the smart-contract Credit.
@@ -102,8 +145,11 @@ func (c *rpcClient) credit(ctx context.Context) (*metaschedulerabi.IERC20, error
 	return metaschedulerabi.NewIERC20(address, c)
 }
 
-func (c *rpcClient) from() common.Address {
-	return crypto.PubkeyToAddress(c.pk.PublicKey)
+func (c *rpcClient) from() (addr common.Address) {
+	if c.UserPrivateKey == nil {
+		return addr
+	}
+	return crypto.PubkeyToAddress(c.UserPrivateKey.PublicKey)
 }
 
 // authOpts generate transact options based on the network.
@@ -118,7 +164,7 @@ func (c *rpcClient) authOpts(ctx context.Context) (*bind.TransactOpts, error) {
 		return nil, err
 	}
 
-	auth, err := bind.NewKeyedTransactorWithChainID(c.pk, c.chainID)
+	auth, err := bind.NewKeyedTransactorWithChainID(c.UserPrivateKey, c.ChainID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +186,7 @@ func (c *rpcClient) SetAllowance(ctx context.Context, amount *big.Int) error {
 	if err != nil {
 		return fmt.Errorf("failed get auth options: %w", err)
 	}
-	tx, err := credit.Approve(opts, c.metaschedulerAddress, amount)
+	tx, err := credit.Approve(opts, c.MetaschedulerAddress, amount)
 	if err != nil {
 		return fmt.Errorf("failed to approve credit: %w", err)
 	}
@@ -159,7 +205,7 @@ func (c *rpcClient) GetAllowance(ctx context.Context) (*big.Int, error) {
 	}
 	return credit.Allowance(&bind.CallOpts{
 		Context: ctx,
-	}, c.from(), c.metaschedulerAddress)
+	}, c.from(), c.MetaschedulerAddress)
 }
 
 func (c *rpcClient) GetJob(ctx context.Context, id [32]byte) (*cli.Job, error) {
@@ -337,36 +383,20 @@ func (c *rpcClient) CancelJob(ctx context.Context, id [32]byte) error {
 	return err
 }
 
-// WS client for metascheduler.
-type WS interface {
-	cli.JobWatcher
+func (c *rpcClient) Balance(ctx context.Context) (*big.Int, error) {
+	c.from()
+	credit, err := c.credit(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return credit.BalanceOf(&bind.CallOpts{
+		Context: ctx,
+	}, c.from())
 }
 
 type wsClient struct {
 	*metaschedulerabi.MetaScheduler
-	EthereumBackend
-	metaschedulerAddress common.Address
-	chainID              *big.Int
-	pk                   *ecdsa.PrivateKey
-}
-
-func NewWS(
-	address common.Address,
-	ethereumBackend EthereumBackend,
-	chainID *big.Int,
-	pk *ecdsa.PrivateKey,
-) (c WS, err error) {
-	m, err := metaschedulerabi.NewMetaScheduler(address, ethereumBackend)
-	if err != nil {
-		return nil, err
-	}
-	return &wsClient{
-		MetaScheduler:        m,
-		EthereumBackend:      ethereumBackend,
-		metaschedulerAddress: address,
-		chainID:              chainID,
-		pk:                   pk,
-	}, err
+	Client
 }
 
 func (c *wsClient) SubscribeEvents(
@@ -374,7 +404,7 @@ func (c *wsClient) SubscribeEvents(
 	ch chan<- types.Log,
 ) (ethereum.Subscription, error) {
 	query := ethereum.FilterQuery{
-		Addresses: []common.Address{c.metaschedulerAddress},
+		Addresses: []common.Address{c.MetaschedulerAddress},
 		Topics: [][]common.Hash{
 			{
 				newJobRequestEvent.ID,

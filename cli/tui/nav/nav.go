@@ -3,6 +3,7 @@ package nav
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	_ "embed"
 
@@ -11,7 +12,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli/v1"
-	"github.com/deepsquare-io/the-grid/cli/v1/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/v1/internal/ether"
 	"github.com/deepsquare-io/the-grid/cli/v1/tui/log"
 	"github.com/deepsquare-io/the-grid/cli/v1/tui/status"
 	"github.com/deepsquare-io/the-grid/cli/v1/tui/style"
@@ -23,12 +24,14 @@ type model struct {
 	isFocusedOnLogs      bool
 	version              string
 	metaschedulerAddress string
+	balance              *big.Int
 
 	help help.Model
 	// logModel is nullable
 	logModel    tea.Model
 	statusModel tea.Model
 
+	credits     cli.CreditManager
 	logger      cli.Logger
 	userAddress common.Address
 	keymap      keymap
@@ -38,8 +41,16 @@ type keymap = struct {
 	next key.Binding
 }
 
+type balanceMsg *big.Int
+
 func (m model) Init() tea.Cmd {
-	return nil
+	return func() tea.Msg {
+		balance, err := m.credits.Balance(context.Background())
+		if err != nil {
+			return balanceMsg(new(big.Int))
+		}
+		return balanceMsg(balance)
+	}
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -72,6 +83,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Render job logs
 		m.logModel = log.Model(m.logger, m.userAddress, msg)
 		cmds = append(cmds, m.logModel.Init())
+	case balanceMsg:
+		m.balance = msg
 	default:
 		if m.logModel != nil {
 			m.logModel, lCmd = m.logModel.Update(msg)
@@ -105,26 +118,31 @@ func (m model) View() string {
 	info := style.Foreground.Render(
 		fmt.Sprintf(`Version: %s
 User Address: %s
-Smart-Contract Address: %s`,
+Smart-Contract Address: %s
+Current balance: %s creds (%s wei)`,
 			m.version,
 			m.userAddress,
 			m.metaschedulerAddress,
+			ether.FromWei(m.balance).String(),
+			m.balance,
 		),
 	)
+
 	return style.Foreground.Render(titlePixelArt) + "\n" + info + "\n" + navView + "\n\n" + help
 }
 
 func Model(
 	ctx context.Context,
 	userAddress common.Address,
-	rpc metascheduler.RPC,
-	ws metascheduler.WS,
+	fetcher cli.JobFetcher,
+	watcher cli.JobWatcher,
+	credits cli.CreditManager,
 	logger cli.Logger,
 	version string,
 	metaschedulerAddress string,
 ) tea.Model {
 	return model{
-		statusModel: status.Model(ctx, rpc, ws, userAddress),
+		statusModel: status.Model(ctx, fetcher, watcher, userAddress),
 		logger:      logger,
 		userAddress: userAddress,
 		help:        help.New(),
@@ -134,6 +152,7 @@ func Model(
 				key.WithHelp("tab", "change focus"),
 			),
 		},
+		credits:              credits,
 		version:              version,
 		metaschedulerAddress: metaschedulerAddress,
 	}
