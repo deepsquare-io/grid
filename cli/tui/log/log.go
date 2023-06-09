@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli/v1"
+	"github.com/deepsquare-io/the-grid/cli/v1/logger"
 	"github.com/deepsquare-io/the-grid/cli/v1/tui/style"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -46,7 +46,7 @@ func (m model) View() string {
 	)
 }
 
-func Model(logger cli.Logger, userAddress common.Address, jobID [32]byte) tea.Model {
+func Model(loggerDialer logger.Dialer, userAddress common.Address, jobID [32]byte) tea.Model {
 	vp := viewport.New(80, style.StandardHeight-2)
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -60,8 +60,8 @@ func Model(logger cli.Logger, userAddress common.Address, jobID [32]byte) tea.Mo
 		messages: make([]string, 0, 100),
 		title:    fmt.Sprintf("Job %s", new(big.Int).SetBytes(jobID[:])),
 
-		logger:      logger,
-		userAddress: userAddress,
-		jobID:       jobID,
+		loggerDialer: loggerDialer,
+		userAddress:  userAddress,
+		jobID:        jobID,
 	}
 }

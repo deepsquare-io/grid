@@ -34,3 +34,4 @@ app
 build/
 *.local
 bin/
+__debug_bin

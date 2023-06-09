@@ -16,29 +16,44 @@ import (
 	"google.golang.org/grpc"
 )
 
+type Dialer interface {
+	DialContext(
+		ctx context.Context,
+	) (l cli.Logger, conn *grpc.ClientConn, err error)
+}
+
+type dialer struct {
+	pk       *ecdsa.PrivateKey
+	endpoint string
+	opts     []grpc.DialOption
+}
+
+func NewDialer(endpoint string, pk *ecdsa.PrivateKey, opts ...grpc.DialOption) Dialer {
+	return &dialer{
+		pk:       pk,
+		endpoint: endpoint,
+		opts:     opts,
+	}
+}
+
 type gridlogger struct {
 	loggerv1alpha1.LoggerAPIClient
 	pk *ecdsa.PrivateKey
 }
 
-type DialOption *grpc.DialOption
-
-func DialContext(
+func (d *dialer) DialContext(
 	ctx context.Context,
-	target string,
-	pk *ecdsa.PrivateKey,
-	opts ...grpc.DialOption,
 ) (l cli.Logger, conn *grpc.ClientConn, err error) {
 	conn, err = grpc.DialContext(ctx,
-		target,
-		opts...,
+		d.endpoint,
+		d.opts...,
 	)
 	if err != nil {
 		return nil, conn, err
 	}
 	l = &gridlogger{
 		LoggerAPIClient: loggerv1alpha1.NewLoggerAPIClient(conn),
-		pk:              pk,
+		pk:              d.pk,
 	}
 	return l, conn, nil
 }

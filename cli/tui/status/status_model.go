@@ -13,6 +13,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/v1/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/v1/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/v1/tui/style"
+	"github.com/deepsquare-io/the-grid/cli/v1/tui/util"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
@@ -122,11 +123,11 @@ func (m *model) watchTransition(
 		if err != nil {
 			log.I.Fatal(err.Error())
 		}
+		defer sub.Unsubscribe()
 		transitions, rest := m.watcher.FilterJobTransition(logs)
 		newJobs, rest := m.watcher.FilterNewJobRequests(rest)
-		go ignoreElements(rest)
+		go util.IgnoreElements(rest)
 
-		defer sub.Unsubscribe()
 		for {
 			select {
 			case transition := <-transitions:

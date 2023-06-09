@@ -11,8 +11,8 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/v1"
 	"github.com/deepsquare-io/the-grid/cli/v1/internal/log"
+	"github.com/deepsquare-io/the-grid/cli/v1/logger"
 	"github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
 )
@@ -32,9 +32,9 @@ type model struct {
 
 	showTimestamp bool
 
-	logger      cli.Logger
-	userAddress common.Address
-	jobID       [32]byte
+	loggerDialer logger.Dialer
+	userAddress  common.Address
+	jobID        [32]byte
 }
 
 func max(a, b int) int {
@@ -48,7 +48,13 @@ func (m *model) watchLogs(
 	ctx context.Context,
 ) tea.Cmd {
 	return func() tea.Msg {
-		stream, err := m.logger.WatchLogs(ctx, m.jobID)
+		l, conn, err := m.loggerDialer.DialContext(ctx)
+		if err != nil {
+			log.I.Error("failed to get logs", zap.Error(err))
+			return nil
+		}
+		defer conn.Close()
+		stream, err := l.WatchLogs(ctx, m.jobID)
 		if err != nil {
 			log.I.Error("failed to get logs", zap.Error(err))
 			return nil

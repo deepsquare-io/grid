@@ -68,10 +68,15 @@ type JobFetcher interface {
 	GetJobs(ctx context.Context) (JobLazyIterator, error)
 }
 
-// JobWatcher watches smart-contract events.
-type JobWatcher interface {
+// EventSubscriber watches smart-contract events.
+type EventSubscriber interface {
 	// Subscribe to metascheduler events.
 	SubscribeEvents(ctx context.Context, ch chan<- types.Log) (ethereum.Subscription, error)
+}
+
+// JobWatcher watches smart-contract events.
+type JobWatcher interface {
+	EventSubscriber
 	// Filter new job requests events.
 	FilterNewJobRequests(
 		ch <-chan types.Log,
@@ -90,8 +95,17 @@ type CreditManager interface {
 
 // CreditWatcher handles the credits of the user.
 type CreditWatcher interface {
+	EventSubscriber
+	// Filter transfer events.
+	FilterTransfer(
+		ctx context.Context,
+		ch <-chan types.Log,
+	) (filtered <-chan *metaschedulerabi.IERC20Transfer, rest <-chan types.Log)
 	// Balance watches the current balance of credits.
-	Balance(ctx context.Context, ch chan<- *big.Int) error
+	Balance(
+		ctx context.Context,
+		transfers <-chan *metaschedulerabi.IERC20Transfer,
+	) (<-chan *big.Int, error)
 }
 
 // AllowanceManager set the allowed quantity of credit for smart-contract interactions.
@@ -104,4 +118,21 @@ type AllowanceManager interface {
 
 	// Get the current allowance toward the contract.
 	GetAllowance(ctx context.Context) (*big.Int, error)
+}
+
+// AllowanceWatcher watches the allowed quantity of credit for smart-contract interactions.
+type AllowanceWatcher interface {
+	EventSubscriber
+
+	// Filter transfer events.
+	FilterApproval(
+		ctx context.Context,
+		ch <-chan types.Log,
+	) (filtered <-chan *metaschedulerabi.IERC20Approval, rest <-chan types.Log)
+
+	// Get the current allowance toward the contract.
+	WatchAllowance(
+		ctx context.Context,
+		approvals <-chan *metaschedulerabi.IERC20Approval,
+	) (<-chan *big.Int, error)
 }

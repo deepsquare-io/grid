@@ -25,8 +25,11 @@ var (
 
 var (
 	MetaschedulerABI   *abi.ABI
+	IERC20ABI          *abi.ABI
 	newJobRequestEvent abi.Event
 	jobTransitionEvent abi.Event
+	transferEvent      abi.Event
+	approvalEvent      abi.Event
 	defaultChainID     = big.NewInt(179188)
 )
 
@@ -34,7 +37,11 @@ func init() {
 	var err error
 	MetaschedulerABI, err = metaschedulerabi.MetaSchedulerMetaData.GetAbi()
 	if err != nil {
-		panic(fmt.Errorf("failed to parse contract ABI: %w", err))
+		panic(fmt.Errorf("failed to parse metascheduler contract ABI: %w", err))
+	}
+	IERC20ABI, err = metaschedulerabi.IERC20MetaData.GetAbi()
+	if err != nil {
+		panic(fmt.Errorf("failed to parse erc20 contract ABI: %w", err))
 	}
 
 	// Find the event signature dynamically
@@ -47,6 +54,15 @@ func init() {
 	jobTransitionEvent, ok = MetaschedulerABI.Events["JobTransitionEvent"]
 	if !ok {
 		panic(fmt.Errorf("failed to get JobTransitionEvent: %w", err))
+	}
+
+	transferEvent, ok = IERC20ABI.Events["Transfer"]
+	if !ok {
+		panic(fmt.Errorf("failed to get Transfer: %w", err))
+	}
+	approvalEvent, ok = IERC20ABI.Events["Approval"]
+	if !ok {
+		panic(fmt.Errorf("failed to get Approval: %w", err))
 	}
 }
 
@@ -101,12 +117,10 @@ func NewJobFetcher(c Client) (fetcher cli.JobFetcher, err error) {
 }
 
 func NewJobWatcher(c Client) (watcher cli.JobWatcher, err error) {
+	c = c.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
 		return nil, err
-	}
-	if c.ChainID == nil {
-		c.ChainID = defaultChainID
 	}
 	return &wsClient{
 		MetaScheduler: m,
@@ -114,35 +128,122 @@ func NewJobWatcher(c Client) (watcher cli.JobWatcher, err error) {
 	}, err
 }
 
-func NewCreditManager(c Client) (credits cli.CreditManager, err error) {
+func NewCreditManager(ctx context.Context, c Client) (credits cli.CreditManager, err error) {
+	c = c.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
 		return nil, err
 	}
-	if c.ChainID == nil {
-		c.ChainID = defaultChainID
-	}
-	return &rpcClient{
-		MetaScheduler: m,
-		Client:        c,
-	}, err
-}
-
-type rpcClient struct {
-	*metaschedulerabi.MetaScheduler
-	Client
-	sbatch sbatch.Service
-}
-
-// credit fetches the smart-contract Credit.
-func (c *rpcClient) credit(ctx context.Context) (*metaschedulerabi.IERC20, error) {
-	address, err := c.MetaScheduler.Credit(&bind.CallOpts{
+	creditAddress, err := m.Credit(&bind.CallOpts{
 		Context: ctx,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return metaschedulerabi.NewIERC20(address, c)
+	ierc20, err := metaschedulerabi.NewIERC20(creditAddress, c)
+	if err != nil {
+		return nil, err
+	}
+	return &rpcClient{
+		MetaScheduler: m,
+		Client:        c,
+		IERC20:        ierc20,
+	}, err
+}
+
+func NewCreditWatcher(
+	ctx context.Context,
+	ws Client,
+	credit cli.CreditManager,
+) (watcher cli.CreditWatcher, err error) {
+	ws = ws.applyDefault()
+	mWs, err := metaschedulerabi.NewMetaScheduler(ws.MetaschedulerAddress, ws.EthereumBackend)
+	if err != nil {
+		return nil, err
+	}
+	wsClient := wsClient{
+		MetaScheduler: mWs,
+		Client:        ws,
+	}
+	creditAddress, err := mWs.Credit(&bind.CallOpts{
+		Context: ctx,
+	})
+	if err != nil {
+		return nil, err
+	}
+	ierc20Filterer, err := metaschedulerabi.NewIERC20Filterer(creditAddress, ws)
+	if err != nil {
+		return nil, err
+	}
+	return &creditWatcher{
+		CreditManager:  credit,
+		wsClient:       wsClient,
+		IERC20Filterer: ierc20Filterer,
+	}, err
+}
+
+func NewAllowanceManager(
+	ctx context.Context,
+	c Client,
+) (allowance cli.AllowanceManager, err error) {
+	c = c.applyDefault()
+	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
+	if err != nil {
+		return nil, err
+	}
+	creditAddress, err := m.Credit(&bind.CallOpts{
+		Context: ctx,
+	})
+	if err != nil {
+		return nil, err
+	}
+	ierc20, err := metaschedulerabi.NewIERC20(creditAddress, c)
+	if err != nil {
+		return nil, err
+	}
+	return &rpcClient{
+		MetaScheduler: m,
+		Client:        c,
+		IERC20:        ierc20,
+	}, err
+}
+
+func NewAllowanceWatcher(
+	ctx context.Context,
+	ws Client,
+	allowance cli.AllowanceManager,
+) (watcher cli.AllowanceWatcher, err error) {
+	ws = ws.applyDefault()
+	mWs, err := metaschedulerabi.NewMetaScheduler(ws.MetaschedulerAddress, ws.EthereumBackend)
+	if err != nil {
+		return nil, err
+	}
+	wsClient := wsClient{
+		MetaScheduler: mWs,
+		Client:        ws,
+	}
+	creditAddress, err := mWs.Credit(&bind.CallOpts{
+		Context: ctx,
+	})
+	if err != nil {
+		return nil, err
+	}
+	ierc20Filterer, err := metaschedulerabi.NewIERC20Filterer(creditAddress, ws)
+	if err != nil {
+		return nil, err
+	}
+	return &allowanceWatcher{
+		AllowanceManager: allowance,
+		wsClient:         wsClient,
+		IERC20Filterer:   ierc20Filterer,
+	}, err
+}
+
+type rpcClient struct {
+	*metaschedulerabi.MetaScheduler
+	*metaschedulerabi.IERC20
+	Client
+	sbatch sbatch.Service
 }
 
 func (c *rpcClient) from() (addr common.Address) {
@@ -178,15 +279,11 @@ func (c *rpcClient) authOpts(ctx context.Context) (*bind.TransactOpts, error) {
 }
 
 func (c *rpcClient) SetAllowance(ctx context.Context, amount *big.Int) error {
-	credit, err := c.credit(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get Credit contract: %w", err)
-	}
 	opts, err := c.authOpts(ctx)
 	if err != nil {
 		return fmt.Errorf("failed get auth options: %w", err)
 	}
-	tx, err := credit.Approve(opts, c.MetaschedulerAddress, amount)
+	tx, err := c.Approve(opts, c.MetaschedulerAddress, amount)
 	if err != nil {
 		return fmt.Errorf("failed to approve credit: %w", err)
 	}
@@ -199,11 +296,7 @@ func (c *rpcClient) ClearAllowance(ctx context.Context) error {
 }
 
 func (c *rpcClient) GetAllowance(ctx context.Context) (*big.Int, error) {
-	credit, err := c.credit(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get Credit contract: %w", err)
-	}
-	return credit.Allowance(&bind.CallOpts{
+	return c.Allowance(&bind.CallOpts{
 		Context: ctx,
 	}, c.from(), c.MetaschedulerAddress)
 }
@@ -385,11 +478,7 @@ func (c *rpcClient) CancelJob(ctx context.Context, id [32]byte) error {
 
 func (c *rpcClient) Balance(ctx context.Context) (*big.Int, error) {
 	c.from()
-	credit, err := c.credit(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return credit.BalanceOf(&bind.CallOpts{
+	return c.BalanceOf(&bind.CallOpts{
 		Context: ctx,
 	}, c.from())
 }
@@ -399,16 +488,34 @@ type wsClient struct {
 	Client
 }
 
+func (c *wsClient) from() (addr common.Address) {
+	if c.UserPrivateKey == nil {
+		return addr
+	}
+	return crypto.PubkeyToAddress(c.UserPrivateKey.PublicKey)
+}
+
 func (c *wsClient) SubscribeEvents(
 	ctx context.Context,
 	ch chan<- types.Log,
 ) (ethereum.Subscription, error) {
+	creditAddress, err := c.Credit(&bind.CallOpts{
+		Context: ctx,
+	})
+	if err != nil {
+		return nil, err
+	}
 	query := ethereum.FilterQuery{
-		Addresses: []common.Address{c.MetaschedulerAddress},
+		Addresses: []common.Address{
+			c.MetaschedulerAddress,
+			creditAddress,
+		},
 		Topics: [][]common.Hash{
 			{
 				newJobRequestEvent.ID,
 				jobTransitionEvent.ID,
+				transferEvent.ID,
+				approvalEvent.ID,
 			},
 		},
 	}
@@ -472,4 +579,143 @@ func (c *wsClient) FilterJobTransition(
 	}()
 
 	return fChan, rChan
+}
+
+type creditWatcher struct {
+	cli.CreditManager
+	wsClient
+	*metaschedulerabi.IERC20Filterer
+}
+
+func (c *creditWatcher) FilterTransfer(
+	ctx context.Context,
+	ch <-chan types.Log,
+) (filtered <-chan *metaschedulerabi.IERC20Transfer, rest <-chan types.Log) {
+	fChan := make(chan *metaschedulerabi.IERC20Transfer)
+	rChan := make(chan types.Log)
+
+	go func() {
+		defer close(fChan)
+		defer close(rChan)
+		for log := range ch {
+			if len(log.Topics) == 0 {
+				return
+			}
+			if log.Topics[0].Hex() == transferEvent.ID.Hex() {
+				event, err := c.ParseTransfer(log)
+				if err != nil {
+					panic(fmt.Errorf("failed to parse event: %w", err))
+				}
+
+				fChan <- event
+			} else {
+				rChan <- log
+			}
+		}
+	}()
+
+	return fChan, rChan
+}
+
+func (c *creditWatcher) Balance(
+	ctx context.Context,
+	transfers <-chan *metaschedulerabi.IERC20Transfer,
+) (<-chan *big.Int, error) {
+	rChan := make(chan *big.Int, 2)
+	errChan := make(chan error, 1)
+
+	// Fetch initial value
+	value, err := c.CreditManager.Balance(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		defer close(rChan)
+		defer close(errChan)
+
+		// Send initial value
+		rChan <- value
+
+		// Track value
+		for transfer := range transfers {
+			// User is sending data
+			if c.from() == transfer.From {
+				value = new(big.Int).Sub(value, transfer.Value)
+				rChan <- value
+			} else if c.from() == transfer.To {
+				value = new(big.Int).Add(value, transfer.Value)
+				rChan <- value
+			}
+		}
+	}()
+
+	return rChan, nil
+}
+
+type allowanceWatcher struct {
+	cli.AllowanceManager
+	wsClient
+	*metaschedulerabi.IERC20Filterer
+}
+
+func (c *allowanceWatcher) FilterApproval(
+	ctx context.Context,
+	ch <-chan types.Log,
+) (filtered <-chan *metaschedulerabi.IERC20Approval, rest <-chan types.Log) {
+	fChan := make(chan *metaschedulerabi.IERC20Approval)
+	rChan := make(chan types.Log)
+
+	go func() {
+		defer close(fChan)
+		defer close(rChan)
+		for log := range ch {
+			if len(log.Topics) == 0 {
+				return
+			}
+			if log.Topics[0].Hex() == transferEvent.ID.Hex() {
+				event, err := c.ParseApproval(log)
+				if err != nil {
+					panic(fmt.Errorf("failed to parse event: %w", err))
+				}
+
+				fChan <- event
+			} else {
+				rChan <- log
+			}
+		}
+	}()
+
+	return fChan, rChan
+}
+
+func (c *allowanceWatcher) WatchAllowance(
+	ctx context.Context,
+	approvals <-chan *metaschedulerabi.IERC20Approval,
+) (<-chan *big.Int, error) {
+	rChan := make(chan *big.Int, 2)
+	errChan := make(chan error, 1)
+
+	// Fetch initial value
+	value, err := c.AllowanceManager.GetAllowance(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		defer close(rChan)
+		defer close(errChan)
+
+		// Send initial value
+		rChan <- value
+
+		// Track value
+		for approval := range approvals {
+			if approval.Owner == c.from() && approval.Spender == c.MetaschedulerAddress {
+				rChan <- approval.Value
+			}
+		}
+	}()
+
+	return rChan, nil
 }

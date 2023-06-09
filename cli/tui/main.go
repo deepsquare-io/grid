@@ -119,6 +119,7 @@ var app = &cli.App{
 			},
 		}
 
+		// Start instenciating ethereum services
 		address := common.HexToAddress(metaschedulerSmartContract)
 		rpcClient, err := rpc.DialOptions(ctx, ethEndpointRPC, rpc.WithHTTPClient(client))
 		if err != nil {
@@ -144,19 +145,34 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
-		credits, err := metascheduler.NewCreditManager(metaschedulerRPC)
+		credits, err := metascheduler.NewCreditManager(ctx, metaschedulerRPC)
 		if err != nil {
 			return err
 		}
-		watcher, err := metascheduler.NewJobWatcher(metascheduler.Client{
+		allowance, err := metascheduler.NewAllowanceManager(ctx, metaschedulerRPC)
+		if err != nil {
+			return err
+		}
+		metaschedulerWS := metascheduler.Client{
 			MetaschedulerAddress: address,
 			ChainID:              big.NewInt(179188),
 			EthereumBackend:      ethClientWS,
 			UserPrivateKey:       pk,
-		})
+		}
+		watcher, err := metascheduler.NewJobWatcher(metaschedulerWS)
 		if err != nil {
 			return err
 		}
+		creditWatcher, err := metascheduler.NewCreditWatcher(ctx, metaschedulerWS, credits)
+		if err != nil {
+			return err
+		}
+		allowanceWatcher, err := metascheduler.NewAllowanceWatcher(ctx, metaschedulerWS, allowance)
+		if err != nil {
+			return err
+		}
+
+		// Start watching logs
 		dialOptions := []grpc.DialOption{
 			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
 		}
@@ -165,7 +181,6 @@ var app = &cli.App{
 			log.I.Error("Failed to parse URL", zap.Error(err))
 			return err
 		}
-
 		port := u.Port()
 		if port == "" {
 			// If the URL doesn't explicitly specify a port, use the default port for the scheme.
@@ -178,24 +193,20 @@ var app = &cli.App{
 				log.I.Fatal("Unknown scheme for logger URL", zap.String("scheme", u.Scheme))
 			}
 		}
-		l, conn, err := logger.DialContext(
-			ctx,
+		logDialer := logger.NewDialer(
 			net.JoinHostPort(u.Hostname(), port),
 			pk,
 			dialOptions...,
 		)
-		if err != nil {
-			return err
-		}
-		defer conn.Close()
 		_, err = tea.NewProgram(
 			nav.Model(
 				ctx,
 				crypto.PubkeyToAddress(pk.PublicKey),
 				fetcher,
 				watcher,
-				credits,
-				l,
+				creditWatcher,
+				allowanceWatcher,
+				logDialer,
 				version,
 				metaschedulerSmartContract,
 			),
