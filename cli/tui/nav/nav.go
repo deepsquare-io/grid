@@ -165,6 +165,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 //go:embed title.txt
 var titlePixelArt string
 
+var labels = lipgloss.NewStyle().PaddingRight(2).Render(`Version:
+User Address:
+Smart-Contract Address:
+Current balance:
+Allowance:`)
+
 func (m model) View() string {
 	help := m.help.ShortHelpView([]key.Binding{
 		m.keymap.next,
@@ -180,19 +186,25 @@ func (m model) View() string {
 	} else {
 		navView = m.statusModel.View()
 	}
+
+	values := fmt.Sprintf(`%s
+%s
+%s
+%s creds (%s wei)
+%s creds (%s wei)`,
+		m.version,
+		m.userAddress,
+		m.metaschedulerAddress,
+		ether.FromWei(m.balance).String(),
+		m.balance,
+		ether.FromWei(m.allowance).String(),
+		m.allowance,
+	)
 	info := style.Box.Render(
-		fmt.Sprintf(`Version: %s
-User Address: %s
-Smart-Contract Address: %s
-Current balance: %s creds (%s wei)
-Allowance: %s creds (%s wei)`,
-			m.version,
-			m.userAddress,
-			m.metaschedulerAddress,
-			ether.FromWei(m.balance).String(),
-			m.balance,
-			ether.FromWei(m.allowance).String(),
-			m.allowance,
+		lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			labels,
+			values,
 		),
 	)
 

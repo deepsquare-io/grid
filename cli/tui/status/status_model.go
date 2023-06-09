@@ -45,7 +45,7 @@ func jobToRow(job cli.Job) table.Row {
 		new(big.Int).SetBytes(job.JobID[:]).String(),
 		string(job.JobName[:]),
 		metascheduler.JobStatus(job.Status).String(),
-		(time.UnixMilli(job.Time.Start.Int64() * 1000)).String(),
+		(time.UnixMilli(job.Time.Start.Int64() * 1000)).Format(time.UnixDate),
 	}
 }
 
