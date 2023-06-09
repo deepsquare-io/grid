@@ -59,7 +59,9 @@ func (m *model) watchLogs(
 			log.I.Error("failed to get logs", zap.Error(err))
 			return nil
 		}
-		defer stream.CloseSend()
+		defer func() {
+			_ = stream.CloseSend()
+		}()
 		for {
 			req, err := stream.Recv()
 			if err == io.EOF || errors.Is(err, context.Canceled) {
