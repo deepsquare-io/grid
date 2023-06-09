@@ -8,7 +8,6 @@ protos/ @Darkness4 @efelem @Lymnah
 schemas/ @Darkness4 @valentinpollart
 
 # Customer side
-customer-portal/ @valentinpollart @Lymnah
 cli/ @Darkness4 @Lymnah
 
 # Microservices
