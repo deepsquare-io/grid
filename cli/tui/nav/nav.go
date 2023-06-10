@@ -7,8 +7,6 @@ import (
 
 	_ "embed"
 
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli"
@@ -24,29 +22,27 @@ import (
 )
 
 type model struct {
-	showLog              bool
-	isFocusedOnLogs      bool
 	version              string
 	metaschedulerAddress string
+	logs                 chan types.Log
 	balance              *big.Int
 	balanceChan          chan *big.Int
 	allowance            *big.Int
 	allowanceChan        chan *big.Int
 
-	help help.Model
 	// logModel is nullable
 	logModel    tea.Model
 	statusModel tea.Model
 
-	creditWatcher    cli.CreditWatcher
-	allowanceWatcher cli.AllowanceWatcher
-	logDialer        logger.Dialer
-	userAddress      common.Address
-	keymap           keymap
+	eventSubscriber   cli.EventSubscriber
+	creditFilterer    cli.CreditFilterer
+	allowanceFilterer cli.AllowanceFilterer
+	logDialer         logger.Dialer
+	userAddress       common.Address
+	keymap            keymap
 }
 
 type keymap = struct {
-	next key.Binding
 }
 
 type balanceMsg *big.Int
@@ -56,20 +52,19 @@ func (m *model) watchEvents(
 	ctx context.Context,
 ) tea.Cmd {
 	return func() tea.Msg {
-		logs := make(chan types.Log, 100)
-		sub, err := m.creditWatcher.SubscribeEvents(ctx, logs)
+		sub, err := m.eventSubscriber.SubscribeEvents(ctx, m.logs)
 		if err != nil {
 			internallog.I.Fatal(err.Error())
 		}
 		defer sub.Unsubscribe()
-		transfers, rest := m.creditWatcher.FilterTransfer(ctx, logs)
-		approvals, rest := m.allowanceWatcher.FilterApproval(ctx, rest)
+		transfers, rest := m.creditFilterer.FilterTransfer(ctx, m.logs)
+		approvals, rest := m.allowanceFilterer.FilterApproval(ctx, rest)
 
-		balances, err := m.creditWatcher.Balance(ctx, transfers)
+		balances, err := m.creditFilterer.ReduceToBalance(ctx, transfers)
 		if err != nil {
 			internallog.I.Fatal(err.Error())
 		}
-		allowances, err := m.allowanceWatcher.WatchAllowance(ctx, approvals)
+		allowances, err := m.allowanceFilterer.ReduceToAllowance(ctx, approvals)
 		if err != nil {
 			internallog.I.Fatal(err.Error())
 		}
@@ -97,20 +92,21 @@ func (m *model) watchEvents(
 	}
 }
 
-func (m *model) tickBalance() tea.Msg {
-	return balanceMsg(<-m.balanceChan)
-}
-
-func (m *model) tickAllowance() tea.Msg {
-	return allowanceMsg(<-m.allowanceChan)
+func (m *model) tick() tea.Msg {
+	select {
+	case balance := <-m.balanceChan:
+		return balanceMsg(balance)
+	case allowance := <-m.allowanceChan:
+		return allowanceMsg(allowance)
+	}
 }
 
 func (m model) Init() tea.Cmd {
+	// TODO: handle termination
 	return tea.Batch(
 		m.statusModel.Init(),
-		m.watchEvents(context.Background()),
-		m.tickBalance,
-		m.tickAllowance,
+		m.watchEvents(context.TODO()),
+		m.tick,
 	)
 }
 
@@ -123,7 +119,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.isFocusedOnLogs && m.logModel != nil {
+		if m.logModel != nil {
 			m.logModel, lCmd = m.logModel.Update(msg)
 			cmds = append(cmds, lCmd)
 		} else {
@@ -131,25 +127,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, sCmd)
 		}
 		switch {
-		case key.Matches(msg, m.keymap.next):
-			if m.logModel != nil {
-				m.isFocusedOnLogs = !m.isFocusedOnLogs
-			}
-		case msg.Type == tea.KeyCtrlC, msg.Type == tea.KeyEsc, msg.String() == "q":
+		case msg.Type == tea.KeyCtrlC:
 			return m, tea.Quit
 		}
 	case status.SelectJobMsg:
-		m.showLog = true
-
 		// Render job logs
-		m.logModel = log.Model(m.logDialer, m.userAddress, msg)
+		m.logModel = log.Model(context.TODO(), m.logDialer, m.userAddress, msg)
 		cmds = append(cmds, m.logModel.Init())
+	case log.ExitMsg:
+		_, _ = m.logModel.Update(msg)
+		m.logModel = nil
 	case balanceMsg:
 		m.balance = msg
-		cmds = append(cmds, m.tickBalance)
+		cmds = append(cmds, m.tick)
 	case allowanceMsg:
 		m.allowance = msg
-		cmds = append(cmds, m.tickAllowance)
+		cmds = append(cmds, m.tick)
 	default:
 		if m.logModel != nil {
 			m.logModel, lCmd = m.logModel.Update(msg)
@@ -172,17 +165,9 @@ Current balance:
 Allowance:`)
 
 func (m model) View() string {
-	help := m.help.ShortHelpView([]key.Binding{
-		m.keymap.next,
-	})
-
 	var navView string
-	if m.showLog && m.logModel != nil {
-		navView = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			m.statusModel.View(),
-			style.LeftVerticalSeparator.Render(m.logModel.View()),
-		)
+	if m.logModel != nil {
+		navView = m.logModel.View()
 	} else {
 		navView = m.statusModel.View()
 	}
@@ -208,38 +193,41 @@ func (m model) View() string {
 		),
 	)
 
-	return style.Foreground.Render(titlePixelArt) + "\n" + info + "\n" + navView + "\n\n" + help
+	return style.Foreground.Render(titlePixelArt) + "\n" + info + "\n" + navView
 }
 
 func Model(
 	ctx context.Context,
 	userAddress common.Address,
-	fetcher cli.JobFetcher,
-	watcher cli.JobWatcher,
-	credit cli.CreditWatcher,
-	allowance cli.AllowanceWatcher,
+	eventSubscriber cli.EventSubscriber,
+	jobFetcher cli.JobFetcher,
+	jobFilterer cli.JobFilterer,
+	creditFilterer cli.CreditFilterer,
+	allowanceFilterer cli.AllowanceFilterer,
 	logDialer logger.Dialer,
 	version string,
 	metaschedulerAddress string,
 ) tea.Model {
 	return model{
+		logs:          make(chan types.Log, 100),
 		balanceChan:   make(chan *big.Int, 10),
 		balance:       new(big.Int),
 		allowanceChan: make(chan *big.Int, 10),
 		allowance:     new(big.Int),
 
-		statusModel: status.Model(ctx, fetcher, watcher, userAddress),
-		logDialer:   logDialer,
-		userAddress: userAddress,
-		help:        help.New(),
-		keymap: keymap{
-			next: key.NewBinding(
-				key.WithKeys("tab"),
-				key.WithHelp("tab", "change focus"),
-			),
-		},
-		creditWatcher:        credit,
-		allowanceWatcher:     allowance,
+		statusModel: status.Model(
+			ctx,
+			eventSubscriber,
+			jobFetcher,
+			jobFilterer,
+			userAddress,
+		),
+		logDialer:            logDialer,
+		userAddress:          userAddress,
+		keymap:               keymap{},
+		eventSubscriber:      eventSubscriber,
+		creditFilterer:       creditFilterer,
+		allowanceFilterer:    allowanceFilterer,
 		version:              version,
 		metaschedulerAddress: metaschedulerAddress,
 	}

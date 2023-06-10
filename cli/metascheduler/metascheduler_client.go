@@ -116,7 +116,19 @@ func NewJobFetcher(c Client) (fetcher cli.JobFetcher, err error) {
 	}, err
 }
 
-func NewJobWatcher(c Client) (watcher cli.JobWatcher, err error) {
+func NewEventSubscriber(c Client) (cli.EventSubscriber, error) {
+	c = c.applyDefault()
+	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
+	if err != nil {
+		return nil, err
+	}
+	return &wsClient{
+		MetaScheduler: m,
+		Client:        c,
+	}, err
+}
+
+func NewJobFilterer(c Client) (watcher cli.JobFilterer, err error) {
 	c = c.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
@@ -151,11 +163,11 @@ func NewCreditManager(ctx context.Context, c Client) (credits cli.CreditManager,
 	}, err
 }
 
-func NewCreditWatcher(
+func NewCreditFilterer(
 	ctx context.Context,
 	ws Client,
 	credit cli.CreditManager,
-) (watcher cli.CreditWatcher, err error) {
+) (watcher cli.CreditFilterer, err error) {
 	ws = ws.applyDefault()
 	mWs, err := metaschedulerabi.NewMetaScheduler(ws.MetaschedulerAddress, ws.EthereumBackend)
 	if err != nil {
@@ -175,7 +187,7 @@ func NewCreditWatcher(
 	if err != nil {
 		return nil, err
 	}
-	return &creditWatcher{
+	return &creditFilterer{
 		CreditManager:  credit,
 		wsClient:       wsClient,
 		IERC20Filterer: ierc20Filterer,
@@ -208,11 +220,11 @@ func NewAllowanceManager(
 	}, err
 }
 
-func NewAllowanceWatcher(
+func NewAllowanceFilterer(
 	ctx context.Context,
 	ws Client,
 	allowance cli.AllowanceManager,
-) (watcher cli.AllowanceWatcher, err error) {
+) (watcher cli.AllowanceFilterer, err error) {
 	ws = ws.applyDefault()
 	mWs, err := metaschedulerabi.NewMetaScheduler(ws.MetaschedulerAddress, ws.EthereumBackend)
 	if err != nil {
@@ -232,7 +244,7 @@ func NewAllowanceWatcher(
 	if err != nil {
 		return nil, err
 	}
-	return &allowanceWatcher{
+	return &allowanceFilterer{
 		AllowanceManager: allowance,
 		wsClient:         wsClient,
 		IERC20Filterer:   ierc20Filterer,
@@ -476,6 +488,19 @@ func (c *rpcClient) CancelJob(ctx context.Context, id [32]byte) error {
 	return err
 }
 
+func (c *rpcClient) TopUpJob(ctx context.Context, id [32]byte, amount *big.Int) error {
+	opts, err := c.authOpts(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create auth options: %w", err)
+	}
+	_, err = c.MetaScheduler.TopUpJob(
+		opts,
+		id,
+		amount,
+	)
+	return err
+}
+
 func (c *rpcClient) Balance(ctx context.Context) (*big.Int, error) {
 	c.from()
 	return c.BalanceOf(&bind.CallOpts{
@@ -581,13 +606,13 @@ func (c *wsClient) FilterJobTransition(
 	return fChan, rChan
 }
 
-type creditWatcher struct {
+type creditFilterer struct {
 	cli.CreditManager
 	wsClient
 	*metaschedulerabi.IERC20Filterer
 }
 
-func (c *creditWatcher) FilterTransfer(
+func (c *creditFilterer) FilterTransfer(
 	ctx context.Context,
 	ch <-chan types.Log,
 ) (filtered <-chan *metaschedulerabi.IERC20Transfer, rest <-chan types.Log) {
@@ -617,7 +642,7 @@ func (c *creditWatcher) FilterTransfer(
 	return fChan, rChan
 }
 
-func (c *creditWatcher) Balance(
+func (c *creditFilterer) ReduceToBalance(
 	ctx context.Context,
 	transfers <-chan *metaschedulerabi.IERC20Transfer,
 ) (<-chan *big.Int, error) {
@@ -653,13 +678,13 @@ func (c *creditWatcher) Balance(
 	return rChan, nil
 }
 
-type allowanceWatcher struct {
+type allowanceFilterer struct {
 	cli.AllowanceManager
 	wsClient
 	*metaschedulerabi.IERC20Filterer
 }
 
-func (c *allowanceWatcher) FilterApproval(
+func (c *allowanceFilterer) FilterApproval(
 	ctx context.Context,
 	ch <-chan types.Log,
 ) (filtered <-chan *metaschedulerabi.IERC20Approval, rest <-chan types.Log) {
@@ -689,7 +714,7 @@ func (c *allowanceWatcher) FilterApproval(
 	return fChan, rChan
 }
 
-func (c *allowanceWatcher) WatchAllowance(
+func (c *allowanceFilterer) ReduceToAllowance(
 	ctx context.Context,
 	approvals <-chan *metaschedulerabi.IERC20Approval,
 ) (<-chan *big.Int, error) {

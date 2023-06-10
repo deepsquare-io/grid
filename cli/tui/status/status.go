@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 var columns = []table.Column{
@@ -20,23 +22,37 @@ var columns = []table.Column{
 }
 
 func (m model) View() string {
-	return style.Base.Render(m.table.View())
+	help := m.help.FullHelpView([][]key.Binding{
+		{
+			m.keyMap.OpenLogs,
+			m.keyMap.CancelJob,
+			m.keyMap.Exit,
+		},
+		{
+			m.keyMap.TableKeyMap.LineUp,
+			m.keyMap.TableKeyMap.LineDown,
+		},
+	})
+	return style.Base.Render(m.table.View()) + "\n" + help
 }
 
 func Model(
 	ctx context.Context,
-	fetcher cli.JobFetcher,
-	watcher cli.JobWatcher,
+	eventSubscriber cli.EventSubscriber,
+	jobFetcher cli.JobFetcher,
+	jobFilterer cli.JobFilterer,
 	userAddress common.Address,
 ) tea.Model {
 	// Initialize rows
-	rows, idToRow, it := initializeRows(ctx, fetcher)
+	rows, idToRow, it := initializeRows(ctx, jobFetcher)
 
+	tableKeymap := table.DefaultKeyMap()
 	t := table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
 		table.WithHeight(style.StandardHeight),
+		table.WithKeyMap(tableKeymap),
 	)
 
 	s := table.DefaultStyles()
@@ -59,10 +75,29 @@ func Model(
 		idToRow: idToRow,
 		it:      it,
 		help:    help,
+		keyMap: KeyMap{
+			TableKeyMap: tableKeymap,
+			OpenLogs: key.NewBinding(
+				key.WithKeys("enter"),
+				key.WithHelp("enter", "show job logs"),
+			),
+			CancelJob: key.NewBinding(
+				key.WithKeys("c"),
+				key.WithHelp("c", "cancel job"),
+			),
+			Exit: key.NewBinding(
+				key.WithKeys("esc", "q"),
+				key.WithHelp("esc/q", "exit"),
+			),
+		},
 
-		jobs:        make(chan cli.Job, 100),
-		fetcher:     fetcher,
-		watcher:     watcher,
-		userAddress: userAddress,
+		watchJobs: makeWatchJobsModel(
+			ctx,
+			userAddress,
+			make(chan types.Log, 100),
+			eventSubscriber,
+			jobFilterer,
+			jobFetcher,
+		),
 	}
 }

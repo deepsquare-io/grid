@@ -46,6 +46,8 @@ type JobScheduler interface {
 	) ([32]byte, error)
 	// Cancel a job.
 	CancelJob(ctx context.Context, jobID [32]byte) error
+	// TopUp a job.
+	TopUpJob(ctx context.Context, jobID [32]byte, amount *big.Int) error
 }
 
 // JobLazyIterator iterates on a lazy list of jobs.
@@ -74,9 +76,8 @@ type EventSubscriber interface {
 	SubscribeEvents(ctx context.Context, ch chan<- types.Log) (ethereum.Subscription, error)
 }
 
-// JobWatcher watches smart-contract events.
-type JobWatcher interface {
-	EventSubscriber
+// JobFilterer watches smart-contract events.
+type JobFilterer interface {
 	// Filter new job requests events.
 	FilterNewJobRequests(
 		ch <-chan types.Log,
@@ -93,16 +94,15 @@ type CreditManager interface {
 	Balance(ctx context.Context) (*big.Int, error)
 }
 
-// CreditWatcher handles the credits of the user.
-type CreditWatcher interface {
-	EventSubscriber
+// CreditFilterer handles the credits of the user.
+type CreditFilterer interface {
 	// Filter transfer events.
 	FilterTransfer(
 		ctx context.Context,
 		ch <-chan types.Log,
 	) (filtered <-chan *metaschedulerabi.IERC20Transfer, rest <-chan types.Log)
 	// Balance watches the current balance of credits.
-	Balance(
+	ReduceToBalance(
 		ctx context.Context,
 		transfers <-chan *metaschedulerabi.IERC20Transfer,
 	) (<-chan *big.Int, error)
@@ -120,10 +120,8 @@ type AllowanceManager interface {
 	GetAllowance(ctx context.Context) (*big.Int, error)
 }
 
-// AllowanceWatcher watches the allowed quantity of credit for smart-contract interactions.
-type AllowanceWatcher interface {
-	EventSubscriber
-
+// AllowanceFilterer watches the allowed quantity of credit for smart-contract interactions.
+type AllowanceFilterer interface {
 	// Filter transfer events.
 	FilterApproval(
 		ctx context.Context,
@@ -131,7 +129,7 @@ type AllowanceWatcher interface {
 	) (filtered <-chan *metaschedulerabi.IERC20Approval, rest <-chan types.Log)
 
 	// Get the current allowance toward the contract.
-	WatchAllowance(
+	ReduceToAllowance(
 		ctx context.Context,
 		approvals <-chan *metaschedulerabi.IERC20Approval,
 	) (<-chan *big.Int, error)

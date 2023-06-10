@@ -12,23 +12,26 @@ import (
 	"github.com/deepsquare-io/the-grid/cli"
 	"github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/tui/channel"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
-	"github.com/deepsquare-io/the-grid/cli/tui/util"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
-type model struct {
-	table   table.Model
-	idToRow map[[32]byte]table.Row
-	it      cli.JobLazyIterator
-	help    help.Model
-	jobs    chan cli.Job
+type KeyMap struct {
+	TableKeyMap table.KeyMap
+	OpenLogs    key.Binding
+	CancelJob   key.Binding
+	Exit        key.Binding
+}
 
-	fetcher     cli.JobFetcher
-	watcher     cli.JobWatcher
-	userAddress common.Address
+type model struct {
+	table     table.Model
+	idToRow   map[[32]byte]table.Row
+	it        cli.JobLazyIterator
+	help      help.Model
+	watchJobs channel.Model[transitionMsg]
+	scheduler cli.JobScheduler
+	keyMap    KeyMap
 }
 
 // SelectJobMsg is a public msg used to indicate the user selected a job.
@@ -47,6 +50,19 @@ func jobToRow(job cli.Job) table.Row {
 		metascheduler.JobStatus(job.Status).String(),
 		(time.UnixMilli(job.Time.Start.Int64() * 1000)).Format(time.UnixDate),
 	}
+}
+
+func rowToJobID(row table.Row) [32]byte {
+	jobIDStr := row[0]
+	jobIDBig, _ := new(big.Int).SetString(jobIDStr, 10)
+	jobIDBytes := jobIDBig.Bytes()
+	var jobID [32]byte
+	copy(jobID[:], jobIDBytes)
+	// Reverse the byte order in the array for endianess
+	for i, j := 0, len(jobID)-1; i < j; i, j = i+1, j-1 {
+		jobID[i], jobID[j] = jobID[j], jobID[i]
+	}
+	return jobID
 }
 
 // initializeRows fetches the last "x" jobs and store an iterator in the model
@@ -86,8 +102,8 @@ func initializeRows(
 }
 
 // addMoreRows fetches the last "x" jobs and add it as row.
-func (m *model) addMoreRows() {
-	ctx := context.Background()
+func (m *model) addMoreRows(ctx context.Context) {
+	// TODO: handle termination
 	oldRows := m.table.Rows()
 	rows := make([]table.Row, 0, len(oldRows)+style.StandardHeight)
 	if m.it == nil {
@@ -113,89 +129,29 @@ func (m *model) addMoreRows() {
 	m.table.SetRows(rows)
 }
 
-// watchTransition send new jobs object by watching events
-func (m *model) watchTransition(
-	ctx context.Context,
-) tea.Cmd {
+func (m model) CancelJob(ctx context.Context, jobID [32]byte) tea.Cmd {
 	return func() tea.Msg {
-		logs := make(chan types.Log, 100)
-		sub, err := m.watcher.SubscribeEvents(ctx, logs)
-		if err != nil {
-			log.I.Fatal(err.Error())
+		if err := m.scheduler.CancelJob(ctx, jobID); err != nil {
+			return tea.Println(err)()
 		}
-		defer sub.Unsubscribe()
-		transitions, rest := m.watcher.FilterJobTransition(logs)
-		newJobs, rest := m.watcher.FilterNewJobRequests(rest)
-		go util.IgnoreElements(rest)
-
-		for {
-			select {
-			case transition := <-transitions:
-				go func() {
-					job, err := m.fetcher.GetJob(ctx, transition.JobId)
-					if err != nil {
-						log.I.Error(
-							"failed to get job from transition, ignoring...",
-							zap.Error(err),
-						)
-						return
-					}
-					if job.CustomerAddr != m.userAddress {
-						return
-					}
-					select {
-					case m.jobs <- *job:
-					case <-ctx.Done():
-						// Context canceled. This is not an error.
-						return
-					}
-				}()
-
-			case newJob := <-newJobs:
-				if newJob.CustomerAddr != m.userAddress {
-					continue
-				}
-				go func() {
-					job, err := m.fetcher.GetJob(ctx, newJob.JobId)
-					if err != nil {
-						log.I.Error(
-							"failed to get new job request event, ignoring...",
-							zap.Error(err),
-						)
-						return
-					}
-					select {
-					case m.jobs <- *job:
-					case <-ctx.Done():
-						// Context canceled. This is not an error.
-						return
-					}
-				}()
-			case <-ctx.Done():
-				return nil
-			}
-		}
+		return nil
 	}
 }
 
-type transitionMsg cli.Job
-
-func (m *model) tickTransition() tea.Msg {
-	return transitionMsg(<-m.jobs)
-}
-
 func (m model) Init() tea.Cmd {
-	return tea.Batch(
-		m.watchTransition(context.Background()),
-		m.tickTransition,
-	)
+	return m.watchJobs.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		tbCmd tea.Cmd
+		wCmd  tea.Cmd
 		cmds  = make([]tea.Cmd, 0)
 	)
+	m.watchJobs, wCmd = m.watchJobs.Update(msg)
+	if wCmd != nil {
+		cmds = append(cmds, wCmd)
+	}
 
 	switch msg := msg.(type) {
 	case transitionMsg:
@@ -211,26 +167,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			rows[0] = row
 		}
 		m.table.SetRows(rows)
-		cmds = append(cmds, m.tickTransition)
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.table.KeyMap.LineDown):
+		case key.Matches(msg, m.keyMap.TableKeyMap.LineDown):
 			if m.table.Cursor() == len(m.table.Rows())-1 {
-				m.addMoreRows()
+				// TODO: handle termination
+				m.addMoreRows(context.TODO())
 			}
-		case msg.Type == tea.KeyEnter:
+
+		case key.Matches(msg, m.keyMap.CancelJob):
 			if len(m.table.SelectedRow()) > 0 {
-				jobIDStr := m.table.SelectedRow()[0]
-				jobIDBig, _ := new(big.Int).SetString(jobIDStr, 10)
-				jobIDBytes := jobIDBig.Bytes()
-				var jobID [32]byte
-				copy(jobID[:], jobIDBytes)
-				// Reverse the byte order in the array for endianess
-				for i, j := 0, len(jobID)-1; i < j; i, j = i+1, j-1 {
-					jobID[i], jobID[j] = jobID[j], jobID[i]
-				}
-				cmds = append(cmds, emitSelectJobMsg(jobID))
+				cmds = append(cmds, m.CancelJob(context.TODO(), rowToJobID(m.table.SelectedRow())))
 			}
+		case key.Matches(msg, m.keyMap.OpenLogs):
+			if len(m.table.SelectedRow()) > 0 {
+				cmds = append(cmds, emitSelectJobMsg(rowToJobID(m.table.SelectedRow())))
+			}
+		case key.Matches(msg, m.keyMap.Exit):
+			return m, tea.Batch(
+				m.watchJobs.Dispose,
+				tea.Quit,
+			)
 		}
 	}
 	m.table, tbCmd = m.table.Update(msg)

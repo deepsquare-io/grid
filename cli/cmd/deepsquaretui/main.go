@@ -159,15 +159,19 @@ var app = &cli.App{
 			EthereumBackend:      ethClientWS,
 			UserPrivateKey:       pk,
 		}
-		watcher, err := metascheduler.NewJobWatcher(metaschedulerWS)
+		eventSubscriber, err := metascheduler.NewEventSubscriber(metaschedulerWS)
 		if err != nil {
 			return err
 		}
-		creditWatcher, err := metascheduler.NewCreditWatcher(ctx, metaschedulerWS, credits)
+		watcher, err := metascheduler.NewJobFilterer(metaschedulerWS)
 		if err != nil {
 			return err
 		}
-		allowanceWatcher, err := metascheduler.NewAllowanceWatcher(ctx, metaschedulerWS, allowance)
+		creditWatcher, err := metascheduler.NewCreditFilterer(ctx, metaschedulerWS, credits)
+		if err != nil {
+			return err
+		}
+		allowanceWatcher, err := metascheduler.NewAllowanceFilterer(ctx, metaschedulerWS, allowance)
 		if err != nil {
 			return err
 		}
@@ -202,6 +206,7 @@ var app = &cli.App{
 			nav.Model(
 				ctx,
 				crypto.PubkeyToAddress(pk.PublicKey),
+				eventSubscriber,
 				fetcher,
 				watcher,
 				creditWatcher,
