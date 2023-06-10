@@ -97,7 +97,7 @@ var flags = []cli.Flag{
 }
 
 var app = &cli.App{
-	Name:    "dps",
+	Name:    "deepsquaretui",
 	Version: version,
 	Usage:   "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
 	Flags:   flags,
