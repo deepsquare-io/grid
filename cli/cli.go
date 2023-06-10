@@ -4,8 +4,8 @@ import (
 	"context"
 	"math/big"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/v1/internal/abi/metascheduler"
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/v1/internal/logger/v1alpha1"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
+	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/internal/logger/v1alpha1"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"

@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/deepsquare-io/the-grid/cli/v1"
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/v1/internal/abi/metascheduler"
-	"github.com/deepsquare-io/the-grid/cli/v1/sbatch"
+	"github.com/deepsquare-io/the-grid/cli"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/sbatch"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"

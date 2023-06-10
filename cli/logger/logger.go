@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/cli/v1"
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/v1/internal/logger/v1alpha1"
+	"github.com/deepsquare-io/the-grid/cli"
+	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/internal/logger/v1alpha1"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"

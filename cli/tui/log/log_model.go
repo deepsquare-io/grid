@@ -11,8 +11,8 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/v1/internal/log"
-	"github.com/deepsquare-io/the-grid/cli/v1/logger"
+	"github.com/deepsquare-io/the-grid/cli/internal/log"
+	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
 )

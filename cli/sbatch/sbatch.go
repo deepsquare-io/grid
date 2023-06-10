@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/deepsquare-io/the-grid/cli/v1/internal/graphql"
+	"github.com/deepsquare-io/the-grid/cli/internal/graphql"
 )
 
 type Service interface {

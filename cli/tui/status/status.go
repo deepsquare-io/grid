@@ -7,8 +7,8 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli/v1"
-	"github.com/deepsquare-io/the-grid/cli/v1/tui/style"
+	"github.com/deepsquare-io/the-grid/cli"
+	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/ethereum/go-ethereum/common"
 )
 

@@ -1,4 +1,4 @@
-module github.com/deepsquare-io/the-grid/cli/v1
+module github.com/deepsquare-io/the-grid/cli
 
 go 1.20
 
