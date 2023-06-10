@@ -57,6 +57,8 @@ func (s *client) HealthCheck(ctx context.Context) error {
 }
 
 func (s *client) Fetch(ctx context.Context, hash string) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	logger.I.Info("Fetch sbatch", zap.String("hash", hash))
 	client, conn, err := s.dial(ctx)
 	if err != nil {
