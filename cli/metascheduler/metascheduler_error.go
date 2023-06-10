@@ -579,6 +579,10 @@ func init() {
 }
 
 func WrapError(originalErr error) (newErr error) {
+	if originalErr == nil {
+		return nil
+	}
+
 	// Check if it's an RPC error
 	var target rpc.DataError
 	if ok := errors.As(originalErr, &target); !ok {

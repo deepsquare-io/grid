@@ -14,6 +14,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/sbatch"
 	"github.com/deepsquare-io/the-grid/cli/tui/nav"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -145,6 +146,11 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
+		sbatch := sbatch.NewService(client, sbatchEndpoint)
+		jobScheduler, err := metascheduler.NewJobScheduler(metaschedulerRPC, sbatch)
+		if err != nil {
+			return err
+		}
 		credits, err := metascheduler.NewCreditManager(ctx, metaschedulerRPC)
 		if err != nil {
 			return err
@@ -209,6 +215,7 @@ var app = &cli.App{
 				eventSubscriber,
 				fetcher,
 				watcher,
+				jobScheduler,
 				creditWatcher,
 				allowanceWatcher,
 				logDialer,

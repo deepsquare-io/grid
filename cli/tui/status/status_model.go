@@ -14,6 +14,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/tui/channel"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"go.uber.org/zap"
 )
 
@@ -132,7 +133,7 @@ func (m *model) addMoreRows(ctx context.Context) {
 func (m model) CancelJob(ctx context.Context, jobID [32]byte) tea.Cmd {
 	return func() tea.Msg {
 		if err := m.scheduler.CancelJob(ctx, jobID); err != nil {
-			return tea.Println(err)()
+			logger.I.Error(err.Error())
 		}
 		return nil
 	}

@@ -41,6 +41,7 @@ func Model(
 	eventSubscriber cli.EventSubscriber,
 	jobFetcher cli.JobFetcher,
 	jobFilterer cli.JobFilterer,
+	scheduler cli.JobScheduler,
 	userAddress common.Address,
 ) tea.Model {
 	// Initialize rows
@@ -90,7 +91,7 @@ func Model(
 				key.WithHelp("esc/q", "exit"),
 			),
 		},
-
+		scheduler: scheduler,
 		watchJobs: makeWatchJobsModel(
 			ctx,
 			userAddress,
