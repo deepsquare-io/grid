@@ -1,18 +1,31 @@
 package log
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
-	"unicode"
 
 	"github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/deepsquare-io/the-grid/cli/tui/channel"
 	"go.uber.org/zap"
+)
+
+var forbiddenReplacer = strings.NewReplacer(
+	"\x1b[A", "", // Move Up
+	"\x1b[B", "", // Move Down
+	"\x1b[C", "", // Move Forward (Right)
+	"\x1b[D", "", // Move Backward (Left)
+	"\x1b[G", "", // Move to Beginning of Line
+	"\x1b[H", "", // Move to Specific Position
+	"\x1b[f", "", // Move to Specific Position (alternative)
+	"\x1b[s", "", // Save Cursor Position
+	"\x1b[u", "", // Restore Cursor Position
+	"\r\n", "\n",
+	"\r", "\n",
 )
 
 type logMsg struct {
@@ -60,16 +73,11 @@ func makeWatchLogsModel(
 						}
 						return
 					}
-					clean := bytes.Map(func(r rune) rune {
-						if unicode.IsPrint(r) {
-							return r
-						}
-						return -1
-					}, req.GetData())
+					clean := forbiddenReplacer.Replace(string(req.GetData()))
 					select {
 					case c <- logMsg{
 						timestamp: time.Unix(0, req.GetTimestamp()),
-						message:   string(clean),
+						message:   clean,
 					}:
 					case <-ctx.Done():
 						return
