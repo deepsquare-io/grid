@@ -208,23 +208,26 @@ var app = &cli.App{
 			pk,
 			dialOptions...,
 		)
-		_, err = tea.NewProgram(
-			nav.Model(
-				ctx,
-				crypto.PubkeyToAddress(pk.PublicKey),
-				eventSubscriber,
-				fetcher,
-				watcher,
-				jobScheduler,
-				creditWatcher,
-				allowanceWatcher,
-				logDialer,
-				version,
-				metaschedulerSmartContract,
-			),
+		navModel := nav.Model(
+			ctx,
+			crypto.PubkeyToAddress(pk.PublicKey),
+			eventSubscriber,
+			fetcher,
+			watcher,
+			jobScheduler,
+			creditWatcher,
+			allowanceWatcher,
+			logDialer,
+			version,
+			metaschedulerSmartContract,
+		)
+		program := tea.NewProgram(
+			navModel,
 			tea.WithContext(ctx),
 			tea.WithAltScreen(),
-		).Run()
+		)
+		navModel.SetProgram(program)
+		_, err = program.Run()
 		return err
 	},
 }

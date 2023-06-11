@@ -65,7 +65,7 @@ func Model(
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	messages := &strings.Builder{}
 	messages.Grow(1048576)
-	return model{
+	return &model{
 		viewport: vp,
 		spinner:  s,
 		watchLogs: makeWatchLogsModel(

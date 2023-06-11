@@ -22,6 +22,7 @@ type KeyMap struct {
 	TableKeyMap table.KeyMap
 	OpenLogs    key.Binding
 	CancelJob   key.Binding
+	SubmitJob   key.Binding
 	Exit        key.Binding
 }
 
@@ -35,13 +36,20 @@ type model struct {
 	keyMap    KeyMap
 }
 
-// SelectJobMsg is a public msg used to indicate the user selected a job.
+// SelectJobMsg is a public msg used to indicate that the user selected a job.
 type SelectJobMsg [32]byte
 
 func emitSelectJobMsg(msg [32]byte) tea.Cmd {
 	return func() tea.Msg {
 		return SelectJobMsg(msg)
 	}
+}
+
+// SubmitJobMsg is a public msg used to indicate that the user want to submit a job.
+type SubmitJobMsg struct{}
+
+func emitSubmitJobMsg() tea.Msg {
+	return SubmitJobMsg{}
 }
 
 func jobToRow(job cli.Job) table.Row {
@@ -180,10 +188,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(m.table.SelectedRow()) > 0 {
 				cmds = append(cmds, m.CancelJob(context.TODO(), rowToJobID(m.table.SelectedRow())))
 			}
-		case key.Matches(msg, m.keyMap.OpenLogs):
-			if len(m.table.SelectedRow()) > 0 {
-				cmds = append(cmds, emitSelectJobMsg(rowToJobID(m.table.SelectedRow())))
-			}
+		case key.Matches(msg, m.keyMap.SubmitJob):
+			cmds = append(cmds, emitSubmitJobMsg)
 		case key.Matches(msg, m.keyMap.Exit):
 			return m, tea.Batch(
 				m.watchJobs.Dispose,

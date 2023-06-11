@@ -26,6 +26,7 @@ func (m model) View() string {
 		{
 			m.keyMap.OpenLogs,
 			m.keyMap.CancelJob,
+			m.keyMap.SubmitJob,
 			m.keyMap.Exit,
 		},
 		{
@@ -71,7 +72,7 @@ func Model(
 	help := help.New()
 	help.ShowAll = true
 
-	return model{
+	return &model{
 		table:   t,
 		idToRow: idToRow,
 		it:      it,
@@ -85,6 +86,10 @@ func Model(
 			CancelJob: key.NewBinding(
 				key.WithKeys("c"),
 				key.WithHelp("c", "cancel job"),
+			),
+			SubmitJob: key.NewBinding(
+				key.WithKeys("s"),
+				key.WithHelp("s", "submit job"),
 			),
 			Exit: key.NewBinding(
 				key.WithKeys("esc", "q"),

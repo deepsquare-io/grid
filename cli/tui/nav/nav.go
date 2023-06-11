@@ -13,6 +13,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/internal/ether"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/logger"
+	"github.com/deepsquare-io/the-grid/cli/tui/editor"
 	"github.com/deepsquare-io/the-grid/cli/tui/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/status"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
@@ -33,20 +34,23 @@ type model struct {
 	// logModel is nullable
 	logModel    tea.Model
 	statusModel tea.Model
+	program     *tea.Program
 
 	eventSubscriber   cli.EventSubscriber
 	creditFilterer    cli.CreditFilterer
 	allowanceFilterer cli.AllowanceFilterer
 	logDialer         logger.Dialer
 	userAddress       common.Address
-	keymap            keymap
 }
 
-type keymap = struct {
+func (m *model) SetProgram(p *tea.Program) {
+	m.program = p
 }
 
 type balanceMsg *big.Int
 type allowanceMsg *big.Int
+
+type editorDone struct{}
 
 func (m *model) watchEvents(
 	ctx context.Context,
@@ -92,6 +96,17 @@ func (m *model) watchEvents(
 	}
 }
 
+func (m *model) openEditor(ctx context.Context) tea.Cmd {
+	return func() tea.Msg {
+		_, err := editor.Open(ctx)
+		if err != nil {
+			panic(err.Error())
+		}
+		fmt.Println("result is not yet handled")
+		return editorDone{}
+	}
+}
+
 func (m *model) tick() tea.Msg {
 	select {
 	case balance := <-m.balanceChan:
@@ -134,6 +149,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Render job logs
 		m.logModel = log.Model(context.TODO(), m.logDialer, m.userAddress, msg)
 		cmds = append(cmds, m.logModel.Init())
+	case status.SubmitJobMsg:
+		err := m.program.ReleaseTerminal()
+		if err != nil {
+			fmt.Println(err)
+		}
+		cmds = append(
+			cmds,
+			m.openEditor(context.TODO()),
+		)
+	case editorDone:
+		err := m.program.RestoreTerminal()
+		if err != nil {
+			fmt.Println(err)
+		}
 	case log.ExitMsg:
 		_, _ = m.logModel.Update(msg)
 		m.logModel = nil
@@ -208,8 +237,8 @@ func Model(
 	logDialer logger.Dialer,
 	version string,
 	metaschedulerAddress string,
-) tea.Model {
-	return model{
+) *model {
+	return &model{
 		logs:          make(chan types.Log, 100),
 		balanceChan:   make(chan *big.Int, 10),
 		balance:       new(big.Int),
@@ -226,7 +255,6 @@ func Model(
 		),
 		logDialer:            logDialer,
 		userAddress:          userAddress,
-		keymap:               keymap{},
 		eventSubscriber:      eventSubscriber,
 		creditFilterer:       creditFilterer,
 		allowanceFilterer:    allowanceFilterer,

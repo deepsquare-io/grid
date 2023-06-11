@@ -1,0 +1,636 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "properties": {
+    "resources": {
+      "$ref": "#/definitions/JobResources",
+      "description": "Allocated resources for the job.\n\nEach resource is available as environment variables:\n- $NTASKS: number of allowed parallel tasks\n- $CPUS_PER_TASK: number of CPUs per task\n- $MEM_PER_CPU: MB of memory per CPU\n- $GPUS_PER_TASK: number of GPUs per task\n- $GPUS: total number of GPUS\n- $CPUS: total number of CPUS\n- $MEM: total number of memory in MB\n\nGo name: \"Resources\"."
+    },
+    "env": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/EnvVar"
+      },
+      "description": "Environment variables accessible for the entire job.\n\nGo name: \"Env\"."
+    },
+    "enableLogging": {
+      "$ref": "#/definitions/Boolean",
+      "description": "EnableLogging enables the DeepSquare Grid Logger.\n\nGo name: \"EnableLogging\"."
+    },
+    "input": {
+      "$ref": "#/definitions/TransportData",
+      "description": "Pull data at the start of the job.\n\nIt is recommended to set the mode of the data by filling the `inputMode` field.\n\nGo name: \"Input\"."
+    },
+    "inputMode": {
+      "$ref": "#/definitions/Int",
+      "description": "InputMode takes an integer that will be used to change the mode recursively (chmod -R) of the input data.\n\nThe number shouldn't be in octal but in decimal. A mode over 512 is not accepted.\n\nCommon modes:\n  - 511 (user:rwx group:rwx world:rwx)\n  - 493 (user:rwx group:r-x world:r-x)\n  - 448 (user:rwx group:--- world:---)\n\nIf null, the mode won't change and will default to the source.\n\nGo name: \"InputMode\"."
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Step"
+      },
+      "description": "Group of steps that will be run sequentially.\n\nGo name: \"Steps\"."
+    },
+    "output": {
+      "$ref": "#/definitions/TransportData",
+      "description": "Push data at the end of the job.\n\nContinuous sync/push can be enabled using the `continuousOutputSync` flag.\n\nGo name: \"Output\"."
+    },
+    "continuousOutputSync": {
+      "$ref": "#/definitions/Boolean",
+      "description": "ContinuousOutputSync will push data during the whole job.\n\nThis is useful when it is not desired to lose data when the job is suddenly stopped.\n\nContinousOutputSync is not available with HTTP.\n\nGo name: \"ContinuousOutputSync\"."
+    }
+  },
+  "definitions": {
+    "EnvVar": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/String",
+          "description": "Key of the environment variable.\n\nGo name: \"Key\"."
+        },
+        "value": {
+          "$ref": "#/definitions/String",
+          "description": "Value of the environment variable.\n\nGo name: \"Value\"."
+        }
+      },
+      "required": ["key", "value"],
+      "description": "An environment variable.\n\nAccessible via: \"$key\". \"Key\" name must follows the POSIX specifications (alphanumeric with underscore)."
+    },
+    "String": {
+      "type": "string",
+      "title": "String",
+      "description": "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text."
+    },
+    "HTTPData": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "$ref": "#/definitions/String",
+          "description": "HTTP or HTTPS URL to a file.\n\nGo name: \"URL\"."
+        }
+      },
+      "required": ["url"],
+      "description": "HTTPData describes the necessary variables to connect to a HTTP storage."
+    },
+    "S3Data": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "$ref": "#/definitions/String",
+          "description": "S3 region. Example: \"us‑east‑2\".\n\nGo name: \"Region\"."
+        },
+        "bucketUrl": {
+          "$ref": "#/definitions/String",
+          "description": "The S3 Bucket URL. Must not end with \"/\".\n\nExample: \"s3://my-bucket\".\n\nGo name: \"BucketURL\"."
+        },
+        "path": {
+          "$ref": "#/definitions/String",
+          "description": "The absolute path to a directory/file inside the bucket. Must start with \"/\".\n\nGo name: \"Path\"."
+        },
+        "accessKeyId": {
+          "$ref": "#/definitions/String",
+          "description": "An access key ID for the S3 endpoint.\n\nGo name: \"AccessKeyID\"."
+        },
+        "secretAccessKey": {
+          "$ref": "#/definitions/String",
+          "description": "A secret access key for the S3 endpoint.\n\nGo name: \"SecretAccessKey\"."
+        },
+        "endpointUrl": {
+          "$ref": "#/definitions/String",
+          "description": "A S3 Endpoint URL used for authentication. Example: https://s3.us‑east‑2.amazonaws.com\n\nGo name: \"EndpointURL\"."
+        },
+        "deleteSync": {
+          "$ref": "#/definitions/Boolean",
+          "description": "DeleteSync removes destination files that doesn't correspond to the source.\n\nThis applies to any type of source to any type of destination (s3 or filesystem).\n\nSee: s5cmd sync --delete.\n\nIf null, defaults to false.\n\nGo name: \"DeleteSync\"."
+        }
+      },
+      "required": ["region", "bucketUrl", "path", "accessKeyId", "secretAccessKey", "endpointUrl"],
+      "description": "S3Data describes the necessary variables to connect to a S3 storage."
+    },
+    "Boolean": {
+      "type": "boolean",
+      "title": "Boolean",
+      "description": "The `Boolean` scalar type represents `true` or `false`."
+    },
+    "TransportData": {
+      "type": "object",
+      "properties": {
+        "http": {
+          "$ref": "#/definitions/HTTPData",
+          "description": "Use http to download a file or archive, which will be autoextracted.\n\nGo name: \"HTTP\"."
+        },
+        "s3": {
+          "$ref": "#/definitions/S3Data",
+          "description": "Use s3 to sync a file or directory.\n\nGo name: \"S3\"."
+        }
+      },
+      "required": []
+    },
+    "JobResources": {
+      "type": "object",
+      "properties": {
+        "tasks": {
+          "$ref": "#/definitions/Int",
+          "description": "Number of tasks which are run in parallel.\n\nCan be greater or equal to 1.\n\nGo name: \"Tasks\"."
+        },
+        "cpusPerTask": {
+          "$ref": "#/definitions/Int",
+          "description": "Allocated CPUs per task.\n\nCan be greater or equal to 1.\n\nGo name: \"CpusPerTask\"."
+        },
+        "memPerCpu": {
+          "$ref": "#/definitions/Int",
+          "description": "Allocated memory (MB) per task.\n\nCan be greater or equal to 1.\n\nGo name: \"MemPerCPU\"."
+        },
+        "gpusPerTask": {
+          "$ref": "#/definitions/Int",
+          "description": "Allocated GPUs per task.\n\nCan be greater or equal to 0.\n\nGo name: \"GpusPerTask\"."
+        }
+      },
+      "required": ["tasks", "cpusPerTask", "memPerCpu", "gpusPerTask"],
+      "description": "JobResources are the allocated resources for a job in a cluster."
+    },
+    "Int": {
+      "type": "number",
+      "title": "Int",
+      "description": "The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1."
+    },
+    "Job": {
+      "type": "object",
+      "properties": {
+        "resources": {
+          "$ref": "#/definitions/JobResources",
+          "description": "Allocated resources for the job.\n\nEach resource is available as environment variables:\n- $NTASKS: number of allowed parallel tasks\n- $CPUS_PER_TASK: number of CPUs per task\n- $MEM_PER_CPU: MB of memory per CPU\n- $GPUS_PER_TASK: number of GPUs per task\n- $GPUS: total number of GPUS\n- $CPUS: total number of CPUS\n- $MEM: total number of memory in MB\n\nGo name: \"Resources\"."
+        },
+        "env": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EnvVar"
+          },
+          "description": "Environment variables accessible for the entire job.\n\nGo name: \"Env\"."
+        },
+        "enableLogging": {
+          "$ref": "#/definitions/Boolean",
+          "description": "EnableLogging enables the DeepSquare Grid Logger.\n\nGo name: \"EnableLogging\"."
+        },
+        "input": {
+          "$ref": "#/definitions/TransportData",
+          "description": "Pull data at the start of the job.\n\nIt is recommended to set the mode of the data by filling the `inputMode` field.\n\nGo name: \"Input\"."
+        },
+        "inputMode": {
+          "$ref": "#/definitions/Int",
+          "description": "InputMode takes an integer that will be used to change the mode recursively (chmod -R) of the input data.\n\nThe number shouldn't be in octal but in decimal. A mode over 512 is not accepted.\n\nCommon modes:\n  - 511 (user:rwx group:rwx world:rwx)\n  - 493 (user:rwx group:r-x world:r-x)\n  - 448 (user:rwx group:--- world:---)\n\nIf null, the mode won't change and will default to the source.\n\nGo name: \"InputMode\"."
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "description": "Group of steps that will be run sequentially.\n\nGo name: \"Steps\"."
+        },
+        "output": {
+          "$ref": "#/definitions/TransportData",
+          "description": "Push data at the end of the job.\n\nContinuous sync/push can be enabled using the `continuousOutputSync` flag.\n\nGo name: \"Output\"."
+        },
+        "continuousOutputSync": {
+          "$ref": "#/definitions/Boolean",
+          "description": "ContinuousOutputSync will push data during the whole job.\n\nThis is useful when it is not desired to lose data when the job is suddenly stopped.\n\nContinousOutputSync is not available with HTTP.\n\nGo name: \"ContinuousOutputSync\"."
+        }
+      },
+      "required": ["resources", "steps"],
+      "description": "A Job is a finite sequence of instructions."
+    },
+    "Step": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/String",
+          "description": "Name of the instruction.\n\nIs used for debugging.\n\nGo name: \"Name\"."
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/String"
+          },
+          "description": "Depends on wait for async tasks to end before launching this step.\n\nDependsOn uses the `handleName` property of a `StepAsyncLaunch`.\n\nOnly steps at the same level can be awaited.\n\nBE WARNED: Uncontrolled `dependsOn` may results in dead locks.\n\nGo name: \"DependsOn\"."
+        },
+        "run": {
+          "$ref": "#/definitions/StepRun",
+          "description": "Run a command if not null.\n\nIs exclusive with \"for\", \"launch\", \"use\".\n\nGo name: \"Run\"."
+        },
+        "for": {
+          "$ref": "#/definitions/StepFor",
+          "description": "Run a for loop if not null.\n\nIs exclusive with \"run\", \"launch\", \"use\".\n\nGo name: \"For\"."
+        },
+        "launch": {
+          "$ref": "#/definitions/StepAsyncLaunch",
+          "description": "Launch a background process to run a group of commands if not null.\n\nIs exclusive with \"run\", \"for\", \"use\".\n\nGo name: \"Launch\"."
+        },
+        "use": {
+          "$ref": "#/definitions/StepUse",
+          "description": "Use a third-party group of steps.\n\nIs exclusive with \"run\", \"for\", \"launch\".\n\nGo name: \"Use\"."
+        }
+      },
+      "required": [],
+      "description": "Step is one instruction."
+    },
+    "StepUse": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/String",
+          "description": "Source of the group of steps.\n\nSyntax: <url>@<tag/hash>\n\nExample: github.com/example/my-module@v1\n\nGo name: \"Source\"."
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EnvVar"
+          },
+          "description": "Arguments to be passed as inputs to the group of steps.\n\nGo name: \"Args\"."
+        },
+        "exportEnvAs": {
+          "$ref": "#/definitions/String",
+          "description": "Environment variables exported with be prefixed with the value of this field.\n\nExemple: If exportEnvAs=MY_MODULE, and KEY is exported. Then you can invoke ${MY_MODULE_KEY} environment variable.\n\nGo name: \"ExportEnvAs\"."
+        }
+      },
+      "required": ["source"]
+    },
+    "StepRunResources": {
+      "type": "object",
+      "properties": {
+        "tasks": {
+          "$ref": "#/definitions/Int",
+          "description": "Number of tasks which are run in parallel.\n\nCan be greater or equal to 1.\n\nIf null, default to 1.\n\nGo name: \"Tasks\"."
+        },
+        "cpusPerTask": {
+          "$ref": "#/definitions/Int",
+          "description": "Allocated CPUs per task.\n\nCan be greater or equal to 1.\n\nIf null, defaults to the job resources.\n\nGo name: \"CpusPerTask\"."
+        },
+        "memPerCpu": {
+          "$ref": "#/definitions/Int",
+          "description": "Allocated memory (MB) per task.\n\nCan be greater or equal to 1.\n\nIf null, defaults to the job resources.\n\nGo name: \"MemPerCPU\"."
+        },
+        "gpusPerTask": {
+          "$ref": "#/definitions/Int",
+          "description": "Allocated GPUs per task.\n\nCan be greater or equal to 0.\n\nIf null, defaults to the job resources.\n\nGo name: \"GpusPerTask\"."
+        }
+      },
+      "required": [],
+      "description": "StepRunResources are the allocated resources for a command in a job."
+    },
+    "Mount": {
+      "type": "object",
+      "properties": {
+        "hostDir": {
+          "$ref": "#/definitions/String",
+          "description": "Directory on the host to be mounted inside the container.\n\nGo name: \"HostDir\"."
+        },
+        "containerDir": {
+          "$ref": "#/definitions/String",
+          "description": "Target directory inside the container.\n\nGo name: \"ContainerDir\"."
+        },
+        "options": {
+          "$ref": "#/definitions/String",
+          "description": "Options modifies the mount options.\n\nAccepted: ro, rw\n\nGo name: \"Options\"."
+        }
+      },
+      "required": ["hostDir", "containerDir", "options"],
+      "description": "DEPRECATED: Mount decribes a Bind Mount.\n\nMount is now deprecated. Please use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ..."
+    },
+    "ContainerRun": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/String",
+          "description": "Run the command inside a container with Enroot.\n\nFormat: image:tag. Registry and authentication is not allowed on this field.\n\nIf the default container runtime is used:\n\n  - Use an absolute path to load a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT\n\nIf apptainer=true:\n\n  - Use an absolute path to load a sif file or a squashfs file. By default, it will search inside $STORAGE_PATH. /input will be equivalent to $DEEPSQUARE_INPUT, /output is $DEEPSQUARE_OUTPUT\n\nExamples:\n\n  - library/ubuntu:latest\n  - /my.squashfs\n\nGo name: \"Image\"."
+        },
+        "mounts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Mount"
+          },
+          "description": "[DEPRECATED] Mounts decribes a Bind Mount.\n\nPlease use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ...\n\nGo name: \"Mounts\"."
+        },
+        "username": {
+          "$ref": "#/definitions/String",
+          "description": "Username of a basic authentication.\n\nGo name: \"Username\"."
+        },
+        "password": {
+          "$ref": "#/definitions/String",
+          "description": "Password of a basic authentication.\n\nGo name: \"Password\"."
+        },
+        "registry": {
+          "$ref": "#/definitions/String",
+          "description": "Container registry host.\n\nDefaults to registry-1.docker.io.\n\nGo name: \"Registry\"."
+        },
+        "apptainer": {
+          "$ref": "#/definitions/Boolean",
+          "description": "Run with Apptainer as Container runtime instead of Enroot.\n\nBy running with apptainer, you get access Deepsquare-hosted images.\n\nWhen running Apptainer, the container file system is read-only.\n\nDefaults to false.\n\nGo name: \"Apptainer\"."
+        },
+        "deepsquareHosted": {
+          "$ref": "#/definitions/Boolean",
+          "description": "Use DeepSquare-hosted images.\n\nBy setting to true, apptainer will be set to true.\n\nGo name: \"DeepsquareHosted\"."
+        },
+        "x11": {
+          "$ref": "#/definitions/Boolean",
+          "description": "X11 mounts /tmp/.X11-unix in the container.\n\nGo name: \"X11\"."
+        }
+      },
+      "required": ["image"]
+    },
+    "WireguardPeer": {
+      "type": "object",
+      "properties": {
+        "publicKey": {
+          "$ref": "#/definitions/String",
+          "description": "The peer private key.\n\nGo name: \"PublicKey\"."
+        },
+        "preSharedKey": {
+          "$ref": "#/definitions/String",
+          "description": "The peer pre-shared key.\n\nGo name: \"PreSharedKey\"."
+        },
+        "allowedIPs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/String"
+          },
+          "description": "Configuration of wireguard routes.\n\nFormat is a CIDRv4 (X.X.X.X/X) or CIDRv6.\n\n0.0.0.0/0 (or ::/0) would forward all packets to the tunnel. If you plan to use the Wireguard VPN as a gateway, you MUST set this IP range.\n\n<server internal IP>/32 (not the server's public IP) would forward all packets to the tunnel with the server IP as the destination. MUST be set.\n\n<VPN IP range> would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other and want the gateway to act as a router.\n\nGo name: \"AllowedIPs\"."
+        },
+        "endpoint": {
+          "$ref": "#/definitions/String",
+          "description": "The peer endpoint.\n\nFormat is IP:port.\n\nThis would be the Wireguard server.\n\nGo name: \"Endpoint\"."
+        },
+        "persistentKeepalive": {
+          "$ref": "#/definitions/Int",
+          "description": "Initiate the handshake and re-initiate regularly.\n\nTakes seconds as parameter. 25 seconds is recommended.\n\nYou MUST set the persistent keepalive to enables UDP hole-punching.\n\nGo name: \"PersistentKeepalive\"."
+        }
+      },
+      "required": ["publicKey"],
+      "description": "A Wireguard Peer."
+    },
+    "Wireguard": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/String"
+          },
+          "description": "The IP addresses of the wireguard interface.\n\nFormat is a CIDRv4 (X.X.X.X/X) or CIDRv6.\n\nRecommendation is to take one IP from the 10.0.0.0/24 range (example: 10.0.0.2/24).\n\nGo name: \"Address\"."
+        },
+        "privateKey": {
+          "$ref": "#/definitions/String",
+          "description": "The client private key.\n\nGo name: \"PrivateKey\"."
+        },
+        "peers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WireguardPeer"
+          },
+          "description": "The peers connected to the wireguard interface.\n\nGo name: \"Peers\"."
+        }
+      },
+      "required": ["privateKey"],
+      "description": "Wireguard VPN Transport for StepRun.\n\nThe Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.\n\nWireguard transport uses UDP hole punching to connect to the VPN Server.\n\nDisabled settings: PreUp, PostUp, PreDown, PostDown, ListenPort, Table, MTU, SaveConfig.\n\nIf these features are necessary, please do contact DeepSquare developpers!"
+    },
+    "Bore": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "$ref": "#/definitions/String",
+          "description": "Bore server IP/Address.\n\nGo name: \"Address\"."
+        },
+        "port": {
+          "$ref": "#/definitions/Int",
+          "description": "The bore server port.\n\nGo name: \"Port\"."
+        },
+        "targetPort": {
+          "$ref": "#/definitions/Int",
+          "description": "Target port.\n\nGo name: \"TargetPort\"."
+        }
+      },
+      "required": ["address", "port", "targetPort"],
+      "description": "jkuri/bore tunnel Transport for StepRun.\n\nBore is a proxy to expose TCP sockets."
+    },
+    "NetworkInterface": {
+      "type": "object",
+      "properties": {
+        "wireguard": {
+          "$ref": "#/definitions/Wireguard",
+          "description": "Use the wireguard transport.\n\nGo name: \"Wireguard\"."
+        },
+        "bore": {
+          "$ref": "#/definitions/Bore",
+          "description": "Use the bore transport.\n\nGo name: \"Bore\"."
+        }
+      },
+      "required": [],
+      "description": "Connect a network interface on a StepRun.\n\nThe network interface is connected via slirp4netns."
+    },
+    "StepRun": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "$ref": "#/definitions/String",
+          "description": "Command specifies a shell script.\n\nIf container is used, command automatically overwrite the ENTRYPOINT and CMD. If you want to execute the entrypoint, it MUST be re-specified.\n\nYou can install and use skopeo to inspect an image without having to pull it.\n\nExample: skopeo inspect --config docker://curlimages/curl:latest will gives \"/entrypoint.sh\" as ENTRYPOINT and \"curl\" as CMD. Therefore command=\"/entrypoint.sh curl\".\n\nGo name: \"Command\"."
+        },
+        "shell": {
+          "$ref": "#/definitions/String",
+          "description": "Shell to use.\n\nAccepted: /bin/bash, /bin/ash, /bin/sh\nDefault: /bin/sh\n\nGo name: \"Shell\"."
+        },
+        "resources": {
+          "$ref": "#/definitions/StepRunResources",
+          "description": "Allocated resources for the command.\n\nGo name: \"Resources\"."
+        },
+        "container": {
+          "$ref": "#/definitions/ContainerRun",
+          "description": "Container definition.\n\nIf null, run on the host.\n\nGo name: \"Container\"."
+        },
+        "network": {
+          "$ref": "#/definitions/String",
+          "description": "Type of core networking functionality.\n\nEither: \"host\" (default) or \"slirp4netns\" (rootless network namespace).\n\nUsing \"slirp4netns\" will automatically enables mapRoot.\n\nGo name: \"Network\"."
+        },
+        "dns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/String"
+          },
+          "description": "Configuration for the DNS in \"slirp4netns\" mode.\n\nONLY enabled if network is \"slirp4netns\".\n\nA comma-separated list of DNS IP.\n\nGo name: \"DNS\"."
+        },
+        "customNetworkInterfaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NetworkInterface"
+          },
+          "description": "Add custom network interfaces.\n\nONLY enabled if network is \"slirp4netns\".\n\nDue to the nature of slirp4netns, the user is automatically mapped as root in order to create network namespaces and add new network interfaces.\n\nThe tunnel interfaces will be named net0, net1, ... netX.\n\nThe default network interface is tap0, which is a TAP interface connecting the host and the network namespace.\n\nGo name: \"CustomNetworkInterfaces\"."
+        },
+        "env": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EnvVar"
+          },
+          "description": "Environment variables accessible over the command.\n\nGo name: \"Env\"."
+        },
+        "mapRoot": {
+          "$ref": "#/definitions/Boolean",
+          "description": "Remap UID to root. Does not grant elevated system permissions, despite appearances.\n\nIf the \"default\" (Enroot) container runtime is used, it will use the `--container-remap-root` flags.\n\nIf the \"apptainer\" container runtime is used, the `--fakeroot` flag will be passed.\n\nIf no container runtime is used, `unshare --user --map-root-user --mount` will be used and a user namespace will be created.\n\nIt is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).\n\nIf null, default to false.\n\nGo name: \"MapRoot\"."
+        },
+        "workDir": {
+          "$ref": "#/definitions/String",
+          "description": "Working directory.\n\nIf the \"default\" (Enroot) container runtime is used, it will use the `--container-workdir` flag.\n\nIf the \"apptainer\" container runtime is used, the `--pwd` flag will be passed.\n\nIf no container runtime is used, `cd` will be executed first.\n\nIf null, default to use $STORAGE_PATH as working directory.\n\nGo name: \"WorkDir\"."
+        },
+        "disableCpuBinding": {
+          "$ref": "#/definitions/Boolean",
+          "description": "DisableCPUBinding disables process affinity binding to tasks.\n\nCan be useful when running MPI jobs.\n\nIf null, defaults to false.\n\nGo name: \"DisableCPUBinding\"."
+        },
+        "mpi": {
+          "$ref": "#/definitions/String",
+          "description": "MPI selection.\n\nMust be one of: none, pmix_v4, pmi2.\n\nIf null, will default to infrastructure provider settings (which may not be what you want).\n\nGo name: \"Mpi\"."
+        }
+      },
+      "required": ["command"],
+      "description": "StepRun is one script executed with the shell.\n\nA temporary shared storage is accessible through the $STORAGE_PATH environment variable.\n\nA shared cache per site is accessible via the $DEEPSQUARE_TMP environment variable. The $DEEPSQUARE_TMP directory is cleared periodically.\n\necho \"KEY=value\" >> \"$DEEPSQUARE_ENV\" can be used to share environment variables between steps.\n\n$DEEPSQUARE_INPUT is the path that contains imported files.\n\n$DEEPSQUARE_OUTPUT is the staging directory for uploading files."
+    },
+    "StepFor": {
+      "type": "object",
+      "properties": {
+        "parallel": {
+          "$ref": "#/definitions/Boolean",
+          "description": "Do a parallel for loop. Each iteration is run in parallel.\n\nGo name: \"Parallel\"."
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/String"
+          },
+          "description": "Item accessible via the {{ .Item }} variable. Index accessible via the $item variable.\n\nExclusive with \"range\".\n\nGo name: \"Items\"."
+        },
+        "range": {
+          "$ref": "#/definitions/ForRange",
+          "description": "Index accessible via the $index variable.\n\nExclusive with \"items\".\n\nGo name: \"Range\"."
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "description": "Steps are run sequentially in one iteration.\n\nGo name: \"Steps\"."
+        }
+      },
+      "required": ["parallel", "steps"],
+      "description": "StepFor describes a for loop."
+    },
+    "ForRange": {
+      "type": "object",
+      "properties": {
+        "begin": {
+          "$ref": "#/definitions/Int",
+          "description": "Begin is inclusive.\n\nGo name: \"Begin\"."
+        },
+        "end": {
+          "$ref": "#/definitions/Int",
+          "description": "End is inclusive.\n\nGo name: \"End\"."
+        },
+        "increment": {
+          "$ref": "#/definitions/Int",
+          "description": "Increment counter by x count. If null, defaults to 1.\n\nGo name: \"Increment\"."
+        }
+      },
+      "required": ["begin", "end"],
+      "description": "ForRange describes the parameter for a range loop."
+    },
+    "StepAsyncLaunch": {
+      "type": "object",
+      "properties": {
+        "handleName": {
+          "$ref": "#/definitions/String",
+          "description": "HandleName is the name used to await (dependsOn field of the Step).\n\nNaming style is snake_case. Case is insensitive. No symbol allowed.\n\nGo name: \"HandleName\"."
+        },
+        "signalOnParentStepExit": {
+          "$ref": "#/definitions/Int",
+          "description": "SignalOnParentStepExit sends a signal to the step and sub-steps when the parent step ends.\n\nThis function can be used as a cleanup function to avoid a zombie process.\n\nZombie processes will continue to run after the main process dies and therefore will not stop the job.\n\nIf null, SIGTERM will be sent. If 0, no signal will be sent.\n\nCurrent signal :\n\n1 SIGHUP Hang-up detected on the control terminal or death of the control process.\n2 SIGINT Abort from keyboard\n3 SIGQUIT Quit the keyboard\n9 SIGKILL If a process receives this signal, it must quit immediately and will not perform any cleaning operations.\n15 SIGTERM Software stop signal\n\nIt is STRONGLY RECOMMENDED to use SIGTERM to gracefully exit a process. SIGKILL is the most abrupt and will certainly work.\n\nIf no signal is sent, the asynchronous step will be considered a fire and forget asynchronous step and will have to terminate itself to stop the job.\n\nWARNING: the \"no signal sent\" option is subject to removal to avoid undefined behavior. Please refrain from using it.\n\nGo name: \"SignalOnParentStepExit\"."
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "description": "Steps are run sequentially.\n\nGo name: \"Steps\"."
+        }
+      },
+      "required": ["steps"],
+      "description": "StepAsyncLaunch describes launching a background process.\n\nStepAsyncLaunch will be awaited at the end of the job."
+    },
+    "ModuleInput": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/String",
+          "description": "Name of the input.\n\nGo name: \"Key\"."
+        },
+        "description": {
+          "$ref": "#/definitions/String",
+          "description": "Description of the input.\n\nGo name: \"Description\"."
+        },
+        "default": {
+          "$ref": "#/definitions/String",
+          "description": "Default value.\n\nIf not set, will default to empty string.\n\nGo name: \"Default\"."
+        }
+      },
+      "required": ["key", "description"]
+    },
+    "ModuleOutput": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/definitions/String",
+          "description": "Name of the output.\n\nGo name: \"Key\"."
+        },
+        "description": {
+          "$ref": "#/definitions/String",
+          "description": "Description of the output.\n\nGo name: \"Description\"."
+        }
+      },
+      "required": ["key", "description"]
+    },
+    "Module": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/String",
+          "description": "Name of the module.\n\nGo name: \"Name\"."
+        },
+        "description": {
+          "$ref": "#/definitions/String",
+          "description": "Description of the module.\n\nGo name: \"Description\"."
+        },
+        "minimumResources": {
+          "$ref": "#/definitions/JobResources",
+          "description": "Minimum job resources.\n\nGo name: \"MinimumResources\"."
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ModuleInput"
+          },
+          "description": "List of allowed arguments.\n\nGo name: \"Inputs\"."
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ModuleOutput"
+          },
+          "description": "List of exported environment variables.\n\nGo name: \"Outputs\"."
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "description": "Steps of the module.\n\nGo name: \"Steps\"."
+        }
+      },
+      "required": ["name", "description", "minimumResources", "steps"],
+      "description": "A module is basically a group of steps.\n\nThe module.yaml file goes through a templating engine first before getting parsed. So some variables are available:\n\n- {{ .Job }} and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.\n- {{ .Step }} and its childs, which represent the Step object using the module. Can be useful if you want the step name.\n\nNotice that the templating follows the Go format. You can also apply sprig templating functions.\n\nTo outputs environment variables, just append KEY=value to the \"${DEEPSQUARE_ENV}\" file."
+    }
+  }
+}
