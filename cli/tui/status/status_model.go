@@ -188,6 +188,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(m.table.SelectedRow()) > 0 {
 				cmds = append(cmds, m.CancelJob(context.TODO(), rowToJobID(m.table.SelectedRow())))
 			}
+		case key.Matches(msg, m.keyMap.OpenLogs):
+			if len(m.table.SelectedRow()) > 0 {
+				cmds = append(cmds, emitSelectJobMsg(rowToJobID(m.table.SelectedRow())))
+			}
 		case key.Matches(msg, m.keyMap.SubmitJob):
 			cmds = append(cmds, emitSubmitJobMsg)
 		case key.Matches(msg, m.keyMap.Exit):
