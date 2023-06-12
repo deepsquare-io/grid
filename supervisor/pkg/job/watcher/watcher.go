@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
@@ -25,6 +26,7 @@ type Watcher struct {
 	sbatch          sbatch.Client
 	pollingTime     time.Duration
 	resourceManager *lock.ResourceManager
+	claimMutex      sync.Mutex
 }
 
 func New(
@@ -121,7 +123,9 @@ func (w *Watcher) Watch(parent context.Context) error {
 
 		// Claim indefinitely
 		case <-queryTicker.C:
-			go w.handleClaimIndefinitely(parent)
+			if w.claimMutex.TryLock() {
+				go w.claimIndefinitely(parent)
+			}
 
 		case err := <-sub.Err():
 			return err
@@ -129,49 +133,30 @@ func (w *Watcher) Watch(parent context.Context) error {
 	}
 }
 
-func (w *Watcher) handleClaimIndefinitely(parent context.Context) {
-	done := make(chan error)
+func (w *Watcher) claimIndefinitely(parent context.Context) {
+	defer w.claimMutex.Unlock()
 	ctx, cancel := context.WithTimeout(parent, claimJobMaxTimeout)
 	defer cancel()
 
-	go func(ctx context.Context) {
-		// One shot
-		defer close(done)
+	// Slurm healthcheck first
+	if err := w.scheduler.HealthCheck(ctx); err != nil {
+		logger.I.Error("failed healthcheck", zap.Error(err))
+		return
+	}
 
-		// Slurm healthcheck first
-		if err := w.scheduler.HealthCheck(ctx); err != nil {
-			done <- err
-			return
-		}
+	if err := w.metascheduler.Claim(ctx); err != nil {
+		logger.I.Error("failed to claim a job", zap.Error(err))
+		return
+	}
 
-		if err := w.metascheduler.Claim(ctx); err != nil {
-			logger.I.Info("failed to claim a job", zap.Error(err))
-			done <- err
-			return
-		}
+	if err := w.metascheduler.ClaimCancelling(ctx); err != nil {
+		logger.I.Error("failed to claim cancelling job", zap.Error(err))
+		return
+	}
 
-		if err := w.metascheduler.ClaimCancelling(ctx); err != nil {
-			logger.I.Info("failed to claim cancelling job", zap.Error(err))
-			done <- err
-			return
-		}
-
-		if err := w.metascheduler.ClaimTopUp(ctx); err != nil {
-			logger.I.Info("failed to claim topup job", zap.Error(err))
-			done <- err
-			return
-		}
-	}(ctx)
-
-	// Await for the claim response
-	select {
-	case err := <-done:
-		if err != nil {
-			logger.I.Error("ClaimIndefinitely failed", zap.Error(err))
-		}
-
-	case <-ctx.Done():
-		logger.I.Warn("ClaimIndefinitely context closed", zap.Error(ctx.Err()))
+	if err := w.metascheduler.ClaimTopUp(ctx); err != nil {
+		logger.I.Error("failed to claim topup job", zap.Error(err))
+		return
 	}
 }
 

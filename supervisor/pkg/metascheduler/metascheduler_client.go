@@ -161,6 +161,10 @@ func (c *Client) Claim(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
+	_, err = bind.WaitMined(ctx, c, tx)
+	if err != nil {
+		return WrapError(err)
+	}
 	logger.I.Debug("called ClaimNextJob", zap.String("tx", tx.Hash().String()))
 
 	return nil
@@ -381,6 +385,10 @@ func (c *Client) ClaimCancelling(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
+	_, err = bind.WaitMined(ctx, c, tx)
+	if err != nil {
+		return WrapError(err)
+	}
 	logger.I.Debug("called ClaimNextCancellingJob", zap.String("tx", tx.Hash().String()))
 
 	return nil
@@ -406,6 +414,10 @@ func (c *Client) ClaimTopUp(ctx context.Context) error {
 	}
 
 	tx, err := c.contractRPC.ClaimNextTopUpJob(auth)
+	if err != nil {
+		return WrapError(err)
+	}
+	_, err = bind.WaitMined(ctx, c, tx)
 	if err != nil {
 		return WrapError(err)
 	}
