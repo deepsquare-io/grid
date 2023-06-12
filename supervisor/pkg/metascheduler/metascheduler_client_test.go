@@ -179,6 +179,8 @@ func (suite *ClientTestSuite) TestClaim() {
 		[]interface{}{true},
 	)
 	suite.mockContractTransaction("claimNextJob")
+	// Must wait
+	suite.deployBackend.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, nil)
 
 	// Act
 	err := suite.impl.Claim(context.Background())
@@ -293,6 +295,8 @@ func (suite *ClientTestSuite) TestClaimCancelling() {
 		[]interface{}{true},
 	)
 	suite.mockContractTransaction("claimNextCancellingJob")
+	// Must wait
+	suite.deployBackend.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, nil)
 
 	// Act
 	err := suite.impl.ClaimCancelling(context.Background())
@@ -311,6 +315,8 @@ func (suite *ClientTestSuite) TestClaimTopUp() {
 		[]interface{}{true},
 	)
 	suite.mockContractTransaction("claimNextTopUpJob")
+	// Must wait
+	suite.deployBackend.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, nil)
 
 	// Act
 	err := suite.impl.ClaimTopUp(context.Background())
