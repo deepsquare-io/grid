@@ -3,6 +3,9 @@ package lock
 import (
 	"fmt"
 	"sync"
+
+	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"go.uber.org/zap"
 )
 
 type ResourceManager struct {
@@ -17,24 +20,26 @@ func NewResourceManager() *ResourceManager {
 }
 
 func (rm *ResourceManager) Lock(name string) {
+	logger.I.Debug("locking...", zap.String("name", name))
 	rm.mutex.Lock()
-	defer rm.mutex.Unlock()
-
 	lock, ok := rm.locks[name]
 	if !ok {
 		lock = &sync.Mutex{}
 		rm.locks[name] = lock
 	}
+	rm.mutex.Unlock()
 	lock.Lock()
+	logger.I.Debug("locked", zap.String("name", name))
 }
 
 func (rm *ResourceManager) Unlock(name string) {
+	logger.I.Debug("unlocking...", zap.String("name", name))
 	rm.mutex.Lock()
-	defer rm.mutex.Unlock()
-
 	lock, ok := rm.locks[name]
 	if !ok {
 		panic(fmt.Sprintf("Unlock called on non-existing lock: %s", name))
 	}
+	rm.mutex.Unlock()
 	lock.Unlock()
+	logger.I.Debug("unlocked", zap.String("name", name))
 }

@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/graph"
+	"github.com/deepsquare-io/the-grid/cli/internal/graphql"
 )
 
 type Service interface {
@@ -44,7 +44,7 @@ func (s *service) Submit(ctx context.Context, content string) (string, error) {
 		return "", fmt.Errorf("failed to decode job: %w", err)
 	}
 
-	r := graph.Request{
+	r := graphql.Request{
 		Query: submitMutation,
 		Variables: map[string]interface{}{
 			"job": job,
@@ -80,7 +80,7 @@ func (s *service) Submit(ctx context.Context, content string) (string, error) {
 		)
 	}
 
-	var result graph.Response[submitResponseData]
+	var result graphql.Response[submitResponseData]
 	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", err
 	}

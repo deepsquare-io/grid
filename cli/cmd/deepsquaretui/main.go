@@ -11,10 +11,10 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/gridlogger"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/sbatch"
+	"github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/logger"
+	"github.com/deepsquare-io/the-grid/cli/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/sbatch"
 	"github.com/deepsquare-io/the-grid/cli/tui/nav"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -89,7 +89,7 @@ var flags = []cli.Flag{
 		Destination: &debug,
 		Action: func(ctx *cli.Context, b bool) error {
 			if b {
-				logger.EnableDebug()
+				log.EnableDebug()
 			}
 			return nil
 		},
@@ -98,7 +98,7 @@ var flags = []cli.Flag{
 }
 
 var app = &cli.App{
-	Name:    "dps",
+	Name:    "deepsquaretui",
 	Version: version,
 	Usage:   "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
 	Flags:   flags,
@@ -108,7 +108,7 @@ var app = &cli.App{
 		// Load the system CA certificates
 		caCertPool, err := x509.SystemCertPool()
 		if err != nil {
-			logger.I.Warn("failed to load system CA certificates", zap.Error(err))
+			log.I.Warn("failed to load system CA certificates", zap.Error(err))
 			caCertPool = x509.NewCertPool()
 		}
 		tlsConfig := &tls.Config{
@@ -120,6 +120,7 @@ var app = &cli.App{
 			},
 		}
 
+		// Start instenciating ethereum services
 		address := common.HexToAddress(metaschedulerSmartContract)
 		rpcClient, err := rpc.DialOptions(ctx, ethEndpointRPC, rpc.WithHTTPClient(client))
 		if err != nil {
@@ -135,24 +136,61 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
-		sbatch := sbatch.NewService(http.DefaultClient, sbatchEndpoint)
-		rpc, err := metascheduler.NewRPC(address, ethClientRPC, big.NewInt(179188), pk, sbatch)
+		metaschedulerRPC := metascheduler.Client{
+			MetaschedulerAddress: address,
+			ChainID:              big.NewInt(179188),
+			EthereumBackend:      ethClientRPC,
+			UserPrivateKey:       pk,
+		}
+		fetcher, err := metascheduler.NewJobFetcher(metaschedulerRPC)
 		if err != nil {
 			return err
 		}
-		ws, err := metascheduler.NewWS(address, ethClientWS, big.NewInt(179188), pk)
+		sbatch := sbatch.NewService(client, sbatchEndpoint)
+		jobScheduler, err := metascheduler.NewJobScheduler(metaschedulerRPC, sbatch)
 		if err != nil {
 			return err
 		}
+		credits, err := metascheduler.NewCreditManager(ctx, metaschedulerRPC)
+		if err != nil {
+			return err
+		}
+		allowance, err := metascheduler.NewAllowanceManager(ctx, metaschedulerRPC)
+		if err != nil {
+			return err
+		}
+		metaschedulerWS := metascheduler.Client{
+			MetaschedulerAddress: address,
+			ChainID:              big.NewInt(179188),
+			EthereumBackend:      ethClientWS,
+			UserPrivateKey:       pk,
+		}
+		eventSubscriber, err := metascheduler.NewEventSubscriber(metaschedulerWS)
+		if err != nil {
+			return err
+		}
+		watcher, err := metascheduler.NewJobFilterer(metaschedulerWS)
+		if err != nil {
+			return err
+		}
+		creditWatcher, err := metascheduler.NewCreditFilterer(ctx, metaschedulerWS, credits)
+		if err != nil {
+			return err
+		}
+		allowanceWatcher, err := metascheduler.NewAllowanceFilterer(ctx, metaschedulerWS, allowance)
+		if err != nil {
+			return err
+		}
+
+		// Start watching logs
 		dialOptions := []grpc.DialOption{
 			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
 		}
 		u, err := url.Parse(loggerEndpoint)
 		if err != nil {
-			logger.I.Error("Failed to parse URL", zap.Error(err))
+			log.I.Error("Failed to parse URL", zap.Error(err))
 			return err
 		}
-
 		port := u.Port()
 		if port == "" {
 			// If the URL doesn't explicitly specify a port, use the default port for the scheme.
@@ -162,32 +200,34 @@ var app = &cli.App{
 			case "https":
 				port = "443"
 			default:
-				logger.I.Fatal("Unknown scheme for logger URL", zap.String("scheme", u.Scheme))
+				log.I.Fatal("Unknown scheme for logger URL", zap.String("scheme", u.Scheme))
 			}
 		}
-		l, conn, err := gridlogger.DialContext(
-			ctx,
+		logDialer := logger.NewDialer(
 			net.JoinHostPort(u.Hostname(), port),
 			pk,
 			dialOptions...,
 		)
-		if err != nil {
-			return err
-		}
-		defer conn.Close()
-		_, err = tea.NewProgram(
-			nav.Model(
-				ctx,
-				crypto.PubkeyToAddress(pk.PublicKey),
-				rpc,
-				ws,
-				l,
-				version,
-				metaschedulerSmartContract,
-			),
+		navModel := nav.Model(
+			ctx,
+			crypto.PubkeyToAddress(pk.PublicKey),
+			eventSubscriber,
+			fetcher,
+			watcher,
+			jobScheduler,
+			creditWatcher,
+			allowanceWatcher,
+			logDialer,
+			version,
+			metaschedulerSmartContract,
+		)
+		program := tea.NewProgram(
+			navModel,
 			tea.WithContext(ctx),
 			tea.WithAltScreen(),
-		).Run()
+		)
+		navModel.SetProgram(program)
+		_, err = program.Run()
 		return err
 	},
 }
@@ -196,6 +236,6 @@ func main() {
 	_ = godotenv.Load(".env.local")
 	_ = godotenv.Load(".env")
 	if err := app.Run(os.Args); err != nil {
-		logger.I.Fatal("app crashed", zap.Error(err))
+		log.I.Fatal("app crashed", zap.Error(err))
 	}
 }

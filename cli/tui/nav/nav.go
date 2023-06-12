@@ -3,43 +3,126 @@ package nav
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	_ "embed"
 
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli"
+	"github.com/deepsquare-io/the-grid/cli/internal/ether"
+	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
+	"github.com/deepsquare-io/the-grid/cli/logger"
+	"github.com/deepsquare-io/the-grid/cli/tui/editor"
 	"github.com/deepsquare-io/the-grid/cli/tui/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/status"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/the-grid/cli/tui/util"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type model struct {
-	showLog              bool
-	isFocusedOnLogs      bool
 	version              string
 	metaschedulerAddress string
+	logs                 chan types.Log
+	balance              *big.Int
+	balanceChan          chan *big.Int
+	allowance            *big.Int
+	allowanceChan        chan *big.Int
 
-	help help.Model
 	// logModel is nullable
 	logModel    tea.Model
 	statusModel tea.Model
+	program     *tea.Program
 
-	logger      deepsquare.Logger
-	userAddress common.Address
-	keymap      keymap
+	eventSubscriber   cli.EventSubscriber
+	creditFilterer    cli.CreditFilterer
+	allowanceFilterer cli.AllowanceFilterer
+	logDialer         logger.Dialer
+	userAddress       common.Address
 }
 
-type keymap = struct {
-	next key.Binding
+func (m *model) SetProgram(p *tea.Program) {
+	m.program = p
+}
+
+type balanceMsg *big.Int
+type allowanceMsg *big.Int
+
+type editorDone struct{}
+
+func (m *model) watchEvents(
+	ctx context.Context,
+) tea.Cmd {
+	return func() tea.Msg {
+		sub, err := m.eventSubscriber.SubscribeEvents(ctx, m.logs)
+		if err != nil {
+			internallog.I.Fatal(err.Error())
+		}
+		defer sub.Unsubscribe()
+		transfers, rest := m.creditFilterer.FilterTransfer(ctx, m.logs)
+		approvals, rest := m.allowanceFilterer.FilterApproval(ctx, rest)
+
+		balances, err := m.creditFilterer.ReduceToBalance(ctx, transfers)
+		if err != nil {
+			internallog.I.Fatal(err.Error())
+		}
+		allowances, err := m.allowanceFilterer.ReduceToAllowance(ctx, approvals)
+		if err != nil {
+			internallog.I.Fatal(err.Error())
+		}
+		go util.IgnoreElements(rest)
+
+		for {
+			select {
+			case balance := <-balances:
+				select {
+				case m.balanceChan <- balance:
+				case <-ctx.Done():
+					return nil
+				}
+			case allowance := <-allowances:
+				select {
+				case m.allowanceChan <- allowance:
+				case <-ctx.Done():
+					return nil
+				}
+
+			case <-ctx.Done():
+				return nil
+			}
+		}
+	}
+}
+
+func (m *model) openEditor(ctx context.Context) tea.Cmd {
+	return func() tea.Msg {
+		_, err := editor.Open(ctx)
+		if err != nil {
+			panic(err.Error())
+		}
+		fmt.Println("result is not yet handled")
+		return editorDone{}
+	}
+}
+
+func (m *model) tick() tea.Msg {
+	select {
+	case balance := <-m.balanceChan:
+		return balanceMsg(balance)
+	case allowance := <-m.allowanceChan:
+		return allowanceMsg(allowance)
+	}
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	// TODO: handle termination
+	return tea.Batch(
+		m.statusModel.Init(),
+		m.watchEvents(context.TODO()),
+		m.tick,
+	)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -51,7 +134,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.isFocusedOnLogs && m.logModel != nil {
+		if m.logModel != nil {
 			m.logModel, lCmd = m.logModel.Update(msg)
 			cmds = append(cmds, lCmd)
 		} else {
@@ -59,19 +142,36 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, sCmd)
 		}
 		switch {
-		case key.Matches(msg, m.keymap.next):
-			if m.logModel != nil {
-				m.isFocusedOnLogs = !m.isFocusedOnLogs
-			}
-		case msg.Type == tea.KeyCtrlC, msg.Type == tea.KeyEsc, msg.String() == "q":
+		case msg.Type == tea.KeyCtrlC:
 			return m, tea.Quit
 		}
 	case status.SelectJobMsg:
-		m.showLog = true
-
 		// Render job logs
-		m.logModel = log.Model(m.logger, m.userAddress, msg)
+		m.logModel = log.Model(context.TODO(), m.logDialer, m.userAddress, msg)
 		cmds = append(cmds, m.logModel.Init())
+	case status.SubmitJobMsg:
+		err := m.program.ReleaseTerminal()
+		if err != nil {
+			fmt.Println(err)
+		}
+		cmds = append(
+			cmds,
+			m.openEditor(context.TODO()),
+		)
+	case editorDone:
+		err := m.program.RestoreTerminal()
+		if err != nil {
+			fmt.Println(err)
+		}
+	case log.ExitMsg:
+		_, _ = m.logModel.Update(msg)
+		m.logModel = nil
+	case balanceMsg:
+		m.balance = msg
+		cmds = append(cmds, m.tick)
+	case allowanceMsg:
+		m.allowance = msg
+		cmds = append(cmds, m.tick)
 	default:
 		if m.logModel != nil {
 			m.logModel, lCmd = m.logModel.Update(msg)
@@ -87,53 +187,77 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 //go:embed title.txt
 var titlePixelArt string
 
-func (m model) View() string {
-	help := m.help.ShortHelpView([]key.Binding{
-		m.keymap.next,
-	})
+var labels = lipgloss.NewStyle().PaddingRight(2).Render(`Version:
+User Address:
+Smart-Contract Address:
+Current balance:
+Allowance:`)
 
+func (m model) View() string {
 	var navView string
-	if m.showLog && m.logModel != nil {
-		navView = lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			m.statusModel.View(),
-			style.LeftVerticalSeparator.Render(m.logModel.View()),
-		)
+	if m.logModel != nil {
+		navView = m.logModel.View()
 	} else {
 		navView = m.statusModel.View()
 	}
-	info := style.Foreground.Render(
-		fmt.Sprintf(`Version: %s
-User Address: %s
-Smart-Contract Address: %s`,
-			m.version,
-			m.userAddress,
-			m.metaschedulerAddress,
+
+	values := fmt.Sprintf(`%s
+%s
+%s
+%s creds (%s wei)
+%s creds (%s wei)`,
+		m.version,
+		m.userAddress,
+		m.metaschedulerAddress,
+		ether.FromWei(m.balance).String(),
+		m.balance,
+		ether.FromWei(m.allowance).String(),
+		m.allowance,
+	)
+	info := style.Box.Render(
+		lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			labels,
+			values,
 		),
 	)
-	return style.Foreground.Render(titlePixelArt) + "\n" + info + "\n" + navView + "\n\n" + help
+
+	return style.Foreground.Render(titlePixelArt) + "\n" + info + "\n" + navView
 }
 
 func Model(
 	ctx context.Context,
 	userAddress common.Address,
-	rpc metascheduler.RPC,
-	ws metascheduler.WS,
-	logger deepsquare.Logger,
+	eventSubscriber cli.EventSubscriber,
+	jobFetcher cli.JobFetcher,
+	jobFilterer cli.JobFilterer,
+	jobScheduler cli.JobScheduler,
+	creditFilterer cli.CreditFilterer,
+	allowanceFilterer cli.AllowanceFilterer,
+	logDialer logger.Dialer,
 	version string,
 	metaschedulerAddress string,
-) tea.Model {
-	return model{
-		statusModel: status.Model(ctx, rpc, ws, userAddress),
-		logger:      logger,
-		userAddress: userAddress,
-		help:        help.New(),
-		keymap: keymap{
-			next: key.NewBinding(
-				key.WithKeys("tab"),
-				key.WithHelp("tab", "change focus"),
-			),
-		},
+) *model {
+	return &model{
+		logs:          make(chan types.Log, 100),
+		balanceChan:   make(chan *big.Int, 10),
+		balance:       new(big.Int),
+		allowanceChan: make(chan *big.Int, 10),
+		allowance:     new(big.Int),
+
+		statusModel: status.Model(
+			ctx,
+			eventSubscriber,
+			jobFetcher,
+			jobFilterer,
+			jobScheduler,
+			userAddress,
+		),
+		logDialer:            logDialer,
+		userAddress:          userAddress,
+		eventSubscriber:      eventSubscriber,
+		creditFilterer:       creditFilterer,
+		allowanceFilterer:    allowanceFilterer,
 		version:              version,
 		metaschedulerAddress: metaschedulerAddress,
 	}

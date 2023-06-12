@@ -1,119 +1,81 @@
 package log
 
 import (
-	"context"
-	"errors"
 	"fmt"
-	"io"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	"github.com/deepsquare-io/the-grid/cli/logger"
-	"github.com/ethereum/go-ethereum/common"
-	"go.uber.org/zap"
+	"github.com/deepsquare-io/the-grid/cli/tui/channel"
 )
 
-type logMsg struct {
-	timestamp time.Time
-	message   string
+// ExitMsg msg closes to log model
+type ExitMsg struct{}
+
+func emitExitMsg() tea.Msg {
+	return ExitMsg{}
 }
 
 type model struct {
-	viewport viewport.Model
-	spinner  spinner.Model
-	messages []string
-	logs     []logMsg
-	logsChan chan logMsg
-	title    string
+	viewport  viewport.Model
+	spinner   spinner.Model
+	messages  *strings.Builder
+	logs      []logMsg
+	watchLogs channel.Model[logMsg]
+	title     string
 
 	showTimestamp bool
-
-	logger      deepsquare.Logger
-	userAddress common.Address
-	jobID       [32]byte
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func (m *model) watchLogs(
-	ctx context.Context,
-) tea.Cmd {
-	return func() tea.Msg {
-		stream, err := m.logger.WatchLogs(ctx, m.jobID)
-		if err != nil {
-			logger.I.Error("failed to get logs", zap.Error(err))
-			return nil
-		}
-		defer stream.CloseSend()
-		for {
-			req, err := stream.Recv()
-			if err == io.EOF || errors.Is(err, context.Canceled) {
-				// TODO: handle closure
-				logger.I.Info("logs closed", zap.Error(err))
-				return nil
-			}
-			if err != nil {
-				logger.I.Error("failed to get logs", zap.Error(err))
-				return nil
-			}
-			select {
-			case m.logsChan <- logMsg{
-				timestamp: time.Unix(0, req.GetTimestamp()),
-				message:   string(req.GetData()),
-			}:
-			case <-ctx.Done():
-				// Context canceled. This is not an error.
-				return nil
-			}
-		}
-	}
-}
-
-func (m *model) tickLog() tea.Msg {
-	return logMsg(<-m.logsChan)
 }
 
 func (m model) Init() tea.Cmd {
+	// TODO: handle termination
 	return tea.Batch(
-		m.watchLogs(context.Background()),
-		m.tickLog,
+		m.watchLogs.Init(),
 		m.spinner.Tick,
 	)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
-		vpCmd tea.Cmd
-		sCmd  tea.Cmd
-		cmds  = make([]tea.Cmd, 0)
+		vpCmd    tea.Cmd
+		sCmd     tea.Cmd
+		lChanCmd tea.Cmd
+		cmds     = make([]tea.Cmd, 0)
 	)
 
 	m.viewport, vpCmd = m.viewport.Update(msg)
-	cmds = append(cmds, vpCmd)
-	m.spinner, sCmd = m.spinner.Update(msg)
-	cmds = append(cmds, sCmd)
+	if vpCmd != nil {
+		cmds = append(cmds, vpCmd)
+	}
+	m.watchLogs, lChanCmd = m.watchLogs.Update(msg)
+	if lChanCmd != nil {
+		cmds = append(cmds, lChanCmd)
+	}
 
 	switch msg := msg.(type) {
+	case spinner.TickMsg:
+		m.spinner, sCmd = m.spinner.Update(msg)
+		if sCmd != nil {
+			cmds = append(cmds, sCmd)
+		}
+	case ExitMsg:
+		cmds = append(cmds, m.watchLogs.Dispose)
 	case logMsg:
 		m.logs = append(m.logs, msg)
 		if m.showTimestamp {
-			m.messages = append(m.messages, fmt.Sprintf("%s: %s", msg.timestamp, msg.message))
+			m.messages.WriteString(fmt.Sprintf("\n%s: %s", msg.timestamp, msg.message))
 		} else {
-			m.messages = append(m.messages, msg.message)
+			m.messages.WriteString("\n" + msg.message)
 		}
 
-		m.viewport.SetContent(strings.Join(m.messages, "\n"))
+		m.viewport.SetContent(m.messages.String())
 		m.viewport.GotoBottom()
-		cmds = append(cmds, m.tickLog)
+	case tea.KeyMsg:
+		switch {
+		case msg.Type == tea.KeyEscape, msg.String() == "q":
+			cmds = append(cmds, emitExitMsg)
+		}
 	}
 	return m, tea.Batch(cmds...)
 }

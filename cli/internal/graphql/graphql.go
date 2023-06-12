@@ -1,4 +1,4 @@
-package graph
+package graphql
 
 import "github.com/vektah/gqlparser/v2/gqlerror"
 

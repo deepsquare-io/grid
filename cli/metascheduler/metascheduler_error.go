@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
-	errorsabi "github.com/deepsquare-io/the-grid/cli/deepsquare/generated/abi/errors"
+	errorsabi "github.com/deepsquare-io/the-grid/cli/internal/abi/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -579,6 +579,10 @@ func init() {
 }
 
 func WrapError(originalErr error) (newErr error) {
+	if originalErr == nil {
+		return nil
+	}
+
 	// Check if it's an RPC error
 	var target rpc.DataError
 	if ok := errors.As(originalErr, &target); !ok {

@@ -1,11 +1,11 @@
-package deepsquare
+package cli
 
 import (
 	"context"
 	"math/big"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/deepsquare/generated/abi/metascheduler"
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/deepsquare/generated/logger/v1alpha1"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
+	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/internal/logger/v1alpha1"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -16,8 +16,7 @@ type LogStream loggerv1alpha1.LoggerAPI_ReadClient
 
 // Job represents a job object in the smart-contract.
 type Job struct {
-	//lint:ignore ST1003 no need to write ID instead of as we map to the metascheduler structure
-	JobId            [32]byte
+	JobID            [32]byte
 	Status           uint8
 	CustomerAddr     common.Address
 	ProviderAddr     common.Address
@@ -47,6 +46,8 @@ type JobScheduler interface {
 	) ([32]byte, error)
 	// Cancel a job.
 	CancelJob(ctx context.Context, jobID [32]byte) error
+	// TopUp a job.
+	TopUpJob(ctx context.Context, jobID [32]byte, amount *big.Int) error
 }
 
 // JobLazyIterator iterates on a lazy list of jobs.
@@ -69,10 +70,14 @@ type JobFetcher interface {
 	GetJobs(ctx context.Context) (JobLazyIterator, error)
 }
 
-// JobWatcher watches smart-contract events.
-type JobWatcher interface {
+// EventSubscriber watches smart-contract events.
+type EventSubscriber interface {
 	// Subscribe to metascheduler events.
 	SubscribeEvents(ctx context.Context, ch chan<- types.Log) (ethereum.Subscription, error)
+}
+
+// JobFilterer watches smart-contract events.
+type JobFilterer interface {
 	// Filter new job requests events.
 	FilterNewJobRequests(
 		ch <-chan types.Log,
@@ -81,6 +86,26 @@ type JobWatcher interface {
 	FilterJobTransition(
 		ch <-chan types.Log,
 	) (filtered <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, rest <-chan types.Log)
+}
+
+// CreditManager handles the credits of the user.
+type CreditManager interface {
+	// Balance fetches the current balance of credits.
+	Balance(ctx context.Context) (*big.Int, error)
+}
+
+// CreditFilterer handles the credits of the user.
+type CreditFilterer interface {
+	// Filter transfer events.
+	FilterTransfer(
+		ctx context.Context,
+		ch <-chan types.Log,
+	) (filtered <-chan *metaschedulerabi.IERC20Transfer, rest <-chan types.Log)
+	// Balance watches the current balance of credits.
+	ReduceToBalance(
+		ctx context.Context,
+		transfers <-chan *metaschedulerabi.IERC20Transfer,
+	) (<-chan *big.Int, error)
 }
 
 // AllowanceManager set the allowed quantity of credit for smart-contract interactions.
@@ -93,4 +118,19 @@ type AllowanceManager interface {
 
 	// Get the current allowance toward the contract.
 	GetAllowance(ctx context.Context) (*big.Int, error)
+}
+
+// AllowanceFilterer watches the allowed quantity of credit for smart-contract interactions.
+type AllowanceFilterer interface {
+	// Filter transfer events.
+	FilterApproval(
+		ctx context.Context,
+		ch <-chan types.Log,
+	) (filtered <-chan *metaschedulerabi.IERC20Approval, rest <-chan types.Log)
+
+	// Get the current allowance toward the contract.
+	ReduceToAllowance(
+		ctx context.Context,
+		approvals <-chan *metaschedulerabi.IERC20Approval,
+	) (<-chan *big.Int, error)
 }
