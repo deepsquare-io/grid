@@ -1,27 +1,25 @@
 ---
-title: 'Part 4: Taking advantage of MPI'
+title: 'Part 5: Real use case: Machine Learning'
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Taking advantage of MPI
+# Real use case: Machine Learning
+
+Welcome to the fifth part of our tutorial series. After getting comfortable with running basic HPC tasks on the DeepSquare platform, we're now ready to delve into more advanced features. In this tutorial, we'll be harnessing the full potential of our supercomputers through **multi-node distributed training**, powered by [MPI](https://fr.wikipedia.org/wiki/Message_Passing_Interface) and [Horovod](https://github.com/horovod/horovod).
 
 ## MPI and DeepSquare
 
-Since DeepSquare is primarily made up of an ecosystem of supercomputers, it would be a waste not to utilize the parallelization capabilities of these clusters.
+DeepSquare leverages the power of supercomputers, primarily designed for robust high-performance computing tasks, to handle complex and data-intensive deep learning models. These supercomputers, different from standard cloud servers, utilize specialized hardware like GPUs or TPUs and parallel processing techniques for optimal performance.
 
-Compared to the standard servers you may see in the cloud, supercomputers are designed for high-performance computing tasks and can handle much larger and more complex deep learning models with much larger datasets. Supercomputers often use specialized hardware, such as GPUs or TPUs, and parallel processing techniques to achieve maximum performance, while servers may rely on standard CPUs or GPUs. Supercomputers are used for large-scale deep neural network training and inference, while servers are typically used for smaller-scale deep learning tasks, such as training on moderately sized datasets or inferring on pre-trained models.
-
-Message Passing Interface (MPI), is a communication protocol commonly used on supercomputers to allow different processors and nodes to exchange data and coordinate their work during parallel computing tasks. There are several reasons why MPI is used on supercomputers: it is scalable, flexible, and optimized for high-performance computing tasks, providing low-latency, high-bandwidth communication between processors.
-
-MPI is a key tool for achieving high-performance parallel computing on supercomputers, and its flexibility, scalability, and performance make it an essential component of many scientific and engineering applications.
+A critical enabler of this high-performance parallel computing is the Message Passing Interface (MPI). This communication protocol, extensively used in supercomputers, facilitates data exchange and coordination between different processors and nodes during parallel computing tasks. The unique advantages of MPI include scalability, flexibility, low-latency, and high-bandwidth communication, making it an integral component of DeepSquare's ecosystem and many scientific and engineering applications.
 
 ## Adapting the ML example for multi-node distributed training
 
-We can use [Horovod](https://horovod.ai/) to add multi-process parallelization. We have to add:
+To distribute the training of our machine learning models across multiple nodes, we'll be leveraging [Horovod](https://horovod.ai/), an open-source tool designed for distributed training of deep learning models. Here's how we can adapt our code:
 
-1. The initialization of Horovod:
+1. **Initialize Horovod:** Begin by initializing Horovod at the start of your script with:
 
    ```python
    hvd.init()
@@ -29,25 +27,27 @@ We can use [Horovod](https://horovod.ai/) to add multi-process parallelization. 
 
    at the initialization of the script.
 
-2. Pin one GPU per process and set the devices to horovod local ranks:
+2. **Assign a GPU per process:** Check if a GPU is available and assign one to each process using `hvd.local_rank()`
 
    ```python
    if torch.cuda.is_available():
        torch.cuda.set_device(hvd.local_rank())
    ```
 
-3. Wrap the optimizer using `hvd.DistributedOptimizer`.
+3. **Wrap the optimizer:** Use the `hvd.DistributedOptimizer` to wrap your optimizer.
 
-4. Broadcast the initial variable states from rank 0 to all other processes:
+4. **Broadcast the initial variable states:** Ensure all processes are on the same page by broadcasting the initial variable states from rank 0 to all other processes.
 
    ```python
    hvd.broadcast_parameters(model.state_dict(), root_rank=0)
    hvd.broadcast_optimizer_state(optimizer, root_rank=0)
    ```
 
-5. Modify your code to save checkpoints only on worker 0 to prevent other workers from corrupting them.
+5. **Save checkpoints on worker 0 only:** Modify your code to save checkpoints only on **worker 0** to prevent potential corruption from other workers.
 
-Since we must pin one GPU per process, we change the resource **allocation** and **usage**.
+As we allocate a GPU per process, the resource **allocation** and **usage** will change accordingly.
+
+Now, let's look at how to incorporate these changes in different types of workflows:
 
 <Tabs groupId="workflow-type">
   <TabItem value="new" label="Workflow">
@@ -108,6 +108,8 @@ Since we must pin one GPU per process, we change the resource **allocation** and
 
   </TabItem>
   <TabItem value="resume" label="Workflow (from checkpoint)">
+
+If you're resuming from a checkpoint, here's the workflow configuration:
 
 ```json title="Workflow with 2 tasks and 1 GPU per task (from checkpoint)"
 {
@@ -181,7 +183,7 @@ Since we must pin one GPU per process, we change the resource **allocation** and
   </TabItem>
 </Tabs>
 
-And that's it! With Horovod, you can use the whole cluster to accelerate your HPC workload!
+Congrats! You've now learned how to supercharge your HPC workloads with MPI and Horovod on DeepSquare.
 
 The performance of HPC clusters heavily depends on the effectiveness of the message passing interface (MPI) utilized to distribute tasks across the nodes. DeepSquare offers a decentralized network of HPC clusters, eliminating the need to maintain personal infrastructure, while providing an efficient MPI-based communication framework to enable seamless distributed computing.
 
