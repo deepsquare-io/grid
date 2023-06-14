@@ -57,6 +57,17 @@ const config = {
           'https://github.com/deepsquare-io/the-grid/tree/main/deepsquare-grid/',
       },
     ],
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'blockchain',
+        path: 'blockchain',
+        routeBasePath: 'blockchain',
+        sidebarPath: require.resolve('./sidebars.js'),
+        editUrl:
+          'https://github.com/deepsquare-io/the-grid/tree/main/blockchain/',
+      },
+    ],
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
@@ -84,6 +95,11 @@ const config = {
           {
             href: '/deepsquare-grid/join/overview',
             label: 'Infrastructure Documentation',
+            position: 'left',
+          },
+          {
+            href: '/blockchain/introduction/overview',
+            label: 'Blockchain Documentation',
             position: 'left',
           },
           {
