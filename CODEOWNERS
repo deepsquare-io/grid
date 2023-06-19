@@ -13,7 +13,7 @@ cli/ @Darkness4 @Lymnah
 # Microservices
 sbatch-services/ @Darkness4
 avalanche-subnet/ @efelem
-oracle-scheduler/ @efelem @Lymnah
+meta-scheduler/ @Darkness4 @efelem @Lymnah
 
 # Cluster-side
 provider-job-completion-plugin/ @Darkness4

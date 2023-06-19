@@ -46,7 +46,6 @@ flowchart LR
       sbatch-service
       grid-logger-server
       meta-scheduler
-      oracle-scheduler
     end
   end
 
@@ -60,7 +59,6 @@ flowchart LR
   protos/supervisorapis --> provider-job-completion-plugin
   protos/supervisorapis --> provider-spank-plugin
   smart-contracts --> meta-scheduler
-  smart-contracts --> oracle-scheduler
   smart-contracts --> ldap-connector
   smart-contracts --> supervisor
 ```

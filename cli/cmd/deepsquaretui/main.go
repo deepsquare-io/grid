@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"math/big"
 	"net"
 	"net/http"
 	"net/url"
@@ -136,9 +135,13 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
+		chainID, err := ethClientRPC.ChainID(ctx)
+		if err != nil {
+			return err
+		}
 		metaschedulerRPC := metascheduler.Client{
 			MetaschedulerAddress: address,
-			ChainID:              big.NewInt(179188),
+			ChainID:              chainID,
 			EthereumBackend:      ethClientRPC,
 			UserPrivateKey:       pk,
 		}
@@ -161,7 +164,7 @@ var app = &cli.App{
 		}
 		metaschedulerWS := metascheduler.Client{
 			MetaschedulerAddress: address,
-			ChainID:              big.NewInt(179188),
+			ChainID:              chainID,
 			EthereumBackend:      ethClientWS,
 			UserPrivateKey:       pk,
 		}
