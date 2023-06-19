@@ -6,7 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.4
-	github.com/urfave/cli/v2 v2.25.6
+	github.com/urfave/cli/v2 v2.25.7
 	github.com/vektra/mockery/v2 v2.30.1
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.10.0
