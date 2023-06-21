@@ -38,6 +38,8 @@ var (
 
 	loggerEndpoint string
 	loggerPath     string
+
+	version string = "dev"
 )
 
 var flags = []cli.Flag{
@@ -111,10 +113,12 @@ var flags = []cli.Flag{
 }
 
 var app = &cli.App{
-	Name:    "sbatch-service",
-	Usage:   "sbatch script hosting service",
-	Flags:   flags,
-	Suggest: true,
+	Name:                 "sbatch-service",
+	Usage:                "sbatch script hosting service",
+	Flags:                flags,
+	Suggest:              true,
+	EnableBashCompletion: true,
+	Version:              version,
 	Commands: []*cli.Command{
 		&cmd.RenderCmd,
 	},

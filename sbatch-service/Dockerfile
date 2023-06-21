@@ -7,9 +7,10 @@ RUN go mod download
 COPY . /build/
 
 ARG TARGETOS TARGETARCH
+ARG BUILDVERSION=dev
 RUN --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/go/pkg \
-  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w" -a -o /out/app ./server.go
+  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w -X main.version=${BUILDVERSION}" -a -o /out/app ./server.go
 
 # ---
 FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/alpine as certs
