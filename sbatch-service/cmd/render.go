@@ -27,7 +27,10 @@ var (
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			r := renderer.NewJobRenderer("logger.example.com:443")
+			r := renderer.NewJobRenderer(
+				"logger.example.com:443",
+				"/usr/local/bin/grid-logger-writer",
+			)
 			bytes, err := os.ReadFile(file)
 			if err != nil {
 				logger.I.Error("failed to read file", zap.Error(err))

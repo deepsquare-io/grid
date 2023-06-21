@@ -37,6 +37,7 @@ var (
 	redisHostOverride string
 
 	loggerEndpoint string
+	loggerPath     string
 )
 
 var flags = []cli.Flag{
@@ -88,6 +89,13 @@ var flags = []cli.Flag{
 		Usage:       "The grid logger URL endpoint. (ex: logger.example.com:443)",
 		Destination: &loggerEndpoint,
 		EnvVars:     []string{"LOGGER_ENDPOINT"},
+	},
+	&cli.StringFlag{
+		Name:        "logger.writer.path",
+		Value:       "/usr/local/bin/grid-logger-writer",
+		Usage:       "Path of the grid logger on the compute nodes.",
+		Destination: &loggerPath,
+		EnvVars:     []string{"LOGGER_WRITER_PATH"},
 	},
 	&cli.BoolFlag{
 		Name:    "debug",
@@ -145,7 +153,7 @@ var app = &cli.App{
 		}
 		rdb := redis.NewClient(opt)
 
-		jobRenderer := renderer.NewJobRenderer(loggerEndpoint)
+		jobRenderer := renderer.NewJobRenderer(loggerEndpoint, loggerPath)
 
 		// GraphQL server
 		c := graph.Config{
@@ -206,7 +214,8 @@ var app = &cli.App{
 
 func mixedHandler(httpHand http.Handler, grpcHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && strings.HasPrefix(r.Header.Get("content-type"), "application/grpc") {
+		if r.ProtoMajor == 2 &&
+			strings.HasPrefix(r.Header.Get("content-type"), "application/grpc") {
 			grpcHandler.ServeHTTP(w, r)
 			return
 		}

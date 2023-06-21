@@ -852,7 +852,10 @@ done
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
 			// Arrange
-			r := renderer.NewJobRenderer("logger.example.com:443")
+			r := renderer.NewJobRenderer(
+				"logger.example.com:443",
+				"/usr/local/bin/grid-logger-writer",
+			)
 
 			// Act
 			actual, err := r.RenderJob(&tt.input)

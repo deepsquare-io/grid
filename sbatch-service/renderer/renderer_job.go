@@ -18,9 +18,10 @@ var jobTpl string
 type JobRenderer struct {
 	loggerHost string
 	loggerPort int
+	loggerPath string
 }
 
-func NewJobRenderer(loggerEndpoint string) *JobRenderer {
+func NewJobRenderer(loggerEndpoint string, loggerPath string) *JobRenderer {
 	host, port, ok := strings.Cut(loggerEndpoint, ":")
 	if !ok {
 		logger.I.Panic("logger endpoint failed to parse")
@@ -32,6 +33,7 @@ func NewJobRenderer(loggerEndpoint string) *JobRenderer {
 	return &JobRenderer{
 		loggerHost: host,
 		loggerPort: portInt,
+		loggerPath: loggerPath,
 	}
 }
 
@@ -51,15 +53,18 @@ func (r *JobRenderer) RenderJob(j *model.Job) (string, error) {
 		Logger struct {
 			Endpoint string
 			Port     string
+			Path     string
 		}
 	}{
 		Job: j,
 		Logger: struct {
 			Endpoint string
 			Port     string
+			Path     string
 		}{
 			Endpoint: r.loggerHost,
 			Port:     strconv.Itoa(r.loggerPort),
+			Path:     r.loggerPath,
 		},
 	}); err != nil {
 		return "", err

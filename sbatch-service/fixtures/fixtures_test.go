@@ -38,7 +38,10 @@ var (
 	//go:embed minecraft.txt
 	expectedMinecraft string
 
-	r = renderer.NewJobRenderer("logger.example.com:443")
+	r = renderer.NewJobRenderer(
+		"logger.example.com:443",
+		"/usr/local/bin/grid-logger-writer",
+	)
 )
 
 func TestRenderTDP(t *testing.T) {
