@@ -123,6 +123,7 @@ var app = &cli.App{
 		&cmd.RenderCmd,
 	},
 	Action: func(cCtx *cli.Context) error {
+		logger.I.Info("running", zap.String("version", version))
 		// Redis connection
 		opt, err := redis.ParseURL(redisAddress)
 		if err != nil {
