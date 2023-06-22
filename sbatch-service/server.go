@@ -39,6 +39,9 @@ var (
 	loggerEndpoint string
 	loggerPath     string
 
+	preJobScript  string
+	postJobScript string
+
 	version string = "dev"
 )
 
@@ -99,6 +102,20 @@ var flags = []cli.Flag{
 		Destination: &loggerPath,
 		EnvVars:     []string{"LOGGER_WRITER_PATH"},
 	},
+	&cli.StringFlag{
+		Name:        "hook.pre.path",
+		Usage:       "Path to a prescript which will be embedded in the job. Will be run with bash at the very beginning (before logging).",
+		Required:    false,
+		Destination: &preJobScript,
+		EnvVars:     []string{"HOOK_PRE_PATH"},
+	},
+	&cli.StringFlag{
+		Name:        "hook.post.path",
+		Usage:       "Path to a postscript which will be embedded in the job. Will be run with bash at the very end (after logging).",
+		Required:    false,
+		Destination: &postJobScript,
+		EnvVars:     []string{"HOOK_POST_PATH"},
+	},
 	&cli.BoolFlag{
 		Name:    "debug",
 		EnvVars: []string{"DEBUG"},
@@ -158,7 +175,12 @@ var app = &cli.App{
 		}
 		rdb := redis.NewClient(opt)
 
-		jobRenderer := renderer.NewJobRenderer(loggerEndpoint, loggerPath)
+		jobRenderer := renderer.NewJobRenderer(
+			loggerEndpoint,
+			loggerPath,
+			renderer.WithPostscript(postJobScript),
+			renderer.WithPrescript(preJobScript),
+		)
 
 		// GraphQL server
 		c := graph.Config{

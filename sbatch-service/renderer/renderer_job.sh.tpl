@@ -2,6 +2,10 @@
 
 set -e
 
+{{- if not (empty .PreScript) }}
+{{ .PreScript }}
+{{- end }}
+
 export NTASKS='{{ .Job.Resources.Tasks }}'
 export CPUS_PER_TASK='{{ .Job.Resources.CpusPerTask }}'
 export MEM_PER_CPU='{{ .Job.Resources.MemPerCPU }}'
@@ -178,4 +182,8 @@ s5cmd sync {{ if and .Job.Output.S3.DeleteSync (derefBool .Job.Output.S3.DeleteS
 {{- if and .Job.EnableLogging (derefBool .Job.EnableLogging ) }}
 )
 # END SCOPE: LOGS
+{{- end }}
+
+{{- if not (empty .PostScript) }}
+{{ .PostScript }}
 {{- end }}

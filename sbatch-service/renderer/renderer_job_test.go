@@ -1,6 +1,7 @@
 package renderer_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
@@ -859,6 +860,180 @@ done
 
 			// Act
 			actual, err := r.RenderJob(&tt.input)
+
+			// Assert
+			if tt.isError {
+				assert.Error(t, err)
+				for _, contain := range tt.errorContains {
+					assert.ErrorContains(t, err, contain)
+				}
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, actual)
+				require.NoError(t, renderer.Shellcheck(actual))
+			}
+		})
+	}
+}
+
+func TestRenderJobWithPrePostScript(t *testing.T) {
+	cleanJob := model.Job{
+		Resources: cleanJob.Resources,
+	}
+	tests := []struct {
+		postScript    string
+		preScript     string
+		isError       bool
+		errorContains []string
+		expected      string
+		title         string
+	}{
+		{
+			postScript: "test",
+			title:      "render job with postscript",
+			expected: `#!/bin/bash -l
+
+set -e
+
+export NTASKS='1'
+export CPUS_PER_TASK='4'
+export MEM_PER_CPU='4096'
+export GPUS_PER_TASK='1'
+export GPUS='1'
+export CPUS='4'
+export MEM='16384'
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
+/usr/bin/touch "$DEEPSQUARE_ENV"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
+loadDeepsquareEnv() {
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
+}
+
+declare -A EXIT_SIGNALS
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
+test
+`,
+		},
+		{
+			preScript: "test",
+			title:     "render job with prescript",
+			expected: `#!/bin/bash -l
+
+set -e
+test
+
+export NTASKS='1'
+export CPUS_PER_TASK='4'
+export MEM_PER_CPU='4096'
+export GPUS_PER_TASK='1'
+export GPUS='1'
+export CPUS='4'
+export MEM='16384'
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
+/usr/bin/touch "$DEEPSQUARE_ENV"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
+loadDeepsquareEnv() {
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
+}
+
+declare -A EXIT_SIGNALS
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
+`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.title, func(t *testing.T) {
+			// Arrange
+			var postScriptPath, preScriptPath string
+			if tt.postScript != "" {
+				postScriptFile, err := os.CreateTemp("", "testfile-post-*.txt")
+				func() {
+					require.NoError(t, err)
+					defer postScriptFile.Close()
+					content := tt.postScript
+					_, err = postScriptFile.WriteString(content)
+					require.NoError(t, err)
+					postScriptPath = postScriptFile.Name()
+				}()
+			}
+
+			if tt.preScript != "" {
+				preScriptFile, err := os.CreateTemp("", "testfile-pre-*.txt")
+				func() {
+					require.NoError(t, err)
+					defer preScriptFile.Close()
+					content := tt.preScript
+					_, err = preScriptFile.WriteString(content)
+					require.NoError(t, err)
+					preScriptPath = preScriptFile.Name()
+				}()
+			}
+
+			r := renderer.NewJobRenderer(
+				"logger.example.com:443",
+				"/usr/local/bin/grid-logger-writer",
+				renderer.WithPostscript(postScriptPath),
+				renderer.WithPrescript(preScriptPath),
+			)
+
+			// Act
+			actual, err := r.RenderJob(&cleanJob)
 
 			// Assert
 			if tt.isError {
