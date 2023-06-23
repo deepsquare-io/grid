@@ -63,13 +63,8 @@ func jobToRow(job cli.Job) table.Row {
 func rowToJobID(row table.Row) [32]byte {
 	jobIDStr := row[0]
 	jobIDBig, _ := new(big.Int).SetString(jobIDStr, 10)
-	jobIDBytes := jobIDBig.Bytes()
 	var jobID [32]byte
-	copy(jobID[:], jobIDBytes)
-	// Reverse the byte order in the array for endianess
-	for i, j := 0, len(jobID)-1; i < j; i, j = i+1, j-1 {
-		jobID[i], jobID[j] = jobID[j], jobID[i]
-	}
+	jobIDBig.FillBytes(jobID[:])
 	return jobID
 }
 

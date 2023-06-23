@@ -10,11 +10,14 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/internal/log"
+	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
+	"github.com/deepsquare-io/the-grid/cli/tui/editor"
+	"github.com/deepsquare-io/the-grid/cli/tui/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/nav"
+	"github.com/deepsquare-io/the-grid/cli/tui/status"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -88,7 +91,7 @@ var flags = []cli.Flag{
 		Destination: &debug,
 		Action: func(ctx *cli.Context, b bool) error {
 			if b {
-				log.EnableDebug()
+				internallog.EnableDebug()
 			}
 			return nil
 		},
@@ -107,7 +110,7 @@ var app = &cli.App{
 		// Load the system CA certificates
 		caCertPool, err := x509.SystemCertPool()
 		if err != nil {
-			log.I.Warn("failed to load system CA certificates", zap.Error(err))
+			internallog.I.Warn("failed to load system CA certificates", zap.Error(err))
 			caCertPool = x509.NewCertPool()
 		}
 		tlsConfig := &tls.Config{
@@ -191,7 +194,7 @@ var app = &cli.App{
 		}
 		u, err := url.Parse(loggerEndpoint)
 		if err != nil {
-			log.I.Error("Failed to parse URL", zap.Error(err))
+			internallog.I.Error("Failed to parse URL", zap.Error(err))
 			return err
 		}
 		port := u.Port()
@@ -203,7 +206,7 @@ var app = &cli.App{
 			case "https":
 				port = "443"
 			default:
-				log.I.Fatal("Unknown scheme for logger URL", zap.String("scheme", u.Scheme))
+				internallog.I.Fatal("Unknown scheme for logger URL", zap.String("scheme", u.Scheme))
 			}
 		}
 		logDialer := logger.NewDialer(
@@ -211,26 +214,36 @@ var app = &cli.App{
 			pk,
 			dialOptions...,
 		)
-		navModel := nav.Model(
-			ctx,
-			crypto.PubkeyToAddress(pk.PublicKey),
-			eventSubscriber,
-			fetcher,
-			watcher,
-			jobScheduler,
-			creditWatcher,
-			allowanceWatcher,
-			logDialer,
-			version,
-			metaschedulerSmartContract,
-		)
-		program := tea.NewProgram(
-			navModel,
+		userAddress := crypto.PubkeyToAddress(pk.PublicKey)
+		_, err = tea.NewProgram(
+			nav.Model(
+				ctx,
+				userAddress,
+				eventSubscriber,
+				creditWatcher,
+				allowanceWatcher,
+				status.Model(
+					ctx,
+					eventSubscriber,
+					fetcher,
+					watcher,
+					jobScheduler,
+					userAddress,
+				),
+				log.ModelBuilder{
+					LoggerDialer: logDialer,
+					UserAddress:  userAddress,
+				},
+				editor.ModelBuilder{
+					AllowanceManager: allowance,
+					JobScheduler:     jobScheduler,
+				},
+				version,
+				metaschedulerSmartContract,
+			),
 			tea.WithContext(ctx),
 			tea.WithAltScreen(),
-		)
-		navModel.SetProgram(program)
-		_, err = program.Run()
+		).Run()
 		return err
 	},
 }
@@ -239,6 +252,6 @@ func main() {
 	_ = godotenv.Load(".env.local")
 	_ = godotenv.Load(".env")
 	if err := app.Run(os.Args); err != nil {
-		log.I.Fatal("app crashed", zap.Error(err))
+		internallog.I.Fatal("app crashed", zap.Error(err))
 	}
 }

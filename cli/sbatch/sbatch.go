@@ -1,3 +1,5 @@
+//go:generate go run generate.go
+
 package sbatch
 
 import (
@@ -13,7 +15,7 @@ import (
 
 type Service interface {
 	// Submit a job in the batch service.
-	Submit(ctx context.Context, content string) (string, error)
+	Submit(ctx context.Context, job *Job) (string, error)
 }
 
 type service struct {
@@ -38,12 +40,7 @@ type submitResponseData struct {
 	Submit string `json:"submit"`
 }
 
-func (s *service) Submit(ctx context.Context, content string) (string, error) {
-	job := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(content), &job); err != nil {
-		return "", fmt.Errorf("failed to decode job: %w", err)
-	}
-
+func (s *service) Submit(ctx context.Context, job *Job) (string, error) {
 	r := graphql.Request{
 		Query: submitMutation,
 		Variables: map[string]interface{}{
@@ -81,7 +78,7 @@ func (s *service) Submit(ctx context.Context, content string) (string, error) {
 	}
 
 	var result graphql.Response[submitResponseData]
-	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err = json.Unmarshal(body, &result); err != nil {
 		return "", err
 	}
 	return result.Data.Submit, err

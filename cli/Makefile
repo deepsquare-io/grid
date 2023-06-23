@@ -72,6 +72,10 @@ build-all: $(addprefix bin/,$(bins)) bin/checksums.md
 unit:
 	go test -race -covermode=atomic -tags=unit -timeout=30s ./...
 
+.PHONY: generate
+generate:
+	go generate ./...
+
 $(golint):
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 

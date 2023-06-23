@@ -3,13 +3,15 @@ package style
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	StandardHeight   = 13
-	primaryDarkest   = lipgloss.Color("#9202de")
-	primary          = lipgloss.Color("#BD43FD")
-	primaryLightest  = lipgloss.Color("#dea2fe")
-	Base             = Box.Copy()
-	Foreground       = lipgloss.NewStyle().Foreground(primaryDarkest)
-	AccentForeground = lipgloss.NewStyle().Foreground(primary)
+	StandardHeight       = 13
+	primaryDarkestColor  = lipgloss.Color("#9202de")
+	primaryColor         = lipgloss.Color("#BD43FD")
+	primaryLightestColor = lipgloss.Color("#dea2fe")
+	errorColor           = lipgloss.Color("#4b1113")
+	Base                 = Box.Copy()
+	Error                = lipgloss.NewStyle().Foreground(errorColor)
+	Foreground           = lipgloss.NewStyle().Foreground(primaryDarkestColor)
+	AccentForeground     = lipgloss.NewStyle().Foreground(primaryColor)
 
 	LogTitle = Box.Copy().
 			Padding(0, 1)
@@ -18,11 +20,11 @@ var (
 	LeftVerticalSeparator = lipgloss.NewStyle().
 				BorderStyle(lipgloss.NormalBorder()).
 				BorderLeft(true).
-				BorderForeground(primaryDarkest)
+				BorderForeground(primaryDarkestColor)
 	Box = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(primaryDarkest)
+		BorderForeground(primaryDarkestColor)
 	FocusBox = lipgloss.NewStyle().
 			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(primaryLightest)
+			BorderForeground(primaryLightestColor)
 )

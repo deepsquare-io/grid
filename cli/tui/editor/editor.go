@@ -1,127 +1,137 @@
 package editor
 
 import (
-	"context"
-	_ "embed"
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
-	"time"
+	"strings"
+
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/deepsquare-io/the-grid/cli"
+	"github.com/deepsquare-io/the-grid/cli/internal/utils"
+	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/knipferrc/teacup/code"
 )
 
-//go:embed template.yaml
-var template []byte
-
-//go:embed job.schema.json
-var schema []byte
-
-var editors = map[string][]string{
-	"nano":          {},
-	"nano.exe":      {},
-	"vim":           {},
-	"vim.exe":       {},
-	"vi":            {},
-	"vi.exe":        {},
-	"notepad++.exe": {"-nosession", "-multiInst"},
-	"notepad.exe":   {},
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
-const templateFormat = "# yaml-language-server: $schema=%s\n%s"
-
-func isTerminalDumb() bool {
-	_, ok := os.LookupEnv("TERM")
-	return !ok
-}
-
-func getEditor() (editor string, args []string) {
-	var ok bool
-	terminalIsDumb := isTerminalDumb()
-
-	editor, ok = os.LookupEnv("VISUAL")
-	if ok && !terminalIsDumb {
-		if editor, err := exec.LookPath(editor); err == nil {
-			return editor, []string{}
-		}
-	}
-
-	editor, ok = os.LookupEnv("EDITOR")
-	if ok {
-		if editor, err := exec.LookPath(editor); err == nil {
-			return editor, []string{}
-		}
-	}
-
-	for editor, args := range editors {
-		if editor, err := exec.LookPath(editor); err == nil {
-			return editor, args
-		}
-	}
-
-	return "vi", []string{}
-}
-
-func prepareFiles() (jobSchemaPath string, jobPath string, err error) {
-	tempDir := os.TempDir()
-	date := time.Now().Unix()
-	jobSchemaPath = filepath.Join(tempDir, fmt.Sprintf("job.schema.%d.json", date))
-	jobPath = filepath.Join(tempDir, fmt.Sprintf("job.%d.yaml", date))
-
-	// Insert the yaml-language-server parameter
-	template = []byte(
-		fmt.Sprintf(templateFormat, jobSchemaPath, template),
+func (m model) viewportFooterView() string {
+	info := style.LogInfo.Render(fmt.Sprintf("%3.f%%", m.code.Viewport.ScrollPercent()*100))
+	line := style.Foreground.Render(
+		strings.Repeat(" ", max(0, m.code.Viewport.Width-lipgloss.Width(info))),
 	)
-
-	if err := os.WriteFile(jobSchemaPath, schema, 0644); err != nil {
-		return "", "", fmt.Errorf("fail to write %s: %w", jobSchemaPath, err)
-	}
-
-	if err := os.WriteFile(jobPath, template, 0644); err != nil {
-		return "", "", fmt.Errorf("fail to write %s: %w", jobPath, err)
-	}
-
-	return jobSchemaPath, jobPath, nil
+	return lipgloss.JoinHorizontal(lipgloss.Bottom, line, info)
 }
 
-func openAndWaitEditor(ctx context.Context, jobPath string) error {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	var editorCommand string
-	var editorArgs []string
+func (m model) formView() string {
+	return fmt.Sprintf(`%s
+%s
+%s
 
-	switch runtime.GOOS {
-	case "windows":
-		editorCommand, editorArgs = getEditor()
-		editorArgs = append(editorArgs, jobPath)
-	case "darwin":
-		editorCommand = "open" // Use 'open' command on macOS
-		editorArgs = []string{"-e", jobPath}
-	case "linux":
-		editorCommand, editorArgs = getEditor()
-		editorArgs = append(editorArgs, jobPath)
-	default:
-		fmt.Println("Unsupported operating system")
-		return nil
-	}
-	c := exec.CommandContext(ctx, editorCommand, editorArgs...)
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	c.Stdin = os.Stdin
-	return c.Run()
+%s
+%s
+%s
+
+%s
+%s
+%s
+%s
+`,
+		style.Foreground.Render("Allocate Credits"),
+		m.inputs[creditsLockingInput].View(),
+		style.Error.Render(utils.ErrorOrEmpty(m.errors[creditsLockingInput])),
+		style.Foreground.Render("Use flags"),
+		m.inputs[usesInput].View(),
+		style.Error.Render(utils.ErrorOrEmpty(m.errors[usesInput])),
+		style.Foreground.Render("Job Name"),
+		m.inputs[jobNameInput].View(),
+		style.Error.Render(utils.ErrorOrEmpty(m.errors[jobNameInput])),
+		style.Error.Render(utils.ErrorOrEmpty(m.err)),
+	)
 }
 
-func Open(ctx context.Context) ([]byte, error) {
-	jobSchemaPath, jobPath, err := prepareFiles()
-	if err != nil {
-		return []byte{}, err
+func (m model) View() string {
+	help := m.help.FullHelpView([][]key.Binding{
+		{
+			m.keyMap.ViewPortKeymap.Up,
+			m.keyMap.ViewPortKeymap.Down,
+		},
+		{
+			m.keyMap.NextInput,
+			m.keyMap.PrevInput,
+			m.keyMap.EditAgain,
+			m.keyMap.Exit,
+		},
+	})
+	leftView := fmt.Sprintf(
+		"%s\n%s",
+		m.code.View(), m.viewportFooterView(),
+	)
+	rightView := m.formView() + "\n" + help
+	mainView := lipgloss.JoinHorizontal(lipgloss.Center, style.Box.Render(leftView), rightView)
+
+	return mainView
+}
+
+func Model(
+	allowanceManager cli.AllowanceManager,
+	jobScheduler cli.JobScheduler,
+) tea.Model {
+	code := code.New(true, true, lipgloss.AdaptiveColor{Light: "#000000", Dark: "#ffffff"})
+	code.SetSize(118, style.StandardHeight)
+
+	help := help.New()
+	help.ShowAll = true
+
+	inputs := make([]textinput.Model, 3)
+	inputs[creditsLockingInput] = textinput.New()
+	inputs[creditsLockingInput].Placeholder = "100"
+	inputs[creditsLockingInput].Focus()
+	inputs[creditsLockingInput].Width = 32
+	inputs[creditsLockingInput].Prompt = ""
+	inputs[creditsLockingInput].Validate = allowedNumber
+
+	inputs[usesInput] = textinput.New()
+	inputs[usesInput].Placeholder = "os=linux,arch=amd64"
+	inputs[usesInput].Width = 32
+	inputs[usesInput].Prompt = ""
+
+	inputs[jobNameInput] = textinput.New()
+	inputs[jobNameInput].Width = 32
+	inputs[jobNameInput].Prompt = ""
+
+	return &model{
+		code:   code,
+		inputs: inputs,
+		errors: make([]error, 3),
+		keyMap: KeyMap{
+			EditAgain: key.NewBinding(
+				key.WithKeys("ctrl+e"),
+				key.WithHelp("ctrl+e", "edit job"),
+			),
+			Exit: key.NewBinding(
+				key.WithKeys("esc", "ctrl+q"),
+				key.WithHelp("esc/ctrl+q", "exit"),
+			),
+			NextInput: key.NewBinding(
+				key.WithKeys("tab", "ctrl+n", "enter"),
+				key.WithHelp("tab/enter", "next input"),
+			),
+			PrevInput: key.NewBinding(
+				key.WithKeys("shift+tab", "ctrl+p"),
+				key.WithHelp("shift+tab", "prev input"),
+			),
+			ViewPortKeymap: code.Viewport.KeyMap,
+		},
+		help:             help,
+		allowanceManager: allowanceManager,
+		jobScheduler:     jobScheduler,
 	}
-	defer func() {
-		_ = os.Remove(jobSchemaPath)
-		_ = os.Remove(jobPath)
-	}()
-	if err := openAndWaitEditor(ctx, jobPath); err != nil {
-		return []byte{}, err
-	}
-	return os.ReadFile(jobPath)
 }

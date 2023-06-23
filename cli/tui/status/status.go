@@ -34,7 +34,7 @@ func (m model) View() string {
 			m.keyMap.TableKeyMap.LineDown,
 		},
 	})
-	return style.Base.Render(m.table.View()) + "\n" + help
+	return lipgloss.JoinHorizontal(lipgloss.Center, style.Base.Render(m.table.View()), help)
 }
 
 func Model(

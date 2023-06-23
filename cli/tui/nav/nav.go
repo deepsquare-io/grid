@@ -12,7 +12,6 @@ import (
 	"github.com/deepsquare-io/the-grid/cli"
 	"github.com/deepsquare-io/the-grid/cli/internal/ether"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
-	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/deepsquare-io/the-grid/cli/tui/editor"
 	"github.com/deepsquare-io/the-grid/cli/tui/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/status"
@@ -32,25 +31,22 @@ type model struct {
 	allowanceChan        chan *big.Int
 
 	// logModel is nullable
-	logModel    tea.Model
+	logModel tea.Model
+	// editorModel is nullable
+	editorModel tea.Model
 	statusModel tea.Model
-	program     *tea.Program
+
+	logModelBuilder    log.ModelBuilder
+	editorModelBuilder editor.ModelBuilder
 
 	eventSubscriber   cli.EventSubscriber
 	creditFilterer    cli.CreditFilterer
 	allowanceFilterer cli.AllowanceFilterer
-	logDialer         logger.Dialer
 	userAddress       common.Address
-}
-
-func (m *model) SetProgram(p *tea.Program) {
-	m.program = p
 }
 
 type balanceMsg *big.Int
 type allowanceMsg *big.Int
-
-type editorDone struct{}
 
 func (m *model) watchEvents(
 	ctx context.Context,
@@ -96,17 +92,6 @@ func (m *model) watchEvents(
 	}
 }
 
-func (m *model) openEditor(ctx context.Context) tea.Cmd {
-	return func() tea.Msg {
-		_, err := editor.Open(ctx)
-		if err != nil {
-			panic(err.Error())
-		}
-		fmt.Println("result is not yet handled")
-		return editorDone{}
-	}
-}
-
 func (m *model) tick() tea.Msg {
 	select {
 	case balance := <-m.balanceChan:
@@ -127,45 +112,37 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
-		lCmd tea.Cmd
-		sCmd tea.Cmd
-		cmds = make([]tea.Cmd, 0)
+		pageCmd tea.Cmd
+		cmds    = make([]tea.Cmd, 0)
 	)
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.logModel != nil {
-			m.logModel, lCmd = m.logModel.Update(msg)
-			cmds = append(cmds, lCmd)
-		} else {
-			m.statusModel, sCmd = m.statusModel.Update(msg)
-			cmds = append(cmds, sCmd)
-		}
 		switch {
-		case msg.Type == tea.KeyCtrlC:
-			return m, tea.Quit
+		case m.logModel != nil:
+			m.logModel, pageCmd = m.logModel.Update(msg)
+		case m.editorModel != nil:
+			m.editorModel, pageCmd = m.editorModel.Update(msg)
+		default:
+			m.statusModel, pageCmd = m.statusModel.Update(msg)
 		}
+		cmds = append(cmds, pageCmd)
 	case status.SelectJobMsg:
 		// Render job logs
-		m.logModel = log.Model(context.TODO(), m.logDialer, m.userAddress, msg)
+		m.logModel = m.logModelBuilder.Build(context.TODO(), msg)
 		cmds = append(cmds, m.logModel.Init())
 	case status.SubmitJobMsg:
-		err := m.program.ReleaseTerminal()
-		if err != nil {
-			fmt.Println(err)
-		}
+		m.editorModel = m.editorModelBuilder.Build()
 		cmds = append(
 			cmds,
-			m.openEditor(context.TODO()),
+			m.editorModel.Init(),
 		)
-	case editorDone:
-		err := m.program.RestoreTerminal()
-		if err != nil {
-			fmt.Println(err)
-		}
 	case log.ExitMsg:
 		_, _ = m.logModel.Update(msg)
 		m.logModel = nil
+	case editor.ExitMsg:
+		_, _ = m.editorModel.Update(msg)
+		m.editorModel = nil
 	case balanceMsg:
 		m.balance = msg
 		cmds = append(cmds, m.tick)
@@ -173,12 +150,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.allowance = msg
 		cmds = append(cmds, m.tick)
 	default:
-		if m.logModel != nil {
-			m.logModel, lCmd = m.logModel.Update(msg)
-			cmds = append(cmds, lCmd)
+		switch {
+		case m.logModel != nil:
+			m.logModel, pageCmd = m.logModel.Update(msg)
+		case m.editorModel != nil:
+			m.editorModel, pageCmd = m.editorModel.Update(msg)
+		default:
+			m.statusModel, pageCmd = m.statusModel.Update(msg)
 		}
-		m.statusModel, sCmd = m.statusModel.Update(msg)
-		cmds = append(cmds, sCmd)
+		cmds = append(cmds, pageCmd)
 	}
 
 	return m, tea.Batch(cmds...)
@@ -195,9 +175,12 @@ Allowance:`)
 
 func (m model) View() string {
 	var navView string
-	if m.logModel != nil {
+	switch {
+	case m.logModel != nil:
 		navView = m.logModel.View()
-	} else {
+	case m.editorModel != nil:
+		navView = m.editorModel.View()
+	default:
 		navView = m.statusModel.View()
 	}
 
@@ -229,12 +212,11 @@ func Model(
 	ctx context.Context,
 	userAddress common.Address,
 	eventSubscriber cli.EventSubscriber,
-	jobFetcher cli.JobFetcher,
-	jobFilterer cli.JobFilterer,
-	jobScheduler cli.JobScheduler,
 	creditFilterer cli.CreditFilterer,
 	allowanceFilterer cli.AllowanceFilterer,
-	logDialer logger.Dialer,
+	statusModel tea.Model,
+	logModelBuilder log.ModelBuilder,
+	editorModelBuilder editor.ModelBuilder,
 	version string,
 	metaschedulerAddress string,
 ) *model {
@@ -245,15 +227,10 @@ func Model(
 		allowanceChan: make(chan *big.Int, 10),
 		allowance:     new(big.Int),
 
-		statusModel: status.Model(
-			ctx,
-			eventSubscriber,
-			jobFetcher,
-			jobFilterer,
-			jobScheduler,
-			userAddress,
-		),
-		logDialer:            logDialer,
+		statusModel:        statusModel,
+		logModelBuilder:    logModelBuilder,
+		editorModelBuilder: editorModelBuilder,
+
 		userAddress:          userAddress,
 		eventSubscriber:      eventSubscriber,
 		creditFilterer:       creditFilterer,

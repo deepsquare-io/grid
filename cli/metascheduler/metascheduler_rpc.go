@@ -62,7 +62,10 @@ func (c *rpcClient) SetAllowance(ctx context.Context, amount *big.Int) error {
 		return fmt.Errorf("failed to approve credit: %w", err)
 	}
 	_, err = bind.WaitMined(ctx, c, tx)
-	return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
+	if err != nil {
+		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
+	}
+	return nil
 }
 
 func (c *rpcClient) ClearAllowance(ctx context.Context) error {
@@ -219,16 +222,25 @@ func (c *rpcClient) requestNewJob(
 
 func (c *rpcClient) SubmitJob(
 	ctx context.Context,
-	content string,
-	definition metaschedulerabi.JobDefinition,
+	job *sbatch.Job,
+	uses []metaschedulerabi.Label,
 	lockedAmount *big.Int,
 	jobName [32]byte,
 ) ([32]byte, error) {
-	hash, err := c.sbatch.Submit(ctx, content)
+	hash, err := c.sbatch.Submit(ctx, job)
 	if err != nil {
 		return [32]byte{}, fmt.Errorf("failed to submit job: %w", err)
 	}
-	definition.BatchLocationHash = hash
+
+	definition := metaschedulerabi.JobDefinition{
+		Ntasks:            uint64(job.Resources.Tasks),
+		GpuPerTask:        uint64(job.Resources.GpusPerTask),
+		MemPerCpu:         uint64(job.Resources.MemPerCPU),
+		CpuPerTask:        uint64(job.Resources.CpusPerTask),
+		StorageType:       0,
+		BatchLocationHash: hash,
+		Uses:              uses,
+	}
 	id, err := c.requestNewJob(
 		ctx,
 		definition,

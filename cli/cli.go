@@ -6,6 +6,7 @@ import (
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/internal/logger/v1alpha1"
+	"github.com/deepsquare-io/the-grid/cli/sbatch"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -39,10 +40,10 @@ type JobScheduler interface {
 	// Submit a batch script to the batch service and metascheduler.
 	SubmitJob(
 		ctx context.Context,
-		content string,
-		definition metaschedulerabi.JobDefinition,
+		job *sbatch.Job,
+		uses []metaschedulerabi.Label,
 		lockedAmount *big.Int,
-		jobID [32]byte,
+		jobName [32]byte,
 	) ([32]byte, error)
 	// Cancel a job.
 	CancelJob(ctx context.Context, jobID [32]byte) error
