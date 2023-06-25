@@ -12,7 +12,7 @@ require (
 	github.com/prometheus/client_model v0.4.0
 	github.com/prometheus/common v0.44.0
 	github.com/urfave/cli/v2 v2.25.7
-	github.com/vektah/gqlparser/v2 v2.5.4
+	github.com/vektah/gqlparser/v2 v2.5.5
 	go.uber.org/zap v1.24.0
 	google.golang.org/protobuf v1.30.0
 )
