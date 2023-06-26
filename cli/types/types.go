@@ -1,4 +1,4 @@
-package cli
+package types
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"google.golang.org/grpc"
 )
 
 // LogStream is a readable stream of logs.
@@ -27,6 +28,12 @@ type Job struct {
 	Time             metaschedulerabi.JobTime
 	JobName          [32]byte
 	HasCancelRequest bool
+}
+
+type LoggerDialer interface {
+	DialContext(
+		ctx context.Context,
+	) (l Logger, conn *grpc.ClientConn, err error)
 }
 
 // Logger fetches the logs of a job.

@@ -10,8 +10,8 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -55,7 +55,7 @@ func (m model) View() string {
 
 func Model(
 	ctx context.Context,
-	loggerDialer logger.Dialer,
+	loggerDialer types.LoggerDialer,
 	userAddress common.Address,
 	jobID [32]byte,
 ) tea.Model {

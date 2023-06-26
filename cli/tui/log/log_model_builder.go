@@ -4,12 +4,12 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/logger"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 type ModelBuilder struct {
-	LoggerDialer logger.Dialer
+	LoggerDialer types.LoggerDialer
 	UserAddress  common.Address
 }
 

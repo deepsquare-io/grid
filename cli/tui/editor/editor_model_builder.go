@@ -2,14 +2,13 @@ package editor
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli"
+	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 )
 
 type ModelBuilder struct {
-	AllowanceManager cli.AllowanceManager
-	JobScheduler     cli.JobScheduler
+	Client deepsquare.Client
 }
 
 func (b *ModelBuilder) Build() tea.Model {
-	return Model(b.AllowanceManager, b.JobScheduler)
+	return Model(b.Client)
 }

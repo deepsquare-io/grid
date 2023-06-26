@@ -9,11 +9,11 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli"
 	"github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/tui/channel"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"go.uber.org/zap"
 )
 
@@ -28,10 +28,10 @@ type KeyMap struct {
 type model struct {
 	table     table.Model
 	idToRow   map[[32]byte]table.Row
-	it        cli.JobLazyIterator
+	it        types.JobLazyIterator
 	help      help.Model
 	watchJobs channel.Model[transitionMsg]
-	scheduler cli.JobScheduler
+	scheduler types.JobScheduler
 	keyMap    KeyMap
 }
 
@@ -51,7 +51,7 @@ func emitSubmitJobMsg() tea.Msg {
 	return SubmitJobMsg{}
 }
 
-func jobToRow(job cli.Job) table.Row {
+func jobToRow(job types.Job) table.Row {
 	return table.Row{
 		new(big.Int).SetBytes(job.JobID[:]).String(),
 		string(job.JobName[:]),
@@ -74,8 +74,8 @@ func rowToJobID(row table.Row) [32]byte {
 // This method is executed before the loading of the page for SSR.
 func initializeRows(
 	ctx context.Context,
-	fetcher cli.JobFetcher,
-) (rows []table.Row, idToRow map[[32]byte]table.Row, it cli.JobLazyIterator) {
+	fetcher types.JobFetcher,
+) (rows []table.Row, idToRow map[[32]byte]table.Row, it types.JobLazyIterator) {
 	it, err := fetcher.GetJobs(ctx)
 	if err != nil {
 		log.I.Error("failed to get jobs", zap.Error(err))
@@ -162,7 +162,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if row, ok := m.idToRow[msg.JobID]; ok {
 			row[2] = metascheduler.JobStatus(msg.Status).String()
 		} else {
-			job := cli.Job(msg)
+			job := types.Job(msg)
 			row = jobToRow(job)
 			m.idToRow[msg.JobID] = row
 			rows = append(rows, table.Row{})

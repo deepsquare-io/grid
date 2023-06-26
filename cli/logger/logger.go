@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/cli"
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/internal/logger/v1alpha1"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -16,19 +16,13 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Dialer interface {
-	DialContext(
-		ctx context.Context,
-	) (l cli.Logger, conn *grpc.ClientConn, err error)
-}
-
 type dialer struct {
 	pk       *ecdsa.PrivateKey
 	endpoint string
 	opts     []grpc.DialOption
 }
 
-func NewDialer(endpoint string, pk *ecdsa.PrivateKey, opts ...grpc.DialOption) Dialer {
+func NewDialer(endpoint string, pk *ecdsa.PrivateKey, opts ...grpc.DialOption) types.LoggerDialer {
 	return &dialer{
 		pk:       pk,
 		endpoint: endpoint,
@@ -43,7 +37,7 @@ type gridlogger struct {
 
 func (d *dialer) DialContext(
 	ctx context.Context,
-) (l cli.Logger, conn *grpc.ClientConn, err error) {
+) (l types.Logger, conn *grpc.ClientConn, err error) {
 	conn, err = grpc.DialContext(ctx,
 		d.endpoint,
 		d.opts...,
@@ -65,7 +59,7 @@ func (l *gridlogger) from() common.Address {
 func (l *gridlogger) WatchLogs(
 	ctx context.Context,
 	jobID [32]byte,
-) (cli.LogStream, error) {
+) (types.LogStream, error) {
 	address := l.from().Hex()
 	timestamp := uint64(time.Now().Unix())
 	logName := strings.ToLower(hexutil.Encode(jobID[:]))

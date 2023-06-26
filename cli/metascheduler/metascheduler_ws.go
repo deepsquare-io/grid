@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/deepsquare-io/the-grid/cli"
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -28,7 +28,7 @@ func (c *wsClient) from() (addr common.Address) {
 
 func (c *wsClient) SubscribeEvents(
 	ctx context.Context,
-	ch chan<- types.Log,
+	ch chan<- ethtypes.Log,
 ) (ethereum.Subscription, error) {
 	creditAddress, err := c.Credit(&bind.CallOpts{
 		Context: ctx,
@@ -56,10 +56,10 @@ func (c *wsClient) SubscribeEvents(
 }
 
 func (c *wsClient) FilterNewJobRequests(
-	ch <-chan types.Log,
-) (filtered <-chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent, rest <-chan types.Log) {
+	ch <-chan ethtypes.Log,
+) (filtered <-chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent, rest <-chan ethtypes.Log) {
 	fChan := make(chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent)
-	rChan := make(chan types.Log)
+	rChan := make(chan ethtypes.Log)
 
 	go func() {
 		defer close(fChan)
@@ -85,10 +85,10 @@ func (c *wsClient) FilterNewJobRequests(
 }
 
 func (c *wsClient) FilterJobTransition(
-	ch <-chan types.Log,
-) (filtered <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, rest <-chan types.Log) {
+	ch <-chan ethtypes.Log,
+) (filtered <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, rest <-chan ethtypes.Log) {
 	fChan := make(chan *metaschedulerabi.MetaSchedulerJobTransitionEvent)
-	rChan := make(chan types.Log)
+	rChan := make(chan ethtypes.Log)
 
 	go func() {
 		defer close(fChan)
@@ -114,17 +114,17 @@ func (c *wsClient) FilterJobTransition(
 }
 
 type creditFilterer struct {
-	cli.CreditManager
+	types.CreditManager
 	wsClient
 	*metaschedulerabi.IERC20Filterer
 }
 
 func (c *creditFilterer) FilterTransfer(
 	ctx context.Context,
-	ch <-chan types.Log,
-) (filtered <-chan *metaschedulerabi.IERC20Transfer, rest <-chan types.Log) {
+	ch <-chan ethtypes.Log,
+) (filtered <-chan *metaschedulerabi.IERC20Transfer, rest <-chan ethtypes.Log) {
 	fChan := make(chan *metaschedulerabi.IERC20Transfer)
-	rChan := make(chan types.Log)
+	rChan := make(chan ethtypes.Log)
 
 	go func() {
 		defer close(fChan)
@@ -186,17 +186,17 @@ func (c *creditFilterer) ReduceToBalance(
 }
 
 type allowanceFilterer struct {
-	cli.AllowanceManager
+	types.AllowanceManager
 	wsClient
 	*metaschedulerabi.IERC20Filterer
 }
 
 func (c *allowanceFilterer) FilterApproval(
 	ctx context.Context,
-	ch <-chan types.Log,
-) (filtered <-chan *metaschedulerabi.IERC20Approval, rest <-chan types.Log) {
+	ch <-chan ethtypes.Log,
+) (filtered <-chan *metaschedulerabi.IERC20Approval, rest <-chan ethtypes.Log) {
 	fChan := make(chan *metaschedulerabi.IERC20Approval)
-	rChan := make(chan types.Log)
+	rChan := make(chan ethtypes.Log)
 
 	go func() {
 		defer close(fChan)

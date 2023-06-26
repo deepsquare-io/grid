@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/deepsquare-io/the-grid/cli"
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -78,14 +78,14 @@ func (c *rpcClient) GetAllowance(ctx context.Context) (*big.Int, error) {
 	}, c.from(), c.MetaschedulerAddress)
 }
 
-func (c *rpcClient) GetJob(ctx context.Context, id [32]byte) (*cli.Job, error) {
+func (c *rpcClient) GetJob(ctx context.Context, id [32]byte) (*types.Job, error) {
 	job, err := c.Jobs(&bind.CallOpts{
 		Context: ctx,
 	}, id)
 	if err != nil {
 		return nil, WrapError(err)
 	}
-	return &cli.Job{
+	return &types.Job{
 		JobID:            job.JobId,
 		Status:           job.Status,
 		CustomerAddr:     job.CustomerAddr,
@@ -104,12 +104,12 @@ type jobIterator struct {
 	array  [][32]byte
 	length int
 	index  int
-	job    *cli.Job
+	job    *types.Job
 }
 
 func (it *jobIterator) Next(
 	ctx context.Context,
-) (next cli.JobLazyIterator, ok bool, err error) {
+) (next types.JobLazyIterator, ok bool, err error) {
 	if it.index+1 >= it.length {
 		return nil, false, nil
 	}
@@ -129,7 +129,7 @@ func (it *jobIterator) Next(
 
 func (it *jobIterator) Prev(
 	ctx context.Context,
-) (prev cli.JobLazyIterator, ok bool, err error) {
+) (prev types.JobLazyIterator, ok bool, err error) {
 	if it.index-1 < 0 {
 		return nil, false, nil
 	}
@@ -147,11 +147,11 @@ func (it *jobIterator) Prev(
 	}, true, nil
 }
 
-func (it *jobIterator) Current() *cli.Job {
+func (it *jobIterator) Current() *types.Job {
 	return it.job
 }
 
-func (c *rpcClient) GetJobs(ctx context.Context) (cli.JobLazyIterator, error) {
+func (c *rpcClient) GetJobs(ctx context.Context) (types.JobLazyIterator, error) {
 	jobIDs, err := c.MetaScheduler.GetJobs(&bind.CallOpts{
 		Context: ctx,
 	}, c.from())

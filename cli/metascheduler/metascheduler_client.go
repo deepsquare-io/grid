@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/deepsquare-io/the-grid/cli"
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -81,7 +81,7 @@ type Client struct {
 	UserPrivateKey *ecdsa.PrivateKey
 }
 
-func NewJobScheduler(c Client, sbatch sbatch.Service) (client cli.JobScheduler, err error) {
+func NewJobScheduler(c Client, sbatch sbatch.Service) (client types.JobScheduler, err error) {
 	c = c.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
@@ -101,7 +101,7 @@ func (c Client) applyDefault() Client {
 	return c
 }
 
-func NewJobFetcher(c Client) (fetcher cli.JobFetcher, err error) {
+func NewJobFetcher(c Client) (fetcher types.JobFetcher, err error) {
 	c = c.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
@@ -113,7 +113,7 @@ func NewJobFetcher(c Client) (fetcher cli.JobFetcher, err error) {
 	}, err
 }
 
-func NewEventSubscriber(c Client) (cli.EventSubscriber, error) {
+func NewEventSubscriber(c Client) (types.EventSubscriber, error) {
 	c = c.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
@@ -125,7 +125,7 @@ func NewEventSubscriber(c Client) (cli.EventSubscriber, error) {
 	}, err
 }
 
-func NewJobFilterer(c Client) (watcher cli.JobFilterer, err error) {
+func NewJobFilterer(c Client) (watcher types.JobFilterer, err error) {
 	c = c.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
@@ -137,7 +137,7 @@ func NewJobFilterer(c Client) (watcher cli.JobFilterer, err error) {
 	}, err
 }
 
-func NewCreditManager(ctx context.Context, c Client) (credits cli.CreditManager, err error) {
+func NewCreditManager(ctx context.Context, c Client) (credits types.CreditManager, err error) {
 	c = c.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
@@ -163,8 +163,8 @@ func NewCreditManager(ctx context.Context, c Client) (credits cli.CreditManager,
 func NewCreditFilterer(
 	ctx context.Context,
 	ws Client,
-	credit cli.CreditManager,
-) (watcher cli.CreditFilterer, err error) {
+	credit types.CreditManager,
+) (watcher types.CreditFilterer, err error) {
 	ws = ws.applyDefault()
 	mWs, err := metaschedulerabi.NewMetaScheduler(ws.MetaschedulerAddress, ws.EthereumBackend)
 	if err != nil {
@@ -194,7 +194,7 @@ func NewCreditFilterer(
 func NewAllowanceManager(
 	ctx context.Context,
 	c Client,
-) (allowance cli.AllowanceManager, err error) {
+) (allowance types.AllowanceManager, err error) {
 	c = c.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c.EthereumBackend)
 	if err != nil {
@@ -220,8 +220,8 @@ func NewAllowanceManager(
 func NewAllowanceFilterer(
 	ctx context.Context,
 	ws Client,
-	allowance cli.AllowanceManager,
-) (watcher cli.AllowanceFilterer, err error) {
+	allowance types.AllowanceManager,
+) (watcher types.AllowanceFilterer, err error) {
 	ws = ws.applyDefault()
 	mWs, err := metaschedulerabi.NewMetaScheduler(ws.MetaschedulerAddress, ws.EthereumBackend)
 	if err != nil {

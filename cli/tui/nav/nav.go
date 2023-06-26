@@ -9,7 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli"
+	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/internal/ether"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/editor"
@@ -18,13 +18,13 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/deepsquare-io/the-grid/cli/tui/util"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
 type model struct {
 	version              string
 	metaschedulerAddress string
-	logs                 chan types.Log
+	logs                 chan ethtypes.Log
 	balance              *big.Int
 	balanceChan          chan *big.Int
 	allowance            *big.Int
@@ -39,10 +39,8 @@ type model struct {
 	logModelBuilder    log.ModelBuilder
 	editorModelBuilder editor.ModelBuilder
 
-	eventSubscriber   cli.EventSubscriber
-	creditFilterer    cli.CreditFilterer
-	allowanceFilterer cli.AllowanceFilterer
-	userAddress       common.Address
+	watcher     deepsquare.Watcher
+	userAddress common.Address
 }
 
 type balanceMsg *big.Int
@@ -52,19 +50,19 @@ func (m *model) watchEvents(
 	ctx context.Context,
 ) tea.Cmd {
 	return func() tea.Msg {
-		sub, err := m.eventSubscriber.SubscribeEvents(ctx, m.logs)
+		sub, err := m.watcher.SubscribeEvents(ctx, m.logs)
 		if err != nil {
 			internallog.I.Fatal(err.Error())
 		}
 		defer sub.Unsubscribe()
-		transfers, rest := m.creditFilterer.FilterTransfer(ctx, m.logs)
-		approvals, rest := m.allowanceFilterer.FilterApproval(ctx, rest)
+		transfers, rest := m.watcher.FilterTransfer(ctx, m.logs)
+		approvals, rest := m.watcher.FilterApproval(ctx, rest)
 
-		balances, err := m.creditFilterer.ReduceToBalance(ctx, transfers)
+		balances, err := m.watcher.ReduceToBalance(ctx, transfers)
 		if err != nil {
 			internallog.I.Fatal(err.Error())
 		}
-		allowances, err := m.allowanceFilterer.ReduceToAllowance(ctx, approvals)
+		allowances, err := m.watcher.ReduceToAllowance(ctx, approvals)
 		if err != nil {
 			internallog.I.Fatal(err.Error())
 		}
@@ -211,9 +209,7 @@ func (m model) View() string {
 func Model(
 	ctx context.Context,
 	userAddress common.Address,
-	eventSubscriber cli.EventSubscriber,
-	creditFilterer cli.CreditFilterer,
-	allowanceFilterer cli.AllowanceFilterer,
+	watcher deepsquare.Watcher,
 	statusModel tea.Model,
 	logModelBuilder log.ModelBuilder,
 	editorModelBuilder editor.ModelBuilder,
@@ -221,7 +217,7 @@ func Model(
 	metaschedulerAddress string,
 ) *model {
 	return &model{
-		logs:          make(chan types.Log, 100),
+		logs:          make(chan ethtypes.Log, 100),
 		balanceChan:   make(chan *big.Int, 10),
 		balance:       new(big.Int),
 		allowanceChan: make(chan *big.Int, 10),
@@ -232,9 +228,7 @@ func Model(
 		editorModelBuilder: editorModelBuilder,
 
 		userAddress:          userAddress,
-		eventSubscriber:      eventSubscriber,
-		creditFilterer:       creditFilterer,
-		allowanceFilterer:    allowanceFilterer,
+		watcher:              watcher,
 		version:              version,
 		metaschedulerAddress: metaschedulerAddress,
 	}

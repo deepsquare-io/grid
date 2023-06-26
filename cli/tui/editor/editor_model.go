@@ -14,7 +14,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli"
+	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/internal/ether"
 	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/internal/validator"
@@ -70,8 +70,7 @@ type model struct {
 	help   help.Model
 	keyMap KeyMap
 
-	allowanceManager cli.AllowanceManager
-	jobScheduler     cli.JobScheduler
+	client deepsquare.Client
 
 	isRunning bool
 }
@@ -126,7 +125,7 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 			return errorMsg(err)
 		}
 		allocatedCreditsBigF := new(big.Float).SetFloat64(allocatedCreditsF)
-		curr, err := m.allowanceManager.GetAllowance(ctx)
+		curr, err := m.client.GetAllowance(ctx)
 		if err != nil {
 			return errorMsg(err)
 		}
@@ -137,13 +136,13 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 
 		// Mutate
 		allocatedCreditsBigI := ether.ToWei(allocatedCreditsBigF)
-		if err = m.allowanceManager.SetAllowance(ctx, curr.Add(curr, allocatedCreditsBigI)); err != nil {
+		if err = m.client.SetAllowance(ctx, curr.Add(curr, allocatedCreditsBigI)); err != nil {
 			return errorMsg(err)
 		}
 
 		var jobName [32]byte
 		copy(jobName[:], m.inputs[jobNameInput].Value())
-		_, err = m.jobScheduler.SubmitJob(
+		_, err = m.client.SubmitJob(
 			ctx,
 			&job,
 			labels,

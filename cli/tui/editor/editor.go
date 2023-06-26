@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli"
+	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/knipferrc/teacup/code"
@@ -81,8 +81,7 @@ func (m model) View() string {
 }
 
 func Model(
-	allowanceManager cli.AllowanceManager,
-	jobScheduler cli.JobScheduler,
+	client deepsquare.Client,
 ) tea.Model {
 	code := code.New(true, true, lipgloss.AdaptiveColor{Light: "#000000", Dark: "#ffffff"})
 	code.SetSize(118, style.StandardHeight)
@@ -130,8 +129,7 @@ func Model(
 			),
 			ViewPortKeymap: code.Viewport.KeyMap,
 		},
-		help:             help,
-		allowanceManager: allowanceManager,
-		jobScheduler:     jobScheduler,
+		help:   help,
+		client: client,
 	}
 }

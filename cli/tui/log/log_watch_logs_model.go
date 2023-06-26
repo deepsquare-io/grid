@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/deepsquare-io/the-grid/cli/internal/log"
-	"github.com/deepsquare-io/the-grid/cli/logger"
 	"github.com/deepsquare-io/the-grid/cli/tui/channel"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"go.uber.org/zap"
 )
 
@@ -36,7 +36,7 @@ type logMsg struct {
 func makeWatchLogsModel(
 	ctx context.Context,
 	jobID [32]byte,
-	loggerDialer logger.Dialer,
+	loggerDialer types.LoggerDialer,
 ) channel.Model[logMsg] {
 	return channel.Model[logMsg]{
 		Channel: make(chan logMsg, 100),

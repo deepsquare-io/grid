@@ -8,10 +8,10 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli"
+	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
 var columns = []table.Column{
@@ -39,14 +39,12 @@ func (m model) View() string {
 
 func Model(
 	ctx context.Context,
-	eventSubscriber cli.EventSubscriber,
-	jobFetcher cli.JobFetcher,
-	jobFilterer cli.JobFilterer,
-	scheduler cli.JobScheduler,
+	client deepsquare.Client,
+	watcher deepsquare.Watcher,
 	userAddress common.Address,
 ) tea.Model {
 	// Initialize rows
-	rows, idToRow, it := initializeRows(ctx, jobFetcher)
+	rows, idToRow, it := initializeRows(ctx, client)
 
 	tableKeymap := table.DefaultKeyMap()
 	t := table.New(
@@ -96,14 +94,13 @@ func Model(
 				key.WithHelp("esc/q", "exit"),
 			),
 		},
-		scheduler: scheduler,
+		scheduler: client,
 		watchJobs: makeWatchJobsModel(
 			ctx,
 			userAddress,
-			make(chan types.Log, 100),
-			eventSubscriber,
-			jobFilterer,
-			jobFetcher,
+			make(chan ethtypes.Log, 100),
+			watcher,
+			client,
 		),
 	}
 }
