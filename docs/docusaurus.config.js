@@ -31,8 +31,7 @@ const config = {
           path: 'workflow',
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
-          editUrl:
-            'https://github.com/deepsquare-io/the-grid/tree/main/workflow/',
+          editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/docs/',
         },
         blog: {
           showReadingTime: true,
@@ -53,8 +52,7 @@ const config = {
         path: 'deepsquare-grid',
         routeBasePath: 'deepsquare-grid',
         sidebarPath: require.resolve('./sidebars.js'),
-        editUrl:
-          'https://github.com/deepsquare-io/the-grid/tree/main/deepsquare-grid/',
+        editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/docs/',
       },
     ],
     [
@@ -64,8 +62,7 @@ const config = {
         path: 'blockchain',
         routeBasePath: 'blockchain',
         sidebarPath: require.resolve('./sidebars.js'),
-        editUrl:
-          'https://github.com/deepsquare-io/the-grid/tree/main/blockchain/',
+        editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/docs/',
       },
     ],
   ],

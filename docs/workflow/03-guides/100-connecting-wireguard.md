@@ -28,6 +28,8 @@ For the rest of this guide, we assume that you have deployed an instance with th
 - 1 vCPU, 1GB of RAM, 10 GB of persistent storage
 - 1 public IP
 
+Since we are in a server-client setup, **Network Address Translation (NAT)** becomes necessary to enable communication between the clients and the external network. To achieve this, the server uses **masquerading**. Specifically, the network interface dedicated to WireGuard utilizes the Linux IP masquerade feature to perform NAT on the packets passing through that interface. This involves modifying the source IP of the packets to match the IP address of the WireGuard server. By doing so, the routing on the client-side can be configured by setting the `allowedIPs` field to specify the VPN subnet they can access. This NAT setup ensures proper communication and routing between the clients and the external network.
+
 For the sake of the example, we are also deploying NGINX servers on the compute nodes, which will open the port 8080/tcp. We will either load-balance with HAProxy or via iptables.
 
 If you can deploy a [VyOS](https://vyos.io) as an OS image, it will be a lot simpler since it is an OS optimized for routers. You can also use an [OPNSense](https://opnsense.org) OS image, which is an OS for firewalls with routing capabilities, and has a web dashboard.
@@ -491,15 +493,15 @@ A second job will have `wIQkWhjPnIg9GUg1dhH6FmEIftKuxZdkvaD9VjOWH1Q=` as private
 
 ## Why not IPsec or OpenVPN ?
 
-WireGuard is better suited than IPsec and OpenVPN due to its lightweight design, modern cryptography, built-in NAT traversal support, and simpler implementation. Its streamlined design enables it to work more efficiently over networks with limited bandwidth or high latency, while its modern cryptographic techniques reduce the computational overhead required for encryption and decryption.
+WireGuard is seamlessly integrated into the Linux kernel, delivering superior performance and employing advanced encryption techniques. Its lightweight configuration makes it particularly well-suited for deployment in DeepSquare, providing a more straightforward setup compared to OpenVPN.
 
-Additionally, WireGuard's built-in NAT traversal support means it can automatically detect and work around NAT devices without requiring complex configuration or additional network infrastructure.
+Thanks to its UDP-based nature and support for dynamic IPs, WireGuard inherently facilitates NAT traversal, rendering it highly suitable for server-client setups in a decentralized ecosystem like DeepSquare. As a result, traditional point-to-point VPN solutions like IPsec are not supported.
 
-Overall, WireGuard is a compelling option for organizations with large and complex networks where managing multiple VPN connections can become challenging.
+Overall, Wireguard is well-suited in our environment. It simplifies the process of establishing and maintaining connections across NAT devices, ensuring smooth and reliable communication between the server and clients, even in dynamic and diverse network environments like DeepSquare.
 
 ## Limitations
 
-If you enables the `slirp4netns` container networking will automatically **re-map the user as root**.
+If you enable the `slirp4netns` container networking will automatically **re-map the user as root**.
 
 Although you are remapped as root, this is still in an unprivileged container, which means that it is not possible to bind restricted ports (like 80).
 
