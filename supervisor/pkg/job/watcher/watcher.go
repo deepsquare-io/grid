@@ -183,7 +183,7 @@ func (w *Watcher) handleClaimNextJob(
 	}
 
 	// Fetch the job script
-	body, err := w.sbatch.Fetch(ctx, event.JobDefinition.BatchLocationHash)
+	fResp, err := w.sbatch.Fetch(ctx, event.JobDefinition.BatchLocationHash)
 	if err != nil {
 		logger.I.Error("slurm fetch job body failed, setting job to failed", zap.Error(err))
 		if err := w.metascheduler.SetJobStatus(ctx, event.JobId, metascheduler.JobStatusFailed, 0); err != nil {
@@ -192,7 +192,11 @@ func (w *Watcher) handleClaimNextJob(
 		return
 	}
 
-	definition := MapJobDefinitionToScheduler(event.JobDefinition, event.MaxDurationMinute, body)
+	definition := MapJobDefinitionToScheduler(
+		event.JobDefinition,
+		event.MaxDurationMinute,
+		fResp.SBatch,
+	)
 	req := &scheduler.SubmitRequest{
 		Name:          hexutil.Encode(event.JobId[:]),
 		User:          strings.ToLower(event.CustomerAddr.Hex()),

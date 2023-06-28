@@ -38,8 +38,8 @@ func (suite *HealthTestSuite) TestWatch() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	mockStream := mocks.NewHealth_WatchServer(suite.T())
-	mockStream.On("Send", mock.Anything).Return(nil)
-	mockStream.On("Context").Return(ctx)
+	mockStream.EXPECT().Send(mock.Anything).Return(nil)
+	mockStream.EXPECT().Context().Return(ctx)
 
 	// Act
 	err := suite.impl.Watch(&healthv1.HealthCheckRequest{}, mockStream)

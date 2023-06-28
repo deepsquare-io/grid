@@ -51,7 +51,7 @@ func (suite *ClientTestSuite) mockProviderJobQueue() {
 	suite.Require().NoError(err)
 
 	// Mock
-	suite.contractBackend.On("CallContract", mock.Anything, ethereum.CallMsg{
+	suite.contractBackend.EXPECT().CallContract(mock.Anything, ethereum.CallMsg{
 		To:   &metaschedulerAddress,
 		Data: input,
 	}, mock.Anything).Return(output, nil)
@@ -71,7 +71,7 @@ func (suite *ClientTestSuite) mockProviderJobQueuesContractCall(
 	suite.Require().NoError(err)
 
 	// Mock
-	suite.contractBackend.On("CallContract", mock.Anything, ethereum.CallMsg{
+	suite.contractBackend.EXPECT().CallContract(mock.Anything, ethereum.CallMsg{
 		To:   &providerJobQueuesAddress,
 		Data: input,
 	}, mock.Anything).Return(output, nil)
@@ -89,7 +89,7 @@ func (suite *ClientTestSuite) mockContractCall(
 	suite.Require().NoError(err)
 
 	// Mock
-	suite.contractBackend.On("CallContract", mock.Anything, ethereum.CallMsg{
+	suite.contractBackend.EXPECT().CallContract(mock.Anything, ethereum.CallMsg{
 		To:   &metaschedulerAddress,
 		Data: input,
 	}, mock.Anything).Return(output, nil)
@@ -97,11 +97,11 @@ func (suite *ClientTestSuite) mockContractCall(
 
 func (suite *ClientTestSuite) mockContractTransaction(name string, args ...interface{}) {
 	// Mock code presence
-	suite.contractBackend.On(
-		"PendingCodeAt",
-		mock.Anything,
-		metaschedulerAddress,
-	).Return(
+	suite.contractBackend.EXPECT().
+		PendingCodeAt(
+			mock.Anything,
+			metaschedulerAddress,
+		).Return(
 		common.FromHex("0xdeadface"),
 		nil,
 	)
@@ -113,18 +113,18 @@ func (suite *ClientTestSuite) mockContractTransaction(name string, args ...inter
 	suite.Require().NoError(err)
 
 	// Mock
-	suite.contractBackend.On(
-		"EstimateGas",
-		mock.Anything,
-		mock.MatchedBy(func(call ethereum.CallMsg) bool {
-			return call.From == fromAddress && *call.To == metaschedulerAddress &&
-				bytes.Equal(call.Data, input)
-		}),
-	).Return(
+	suite.contractBackend.EXPECT().
+		EstimateGas(
+			mock.Anything,
+			mock.MatchedBy(func(call ethereum.CallMsg) bool {
+				return call.From == fromAddress && *call.To == metaschedulerAddress &&
+					bytes.Equal(call.Data, input)
+			}),
+		).Return(
 		uint64(0),
 		nil,
 	)
-	suite.contractBackend.On("SendTransaction", mock.Anything, mock.Anything).Return(nil)
+	suite.contractBackend.EXPECT().SendTransaction(mock.Anything, mock.Anything).Return(nil)
 }
 
 func generateAddress() (pk *ecdsa.PrivateKey, address common.Address) {
@@ -165,9 +165,9 @@ func (suite *ClientTestSuite) assertMocksExpectations() {
 
 func (suite *ClientTestSuite) mustAuthenticate() {
 	// Must fetch nonce
-	suite.contractBackend.On("PendingNonceAt", mock.Anything, fromAddress).Return(nonce, nil)
+	suite.contractBackend.EXPECT().PendingNonceAt(mock.Anything, fromAddress).Return(nonce, nil)
 	// Must fetch gas price
-	suite.contractBackend.On("SuggestGasPrice", mock.Anything).Return(gasPrice, nil)
+	suite.contractBackend.EXPECT().SuggestGasPrice(mock.Anything).Return(gasPrice, nil)
 }
 
 func (suite *ClientTestSuite) TestClaim() {
@@ -180,7 +180,7 @@ func (suite *ClientTestSuite) TestClaim() {
 	)
 	suite.mockContractTransaction("claimNextJob")
 	// Must wait
-	suite.deployBackend.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, nil)
+	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
 
 	// Act
 	err := suite.impl.Claim(context.Background())
@@ -218,7 +218,7 @@ func (suite *ClientTestSuite) TestSetJobStatus() {
 		jobDuration,
 	)
 	// Must wait
-	suite.deployBackend.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, nil)
+	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
 
 	// Act
 	err := suite.impl.SetJobStatus(
@@ -259,9 +259,8 @@ func (suite *ClientTestSuite) TestWatchEvents() {
 		100,
 	)
 	sub := mocks.NewSubscription(suite.T())
-	sub.On("Unsubscribe")
-	suite.contractBackend.On(
-		"SubscribeFilterLogs",
+	sub.EXPECT().Unsubscribe()
+	suite.contractBackend.EXPECT().SubscribeFilterLogs(
 		mock.Anything,
 		mock.Anything,
 		mock.Anything,
@@ -296,7 +295,7 @@ func (suite *ClientTestSuite) TestClaimCancelling() {
 	)
 	suite.mockContractTransaction("claimNextCancellingJob")
 	// Must wait
-	suite.deployBackend.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, nil)
+	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
 
 	// Act
 	err := suite.impl.ClaimCancelling(context.Background())
@@ -316,7 +315,7 @@ func (suite *ClientTestSuite) TestClaimTopUp() {
 	)
 	suite.mockContractTransaction("claimNextTopUpJob")
 	// Must wait
-	suite.deployBackend.On("TransactionReceipt", mock.Anything, mock.Anything).Return(nil, nil)
+	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
 
 	// Act
 	err := suite.impl.ClaimTopUp(context.Background())

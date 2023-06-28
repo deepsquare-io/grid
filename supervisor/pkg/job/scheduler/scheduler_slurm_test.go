@@ -49,8 +49,7 @@ func (suite *ServiceTestSuite) TestCancel() {
 		Name: name,
 		User: user,
 	}
-	suite.ssh.On(
-		"ExecAs",
+	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		user,
 		mock.MatchedBy(func(cmd string) bool {
@@ -87,8 +86,7 @@ srun sleep infinity
 `,
 		},
 	}
-	suite.ssh.On(
-		"ExecAs",
+	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		user,
 		mock.MatchedBy(func(cmd string) bool {
@@ -121,8 +119,7 @@ func (suite *ServiceTestSuite) TestTopUp() {
 		Name:           name,
 		AdditionalTime: 30,
 	}
-	suite.ssh.On(
-		"ExecAs",
+	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		admin,
 		mock.MatchedBy(func(cmd string) bool {
@@ -130,8 +127,7 @@ func (suite *ServiceTestSuite) TestTopUp() {
 				strings.Contains(cmd, req.Name)
 		}),
 	).Return(jobID, nil)
-	suite.ssh.On(
-		"ExecAs",
+	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		admin,
 		mock.MatchedBy(func(cmd string) bool {
@@ -152,8 +148,7 @@ func (suite *ServiceTestSuite) TestTopUp() {
 
 func (suite *ServiceTestSuite) TestHealthCheck() {
 	// Arrange
-	suite.ssh.On(
-		"ExecAs",
+	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		admin,
 		"squeue",
@@ -176,8 +171,7 @@ func (suite *ServiceTestSuite) TestFindRunningJobByName() {
 		Name: name,
 		User: user,
 	}
-	suite.ssh.On(
-		"ExecAs",
+	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		user,
 		mock.MatchedBy(func(cmd string) bool {

@@ -13,19 +13,24 @@ import (
 
 type API struct {
 	sbatchapiv1alpha1.UnimplementedSBatchAPIServer
-	RedisClient *redis.Client
+	RedisClient    *redis.Client
+	loggerEndpoint string
 }
 
-func NewAPI(r *redis.Client) *API {
+func NewAPI(r *redis.Client, loggerEndpoint string) *API {
 	if r == nil {
 		logger.I.Panic("redis is nil")
 	}
 	return &API{
-		RedisClient: r,
+		RedisClient:    r,
+		loggerEndpoint: loggerEndpoint,
 	}
 }
 
-func (a *API) GetSBatch(ctx context.Context, req *sbatchapiv1alpha1.GetSBatchRequest) (*sbatchapiv1alpha1.GetSBatchResponse, error) {
+func (a *API) GetSBatch(
+	ctx context.Context,
+	req *sbatchapiv1alpha1.GetSBatchRequest,
+) (*sbatchapiv1alpha1.GetSBatchResponse, error) {
 	logger.I.Info("get", zap.String("batchLocationHash", req.BatchLocationHash))
 	resp, err := a.RedisClient.Get(ctx, req.BatchLocationHash).Result()
 	if err != nil {
@@ -34,5 +39,5 @@ func (a *API) GetSBatch(ctx context.Context, req *sbatchapiv1alpha1.GetSBatchReq
 		}
 		return nil, err
 	}
-	return &sbatchapiv1alpha1.GetSBatchResponse{Sbatch: resp}, nil
+	return &sbatchapiv1alpha1.GetSBatchResponse{Sbatch: resp, GridLoggerUrl: a.loggerEndpoint}, nil
 }

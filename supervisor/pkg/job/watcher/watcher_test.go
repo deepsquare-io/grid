@@ -17,8 +17,10 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/watcher"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/event"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )
@@ -73,86 +75,93 @@ func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
 func (suite *WatcherTestSuite) arrangeNoEvent() {
 	// Arrange
 	sub := mocks.NewSubscription(suite.T())
-	suite.metaScheduler.On("WatchEvents", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(sub, nil)
+	suite.metaScheduler.EXPECT().WatchEvents(
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(sub, nil)
 	errChan := make(chan error, 1)
 	var rErrChan <-chan error = errChan
-	sub.On("Err").Return(rErrChan)
+	sub.EXPECT().Err().Return(rErrChan)
 }
 
 // arrangeEmitClaimNextJobEvent arrange a claim next job
 func (suite *WatcherTestSuite) arrangeEmitClaimNextJobEvent(
-	event *metaschedulerabi.MetaSchedulerClaimJobEvent,
+	e *metaschedulerabi.MetaSchedulerClaimJobEvent,
 ) {
 	// Arrange
 	sub := mocks.NewSubscription(suite.T())
-	suite.metaScheduler.On("WatchEvents", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Run(func(args mock.Arguments) {
-			sink := args.Get(3).(chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent)
-			go func() {
-				sink <- event
-			}()
-		}).
-		Return(sub, nil)
+	suite.metaScheduler.EXPECT().WatchEvents(
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).RunAndReturn(func(ctx context.Context, c1 chan<- *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent, c2 chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent, c3 chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent) (event.Subscription, error) {
+		go func() {
+			c3 <- e
+		}()
+		return sub, nil
+	})
 	errChan := make(chan error, 1)
 	var rErrChan <-chan error = errChan
-	sub.On("Err").Return(rErrChan)
+	sub.EXPECT().Err().Return(rErrChan)
 
 	// Disable slurm healthcheck
-	suite.scheduler.On("HealthCheck", mock.Anything).Return(errors.New("scheduler disabled"))
+	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(errors.New("scheduler disabled"))
 }
 
 // arrangeEmitClaimNextCancellingJobEvent arrange a claim next job
 func (suite *WatcherTestSuite) arrangeEmitClaimNextCancellingJobEvent(
-	event *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent,
+	e *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent,
 ) {
 	// Arrange
 	sub := mocks.NewSubscription(suite.T())
-	suite.metaScheduler.On("WatchEvents", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Run(func(args mock.Arguments) {
-			sink := args.Get(2).(chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent)
+	suite.metaScheduler.EXPECT().
+		WatchEvents(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		RunAndReturn(func(ctx context.Context, c1 chan<- *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent, c2 chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent, c3 chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent) (event.Subscription, error) {
 			go func() {
-				sink <- event
+				c2 <- e
 			}()
-		}).
-		Return(sub, nil)
+			return sub, nil
+		})
 	errChan := make(chan error, 1)
 	var rErrChan <-chan error = errChan
-	sub.On("Err").Return(rErrChan)
+	sub.EXPECT().Err().Return(rErrChan)
 
 	// Disable slurm healthcheck
-	suite.scheduler.On("HealthCheck", mock.Anything).Return(errors.New("scheduler disabled"))
+	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(errors.New("scheduler disabled"))
 }
 
 // arrangeEmitClaimNextTopUpJobEvent arrange a claim next job
 func (suite *WatcherTestSuite) arrangeEmitClaimNextTopUpJobEvent(
-	event *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent,
+	e *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent,
 ) {
 	// Arrange
 	sub := mocks.NewSubscription(suite.T())
-	suite.metaScheduler.On("WatchEvents", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Run(func(args mock.Arguments) {
-			sink := args.Get(1).(chan<- *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent)
+	suite.metaScheduler.EXPECT().
+		WatchEvents(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		RunAndReturn(func(ctx context.Context, c1 chan<- *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent, c2 chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent, c3 chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent) (event.Subscription, error) {
 			go func() {
-				sink <- event
+				c1 <- e
 			}()
-		}).
-		Return(sub, nil)
+			return sub, nil
+		})
 	errChan := make(chan error, 1)
 	var rErrChan <-chan error = errChan
-	sub.On("Err").Return(rErrChan)
+	sub.EXPECT().Err().Return(rErrChan)
 
 	// Disable slurm healthcheck
-	suite.scheduler.On("HealthCheck", mock.Anything).Return(errors.New("scheduler disabled"))
+	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(errors.New("scheduler disabled"))
 }
 
 func (suite *WatcherTestSuite) TestClaimIndefinitely() {
 	// Arrange
 	suite.arrangeNoEvent()
-	suite.metaScheduler.On("Claim", mock.Anything).Return(nil)
-	suite.metaScheduler.On("ClaimCancelling", mock.Anything).Return(nil)
-	suite.metaScheduler.On("ClaimTopUp", mock.Anything).Return(nil)
-	suite.scheduler.On("HealthCheck", mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().Claim(mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().ClaimCancelling(mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().ClaimTopUp(mock.Anything).Return(nil)
+	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(nil)
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)
@@ -173,7 +182,7 @@ func (suite *WatcherTestSuite) TestClaimIndefinitely() {
 func (suite *WatcherTestSuite) TestClaimIndefinitelyWithSchedulerHealthCheckFail() {
 	// Arrange
 	suite.arrangeNoEvent()
-	suite.scheduler.On("HealthCheck", mock.Anything).Return(errors.New("expected error"))
+	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(errors.New("expected error"))
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
@@ -196,10 +205,8 @@ func (suite *WatcherTestSuite) TestClaimIndefinitelyWithSchedulerHealthCheckFail
 func (suite *WatcherTestSuite) TestClaimIndefinitelyWithClaimFail() {
 	// Arrange
 	suite.arrangeNoEvent()
-	suite.scheduler.On("HealthCheck", mock.Anything).Return(nil)
-	suite.metaScheduler.On("Claim", mock.Anything).Return(nil, errors.New("expected error"))
-	suite.metaScheduler.On("ClaimCancelling", mock.Anything).Return(nil)
-	suite.metaScheduler.On("ClaimTopUp", mock.Anything).Return(nil)
+	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().Claim(mock.Anything).Return(errors.New("expected error"))
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
@@ -221,18 +228,20 @@ func (suite *WatcherTestSuite) TestClaimIndefinitelyWithClaimFail() {
 func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 	// Arrange
 	suite.arrangeEmitClaimNextJobEvent(fixtureClaimNextJobEvent)
-	suite.metaScheduler.On("GetProviderAddress").Return(fixtureClaimNextJobEvent.ProviderAddr)
-	suite.sbatch.On(
-		"Fetch",
-		mock.Anything,
-		fixtureClaimNextJobEvent.JobDefinition.BatchLocationHash,
-	).Return(fixtureBody, nil)
+	suite.metaScheduler.EXPECT().GetProviderAddress().Return(fixtureClaimNextJobEvent.ProviderAddr)
+	suite.sbatch.EXPECT().
+		Fetch(
+			mock.Anything,
+			fixtureClaimNextJobEvent.JobDefinition.BatchLocationHash,
+		).Return(sbatch.FetchResponse{
+		SBatch: fixtureBody,
+	}, nil)
 	d := watcher.MapJobDefinitionToScheduler(
 		fixtureClaimNextJobEvent.JobDefinition,
 		fixtureClaimNextJobEvent.MaxDurationMinute,
 		fixtureBody,
 	)
-	suite.scheduler.On("Submit", mock.Anything, &scheduler.SubmitRequest{
+	suite.scheduler.EXPECT().Submit(mock.Anything, &scheduler.SubmitRequest{
 		Name:          hexutil.Encode(fixtureClaimNextJobEvent.JobId[:]),
 		User:          strings.ToLower(fixtureClaimNextJobEvent.CustomerAddr.Hex()),
 		JobDefinition: &d,
@@ -257,7 +266,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 func (suite *WatcherTestSuite) TestWatchClaimNextJobIgnoresEvent() {
 	// Arrange
 	suite.arrangeEmitClaimNextJobEvent(fixtureClaimNextJobEvent)
-	suite.metaScheduler.On("GetProviderAddress").Return(common.HexToAddress("123"))
+	suite.metaScheduler.EXPECT().GetProviderAddress().Return(common.HexToAddress("123"))
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)
@@ -280,9 +289,10 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
 	badFixtureEvent := *fixtureClaimNextJobEvent
 	badFixtureEvent.MaxDurationMinute = 0
 	suite.arrangeEmitClaimNextJobEvent(&badFixtureEvent)
-	suite.metaScheduler.On("GetProviderAddress").Return(fixtureClaimNextJobEvent.ProviderAddr)
+	suite.metaScheduler.EXPECT().GetProviderAddress().Return(fixtureClaimNextJobEvent.ProviderAddr)
 	// Must fail job
-	suite.metaScheduler.On("SetJobStatus", mock.Anything, badFixtureEvent.JobId, metascheduler.JobStatusFailed, uint64(0)).
+	suite.metaScheduler.EXPECT().
+		SetJobStatus(mock.Anything, badFixtureEvent.JobId, metascheduler.JobStatusFailed, uint64(0)).
 		Return(nil)
 
 	// Act
@@ -304,15 +314,15 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
 
 func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 	// Arrange
-	suite.metaScheduler.On("GetProviderAddress").Return(fixtureClaimNextJobEvent.ProviderAddr)
+	suite.metaScheduler.EXPECT().GetProviderAddress().Return(fixtureClaimNextJobEvent.ProviderAddr)
 	suite.arrangeEmitClaimNextJobEvent(fixtureClaimNextJobEvent)
-	suite.sbatch.On(
-		"Fetch",
+	suite.sbatch.EXPECT().Fetch(
 		mock.Anything,
 		fixtureClaimNextJobEvent.JobDefinition.BatchLocationHash,
-	).Return("", errors.New("expected error"))
+	).Return(sbatch.FetchResponse{}, errors.New("expected error"))
 	// Must fail job
-	suite.metaScheduler.On("SetJobStatus", mock.Anything, fixtureClaimNextJobEvent.JobId, metascheduler.JobStatusFailed, uint64(0)).
+	suite.metaScheduler.EXPECT().
+		SetJobStatus(mock.Anything, fixtureClaimNextJobEvent.JobId, metascheduler.JobStatusFailed, uint64(0)).
 		Return(nil)
 
 	// Act
@@ -334,25 +344,26 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 
 func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	// Arrange
-	suite.metaScheduler.On("GetProviderAddress").Return(fixtureClaimNextJobEvent.ProviderAddr)
+	suite.metaScheduler.EXPECT().GetProviderAddress().Return(fixtureClaimNextJobEvent.ProviderAddr)
 	suite.arrangeEmitClaimNextJobEvent(fixtureClaimNextJobEvent)
-	suite.sbatch.On(
-		"Fetch",
+	suite.sbatch.EXPECT().Fetch(
 		mock.Anything,
 		fixtureClaimNextJobEvent.JobDefinition.BatchLocationHash,
-	).Return(fixtureBody, nil)
+	).Return(sbatch.FetchResponse{
+		SBatch: fixtureBody,
+	}, nil)
 	d := watcher.MapJobDefinitionToScheduler(
 		fixtureClaimNextJobEvent.JobDefinition,
 		fixtureClaimNextJobEvent.MaxDurationMinute,
 		fixtureBody,
 	)
-	suite.scheduler.On("Submit", mock.Anything, &scheduler.SubmitRequest{
+	suite.scheduler.EXPECT().Submit(mock.Anything, &scheduler.SubmitRequest{
 		Name:          hexutil.Encode(fixtureClaimNextJobEvent.JobId[:]),
 		User:          strings.ToLower(fixtureClaimNextJobEvent.CustomerAddr.Hex()),
 		JobDefinition: &d,
 	}).Return("0", errors.New("expected error"))
 	// Must refuse job because we couldn't fetch the job batch script
-	suite.metaScheduler.On("RefuseJob", mock.Anything, mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().RefuseJob(mock.Anything, mock.Anything).Return(nil)
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
@@ -374,12 +385,15 @@ func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEvent() {
 	// Arrange
 	status := metascheduler.JobStatusRunning
 	suite.arrangeEmitClaimNextCancellingJobEvent(fixtureCancellingEvent)
-	suite.metaScheduler.On("GetJobStatus", mock.Anything, fixtureCancellingEvent.JobId).
+	suite.metaScheduler.EXPECT().GetJobStatus(mock.Anything, fixtureCancellingEvent.JobId).
 		Return(status, nil)
-	suite.metaScheduler.On("GetProviderAddress").Return(fixtureCancellingEvent.ProviderAddr)
-	suite.scheduler.On("CancelJob", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-		status = metascheduler.JobStatusCancelled
-	}).Return(nil)
+	suite.metaScheduler.EXPECT().GetProviderAddress().Return(fixtureCancellingEvent.ProviderAddr)
+	suite.scheduler.EXPECT().
+		CancelJob(mock.Anything, mock.Anything).
+		RunAndReturn(func(ctx context.Context, cr *scheduler.CancelRequest) error {
+			status = metascheduler.JobStatusCancelled
+			return nil
+		})
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)
@@ -400,7 +414,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEvent() {
 func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEventIgnoresEvent() {
 	// Arrange
 	suite.arrangeEmitClaimNextCancellingJobEvent(fixtureCancellingEvent)
-	suite.metaScheduler.On("GetProviderAddress").Return(common.HexToAddress("123"))
+	suite.metaScheduler.EXPECT().GetProviderAddress().Return(common.HexToAddress("123"))
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)
@@ -422,8 +436,10 @@ func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEventIgnoresEvent(
 func (suite *WatcherTestSuite) TestWatchClaimNextTopUpJobEvent() {
 	// Arrange
 	suite.arrangeEmitClaimNextTopUpJobEvent(fixtureClaimNextTopUpJobEvent)
-	suite.scheduler.On("TopUp", mock.Anything, mock.Anything).Return(nil)
-	suite.metaScheduler.On("GetProviderAddress").Return(fixtureClaimNextTopUpJobEvent.ProviderAddr)
+	suite.scheduler.EXPECT().TopUp(mock.Anything, mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().
+		GetProviderAddress().
+		Return(fixtureClaimNextTopUpJobEvent.ProviderAddr)
 
 	// Act
 	ctx, cancel := context.WithTimeout(context.Background(), 10*pollingTime)

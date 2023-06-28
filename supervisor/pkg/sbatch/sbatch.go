@@ -10,11 +10,16 @@ import (
 	"google.golang.org/grpc"
 )
 
+type FetchResponse struct {
+	SBatch        string
+	GridLoggerURL string
+}
+
 type Client interface {
 	// HealthCheck sends a simple commands to check if the service is alive.
 	HealthCheck(ctx context.Context) error
 	// Fetch a job batch content.
-	Fetch(ctx context.Context, hash string) (string, error)
+	Fetch(ctx context.Context, hash string) (FetchResponse, error)
 }
 
 func NewClient(
@@ -56,13 +61,13 @@ func (s *client) HealthCheck(ctx context.Context) error {
 	return nil
 }
 
-func (s *client) Fetch(ctx context.Context, hash string) (string, error) {
+func (s *client) Fetch(ctx context.Context, hash string) (FetchResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	logger.I.Info("Fetch sbatch", zap.String("hash", hash))
 	client, conn, err := s.dial(ctx)
 	if err != nil {
-		return "", err
+		return FetchResponse{}, err
 	}
 	defer func() {
 		_ = conn.Close()
@@ -70,5 +75,8 @@ func (s *client) Fetch(ctx context.Context, hash string) (string, error) {
 	resp, err := client.GetSBatch(ctx, &sbatchv1alpha1.GetSBatchRequest{
 		BatchLocationHash: hash,
 	})
-	return resp.GetSbatch(), err
+	return FetchResponse{
+		SBatch:        resp.GetSbatch(),
+		GridLoggerURL: resp.GetGridLoggerUrl(),
+	}, err
 }

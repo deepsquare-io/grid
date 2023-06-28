@@ -36,15 +36,16 @@ func (suite *ServerTestSuite) TestSetJobStatus() {
 	done := make(chan struct{})
 	defer close(done)
 
-	suite.jobHandler.On(
-		"SetJobStatus",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Run(func(_ mock.Arguments) {
+	suite.jobHandler.EXPECT().
+		SetJobStatus(
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
 		done <- struct{}{}
-	}).Return(nil)
+		return nil
+	})
 
 	// Act
 	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
@@ -72,15 +73,16 @@ func (suite *ServerTestSuite) TestSetJobStatusFailure() {
 	done := make(chan struct{})
 	defer close(done)
 
-	suite.jobHandler.On(
-		"SetJobStatus",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Run(func(_ mock.Arguments) {
+	suite.jobHandler.EXPECT().
+		SetJobStatus(
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
 		done <- struct{}{}
-	}).Return(err)
+		return err
+	})
 
 	// Act
 	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
@@ -108,17 +110,17 @@ func (suite *ServerTestSuite) TestSetJobStatusBlocking() {
 	done := make(chan struct{})
 	defer close(done)
 
-	suite.jobHandler.On(
-		"SetJobStatus",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Run(func(args mock.Arguments) {
-		<-args[0].(context.Context).Done()
-	}).Run(func(_ mock.Arguments) {
+	suite.jobHandler.EXPECT().
+		SetJobStatus(
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
+		<-ctx.Done()
 		done <- struct{}{}
-	}).Return(context.Canceled)
+		return context.Canceled
+	})
 
 	// Act
 	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
@@ -146,15 +148,16 @@ func (suite *ServerTestSuite) TestSetJobStatusThrowSameStatusError() {
 	done := make(chan struct{})
 	defer close(done)
 
-	suite.jobHandler.On(
-		"SetJobStatus",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Run(func(_ mock.Arguments) {
+	suite.jobHandler.EXPECT().
+		SetJobStatus(
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
 		done <- struct{}{}
-	}).Return(&metascheduler.SameStatusError{})
+		return &metascheduler.SameStatusError{}
+	})
 
 	// Act
 	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{
@@ -181,15 +184,16 @@ func (suite *ServerTestSuite) TestSetJobStatusThrowTransitionError() {
 	done := make(chan struct{})
 	defer close(done)
 
-	suite.jobHandler.On(
-		"SetJobStatus",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Run(func(_ mock.Arguments) {
+	suite.jobHandler.EXPECT().
+		SetJobStatus(
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
 		done <- struct{}{}
-	}).Return(&metascheduler.InvalidTransitionFromScheduled{})
+		return &metascheduler.InvalidTransitionFromScheduled{}
+	})
 
 	// Act
 	resp, err := suite.impl.SetJobStatus(ctx, &supervisorv1alpha1.SetJobStatusRequest{

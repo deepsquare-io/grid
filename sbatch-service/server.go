@@ -220,7 +220,7 @@ var app = &cli.App{
 
 		// gRPC server
 		g := grpc.NewServer()
-		sbatchapiv1alpha1.RegisterSBatchAPIServer(g, sbatch.NewAPI(rdb))
+		sbatchapiv1alpha1.RegisterSBatchAPIServer(g, sbatch.NewAPI(rdb, loggerEndpoint))
 
 		rg := mixedHandler(r, g)
 
