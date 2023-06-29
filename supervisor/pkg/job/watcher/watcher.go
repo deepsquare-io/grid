@@ -1,6 +1,8 @@
 package watcher
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -84,23 +86,33 @@ func (w *Watcher) logToUser(
 	defer cancel()
 	c, close, err := w.gridLoggerDialer.DialContext(ctx, endpoint)
 	if err != nil {
+		log.Error("log to user: dial fail", zap.Error(err))
 		return err
 	}
 	defer func() {
 		_ = close()
 	}()
 
-	if err := c.Send(&loggerv1alpha1.WriteRequest{
-		LogName:   jobName,
-		Data:      content,
-		User:      user,
-		Timestamp: time.Now().UnixNano(),
-	}); err != nil {
-		log.Debug("failed log to user")
-		return err
+	// Iterate line by line
+	scanner := bufio.NewScanner(bytes.NewReader(content))
+	for scanner.Scan() {
+		if err := c.Send(&loggerv1alpha1.WriteRequest{
+			LogName:   jobName,
+			Data:      scanner.Bytes(),
+			User:      user,
+			Timestamp: time.Now().UnixNano(),
+		}); err != nil {
+			log.Error("log to user: send fail", zap.Error(err))
+			return err
+		}
 	}
+
+	if err := scanner.Err(); err != nil {
+		log.Error("log to user: scanner thrown an error", zap.Error(err))
+	}
+
 	if _, err := c.CloseAndRecv(); err != nil {
-		log.Error("failed close log to user gracefully", zap.Error(err))
+		log.Error("log to user: failed close gracefully", zap.Error(err))
 	}
 	log.Debug("successfully logged to user")
 	return nil
