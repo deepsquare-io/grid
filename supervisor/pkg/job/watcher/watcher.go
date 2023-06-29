@@ -73,6 +73,15 @@ func (w *Watcher) logToUser(
 	user string,
 	content []byte,
 ) error {
+	logger.I.Debug(
+		"sending log to user",
+		zap.String("endpoint", endpoint),
+		zap.String("jobName", jobName),
+		zap.String("user", user),
+		zap.ByteString("content", content),
+	)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	c, close, err := w.gridLoggerDialer.DialContext(ctx, endpoint)
 	if err != nil {
 		return err
