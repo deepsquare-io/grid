@@ -81,6 +81,7 @@ func (suite *WatcherTestSuite) expectLoggerSend() *mocks.LoggerAPI_WriteClient {
 		DialContext(mock.Anything, mock.Anything).
 		Return(c, func() error { return nil }, nil)
 	c.EXPECT().Send(mock.Anything).Return(nil)
+	c.EXPECT().CloseAndRecv().Return(nil, nil)
 	return c
 }
 
