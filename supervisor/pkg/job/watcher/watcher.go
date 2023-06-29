@@ -99,6 +99,9 @@ func (w *Watcher) logToUser(
 		log.Debug("failed log to user")
 		return err
 	}
+	if _, err := c.CloseAndRecv(); err != nil {
+		log.Error("failed close log to user gracefully", zap.Error(err))
+	}
 	log.Debug("successfully logged to user")
 	return nil
 }
