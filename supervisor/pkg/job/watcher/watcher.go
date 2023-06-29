@@ -73,13 +73,13 @@ func (w *Watcher) logToUser(
 	user string,
 	content []byte,
 ) error {
-	logger.I.Debug(
-		"sending log to user",
+	log := logger.I.With(
 		zap.String("endpoint", endpoint),
 		zap.String("jobName", jobName),
 		zap.String("user", user),
 		zap.ByteString("content", content),
 	)
+	log.Debug("sending log to user")
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	c, close, err := w.gridLoggerDialer.DialContext(ctx, endpoint)
@@ -90,12 +90,17 @@ func (w *Watcher) logToUser(
 		_ = close()
 	}()
 
-	return c.Send(&loggerv1alpha1.WriteRequest{
+	if err := c.Send(&loggerv1alpha1.WriteRequest{
 		LogName:   jobName,
 		Data:      content,
 		User:      user,
 		Timestamp: time.Now().UnixNano(),
-	})
+	}); err != nil {
+		log.Debug("failed log to user")
+		return err
+	}
+	log.Debug("successfully logged to user")
+	return nil
 }
 
 // Watch incoming jobs and handles it.
