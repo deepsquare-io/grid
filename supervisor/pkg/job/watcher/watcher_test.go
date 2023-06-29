@@ -53,23 +53,35 @@ srun hostname
 
 type WatcherTestSuite struct {
 	suite.Suite
-	metaScheduler *mocks.MetaScheduler
-	scheduler     *mocks.Scheduler
-	sbatch        *mocks.Client
-	impl          *watcher.Watcher
+	metaScheduler    *mocks.MetaScheduler
+	scheduler        *mocks.Scheduler
+	sbatch           *mocks.Client
+	gridLoggerDialer *mocks.Dialer
+	impl             *watcher.Watcher
 }
 
 func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
 	suite.metaScheduler = mocks.NewMetaScheduler(suite.T())
 	suite.scheduler = mocks.NewScheduler(suite.T())
 	suite.sbatch = mocks.NewClient(suite.T())
+	suite.gridLoggerDialer = mocks.NewDialer(suite.T())
 	suite.impl = watcher.New(
 		suite.metaScheduler,
 		suite.scheduler,
 		suite.sbatch,
 		pollingTime,
 		lock.NewResourceManager(),
+		suite.gridLoggerDialer,
 	)
+}
+
+func (suite *WatcherTestSuite) expectLoggerSend() *mocks.LoggerAPI_WriteClient {
+	c := mocks.NewLoggerAPI_WriteClient(suite.T())
+	suite.gridLoggerDialer.EXPECT().
+		DialContext(mock.Anything, mock.Anything).
+		Return(c, func() error { return nil }, nil)
+	c.EXPECT().Send(mock.Anything).Return(nil)
+	return c
 }
 
 func (suite *WatcherTestSuite) arrangeNoEvent() {
@@ -344,6 +356,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 
 func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	// Arrange
+	suite.expectLoggerSend()
 	suite.metaScheduler.EXPECT().GetProviderAddress().Return(fixtureClaimNextJobEvent.ProviderAddr)
 	suite.arrangeEmitClaimNextJobEvent(fixtureClaimNextJobEvent)
 	suite.sbatch.EXPECT().Fetch(

@@ -84,12 +84,17 @@ true
 		eof,
 	)
 	out, err := s.ExecAs(ctx, req.User, cmd)
+	out = strings.TrimSpace(strings.TrimRight(string(out), "\n"))
 	if err != nil {
 		logger.I.Error("Submit failed with error", zap.Error(err), zap.String("out", out))
-		return strings.TrimSpace(strings.TrimRight(string(out), "\n")), err
+		return out, fmt.Errorf(
+			"failed to submit: %w, %s",
+			err,
+			out,
+		)
 	}
 
-	return strings.TrimSpace(strings.TrimRight(string(out), "\n")), nil
+	return out, nil
 }
 
 // TopUp add additional time to a SLURM job
@@ -105,8 +110,10 @@ func (s *Slurm) TopUp(ctx context.Context, req *TopUpRequest) error {
 
 	cmd := fmt.Sprintf("%s update job %d TimeLimit+=%d", s.scontrol, jobID, req.AdditionalTime)
 	out, err := s.ExecAs(ctx, s.adminUser, cmd)
+	out = strings.TrimSpace(strings.TrimRight(string(out), "\n"))
 	if err != nil {
 		logger.I.Error("TopUp failed with error", zap.Error(err), zap.String("out", out))
+		return fmt.Errorf("failed to top up: %w, %s", err, out)
 	}
 	return err
 }
@@ -127,14 +134,15 @@ func (s *Slurm) FindRunningJobByName(
 ) (int, error) {
 	cmd := fmt.Sprintf("%s --name %s -O JobId:256 --noheader", s.squeue, req.Name)
 	out, err := s.ExecAs(ctx, req.User, cmd)
+	out = strings.TrimSpace(strings.TrimRight(string(out), "\n"))
 	if err != nil {
 		logger.I.Error(
 			"FindRunningJobByName failed with error",
 			zap.Error(err),
 			zap.String("out", out),
 		)
-		return 0, err
+		return 0, fmt.Errorf("failed to find job: %w, %s", err, out)
 	}
 
-	return strconv.Atoi(strings.TrimSpace(strings.TrimRight(out, "\n")))
+	return strconv.Atoi(out)
 }

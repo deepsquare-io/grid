@@ -3,12 +3,15 @@ package watcher
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
+	loggerv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/gridlogger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
@@ -21,12 +24,13 @@ import (
 const claimJobMaxTimeout = time.Duration(60 * time.Second)
 
 type Watcher struct {
-	metascheduler   metascheduler.MetaScheduler
-	scheduler       scheduler.Scheduler
-	sbatch          sbatch.Client
-	pollingTime     time.Duration
-	resourceManager *lock.ResourceManager
-	claimMutex      sync.Mutex
+	metascheduler    metascheduler.MetaScheduler
+	scheduler        scheduler.Scheduler
+	sbatch           sbatch.Client
+	pollingTime      time.Duration
+	resourceManager  *lock.ResourceManager
+	gridLoggerDialer gridlogger.Dialer
+	claimMutex       sync.Mutex
 }
 
 func New(
@@ -35,6 +39,7 @@ func New(
 	sbatch sbatch.Client,
 	pollingTime time.Duration,
 	resourceManager *lock.ResourceManager,
+	gridLoggerDialer gridlogger.Dialer,
 ) *Watcher {
 	if metascheduler == nil {
 		logger.I.Panic("metascheduler is nil")
@@ -48,13 +53,40 @@ func New(
 	if resourceManager == nil {
 		logger.I.Panic("resourceManager is nil")
 	}
-	return &Watcher{
-		metascheduler:   metascheduler,
-		scheduler:       scheduler,
-		sbatch:          sbatch,
-		pollingTime:     pollingTime,
-		resourceManager: resourceManager,
+	if gridLoggerDialer == nil {
+		logger.I.Panic("gridLoggerDialer is nil")
 	}
+	return &Watcher{
+		metascheduler:    metascheduler,
+		scheduler:        scheduler,
+		sbatch:           sbatch,
+		pollingTime:      pollingTime,
+		resourceManager:  resourceManager,
+		gridLoggerDialer: gridLoggerDialer,
+	}
+}
+
+func (w *Watcher) logToUser(
+	ctx context.Context,
+	endpoint string,
+	jobName string,
+	user string,
+	content []byte,
+) error {
+	c, close, err := w.gridLoggerDialer.DialContext(ctx, endpoint)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = close()
+	}()
+
+	return c.Send(&loggerv1alpha1.WriteRequest{
+		LogName:   jobName,
+		Data:      content,
+		User:      user,
+		Timestamp: time.Now().UnixNano(),
+	})
 }
 
 // Watch incoming jobs and handles it.
@@ -192,25 +224,37 @@ func (w *Watcher) handleClaimNextJob(
 		return
 	}
 
+	jobName := hexutil.Encode(event.JobId[:])
+	user := strings.ToLower(event.CustomerAddr.Hex())
+
 	definition := MapJobDefinitionToScheduler(
 		event.JobDefinition,
 		event.MaxDurationMinute,
 		fResp.SBatch,
 	)
 	req := &scheduler.SubmitRequest{
-		Name:          hexutil.Encode(event.JobId[:]),
-		User:          strings.ToLower(event.CustomerAddr.Hex()),
+		Name:          jobName,
+		User:          user,
 		JobDefinition: &definition,
 	}
 
 	// Lock the job: avoid any mutation of the job until we receive a response from sbatch
-	w.resourceManager.Lock(hexutil.Encode(event.JobId[:]))
-	defer w.resourceManager.Unlock(hexutil.Encode(event.JobId[:]))
+	w.resourceManager.Lock(jobName)
+	defer w.resourceManager.Unlock(jobName)
 
 	// Submit the job script
 	resp, err := w.scheduler.Submit(ctx, req)
 	if err != nil {
 		logger.I.Error("slurm submit job failed", zap.Error(err))
+		if err := w.logToUser(
+			ctx,
+			fResp.GridLoggerURL,
+			jobName,
+			user,
+			[]byte(fmt.Sprintf("slurm failed to submit the job: %s", err)),
+		); err != nil {
+			logger.I.Error("failed to log error to the user", zap.Error(err))
+		}
 		if err := w.metascheduler.RefuseJob(ctx, event.JobId); err != nil {
 			logger.I.Error("failed to refuse a job", zap.Error(err))
 		}

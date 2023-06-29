@@ -98,6 +98,8 @@ mocks:
 	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler --name=MetaScheduler
 	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi --name=JobHandler
 	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1 --name=Health_WatchServer
+	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/generated/logger/v1alpha1 --name=LoggerAPI_WriteClient
+	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/gridlogger --name=Dialer
 	$(mockery) --srcpkg github.com/ethereum/go-ethereum/accounts/abi/bind --name=ContractBackend
 	$(mockery) --srcpkg github.com/ethereum/go-ethereum/accounts/abi/bind --name=DeployBackend
 	$(mockery) --srcpkg github.com/ethereum/go-ethereum --name=Subscription

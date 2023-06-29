@@ -11,6 +11,7 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/debug"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/gridlogger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/watcher"
@@ -335,12 +336,26 @@ func Init(ctx context.Context) *Container {
 		publicAddress,
 	)
 	resourceManager := lock.NewResourceManager()
+
+	// TODO: do not hardcode this
+	caCertPool, err := x509.SystemCertPool()
+	if err != nil {
+		caCertPool = x509.NewCertPool()
+	}
+	gridLoggerOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(credentials.NewTLS(&cryptotls.Config{
+			RootCAs: caCertPool,
+		})),
+	}
 	watcher := watcher.New(
 		metascheduler,
 		slurmJobService,
 		sbatchClient,
 		time.Duration(5*time.Second),
 		resourceManager,
+		gridlogger.NewDialer(
+			gridLoggerOpts...,
+		),
 	)
 
 	opts := []grpc.ServerOption{}
