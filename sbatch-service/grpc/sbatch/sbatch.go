@@ -31,7 +31,11 @@ func (a *API) GetSBatch(
 	ctx context.Context,
 	req *sbatchapiv1alpha1.GetSBatchRequest,
 ) (*sbatchapiv1alpha1.GetSBatchResponse, error) {
-	logger.I.Info("get", zap.String("batchLocationHash", req.BatchLocationHash))
+	logger.I.Info(
+		"get",
+		zap.String("batchLocationHash", req.BatchLocationHash),
+		zap.String("gridLoggerURL", a.loggerEndpoint),
+	)
 	resp, err := a.RedisClient.Get(ctx, req.BatchLocationHash).Result()
 	if err != nil {
 		if err == redis.Nil {
