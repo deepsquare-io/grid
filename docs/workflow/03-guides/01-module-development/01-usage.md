@@ -4,7 +4,7 @@ Instead of using a `run` step, you can use a `use` step to invoke a module.
 
 Specify:
 
-- The `source` of the module, which is the git repository accessible via HTTPS. You can specify a git tag by adding `@<git-tag>` as a suffix. You can also specify the git SHA commit `@<git-commit-sha>`, which you can shorten to 7 characters. Otherwise, the HEAD commit will be used.
+- The `source` of the module, which is the git repository accessible via HTTPS. You can specify a git tag by adding `@<git-tag>` as a suffix. You can also specify the git SHA commit `@<git-commit-sha>`, which you can shorten to 7 characters. Otherwise, the HEAD commit will be used. The format of the path is the following: `<host>/<owner>/<repo>[/<path>]`. If the git repository is a monorepo of modules, you can specify the path to the directory containing a `module.yaml` by appending `/path` (example: `github.com/deepsquare-io/workflow-module-example/other-module-example`).
 - The `args`, which must match the `inputs` field of the module.
 - The `exportEnvAs`, which allows to use the `outputs` of the module as environment variables. The variables will be prefixed with the value of `exportEnvAs`.
 
