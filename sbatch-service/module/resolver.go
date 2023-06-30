@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -25,9 +26,24 @@ func isCommitHash(str string) bool {
 	return commitHashRegex.MatchString(str)
 }
 
-func Resolve(ctx context.Context, j *model.Job, s *model.Step, repository string, ref string) (*model.Module, error) {
+func urlParse(url string) (host, owner, repo, path string) {
+	host, rest, _ := strings.Cut(url, "/")
+	owner, rest, _ = strings.Cut(rest, "/")
+	repo, path, _ = strings.Cut(rest, "/")
+	return host, owner, repo, path
+}
+
+func Resolve(
+	ctx context.Context,
+	j *model.Job,
+	s *model.Step,
+	repository string,
+	ref string,
+) (*model.Module, error) {
+	host, owner, repo, path := urlParse(repository)
+
 	opts := &git.CloneOptions{
-		URL: fmt.Sprintf("https://%s", repository),
+		URL: fmt.Sprintf("https://%s/%s/%s", host, owner, repo),
 	}
 
 	switch {
@@ -64,7 +80,11 @@ func Resolve(ctx context.Context, j *model.Job, s *model.Step, repository string
 	}
 
 	// Read the contents of the module file
-	file, err := wt.Filesystem.Open(moduleFileName)
+	filePath := moduleFileName
+	if path != "" {
+		filePath = fmt.Sprintf("%s/%s", path, moduleFileName)
+	}
+	file, err := wt.Filesystem.Open(filePath)
 	if err != nil {
 		return nil, err
 	}

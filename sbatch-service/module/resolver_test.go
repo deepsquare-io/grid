@@ -43,6 +43,11 @@ func TestResolve(t *testing.T) {
 			expectedName: "Hello World",
 			title:        "Positive test: tag",
 		},
+		{
+			repository:   "github.com/deepsquare-io/workflow-module-example/other-module-example",
+			expectedName: "Another Hello World",
+			title:        "Positive test: submodule",
+		},
 	}
 
 	for _, tt := range tests {
