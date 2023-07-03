@@ -30,7 +30,7 @@ A workflow file is a JSON-formatted file that defines resource allocation and ex
 }
 ```
 
-To learn more about Workflow files, read [Part 2: Writing a workflow file](/workflow/getting-started/part-2).
+To learn more about Workflow files, check out the [Getting Started](/workflow/getting-started/introduction).
 
 ## Running a Workflow in the Dev Application
 
