@@ -1,4 +1,4 @@
-# Using bind mounts
+# Mounting volumes from the host to the container
 
 :::caution
 

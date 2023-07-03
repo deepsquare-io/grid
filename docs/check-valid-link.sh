@@ -11,7 +11,7 @@ trap cleanup EXIT
 sleep 10
 
 mkdir -p spider && cd spider || exit
-wget --spider -nv -nd -r -o wget.log -l 100 http://localhost:37628/workflow/introduction/overview
+wget --spider -nv -nd -r -o wget.log -l 100 http://localhost:37628/workflow/overview
 
 grep "broken links" wget.log
 echo Check spider/wget.log

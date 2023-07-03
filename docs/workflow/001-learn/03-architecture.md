@@ -1,6 +1,4 @@
----
-title: Architecture
----
+# Architecture
 
 ## DeepSquare's Job Scheduling Architecture
 

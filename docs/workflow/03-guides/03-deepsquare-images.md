@@ -1,4 +1,4 @@
-# Using DeepSquare-hosted images
+# Using pre-cached DeepSquare-hosted images
 
 The images hosted by DeepSquare are unpacked container images distributed on a read-only file system called CernVM-FS.
 

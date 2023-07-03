@@ -1,17 +1,17 @@
-# Using container runtimes
+# Switching of container runtimes
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
-The container runtime is software that makes it easy to create, manage and destroy containers. Common container runtimes are [containerd](https://containerd.io), [runc](https://github.com/opencontainers/runc)(the Docker runtime) or [crun](https://github.com/containers/crun)(the Podman runtime).
+The container runtime is software that makes it easy to create, manage and destroy containers. Common container runtimes are [containerd](https://containerd.io), [runc](https://github.com/opencontainers/runc) (the Docker runtime) or [crun](https://github.com/containers/crun) (the Podman runtime).
 
 While these runtimes meet the OCI specifications perfectly, we have some requirements to optimize for task scheduling in a HPC environment:
 
-- Rootless and privilege-free by default
+- Rootless and unprivileged by default
 - GPU and MPI compatible
 - No performance overhead, no network overhead
 
-Apptainer and Enroot are the standards container runtimes in HPC.
+Therefore, Apptainer and Enroot are the best candidates, which are the standards container runtimes in an HPC environment.
 
 ## Apptainer
 

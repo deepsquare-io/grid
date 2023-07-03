@@ -298,6 +298,18 @@ a.card:hover {
 }
 
 /* Sidebar nav header  */
+.menu>.menu__list>.theme-doc-sidebar-item-link-level-1 {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.menu>.menu__list>.menu__list-item>.theme-doc-sidebar-item-link-level-1 a {
+  padding-left: var(--ifm-col-spacing-vertical);
+}
+
 .menu>.menu__list>.menu__list-item>.menu__list-item-collapsible {
   margin-bottom: 4px;
   color: gray;
@@ -313,9 +325,6 @@ a.card:hover {
 
 /* Disable click events for large screens  */
 @media (min-width: 997px) {
-  .menu>.menu__list>.menu__list-item>.menu__link {
-    pointer-events: none;
-  }
 }
 
 .menu>ul.menu__list>li.menu__list-item:first-child div.title {

@@ -1,4 +1,4 @@
-# Exposing container logs
+# Exposing and fetching job logs
 
 Because DeepSquare is decentralized, we cannot open ports or expect infrastructure provider to open ports. Instead the job is aggregating the logs and pushing them to a remote server.
 

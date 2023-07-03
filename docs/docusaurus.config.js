@@ -85,7 +85,7 @@ const config = {
         },
         items: [
           {
-            href: '/workflow/introduction/overview',
+            href: '/workflow/overview',
             label: 'Workflow Documentation',
             position: 'left',
           },

@@ -1,4 +1,4 @@
-# Re-mapping to root
+# Running the container as root
 
 Fundamentally, containers uses user namespaces, a feature of the Linux kernel that provide a way to isolate and control user and group permissions within a container or other process. This isolation can help improve security and prevent container breakouts or privilege escalation attacks.
 

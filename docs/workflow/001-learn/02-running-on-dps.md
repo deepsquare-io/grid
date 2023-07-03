@@ -1,8 +1,4 @@
----
-title: Running jobs on DeepSquare
----
-
-# Run Your Workloads on DeepSquare
+# Running jobs on DeepSquare
 
 DeepSquare allows you to run your computational tasks on any compute provider within the DeepSquare Grid through job scheduling, container technologies, and Web3. Container technologies ensure compatibility across different clusters, while web3 provides transparency, availability, and scalability as the backbone of a global job scheduler.
 
@@ -52,7 +48,7 @@ Once you've prepared your workflow file, acquired credits, and obtained SQUARE t
 
 ### Monitoring Job Status
 
-Monitor your [job status](/workflow/introduction/core-concepts#job-status) until it's finished to retrieve your job results, if any.
+Monitor your [job status](/workflow/learn/core-concepts#job-status) until it's finished to retrieve your job results, if any.
 
 ### Job Completion
 

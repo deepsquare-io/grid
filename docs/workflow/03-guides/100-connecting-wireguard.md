@@ -1,4 +1,4 @@
-# Connecting a wireguard tunnel
+# Exposing all the ports using a Wireguard tunnel
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

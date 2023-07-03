@@ -1,4 +1,4 @@
-# Connecting a bore tunnel (expose HTTPS quick and easy)
+# Exposing HTTPS using a Bore tunnel without overhead
 
 While a wireguard tunnel allow UDP and TCP ports forwarding, it's quite complicated and heavy to setup.
 

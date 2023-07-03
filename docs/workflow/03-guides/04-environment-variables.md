@@ -1,4 +1,4 @@
-# Using environment variables
+# Leveraging environment variables to configure a workload
 
 Environment variables are the best way to customize your environment without having to rebuild your container image.
 
