@@ -8,6 +8,7 @@ export default function DocCard({ children, title, href, startDecorator, sx }) {
       orientation="horizontal"
       variant="outlined"
       sx={{
+        p: "2rem",
         "&:hover": {
           boxShadow: "md",
           borderColor: "neutral.outlinedHoverBorder",
@@ -21,7 +22,9 @@ export default function DocCard({ children, title, href, startDecorator, sx }) {
             {title}
           </Typography>
         </Link>
-        <Typography level="body2">{children}</Typography>
+        <Typography level="body2" sx={{ mt: 1 }}>
+          {children}
+        </Typography>
       </CardContent>
     </Card>
   );
