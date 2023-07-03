@@ -16,7 +16,7 @@ import (
 
 type wsClient struct {
 	*metaschedulerabi.MetaScheduler
-	Client
+	Backend
 }
 
 func (c *wsClient) from() (addr common.Address) {

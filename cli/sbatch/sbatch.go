@@ -13,6 +13,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/internal/graphql"
 )
 
+// The Service is used to interact with the sbatch hosting service.
 type Service interface {
 	// Submit a job in the batch service.
 	Submit(ctx context.Context, job *Job) (string, error)
@@ -23,6 +24,7 @@ type service struct {
 	endpoint string
 }
 
+// NewService creates a new Service.
 func NewService(client *http.Client, endpoint string) Service {
 	return &service{
 		Client:   client,

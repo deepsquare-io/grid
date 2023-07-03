@@ -1,3 +1,18 @@
+// Copyright (C) 2023 DeepSquare
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package log
 
 import (
@@ -36,24 +51,18 @@ type logMsg struct {
 func makeWatchLogsModel(
 	ctx context.Context,
 	jobID [32]byte,
-	loggerDialer types.LoggerDialer,
+	logger types.Logger,
 ) channel.Model[logMsg] {
 	return channel.Model[logMsg]{
 		Channel: make(chan logMsg, 100),
 		OnInit: func(c chan logMsg) func() error {
-			l, conn, err := loggerDialer.DialContext(ctx)
-			if err != nil {
-				log.I.Error("failed to get logs", zap.Error(err))
-				return nil
-			}
-			stream, err := l.WatchLogs(ctx, jobID)
+			stream, err := logger.WatchLogs(ctx, jobID)
 			if err != nil {
 				log.I.Error("failed to get logs", zap.Error(err))
 				return nil
 			}
 
 			go func() {
-				defer conn.Close()
 				defer func() {
 					_ = stream.CloseSend()
 				}()
@@ -86,7 +95,6 @@ func makeWatchLogsModel(
 			}()
 
 			return func() error {
-				_ = conn.Close()
 				_ = stream.CloseSend()
 				return nil
 			}

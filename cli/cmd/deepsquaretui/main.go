@@ -1,3 +1,18 @@
+// Copyright (C) 2023 DeepSquare
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package main
 
 import (
@@ -33,14 +48,14 @@ var (
 var flags = []cli.Flag{
 	&cli.StringFlag{
 		Name:        "metascheduler.rpc",
-		Value:       deepsquare.DefaultEndpointRPC,
+		Value:       deepsquare.DefaultRPCEndpoint,
 		Usage:       "Metascheduler Avalanche C-Chain JSON-RPC endpoint.",
 		Destination: &ethEndpointRPC,
 		EnvVars:     []string{"METASCHEDULER_RPC"},
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.ws",
-		Value:       deepsquare.DefaultEndpointWS,
+		Value:       deepsquare.DefaultWSEndpoint,
 		Usage:       "Metascheduler Avalanche C-Chain WS endpoint.",
 		Destination: &ethEndpointWS,
 		EnvVars:     []string{"METASCHEDULER_WS"},
@@ -101,7 +116,7 @@ var app = &cli.App{
 		}
 		client, err := deepsquare.NewClient(ctx, &deepsquare.ClientConfig{
 			MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
-			EndpointRPC:          ethEndpointRPC,
+			RPCEndpoint:          ethEndpointRPC,
 			SBatchEndpoint:       sbatchEndpoint,
 			LoggerEndpoint:       loggerEndpoint,
 			UserPrivateKey:       pk,
@@ -109,15 +124,25 @@ var app = &cli.App{
 		if err != nil {
 			return err
 		}
+		defer func() {
+			if err := client.Close(); err != nil {
+				internallog.I.Error("failed to close client", zap.Error(err))
+			}
+		}()
 		watcher, err := deepsquare.NewWatcher(ctx, &deepsquare.WatcherConfig{
 			MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
-			EndpointRPC:          ethEndpointRPC,
-			EndpointWS:           ethEndpointWS,
+			RPCEndpoint:          ethEndpointRPC,
+			WSEndpoint:           ethEndpointWS,
 			UserPrivateKey:       pk,
 		})
 		if err != nil {
 			return err
 		}
+		defer func() {
+			if err := watcher.Close(); err != nil {
+				internallog.I.Error("failed to close watcher", zap.Error(err))
+			}
+		}()
 		userAddress := crypto.PubkeyToAddress(pk.PublicKey)
 		_, err = tea.NewProgram(
 			nav.Model(
@@ -131,8 +156,8 @@ var app = &cli.App{
 					userAddress,
 				),
 				log.ModelBuilder{
-					LoggerDialer: client,
-					UserAddress:  userAddress,
+					Logger:      client,
+					UserAddress: userAddress,
 				},
 				editor.ModelBuilder{
 					Client: client,

@@ -1,3 +1,18 @@
+// Copyright (C) 2023 DeepSquare
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package nav
 
 import (
@@ -12,11 +27,11 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/internal/ether"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
+	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/tui/editor"
 	"github.com/deepsquare-io/the-grid/cli/tui/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/status"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
-	"github.com/deepsquare-io/the-grid/cli/tui/util"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
@@ -66,7 +81,7 @@ func (m *model) watchEvents(
 		if err != nil {
 			internallog.I.Fatal(err.Error())
 		}
-		go util.IgnoreElements(rest)
+		go utils.IgnoreElements(rest)
 
 		for {
 			select {

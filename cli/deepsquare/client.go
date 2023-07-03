@@ -1,3 +1,4 @@
+// Package deepsquare provides a simple Client that implement all the DeepSquare services.
 package deepsquare
 
 import (
@@ -21,9 +22,10 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// Default values for the client.
 const (
-	DefaultEndpointRPC    = "https://testnet.deepsquare.run/rpc"
-	DefaultEndpointWS     = "wss://testnet.deepsquare.run/ws"
+	DefaultRPCEndpoint    = "https://testnet.deepsquare.run/rpc"
+	DefaultWSEndpoint     = "wss://testnet.deepsquare.run/ws"
 	DefaultSBatchEndpoint = "https://sbatch.deepsquare.run/graphql"
 	DefaultLoggerEndpoint = "https://grid-logger.deepsquare.run"
 )
@@ -32,18 +34,24 @@ var (
 	DefaultMetaSchedulerAddress = common.HexToAddress("0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0")
 )
 
+// Client implements all the services required to make unary calls to DeepSquare APIs.
+//
+// Users must call Close() at the end of the application to avoid pending connections.
 type Client interface {
-	types.LoggerDialer
+	types.Logger
 	types.JobScheduler
 	types.JobFetcher
 	types.CreditManager
 	types.AllowanceManager
+	// Close all connections.
+	Close() error
 }
 
+// ClientConfig is used to configure the Client's services.
 type ClientConfig struct {
 	http.Client
 	MetaschedulerAddress common.Address
-	EndpointRPC          string
+	RPCEndpoint          string
 	SBatchEndpoint       string
 	LoggerEndpoint       string
 	UserPrivateKey       *ecdsa.PrivateKey
@@ -54,8 +62,8 @@ func (c *ClientConfig) applyDefault() {
 	if c == nil {
 		c = &ClientConfig{}
 	}
-	if c.EndpointRPC == "" {
-		c.EndpointRPC = DefaultEndpointRPC
+	if c.RPCEndpoint == "" {
+		c.RPCEndpoint = DefaultRPCEndpoint
 	}
 	if (c.MetaschedulerAddress == common.Address{}) {
 		c.MetaschedulerAddress = DefaultMetaSchedulerAddress
@@ -83,16 +91,19 @@ func (c *ClientConfig) applyDefault() {
 }
 
 type client struct {
-	types.LoggerDialer
+	types.Logger
 	types.JobScheduler
 	types.JobFetcher
 	types.CreditManager
 	types.AllowanceManager
+	loggerConn *grpc.ClientConn
+	rpcClient  *rpc.Client
 }
 
+// NewClient creates a new Client for the given ClientConfig.
 func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 	c.applyDefault()
-	rpcClient, err := rpc.DialOptions(ctx, c.EndpointRPC, rpc.WithHTTPClient(&c.Client))
+	rpcClient, err := rpc.DialOptions(ctx, c.RPCEndpoint, rpc.WithHTTPClient(&c.Client))
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +112,7 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	metaschedulerRPC := metascheduler.Client{
+	metaschedulerRPC := metascheduler.Backend{
 		MetaschedulerAddress: c.MetaschedulerAddress,
 		ChainID:              chainID,
 		EthereumBackend:      ethClientRPC,
@@ -143,32 +154,48 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 			port = "443"
 		}
 	}
-	logDialer := logger.NewDialer(
+	logger, conn, err := logger.DialContext(
+		ctx,
 		net.JoinHostPort(u.Hostname(), port),
 		c.UserPrivateKey,
-		dialOptions...,
-	)
+		dialOptions...)
+	if err != nil {
+		return nil, err
+	}
 	return &client{
 		JobFetcher:       fetcher,
 		JobScheduler:     jobScheduler,
 		CreditManager:    credits,
 		AllowanceManager: allowance,
-		LoggerDialer:     logDialer,
+		Logger:           logger,
+		loggerConn:       conn,
+		rpcClient:        rpcClient,
 	}, nil
 }
 
+func (c *client) Close() error {
+	c.rpcClient.Close()
+	return c.loggerConn.Close()
+}
+
+// Watcher implements all the services required to make streaming calls to DeepSquare APIs.
+//
+// Users must call Close() at the end of the application to avoid pending connections.
 type Watcher interface {
 	types.EventSubscriber
 	types.JobFilterer
 	types.CreditFilterer
 	types.AllowanceFilterer
+	// Close all connections.
+	Close() error
 }
 
+// WatcherConfig is used to configure the Watcher's services.
 type WatcherConfig struct {
 	http.Client
 	MetaschedulerAddress common.Address
-	EndpointRPC          string
-	EndpointWS           string
+	RPCEndpoint          string
+	WSEndpoint           string
 	UserPrivateKey       *ecdsa.PrivateKey
 	TLSConfig            *tls.Config
 }
@@ -177,11 +204,11 @@ func (c *WatcherConfig) applyDefault() {
 	if c == nil {
 		c = &WatcherConfig{}
 	}
-	if c.EndpointRPC == "" {
-		c.EndpointRPC = DefaultEndpointRPC
+	if c.RPCEndpoint == "" {
+		c.RPCEndpoint = DefaultRPCEndpoint
 	}
-	if c.EndpointWS == "" {
-		c.EndpointWS = DefaultEndpointWS
+	if c.WSEndpoint == "" {
+		c.WSEndpoint = DefaultWSEndpoint
 	}
 	if (c.MetaschedulerAddress == common.Address{}) {
 		c.MetaschedulerAddress = DefaultMetaSchedulerAddress
@@ -207,11 +234,14 @@ type watcher struct {
 	types.JobFilterer
 	types.CreditFilterer
 	types.AllowanceFilterer
+	rpcClient *rpc.Client
+	wsClient  *rpc.Client
 }
 
+// NewWatcher creates a new Watcher for the given WatcherConfig.
 func NewWatcher(ctx context.Context, c *WatcherConfig) (Watcher, error) {
 	c.applyDefault()
-	rpcClient, err := rpc.DialOptions(ctx, c.EndpointRPC, rpc.WithHTTPClient(&c.Client))
+	rpcClient, err := rpc.DialOptions(ctx, c.RPCEndpoint, rpc.WithHTTPClient(&c.Client))
 	if err != nil {
 		return nil, err
 	}
@@ -220,18 +250,18 @@ func NewWatcher(ctx context.Context, c *WatcherConfig) (Watcher, error) {
 	if err != nil {
 		return nil, err
 	}
-	metaschedulerRPC := metascheduler.Client{
+	metaschedulerRPC := metascheduler.Backend{
 		MetaschedulerAddress: c.MetaschedulerAddress,
 		ChainID:              chainID,
 		EthereumBackend:      ethClientRPC,
 		UserPrivateKey:       c.UserPrivateKey,
 	}
-	wsClient, err := rpc.DialOptions(ctx, c.EndpointWS, rpc.WithHTTPClient(&c.Client))
+	wsClient, err := rpc.DialOptions(ctx, c.WSEndpoint, rpc.WithHTTPClient(&c.Client))
 	if err != nil {
 		return nil, err
 	}
 	ethClientWS := ethclient.NewClient(wsClient)
-	metaschedulerWS := metascheduler.Client{
+	metaschedulerWS := metascheduler.Backend{
 		MetaschedulerAddress: c.MetaschedulerAddress,
 		ChainID:              chainID,
 		EthereumBackend:      ethClientWS,
@@ -266,5 +296,13 @@ func NewWatcher(ctx context.Context, c *WatcherConfig) (Watcher, error) {
 		JobFilterer:       jobFilterer,
 		CreditFilterer:    creditFilterer,
 		AllowanceFilterer: allowanceFilterer,
+		rpcClient:         rpcClient,
+		wsClient:          wsClient,
 	}, nil
+}
+
+func (c *watcher) Close() error {
+	c.rpcClient.Close()
+	c.wsClient.Close()
+	return nil
 }

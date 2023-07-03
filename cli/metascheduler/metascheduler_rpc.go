@@ -16,7 +16,7 @@ import (
 type rpcClient struct {
 	*metaschedulerabi.MetaScheduler
 	*metaschedulerabi.IERC20
-	Client
+	Backend
 	sbatch sbatch.Service
 }
 
