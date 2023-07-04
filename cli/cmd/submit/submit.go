@@ -69,7 +69,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringSliceFlag{
 		Name:        "uses",
-		Usage:       "Uses flag. Used to filter the clusters",
+		Usage:       "Uses flag. Used to filter the clusters. Format: `key=value`",
 		Required:    true,
 		Destination: &uses,
 	},
@@ -107,7 +107,7 @@ var flags = []cli.Flag{
 var Command = cli.Command{
 	Name:      "submit",
 	Usage:     "Quickly submit a job.",
-	UsageText: "submit <job.yaml>",
+	ArgsUsage: "<job.yaml>",
 	Flags:     flags,
 	Action: func(cCtx *cli.Context) error {
 		if cCtx.NArg() != 1 {
