@@ -59,23 +59,23 @@ func Resolve(
 	// Clone
 	r, err := git.CloneContext(ctx, memory.NewStorage(), memfs.New(), opts)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to clone: %w", err)
 	}
 
 	wt, err := r.Worktree()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch worktree: %w", err)
 	}
 
 	if ref != "" && isCommitHash(ref) {
 		h, err := r.ResolveRevision(plumbing.Revision(ref))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to resolve revision: %w", err)
 		}
 		if err = wt.Checkout(&git.CheckoutOptions{
 			Hash: *h,
 		}); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to checkout: %w", err)
 		}
 	}
 
@@ -86,13 +86,13 @@ func Resolve(
 	}
 	file, err := wt.Filesystem.Open(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find module.yaml: %w", err)
 	}
 	defer file.Close()
 
 	contents, err := io.ReadAll(file)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("found module.yaml but failed to read module.yaml: %w", err)
 	}
 
 	rContents, err := render(j, s, string(contents))
