@@ -61,7 +61,7 @@ EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' 2>&1 | grep -i "ERROR\|WARN"
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
@@ -143,7 +143,7 @@ EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' 2>&1 | grep -i "ERROR\|WARN"
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
@@ -185,7 +185,7 @@ EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' > /dev/null
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' 2>&1 | grep -i "ERROR\|WARN"
 tries=1; while [ "$tries" -lt 10 ]; do
 	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
 		break
