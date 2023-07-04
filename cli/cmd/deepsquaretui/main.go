@@ -19,6 +19,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/deepsquare-io/the-grid/cli/cmd/submit"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/editor"
@@ -108,6 +109,9 @@ var app = &cli.App{
 	Usage:   "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
 	Flags:   flags,
 	Suggest: true,
+	Commands: []*cli.Command{
+		&submit.Command,
+	},
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context
 		pk, err := crypto.HexToECDSA(ethHexPK)
