@@ -1251,3 +1251,68 @@ func TestValidateBore(t *testing.T) {
 		})
 	}
 }
+
+var cleanStepUse = model.StepUse{
+	Source:      "github.com/deepsquare-io/workflow-module-example",
+	Args:        []*model.EnvVar{&cleanEnvVar},
+	ExportEnvAs: utils.Ptr("EXAMPLE_MODULE"),
+}
+
+func TestValidateStepUse(t *testing.T) {
+	tests := []struct {
+		input         model.StepUse
+		isError       bool
+		errorContains []string
+		title         string
+	}{
+		{
+			input: cleanStepUse,
+			title: "Positive test",
+		},
+		{
+			input: model.StepUse{},
+			title: "Positive test: Empty",
+		},
+		{
+			input: model.StepUse{
+				ExportEnvAs: utils.Ptr("'tata"),
+			},
+			isError:       true,
+			errorContains: []string{"Key", "valid_envvar_name"},
+			title:         "Negative test: Key is not valid",
+		},
+		{
+			input: model.StepUse{
+				ExportEnvAs: utils.Ptr("PATH"),
+			},
+			isError:       true,
+			errorContains: []string{"Key", "ne"},
+			title:         "Negative test: Setting PATH is forbidden",
+		},
+		{
+			input: model.StepUse{
+				ExportEnvAs: utils.Ptr("LD_LIBRARY_PATH"),
+			},
+			isError:       true,
+			errorContains: []string{"Key", "ne"},
+			title:         "Negative test: Setting LD_LIBRARY_PATH is forbidden",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.title, func(t *testing.T) {
+			// Act
+			err := validate.I.Struct(tt.input)
+
+			// Assert
+			if tt.isError {
+				assert.Error(t, err)
+				for _, contain := range tt.errorContains {
+					assert.ErrorContains(t, err, contain)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}

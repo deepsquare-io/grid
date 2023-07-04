@@ -614,6 +614,11 @@ type StepUse struct {
 	// Syntax: <url>@<tag/hash>
 	//
 	// Example: github.com/example/my-module@v1
+	// Example: github.com/example/module-monorepo/my-module@v1
+	//
+	// The host must be a git repository accessible via HTTPS.
+	// The path must indicates a directory. For example, `/my-module` indicates the root directory of the repository `my-module`.
+	// `module-monorepo/my-module` indicates the subdirectory `my-module` of the repository `module-monorepo`.
 	//
 	// Go name: "Source".
 	Source string `json:"source" yaml:"source"`
@@ -626,7 +631,7 @@ type StepUse struct {
 	// Exemple: If exportEnvAs=MY_MODULE, and KEY is exported. Then you can invoke ${MY_MODULE_KEY} environment variable.
 	//
 	// Go name: "ExportEnvAs".
-	ExportEnvAs *string `json:"exportEnvAs,omitempty" yaml:"exportEnvAs,omitempty" validate:"valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"`
+	ExportEnvAs *string `json:"exportEnvAs,omitempty" yaml:"exportEnvAs,omitempty" validate:"omitempty,valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"`
 }
 
 type TransportData struct {

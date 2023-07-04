@@ -556,6 +556,11 @@ input StepUse {
   Syntax: <url>@<tag/hash>
 
   Example: github.com/example/my-module@v1
+  Example: github.com/example/module-monorepo/my-module@v1
+
+  The host must be a git repository accessible via HTTPS.
+  The path must indicates a directory. For example, ` + "`" + `/my-module` + "`" + ` indicates the root directory of the repository ` + "`" + `my-module` + "`" + `.
+  ` + "`" + `module-monorepo/my-module` + "`" + ` indicates the subdirectory ` + "`" + `my-module` + "`" + ` of the repository ` + "`" + `module-monorepo` + "`" + `.
 
   Go name: "Source".
   """
@@ -575,7 +580,9 @@ input StepUse {
   """
   exportEnvAs: String
     @goTag(key: "yaml", value: "exportEnvAs,omitempty")
-    @constraint(format: "valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH")
+    @constraint(
+      format: "omitempty,valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"
+    )
 }
 
 """
@@ -1425,7 +1432,7 @@ func (ec *executionContext) fieldContext_Mutation_submit(ctx context.Context, fi
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_submit_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1480,7 +1487,7 @@ func (ec *executionContext) fieldContext_Mutation_validate(ctx context.Context, 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_validate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1535,7 +1542,7 @@ func (ec *executionContext) fieldContext_Query_job(ctx context.Context, field gr
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_job_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1609,7 +1616,7 @@ func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query___type_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -3090,7 +3097,7 @@ func (ec *executionContext) fieldContext___Type_fields(ctx context.Context, fiel
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field___Type_fields_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -3278,7 +3285,7 @@ func (ec *executionContext) fieldContext___Type_enumValues(ctx context.Context, 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field___Type_enumValues_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
