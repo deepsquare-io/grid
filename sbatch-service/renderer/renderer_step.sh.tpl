@@ -8,6 +8,14 @@ else
 exit 1
 fi
 {{ end -}}
+{{- if and .Step.If (derefStr .Step.If) }}
+# shellcheck disable=SC2016,SC2089
+CONDITION={{ derefStr .Step.If | squote }}
+# shellcheck disable=SC2090
+export CONDITION
+CONDITION_RESULT="$(eval "if [[ $CONDITION ]]; then echo 'true' ; else echo 'false' ; fi")"
+if [ $CONDITION_RESULT = "true" ]; then
+{{ end -}}
 {{- if and .Step.Name (derefStr .Step.Name) -}}
 /usr/bin/echo 'Running: '{{ derefStr .Step.Name | squote }}
 {{- end -}}
@@ -20,3 +28,7 @@ fi
 {{- else if .Step.Use }}
 {{ renderStepUse .Job .Step .Step.Use }}
 {{- end -}}
+{{ if and .Step.If (derefStr .Step.If) }}
+:
+fi
+{{ end -}}

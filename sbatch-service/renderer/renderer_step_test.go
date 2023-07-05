@@ -131,6 +131,24 @@ fi
 			title: "Positive test with await",
 		},
 		{
+			input: model.Step{
+				Name: utils.Ptr("test"),
+				If:   utils.Ptr(`$CONDITION_RESULT = "false"`),
+			},
+			expected: `
+# shellcheck disable=SC2016,SC2089
+CONDITION='$CONDITION_RESULT = "false"'
+# shellcheck disable=SC2090
+export CONDITION
+CONDITION_RESULT="$(eval "if [[ $CONDITION ]]; then echo 'true' ; else echo 'false' ; fi")"
+if [ $CONDITION_RESULT = "true" ]; then
+/usr/bin/echo 'Running: ''test'
+:
+fi
+`,
+			title: "Positive test with if",
+		},
+		{
 			input: *cleanStepWithFor(&cleanStepForItems),
 			expected: `/usr/bin/echo 'Running: ''test'
 doFor() {

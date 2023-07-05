@@ -367,6 +367,16 @@ type Step struct {
 	//
 	// Go name: "DependsOn".
 	DependsOn []string `json:"dependsOn,omitempty" yaml:"dependsOn,omitempty" validate:"dive,alphanum_underscore"`
+	// "If" is a boolean test that skips the step if the test is false.
+	//
+	// The test format is bash and variables such as $PATH or $(pwd) can be expanded.
+	//
+	// Note that "If" will be run after the "DependsOn".
+	//
+	// Example: '3 -eq 3 && "${TEST}" = "test"'.
+	//
+	// Go name: "If".
+	If *string `json:"if,omitempty" yaml:"if,omitempty"`
 	// Run a command if not null.
 	//
 	// Is exclusive with "for", "launch", "use".

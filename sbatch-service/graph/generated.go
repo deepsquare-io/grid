@@ -516,6 +516,18 @@ input Step {
     @goTag(key: "yaml", value: "dependsOn,omitempty")
     @constraint(format: "dive,alphanum_underscore")
   """
+  "If" is a boolean test that skips the step if the test is false.
+
+  The test format is bash and variables such as $PATH or $(pwd) can be expanded.
+
+  Note that "If" will be run after the "DependsOn".
+
+  Example: '3 -eq 3 && "${TEST}" = "test"'.
+
+  Go name: "If".
+  """
+  if: String @goTag(key: "yaml", value: "if,omitempty")
+  """
   Run a command if not null.
 
   Is exclusive with "for", "launch", "use".
@@ -4184,7 +4196,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "dependsOn", "run", "for", "launch", "use"}
+	fieldsInOrder := [...]string{"name", "dependsOn", "if", "run", "for", "launch", "use"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4209,6 +4221,15 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 				return it, err
 			}
 			it.DependsOn = data
+		case "if":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("if"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.If = data
 		case "run":
 			var err error
 
