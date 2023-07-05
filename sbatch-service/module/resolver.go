@@ -52,6 +52,9 @@ func Resolve(
 		opts.Depth = 1
 
 	case ref != "" && !isCommitHash(ref):
+		if path != "" {
+			ref = fmt.Sprintf("%s/%s", path, ref)
+		}
 		opts.ReferenceName = plumbing.NewTagReferenceName(ref)
 		opts.Depth = 1
 	}
