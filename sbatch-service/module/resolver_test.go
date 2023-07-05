@@ -49,7 +49,8 @@ func TestResolve(t *testing.T) {
 			title:        "Positive test: submodule",
 		},
 		{
-			repository:   "github.com/deepsquare-io/workflow-module-example/other-module-example@v1.0.0",
+			repository:   "github.com/deepsquare-io/workflow-module-example/other-module-example",
+			ref:          "v1.0.0",
 			expectedName: "Another Hello World",
 			title:        "Positive test: submodule",
 		},
