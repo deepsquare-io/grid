@@ -70,18 +70,23 @@ EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' 2>&1 | grep -i "ERROR\|WARN"
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+if [ $? -ne 0 ]; then
+  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+fi
+set -e
 tries=1; while [ "$tries" -lt 10 ]; do
-	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
-		break
-	fi
-	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
-	/usr/bin/sleep 10
-	tries=$((tries+1))
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
 done
 if [ "$tries" -ge 10 ]; then
-	/usr/bin/echo "Image import failure (corrupted image). Please try again."
-	exit 1
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
@@ -112,18 +117,23 @@ EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' 2>&1 | grep -i "ERROR\|WARN"
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+if [ $? -ne 0 ]; then
+  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+fi
+set -e
 tries=1; while [ "$tries" -lt 10 ]; do
-	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
-		break
-	fi
-	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
-	/usr/bin/sleep 10
-	tries=$((tries+1))
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
 done
 if [ "$tries" -ge 10 ]; then
-	/usr/bin/echo "Image import failure (corrupted image). Please try again."
-	exit 1
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
@@ -170,18 +180,23 @@ EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' 2>&1 | grep -i "ERROR\|WARN"
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+if [ $? -ne 0 ]; then
+  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+fi
+set -e
 tries=1; while [ "$tries" -lt 10 ]; do
-	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
-		break
-	fi
-	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
-	/usr/bin/sleep 10
-	tries=$((tries+1))
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
 done
 if [ "$tries" -ge 10 ]; then
-	/usr/bin/echo "Image import failure (corrupted image). Please try again."
-	exit 1
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
@@ -212,18 +227,23 @@ EOFnetrc
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' 2>&1 | grep -i "ERROR\|WARN"
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+if [ $? -ne 0 ]; then
+  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+fi
+set -e
 tries=1; while [ "$tries" -lt 10 ]; do
-	if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
-		break
-	fi
-	/usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
-	/usr/bin/sleep 10
-	tries=$((tries+1))
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
 done
 if [ "$tries" -ge 10 ]; then
-	/usr/bin/echo "Image import failure (corrupted image). Please try again."
-	exit 1
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
