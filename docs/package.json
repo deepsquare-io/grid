@@ -26,7 +26,7 @@
     "@emotion/react": "11.11.1",
     "@emotion/styled": "11.11.0",
     "@mdx-js/react": "1.6.22",
-    "@mui/joy": "5.0.0-alpha.85",
+    "@mui/joy": "5.0.0-alpha.86",
     "clsx": "1.2.1",
     "prism-react-renderer": "2.0.6",
     "react": "18.2.0",
