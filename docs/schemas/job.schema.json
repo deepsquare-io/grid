@@ -518,6 +518,18 @@
             "deprecationReason": null
           },
           {
+            "name": "if",
+            "description": "\"If\" is a boolean test that skips the step if the test is false.\n\nThe test format is bash and variables such as $PATH or $(pwd) can be expanded.\n\nNote that \"If\" will be run after the \"DependsOn\".\n\nExample: '3 -eq 3 && \"${TEST}\" = \"test\"'.\n\nGo name: \"If\".",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "run",
             "description": "Run a command if not null.\n\nIs exclusive with \"for\", \"launch\", \"use\".\n\nGo name: \"Run\".",
             "type": {
@@ -579,7 +591,7 @@
         "inputFields": [
           {
             "name": "source",
-            "description": "Source of the group of steps.\n\nSyntax: <url>@<tag/hash>\n\nExample: github.com/example/my-module@v1\n\nGo name: \"Source\".",
+            "description": "Source of the group of steps.\n\nSyntax: <url>@<tag/hash>\n\nExample: github.com/example/my-module@v1\nExample: github.com/example/module-monorepo/my-module@v1\n\nThe host must be a git repository accessible via HTTPS.\nThe path must indicates a directory. For example, `/my-module` indicates the root directory of the repository `my-module`.\n`module-monorepo/my-module` indicates the subdirectory `my-module` of the repository `module-monorepo`.\n\nGo name: \"Source\".",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2817,7 +2829,10 @@
         "name": "goField",
         "description": null,
         "isRepeatable": false,
-        "locations": ["INPUT_FIELD_DEFINITION", "FIELD_DEFINITION"],
+        "locations": [
+          "INPUT_FIELD_DEFINITION",
+          "FIELD_DEFINITION"
+        ],
         "args": [
           {
             "name": "forceResolver",
@@ -2849,7 +2864,10 @@
         "name": "goTag",
         "description": null,
         "isRepeatable": false,
-        "locations": ["INPUT_FIELD_DEFINITION", "FIELD_DEFINITION"],
+        "locations": [
+          "INPUT_FIELD_DEFINITION",
+          "FIELD_DEFINITION"
+        ],
         "args": [
           {
             "name": "key",
@@ -2885,7 +2903,10 @@
         "name": "constraint",
         "description": null,
         "isRepeatable": false,
-        "locations": ["INPUT_FIELD_DEFINITION", "FIELD_DEFINITION"],
+        "locations": [
+          "INPUT_FIELD_DEFINITION",
+          "FIELD_DEFINITION"
+        ],
         "args": [
           {
             "name": "format",
@@ -2905,7 +2926,11 @@
         "name": "include",
         "description": "Directs the executor to include this field or fragment only when the `if` argument is true.",
         "isRepeatable": false,
-        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
+        "locations": [
+          "FIELD",
+          "FRAGMENT_SPREAD",
+          "INLINE_FRAGMENT"
+        ],
         "args": [
           {
             "name": "if",
@@ -2929,7 +2954,11 @@
         "name": "skip",
         "description": "Directs the executor to skip this field or fragment when the `if` argument is true.",
         "isRepeatable": false,
-        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
+        "locations": [
+          "FIELD",
+          "FRAGMENT_SPREAD",
+          "INLINE_FRAGMENT"
+        ],
         "args": [
           {
             "name": "if",
@@ -2978,7 +3007,9 @@
         "name": "specifiedBy",
         "description": "Exposes a URL that specifies the behavior of this scalar.",
         "isRepeatable": false,
-        "locations": ["SCALAR"],
+        "locations": [
+          "SCALAR"
+        ],
         "args": [
           {
             "name": "url",

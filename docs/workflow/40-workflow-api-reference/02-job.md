@@ -644,6 +644,23 @@ Go name: "DependsOn".
 </td>
 </tr>
 <tr>
+<td colspan="2" valign="top"><strong>if</strong></td>
+<td valign="top"><a href="#string">String</a></td>
+<td>
+
+"If" is a boolean test that skips the step if the test is false.
+
+The test format is bash and variables such as $PATH or $(pwd) can be expanded.
+
+Note that "If" will be run after the "DependsOn".
+
+Example: '3 -eq 3 && "${TEST}" = "test"'.
+
+Go name: "If".
+
+</td>
+</tr>
+<tr>
 <td colspan="2" valign="top"><strong>run</strong></td>
 <td valign="top"><a href="#steprun">StepRun</a></td>
 <td>
@@ -2108,6 +2125,11 @@ Source of the group of steps.
 Syntax: &lt;url&gt;@&lt;tag/hash&gt;
 
 Example: github.com/example/my-module@v1
+Example: github.com/example/module-monorepo/my-module@v1
+
+The host must be a git repository accessible via HTTPS.
+The path must indicates a directory. For example, `/my-module` indicates the root directory of the repository `my-module`.
+`module-monorepo/my-module` indicates the subdirectory `my-module` of the repository `module-monorepo`.
 
 Go name: "Source".
 
