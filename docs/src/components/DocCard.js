@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import { Card, CardContent, Link, Typography } from "@mui/joy";
+import { Card, CardContent, Link, Typography } from '@mui/joy';
 
 export default function DocCard({ children, title, href, startDecorator, sx }) {
   return (
@@ -8,10 +8,10 @@ export default function DocCard({ children, title, href, startDecorator, sx }) {
       orientation="horizontal"
       variant="outlined"
       sx={{
-        p: "2rem",
-        "&:hover": {
-          boxShadow: "md",
-          borderColor: "neutral.outlinedHoverBorder",
+        p: '2rem',
+        '&:hover': {
+          boxShadow: 'md',
+          borderColor: 'neutral.outlinedHoverBorder',
         },
         ...sx,
       }}

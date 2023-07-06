@@ -4,37 +4,26 @@ hide_table_of_contents: true
 
 # Workflow Documentation
 
-import { Grid } from "@mui/joy";
-import DocCard from "@site/src/components/DocCard";
-import SchoolIcon from "@mui/icons-material/School";
-import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
-import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
-import StarIcon from "@mui/icons-material/Star";
-import WorkIcon from "@mui/icons-material/Work";
-import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
-import VideoLabelIcon from "@mui/icons-material/VideoLabel";
-import GoLogo from "@site/static/img/Go-Logo_Blue.svg";
-import JavaScriptLogo from "@site/static/img/Unofficial_JavaScript_logo_2.svg";
+import { Grid } from '@mui/joy';
+import DocCard from '@site/src/components/DocCard';
+import SchoolIcon from '@mui/icons-material/School';
+import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import StarIcon from '@mui/icons-material/Star';
+import WorkIcon from '@mui/icons-material/Work';
+import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
+import VideoLabelIcon from '@mui/icons-material/VideoLabel';
+import GoLogo from '@site/static/img/Go-Logo_Blue.svg';
+import JavaScriptLogo from '@site/static/img/Unofficial_JavaScript_logo_2.svg';
 
 ## Develop and Run workflows
 
 Learn how to get up and running with DeepSquare through tutorials, guides and API references.
 
-<Grid
-  container
-  spacing={2}
-  sx={{ flexGrow: 1 }}
-  columns={{ xs: 4, sm: 8, md: 12 }}
->
+<Grid container spacing={2} sx={{ flexGrow: 1 }} columns={{ xs: 4, sm: 8, md: 12 }}>
   <Grid xs={6}>
-    <DocCard
-      title="Learn"
-      href="/workflow/learn/introduction"
-      startDecorator={<SchoolIcon />}
-      sx={{ height: "100%" }}
-    >
-      Learn how to run jobs on DeepSquare, its architecture and its core
-      concepts!
+    <DocCard title="Learn" href="/workflow/learn/introduction" startDecorator={<SchoolIcon />} sx={{ height: '100%' }}>
+      Learn how to run jobs on DeepSquare, its architecture and its core concepts!
     </DocCard>
   </Grid>
   <Grid xs={6}>
@@ -42,10 +31,9 @@ Learn how to get up and running with DeepSquare through tutorials, guides and AP
       title="Getting Started"
       href="/workflow/getting-started/introduction"
       startDecorator={<DirectionsRunIcon />}
-      sx={{ height: "100%" }}
+      sx={{ height: '100%' }}
     >
-      Get started at writing DeepSquare workflow and run HPC workloads on the
-      decentralized infrastructure!
+      Get started at writing DeepSquare workflow and run HPC workloads on the decentralized infrastructure!
     </DocCard>
   </Grid>
   <Grid xs={6}>
@@ -53,7 +41,7 @@ Learn how to get up and running with DeepSquare through tutorials, guides and AP
       title="Guides"
       href="/workflow/guides/overview"
       startDecorator={<LibraryBooksIcon />}
-      sx={{ height: "100%" }}
+      sx={{ height: '100%' }}
     >
       Learn the most important features!
     </DocCard>
@@ -63,19 +51,13 @@ Learn how to get up and running with DeepSquare through tutorials, guides and AP
       title="DeepSquare Portal"
       href="/workflow/deepsquare-portal/introduction"
       startDecorator={<VideoLabelIcon />}
-      sx={{ height: "100%" }}
+      sx={{ height: '100%' }}
     >
-      Learn how to use the DeepSquare portal to help you develop and run
-      workflows!
+      Learn how to use the DeepSquare portal to help you develop and run workflows!
     </DocCard>
   </Grid>
   <Grid xs={6}>
-    <DocCard
-      title="Samples"
-      href="/workflow/samples/overview"
-      startDecorator={<StarIcon />}
-      sx={{ height: "100%" }}
-    >
+    <DocCard title="Samples" href="/workflow/samples/overview" startDecorator={<StarIcon />} sx={{ height: '100%' }}>
       A list of workflows used by the DeepSquare portal.
     </DocCard>
   </Grid>
@@ -85,20 +67,13 @@ Learn how to get up and running with DeepSquare through tutorials, guides and AP
 
 Learn how to incorporate the DeepSquare SDK into your software!
 
-<Grid
-  container
-  spacing={2}
-  sx={{ flexGrow: 1 }}
-  columns={{ xs: 4, sm: 8, md: 12 }}
->
+<Grid container spacing={2} sx={{ flexGrow: 1 }} columns={{ xs: 4, sm: 8, md: 12 }}>
   <Grid xs={3}>
     <DocCard
       title="JavaScript"
       href="/workflow/client-development/overview"
-      startDecorator={
-        <JavaScriptLogo style={{ height: "1em", width: "1em" }} />
-      }
-      sx={{ height: "100%" }}
+      startDecorator={<JavaScriptLogo style={{ height: '1em', width: '1em' }} />}
+      sx={{ height: '100%' }}
     >
       Work in progress...
     </DocCard>
@@ -107,8 +82,8 @@ Learn how to incorporate the DeepSquare SDK into your software!
     <DocCard
       title="Go"
       href="/workflow/client-development/overview"
-      startDecorator={<GoLogo style={{ height: "1em", width: "1em" }} />}
-      sx={{ height: "100%" }}
+      startDecorator={<GoLogo style={{ height: '1em', width: '1em' }} />}
+      sx={{ height: '100%' }}
     >
       Work in progress...
     </DocCard>
@@ -119,18 +94,13 @@ Learn how to incorporate the DeepSquare SDK into your software!
 
 ### Workflow API References
 
-<Grid
-  container
-  spacing={2}
-  sx={{ flexGrow: 1 }}
-  columns={{ xs: 4, sm: 8, md: 12 }}
->
+<Grid container spacing={2} sx={{ flexGrow: 1 }} columns={{ xs: 4, sm: 8, md: 12 }}>
   <Grid xs={6}>
     <DocCard
       title="Job Reference"
       href="/workflow/workflow-api-reference/job"
       startDecorator={<WorkIcon />}
-      sx={{ height: "100%" }}
+      sx={{ height: '100%' }}
     >
       Find all the features a Job.
     </DocCard>
@@ -140,7 +110,7 @@ Learn how to incorporate the DeepSquare SDK into your software!
       title="Module Reference"
       href="/workflow/workflow-api-reference/module"
       startDecorator={<RadioButtonCheckedIcon />}
-      sx={{ height: "100%" }}
+      sx={{ height: '100%' }}
     >
       Find all the features a Module.
     </DocCard>

@@ -1,6 +1,6 @@
-import { useColorScheme } from "@mui/joy";
-import ColorModeToggle from "@theme-original/ColorModeToggle";
-import React, { useEffect } from "react";
+import { useColorScheme } from '@mui/joy';
+import ColorModeToggle from '@theme-original/ColorModeToggle';
+import React, { useEffect } from 'react';
 
 export default function ColorModeToggleWrapper(props) {
   // Get the MUI hook

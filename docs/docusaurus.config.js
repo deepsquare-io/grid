@@ -19,7 +19,7 @@ const config = {
   markdown: {
     mermaid: true,
   },
-  themes: ['@docusaurus/theme-mermaid'],
+  themes: ['@docusaurus/theme-mermaid', 'docusaurus-theme-search-typesense'],
 
   presets: [
     [
@@ -69,6 +69,26 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      typesense: {
+        typesenseCollectionName: 'deepsquare-docs-index',
+        typesenseServerConfig: {
+          nodes: [
+            {
+              host: 'typesense.deepsquare.run',
+              port: 443,
+              protocol: 'https',
+            },
+          ],
+          // Search only key. This is safe to share.
+          apiKey: 'E4veNLYR74h2WSNLEua6Gf4Ea4j6LUVL',
+        },
+
+        // Optional: Typesense search parameters: https://typesense.org/docs/0.24.0/api/search.html#search-parameters
+        typesenseSearchParameters: {},
+
+        // Optional
+        contextualSearch: true,
+      },
       tableOfContents: {
         maxHeadingLevel: 5,
       },

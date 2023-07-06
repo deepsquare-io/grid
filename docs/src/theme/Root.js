@@ -1,14 +1,10 @@
-import {
-  CssVarsProvider,
-  extendTheme,
-  getInitColorSchemeScript,
-} from "@mui/joy";
-import React from "react";
+import { CssVarsProvider, extendTheme, getInitColorSchemeScript } from '@mui/joy';
+import React from 'react';
 
 const theme = extendTheme({
   fontFamily: {
-    body: "var(--custom-font-base)",
-    code: "var(--custom-font-code)",
+    body: 'var(--custom-font-base)',
+    code: 'var(--custom-font-code)',
   },
 });
 

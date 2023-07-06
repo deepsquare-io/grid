@@ -10,9 +10,8 @@
   /*
     Customisation here for both Light and Dark themes
   */
-  --custom-font-base: 'Mulish', 'Roboto',
-    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Helvetica',
-    'Arial', sans-serif;
+  --custom-font-base: 'Mulish', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    'Helvetica', 'Arial', sans-serif;
   --custom-font-code: 'JetBrains Mono', Menlo, monospace;
   --custom-font-size-base: 1rem;
   --custom-border-radius: 3px;
@@ -20,7 +19,7 @@
   --custom-primary-darkest: #9202de;
   --custom-primary-darker: #ac14fc;
   --custom-primary-dark: #b223fd;
-  --custom-primary: #BD43FD;
+  --custom-primary: #bd43fd;
   --custom-primary-light: #c863fd;
   --custom-primary-lighter: #ce72fe;
   --custom-primary-lightest: #dea2fe;
@@ -61,10 +60,8 @@
   --ifm-color-primary: var(--custom-primary);
   --ifm-color-primary-light: var(--custom-primary-light);
   --ifm-color-primary-lighter: var(--custom-primary-lighter);
-  --ifm-color-primary-lightest: var(--custom-primary-lightest)
-
-  /* Fonts */
-  --ifm-font-color-base: var(--custom-content-color);
+  --ifm-color-primary-lightest: var(--custom-primary-lightest) /* Fonts */ --ifm-font-color-base:
+    var(--custom-content-color);
   --ifm-font-family-base: var(--custom-font-base);
   --ifm-font-family-monospace: var(--custom-font-code);
   --ifm-heading-font-family: var(--custom-font-base);
@@ -132,12 +129,12 @@
   --custom-primary-darkest: #9202de;
   --custom-primary-darker: #ac14fc;
   --custom-primary-dark: #b223fd;
-  --custom-primary: #BD43FD;
+  --custom-primary: #bd43fd;
   --custom-primary-light: #c863fd;
   --custom-primary-lighter: #ce72fe;
   --custom-primary-lightest: #dea2fe;
 
-  --custom-background-color: #07021B;
+  --custom-background-color: #07021b;
   --custom-background-color-highlight: #120641;
   --custom-background-color-diff: #1f1f1f;
   --custom-background-color-diff-1: #202020;
@@ -249,7 +246,9 @@ a.card .card__body {
 a.card:hover {
   transition: all 0.2s ease;
   border: 1px solid var(--custom-primary);
-  box-shadow: var(--custom-shadow-xl), 0 0 0 1px var(--custom-primary) !important;
+  box-shadow:
+    var(--custom-shadow-xl),
+    0 0 0 1px var(--custom-primary) !important;
 }
 
 /*
@@ -266,11 +265,11 @@ a.card:hover {
   }
 }
 
-.menu>ul.menu__list li {
+.menu > ul.menu__list li {
   padding: 0 var(--ifm-col-spacing-vertical);
 }
 
-.menu>ul.menu__list li>a {
+.menu > ul.menu__list li > a {
   padding-left: 0;
   padding-right: 0;
   /* color: var(--custom-content-color); */
@@ -283,22 +282,22 @@ a.card:hover {
 /* Category headers */
 
 /* First sidebar nav section  */
-.menu>.menu__list>.menu__list-item:first-child {
+.menu > .menu__list > .menu__list-item:first-child {
   margin-top: 16px;
 }
 
 /* First sidebar nav section  */
-.menu>.menu__list>.menu__list-item>.menu__link::after {
+.menu > .menu__list > .menu__list-item > .menu__link::after {
   display: none;
 }
 
 /* All sidebar nav sections  */
-.menu>.menu__list>.menu__list-item {
+.menu > .menu__list > .menu__list-item {
   margin-bottom: 16px;
 }
 
 /* Sidebar nav header  */
-.menu>.menu__list>.theme-doc-sidebar-item-link-level-1 {
+.menu > .menu__list > .theme-doc-sidebar-item-link-level-1 {
   margin-bottom: 4px;
   font-size: 13px;
   font-weight: 600;
@@ -306,11 +305,11 @@ a.card:hover {
   text-transform: uppercase;
 }
 
-.menu>.menu__list>.menu__list-item>.theme-doc-sidebar-item-link-level-1 a {
+.menu > .menu__list > .menu__list-item > .theme-doc-sidebar-item-link-level-1 a {
   padding-left: var(--ifm-col-spacing-vertical);
 }
 
-.menu>.menu__list>.menu__list-item>.menu__list-item-collapsible {
+.menu > .menu__list > .menu__list-item > .menu__list-item-collapsible {
   margin-bottom: 4px;
   color: gray;
   font-size: 11px;
@@ -319,7 +318,7 @@ a.card:hover {
   text-transform: uppercase;
 }
 
-.menu>.menu__list>.menu__list-item>.menu__list-item-collapsible a {
+.menu > .menu__list > .menu__list-item > .menu__list-item-collapsible a {
   padding-left: var(--ifm-col-spacing-vertical);
 }
 
@@ -327,24 +326,24 @@ a.card:hover {
 @media (min-width: 997px) {
 }
 
-.menu>ul.menu__list>li.menu__list-item:first-child div.title {
+.menu > ul.menu__list > li.menu__list-item:first-child div.title {
   margin-top: 0;
 }
 
-.menu>ul.menu__list ul.menu__list {
+.menu > ul.menu__list ul.menu__list {
   border-left: 1px solid var(--custom-border-color);
   margin-left: 0;
   padding-left: var(--ifm-menu-link-padding-horizontal);
 }
 
-.menu>ul.menu__list ul.menu__list .menu__link {
+.menu > ul.menu__list ul.menu__list .menu__link {
   border-radius: 0;
   font-size: 0.85rem;
   /* margin-left: calc(var(--ifm-menu-link-padding-horizontal) * -1);
   padding-left: var(--ifm-menu-link-padding-horizontal); */
 }
 
-.menu>ul.menu__list>li>ul.menu__list {
+.menu > ul.menu__list > li > ul.menu__list {
   border-left: 0px none;
   padding-left: 0;
 }
@@ -366,7 +365,11 @@ a.card:hover {
   background: transparent !important;
 }
 
-.menu__list-item .menu__list .menu__list-item .menu__list-item-collapsible .menu__link--sublist.menu__link--sublist-caret::after {
+.menu__list-item
+  .menu__list
+  .menu__list-item
+  .menu__list-item-collapsible
+  .menu__link--sublist.menu__link--sublist-caret::after {
   margin-right: -10px;
 }
 
@@ -509,12 +512,12 @@ div[class*=' codeBlockTitle'] {
 
 [data-theme='dark'] div[class^='codeBlockTitle'],
 [data-theme='dark'] div[class*=' codeBlockTitle'],
-[data-theme='dark'] code[class*="language-"],
-[data-theme='dark'] pre[class*="language-"] {
+[data-theme='dark'] code[class*='language-'],
+[data-theme='dark'] pre[class*='language-'] {
   background: #0c2025;
 }
 
-[data-theme='dark'] code:not([class^="codeBlockLines"]) {
+[data-theme='dark'] code:not([class^='codeBlockLines']) {
   border: 0.1rem solid rgba(255, 255, 255, 0.1);
   border-radius: var(--ifm-code-border-radius);
 }

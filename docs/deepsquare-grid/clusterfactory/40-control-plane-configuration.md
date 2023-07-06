@@ -1190,10 +1190,7 @@ kubectl apply -f argo/slurm-cluster/volumes/example-1/ldap-users-storage.yaml
          imagePullPolicy: Always
          command: ['sh', '-c']
          image: ghcr.io/deepsquare-io/provider-ssh-authorized-keys:latest
-         args:
-           [
-             'cp /app/provider-ssh-authorized-keys /out/provider-ssh-authorized-keys',
-           ]
+         args: ['cp /app/provider-ssh-authorized-keys /out/provider-ssh-authorized-keys']
          volumeMounts:
            - name: custom-authorizedkeys
              mountPath: /out
