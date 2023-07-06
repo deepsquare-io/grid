@@ -914,7 +914,15 @@ StepRun is one script executed with the shell.
 
 A temporary shared storage is accessible through the $STORAGE_PATH environment variable.
 
-A shared cache per site is accessible via the $DEEPSQUARE_TMP environment variable. The $DEEPSQUARE_TMP directory is cleared periodically.
+Availables caches can be used by invoking one of the following environment variable:
+
+| Environment variables                   | Lifecycle                        |
+| --------------------------------------- | -------------------------------- |
+| STORAGE_PATH                            | job duration                     |
+| DEEPSQUARE_TMP or DEEPSQUARE_SHARED_TMP | provider's policy                |
+| DEEPSQUARE_SHARED_WORLD_TMP             | provider's policy                |
+| DEEPSQUARE_DISK_TMP                     | node reboot or provider's policy |
+| DEEPSQUARE_DISK_WORLD_TMP               | node reboot or provider's policy |
 
 echo "KEY=value" >> "$DEEPSQUARE_ENV" can be used to share environment variables between steps.
 

@@ -60,7 +60,7 @@ export item="$1"
 /usr/bin/echo 'Running: ''test'
 /usr/bin/cat << 'EOFmounterror'
 WARNING: Mounts is now deprecated.
-If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+If you need a cache (disk, shared, per-user or global), please read https://docs.deepsquare.run/workflow/guides/environment-variables.
 The cache is cleared periodically and only persists on the site.
 EOFmounterror
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
@@ -89,9 +89,17 @@ if [ "$tries" -ge 10 ]; then
   exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -107,7 +115,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/d
 /usr/bin/echo 'Running: ''test'
 /usr/bin/cat << 'EOFmounterror'
 WARNING: Mounts is now deprecated.
-If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+If you need a cache (disk, shared, per-user or global), please read https://docs.deepsquare.run/workflow/guides/environment-variables.
 The cache is cleared periodically and only persists on the site.
 EOFmounterror
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
@@ -136,9 +144,17 @@ if [ "$tries" -ge 10 ]; then
   exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -170,7 +186,7 @@ export index="$1"
 /usr/bin/echo 'Running: ''test'
 /usr/bin/cat << 'EOFmounterror'
 WARNING: Mounts is now deprecated.
-If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+If you need a cache (disk, shared, per-user or global), please read https://docs.deepsquare.run/workflow/guides/environment-variables.
 The cache is cleared periodically and only persists on the site.
 EOFmounterror
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
@@ -199,9 +215,17 @@ if [ "$tries" -ge 10 ]; then
   exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -217,7 +241,7 @@ STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/d
 /usr/bin/echo 'Running: ''test'
 /usr/bin/cat << 'EOFmounterror'
 WARNING: Mounts is now deprecated.
-If you need a persistent cache, use the environment variable $DEEPSQUARE_TMP which is the cache location.
+If you need a cache (disk, shared, per-user or global), please read https://docs.deepsquare.run/workflow/guides/environment-variables.
 The cache is cleared periodically and only persists on the site.
 EOFmounterror
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
@@ -246,9 +270,17 @@ if [ "$tries" -ge 10 ]; then
   exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_TMP:/deepsquare/tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' DEEPSQUARE_TMP='/deepsquare/tmp' DEEPSQUARE_INPUT='/deepsquare/input' DEEPSQUARE_OUTPUT='/deepsquare/output' DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
