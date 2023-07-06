@@ -173,19 +173,20 @@ wait_for_network_device() {
 
 wait_for_network_device $$ tap0
 
-/usr/sbin/ip link add dev net0 type wireguard
-/usr/sbin/ip -4 address add 10.0.0.2/24 dev net0
-/usr/bin/echo '"'"'"'"'"'"'"'"'<TO FILL: Client PK>'"'"'"'"'"'"'"'"' > "$(pwd)/wg-privatekey"
-/usr/bin/chmod 600 "$(pwd)/wg-privatekey"
-/usr/bin/wg set net0 private-key "$(pwd)/wg-privatekey"
-/usr/bin/wg set net0 peer '"'"'"'"'"'"'"'"'<TO FILL: Serv Pub>'"'"'"'"'"'"'"'"' allowed-ips 10.0.0.1/32
-/usr/bin/wg set net0 peer '"'"'"'"'"'"'"'"'<TO FILL: Serv Pub>'"'"'"'"'"'"'"'"' endpoint 194.182.186.85:51000
-/usr/bin/echo '"'"'"'"'"'"'"'"'<TO FILL: SharedKey>'"'"'"'"'"'"'"'"' > "$(pwd)/wg-preshared-0"
-/usr/bin/chmod 600 "$(pwd)/wg-preshared-0"
-/usr/bin/wg set net0 peer '"'"'"'"'"'"'"'"'<TO FILL: Serv Pub>'"'"'"'"'"'"'"'"' preshared-key "$(pwd)/wg-preshared-0"
-/usr/bin/wg set net0 peer '"'"'"'"'"'"'"'"'<TO FILL: Serv Pub>'"'"'"'"'"'"'"'"' persistent-keepalive 10
-/usr/sbin/ip link set mtu 1420 up dev net0
-/usr/sbin/ip -4 route add 10.0.0.1/32 dev net0
+/usr/bin/cat << '"'"'"'"'"'"'"'"'EOFwireguard'"'"'"'"'"'"'"'"' > "$(pwd)/net0.conf"
+[Interface]
+Address = 10.0.0.2/24
+PrivateKey = <TO FILL: Client PK>
+MTU = 1420
+[Peer]
+PublicKey = <TO FILL: Serv Pub>
+AllowedIPs = 10.0.0.1/32
+Endpoint = 194.182.186.85:51000
+PresharedKey = <TO FILL: SharedKey>
+PersistentKeepalive = 10
+EOFwireguard
+/usr/bin/chmod 600 "$(pwd)/net0.conf"
+wg-quick up "$(pwd)/net0.conf"
 
 /usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
 /usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf

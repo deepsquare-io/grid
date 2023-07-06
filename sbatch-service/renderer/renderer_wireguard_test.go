@@ -45,20 +45,20 @@ func TestRenderWireguard(t *testing.T) {
 				Wireguard:     cleanWireguard,
 				InterfaceName: "net0",
 			},
-			expected: `/usr/sbin/ip link add dev net0 type wireguard
-/usr/sbin/ip -4 address add 10.0.0.1/32 dev net0
-/usr/bin/echo 'abc' > "$(pwd)/wg-privatekey"
-/usr/bin/chmod 600 "$(pwd)/wg-privatekey"
-/usr/bin/wg set net0 private-key "$(pwd)/wg-privatekey"
-/usr/bin/wg set net0 peer 'pub' allowed-ips 0.0.0.0/0,172.10.0.0/32
-/usr/bin/wg set net0 peer 'pub' endpoint 10.0.0.0:30
-/usr/bin/echo 'sha' > "$(pwd)/wg-preshared-0"
-/usr/bin/chmod 600 "$(pwd)/wg-preshared-0"
-/usr/bin/wg set net0 peer 'pub' preshared-key "$(pwd)/wg-preshared-0"
-/usr/bin/wg set net0 peer 'pub' persistent-keepalive 20
-/usr/sbin/ip link set mtu 1420 up dev net0
-/usr/sbin/ip -4 route add 0.0.0.0/0 dev net0
-/usr/sbin/ip -4 route add 172.10.0.0/32 dev net0
+			expected: `/usr/bin/cat << 'EOFwireguard' > "$(pwd)/net0.conf"
+[Interface]
+Address = 10.0.0.1/32
+PrivateKey = abc
+MTU = 1420
+[Peer]
+PublicKey = pub
+AllowedIPs = 0.0.0.0/0,172.10.0.0/32
+Endpoint = 10.0.0.0:30
+PresharedKey = sha
+PersistentKeepalive = 20
+EOFwireguard
+/usr/bin/chmod 600 "$(pwd)/net0.conf"
+wg-quick up "$(pwd)/net0.conf"
 `,
 			title: "Positive test with wireguard tunnel",
 		},
