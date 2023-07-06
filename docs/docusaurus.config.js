@@ -80,7 +80,7 @@ const config = {
             },
           ],
           // Search only key. This is safe to share.
-          apiKey: 'E4veNLYR74h2WSNLEua6Gf4Ea4j6LUVL',
+          apiKey: 'beEQxk6x8M8QyDHJpvcjpc56VWPF6JUi',
         },
 
         // Optional: Typesense search parameters: https://typesense.org/docs/0.24.0/api/search.html#search-parameters
