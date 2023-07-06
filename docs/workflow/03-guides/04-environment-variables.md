@@ -49,7 +49,7 @@ The other environment variables defined by DeepSquare are subdirectories in the 
 | DEEPSQUARE_DISK_TMP                     | /deepsquare/disk/tmp       |
 | DEEPSQUARE_DISK_WORLD_TMP               | /deepsquare/disk/world-tmp |
 
-**When no running a container**, all the variables are set to:
+**When running host**, all the variables are set to:
 
 | Environment variables                   | Value                                 |
 | --------------------------------------- | ------------------------------------- |
