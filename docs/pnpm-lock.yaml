@@ -74,8 +74,8 @@ devDependencies:
     specifier: 1.2.1
     version: 1.2.1
   docusaurus-theme-search-typesense:
-    specifier: 0.12.0-0
-    version: 0.12.0-0(@algolia/client-search@4.18.0)(@babel/runtime@7.22.5)(@docusaurus/core@2.4.1)(@docusaurus/theme-common@2.4.1)(@docusaurus/types@2.4.1)(@types/react@18.2.14)(algoliasearch@4.13.1)(eslint@8.44.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6)
+    specifier: 0.12.0
+    version: 0.12.0(@algolia/client-search@4.18.0)(@babel/runtime@7.22.5)(@docusaurus/core@2.4.1)(@docusaurus/theme-common@2.4.1)(@docusaurus/types@2.4.1)(@types/react@18.2.14)(algoliasearch@4.13.1)(eslint@8.44.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6)
   eslint:
     specifier: 8.44.0
     version: 8.44.0
@@ -5529,8 +5529,8 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /docusaurus-theme-search-typesense@0.12.0-0(@algolia/client-search@4.18.0)(@babel/runtime@7.22.5)(@docusaurus/core@2.4.1)(@docusaurus/theme-common@2.4.1)(@docusaurus/types@2.4.1)(@types/react@18.2.14)(algoliasearch@4.13.1)(eslint@8.44.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6):
-    resolution: {integrity: sha512-Vj09X3cSdB/AjKuzYR/sHP6PoIK7yr6Ww+T9EKO+T8etAjDumkQnwEf8qpvrBzqypWoGKs05fdZ8Xr/7WEscUA==}
+  /docusaurus-theme-search-typesense@0.12.0(@algolia/client-search@4.18.0)(@babel/runtime@7.22.5)(@docusaurus/core@2.4.1)(@docusaurus/theme-common@2.4.1)(@docusaurus/types@2.4.1)(@types/react@18.2.14)(algoliasearch@4.13.1)(eslint@8.44.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.6):
+    resolution: {integrity: sha512-jPbw4mm1asWStZAXMvsN+QIKqu7QINV0kuzQIyH1kS/RxMApEW05f5FJ2z55j4ng1g9wcNRrg5DPt3Rj8f+Jxg==}
     engines: {node: '>=16.14'}
     peerDependencies:
       '@docusaurus/core': 2.4.1
@@ -9737,7 +9737,7 @@ packages:
     dev: true
 
   /typesense-docsearch-css@0.4.0:
-    resolution: {integrity: sha512-hVTJC1Rg2BnNB4kl2Qi4GcgjFmPZY8YGu0aJ5V6iM6vK62yvtE7jObnAc1maYOp33NWFVLPgl/9PlBfWBlN0Dw==, tarball: https://registry.npmjs.org/typesense-docsearch-css/-/typesense-docsearch-css-0.4.0.tgz}
+    resolution: {integrity: sha512-hVTJC1Rg2BnNB4kl2Qi4GcgjFmPZY8YGu0aJ5V6iM6vK62yvtE7jObnAc1maYOp33NWFVLPgl/9PlBfWBlN0Dw==}
     dev: true
 
   /typesense-docsearch-react@3.4.0(@algolia/client-search@4.18.0)(@babel/runtime@7.22.5)(@types/react@18.2.14)(algoliasearch@4.13.1)(react-dom@18.2.0)(react@18.2.0):
