@@ -34,7 +34,7 @@ trap finally EXIT INT TERM
 {{- if and .Step.Name (derefStr .Step.Name) -}}
 /usr/bin/echo 'Running: '{{ derefStr .Step.Name | squote }}
 {{- end -}}
-{{- if .Step.Catch }}
+{{ if .Step.Catch }}
 ( # CATCH
 set -e
 {{- end -}}
@@ -51,7 +51,7 @@ set -e
 {{- else if .Step.Use }}
 {{ renderStepUse .Job .Step .Step.Use }}
 {{- end -}}
-{{- if .Step.Catch }}
+{{ if .Step.Catch }}
 ) # CATCH
 DEEPSQUARE_ERROR_CODE=$?
 export DEEPSQUARE_ERROR_CODE
@@ -62,7 +62,7 @@ set -e
 {{- end }}
 fi
 {{- end -}}
-{{- if or .Step.Catch .Step.Finally }}
+{{ if or .Step.Catch .Step.Finally }}
 ) # CATCH FINALLY
 {{- end -}}
 {{ if and .Step.If (derefStr .Step.If) }}

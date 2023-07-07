@@ -14,7 +14,7 @@ asynclaunchpid="$!"
 {{- if and .Launch.HandleName (derefStr .Launch.HandleName) }}
 export PID_{{ .Launch.HandleName | upper }}="$asynclaunchpid"
 {{- end -}}
-{{- if and .Launch.SignalOnParentStepExit (derefInt .Launch.SignalOnParentStepExit) }}
+{{ if and .Launch.SignalOnParentStepExit (derefInt .Launch.SignalOnParentStepExit) }}
 EXIT_SIGNALS[$asynclaunchpid]={{ derefInt .Launch.SignalOnParentStepExit }}
 {{- else if not .Launch.SignalOnParentStepExit }}
 EXIT_SIGNALS[$asynclaunchpid]=15
