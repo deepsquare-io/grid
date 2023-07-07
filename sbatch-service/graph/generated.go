@@ -528,9 +528,17 @@ input Step {
   """
   if: String @goTag(key: "yaml", value: "if,omitempty")
   """
+  Group of steps that will be run sequentially.
+
+  Is exclusive with "for", "launch", "use", "run".
+
+  Go name: "Steps".
+  """
+  steps: [Step!] @goTag(key: "yaml") @constraint(format: "dive,omitempty")
+  """
   Run a command if not null.
 
-  Is exclusive with "for", "launch", "use".
+  Is exclusive with "for", "launch", "use", "steps".
 
   Go name: "Run".
   """
@@ -538,7 +546,7 @@ input Step {
   """
   Run a for loop if not null.
 
-  Is exclusive with "run", "launch", "use".
+  Is exclusive with "run", "launch", "use", "steps".
 
   Go name: "For".
   """
@@ -546,7 +554,7 @@ input Step {
   """
   Launch a background process to run a group of commands if not null.
 
-  Is exclusive with "run", "for", "use".
+  Is exclusive with "run", "for", "use", "steps".
 
   Go name: "Launch".
   """
@@ -554,7 +562,7 @@ input Step {
   """
   Use a third-party group of steps.
 
-  Is exclusive with "run", "for", "launch".
+  Is exclusive with "run", "for", "launch", "steps".
 
   Go name: "Use".
   """
@@ -4204,7 +4212,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "dependsOn", "if", "run", "for", "launch", "use"}
+	fieldsInOrder := [...]string{"name", "dependsOn", "if", "steps", "run", "for", "launch", "use"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4238,6 +4246,15 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 				return it, err
 			}
 			it.If = data
+		case "steps":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
+			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Steps = data
 		case "run":
 			var err error
 
@@ -5771,6 +5788,26 @@ func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑio�
 	}
 	res, err := ec.unmarshalInputS3Data(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx context.Context, v interface{}) ([]*model.Step, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.Step, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStep(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx context.Context, v interface{}) (*model.StepAsyncLaunch, error) {

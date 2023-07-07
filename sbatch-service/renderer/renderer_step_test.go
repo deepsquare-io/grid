@@ -286,6 +286,19 @@ done`,
 		{
 			input: model.Step{
 				Name: utils.Ptr("test"),
+				Steps: []*model.Step{
+					{
+						Name: utils.Ptr("test 2"),
+					},
+				},
+			},
+			expected: `/usr/bin/echo 'Running: ''test'
+/usr/bin/echo 'Running: ''test 2'`,
+			title: "Positive test with step of steps",
+		},
+		{
+			input: model.Step{
+				Name: utils.Ptr("test"),
 			},
 			expected: "/usr/bin/echo 'Running: ''test'",
 			title:    "Positive test with none",

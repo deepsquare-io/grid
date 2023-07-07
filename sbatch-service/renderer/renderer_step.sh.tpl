@@ -19,7 +19,11 @@ if [ $CONDITION_RESULT = "true" ]; then
 {{- if and .Step.Name (derefStr .Step.Name) -}}
 /usr/bin/echo 'Running: '{{ derefStr .Step.Name | squote }}
 {{- end -}}
-{{ if .Step.Run }}
+{{ if .Step.Steps }}
+{{- range $step := .Step.Steps }}
+{{ renderStep $.Job $step }}
+{{- end }}
+{{- else if .Step.Run }}
 {{ renderStepRun .Job .Step }}
 {{- else if .Step.For }}
 {{ renderStepFor .Job .Step.For }}

@@ -377,27 +377,33 @@ type Step struct {
 	//
 	// Go name: "If".
 	If *string `json:"if,omitempty" yaml:"if,omitempty"`
+	// Group of steps that will be run sequentially.
+	//
+	// Is exclusive with "for", "launch", "use", "run".
+	//
+	// Go name: "Steps".
+	Steps []*Step `json:"steps,omitempty" yaml:"steps" validate:"dive,omitempty"`
 	// Run a command if not null.
 	//
-	// Is exclusive with "for", "launch", "use".
+	// Is exclusive with "for", "launch", "use", "steps".
 	//
 	// Go name: "Run".
 	Run *StepRun `json:"run,omitempty" yaml:"run,omitempty"`
 	// Run a for loop if not null.
 	//
-	// Is exclusive with "run", "launch", "use".
+	// Is exclusive with "run", "launch", "use", "steps".
 	//
 	// Go name: "For".
 	For *StepFor `json:"for,omitempty" yaml:"for,omitempty"`
 	// Launch a background process to run a group of commands if not null.
 	//
-	// Is exclusive with "run", "for", "use".
+	// Is exclusive with "run", "for", "use", "steps".
 	//
 	// Go name: "Launch".
 	Launch *StepAsyncLaunch `json:"launch,omitempty" yaml:"launch,omitempty"`
 	// Use a third-party group of steps.
 	//
-	// Is exclusive with "run", "for", "launch".
+	// Is exclusive with "run", "for", "launch", "steps".
 	//
 	// Go name: "Use".
 	Use *StepUse `json:"use,omitempty" yaml:"use,omitempty"`
