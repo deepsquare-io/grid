@@ -448,6 +448,14 @@ type Step struct {
 	//
 	// Go name: "Use".
 	Use *StepUse `json:"use,omitempty" yaml:"use,omitempty"`
+	// Group of steps that will be run sequentially on error.
+	//
+	// Go name: "Catch".
+	Catch []*Step `json:"catch,omitempty" yaml:"catch,omitempty" validate:"omitempty,dive,required"`
+	// Group of steps that will be run sequentially after the group of steps or command finishes.
+	//
+	// Go name: "Finally".
+	Finally []*Step `json:"finally,omitempty" yaml:"finally,omitempty" validate:"omitempty,dive,required"`
 }
 
 // StepAsyncLaunch describes launching a background process.

@@ -16,8 +16,27 @@ export CONDITION
 CONDITION_RESULT="$(eval "if [[ $CONDITION ]]; then echo 'true' ; else echo 'false' ; fi")"
 if [ $CONDITION_RESULT = "true" ]; then
 {{ end -}}
+{{ if or .Step.Catch .Step.Finally }}
+( # CATCH FINALLY
+{{- end }}
+{{- if .Step.Catch }}
+set +e
+{{ end -}}
+{{- if .Step.Finally }}
+finally() {
+set -e
+{{- range $step := .Step.Finally }}
+{{ renderStep $.Job $step }}
+{{- end }}
+}
+trap finally EXIT INT TERM
+{{ end -}}
 {{- if and .Step.Name (derefStr .Step.Name) -}}
 /usr/bin/echo 'Running: '{{ derefStr .Step.Name | squote }}
+{{- end -}}
+{{- if .Step.Catch }}
+( # CATCH
+set -e
 {{- end -}}
 {{ if .Step.Steps }}
 {{- range $step := .Step.Steps }}
@@ -31,6 +50,17 @@ if [ $CONDITION_RESULT = "true" ]; then
 {{ renderStepAsyncLaunch .Job .Step.Launch }}
 {{- else if .Step.Use }}
 {{ renderStepUse .Job .Step .Step.Use }}
+{{- end -}}
+{{- if .Step.Catch }}
+) # CATCH
+export DEEPSQUARE_ERROR_CODE=$?
+set -e
+{{- range $step := .Step.Catch }}
+{{ renderStep $.Job $step }}
+{{- end }}
+{{- end -}}
+{{- if or .Step.Catch .Step.Finally }}
+) # CATCH FINALLY
 {{- end -}}
 {{ if and .Step.If (derefStr .Step.If) }}
 :

@@ -298,6 +298,147 @@ done`,
 		},
 		{
 			input: model.Step{
+				Name: utils.Ptr("catch"),
+				Run: &model.StepRun{
+					Command: "exit 1",
+				},
+				Catch: []*model.Step{
+					{
+						Run: &model.StepRun{
+							Command: "echo $DEEPSQUARE_ERROR_CODE",
+						},
+					},
+				},
+			},
+			expected: `
+( # CATCH FINALLY
+set +e
+/usr/bin/echo 'Running: ''catch'
+( # CATCH
+set -e
+/usr/bin/srun --job-name='catch' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=4096M \
+  --gpus-per-task=1 \
+  --ntasks=1 \
+  /bin/sh -c 'exit 1'
+) # CATCH
+export DEEPSQUARE_ERROR_CODE=$?
+set -e
+
+/usr/bin/srun  \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=4096M \
+  --gpus-per-task=1 \
+  --ntasks=1 \
+  /bin/sh -c 'echo $DEEPSQUARE_ERROR_CODE'
+) # CATCH FINALLY`,
+			title: "Positive test with catch",
+		},
+		{
+			input: model.Step{
+				Name: utils.Ptr("catch"),
+				Run: &model.StepRun{
+					Command: "exit 1",
+				},
+				Finally: []*model.Step{
+					{
+						Run: &model.StepRun{
+							Command: "cleaning up",
+						},
+					},
+				},
+			},
+			expected: `
+( # CATCH FINALLY
+finally() {
+set -e
+
+/usr/bin/srun  \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=4096M \
+  --gpus-per-task=1 \
+  --ntasks=1 \
+  /bin/sh -c 'cleaning up'
+}
+trap finally EXIT INT TERM
+/usr/bin/echo 'Running: ''catch'
+/usr/bin/srun --job-name='catch' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=4096M \
+  --gpus-per-task=1 \
+  --ntasks=1 \
+  /bin/sh -c 'exit 1'
+) # CATCH FINALLY`,
+			title: "Positive test with finally",
+		},
+		{
+			input: model.Step{
+				Name: utils.Ptr("catch"),
+				Run: &model.StepRun{
+					Command: "exit 1",
+				},
+				Catch: []*model.Step{
+					{
+						Run: &model.StepRun{
+							Command: "echo $DEEPSQUARE_ERROR_CODE",
+						},
+					},
+				},
+				Finally: []*model.Step{
+					{
+						Run: &model.StepRun{
+							Command: "cleaning up",
+						},
+					},
+				},
+			},
+			expected: `
+( # CATCH FINALLY
+set +e
+
+finally() {
+set -e
+
+/usr/bin/srun  \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=4096M \
+  --gpus-per-task=1 \
+  --ntasks=1 \
+  /bin/sh -c 'cleaning up'
+}
+trap finally EXIT INT TERM
+/usr/bin/echo 'Running: ''catch'
+( # CATCH
+set -e
+/usr/bin/srun --job-name='catch' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=4096M \
+  --gpus-per-task=1 \
+  --ntasks=1 \
+  /bin/sh -c 'exit 1'
+) # CATCH
+export DEEPSQUARE_ERROR_CODE=$?
+set -e
+
+/usr/bin/srun  \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=4096M \
+  --gpus-per-task=1 \
+  --ntasks=1 \
+  /bin/sh -c 'echo $DEEPSQUARE_ERROR_CODE'
+) # CATCH FINALLY`,
+			title: "Positive test with catch-finally",
+		},
+		{
+			input: model.Step{
 				Name: utils.Ptr("test"),
 			},
 			expected: "/usr/bin/echo 'Running: ''test'",

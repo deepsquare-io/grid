@@ -1,0 +1,30 @@
+---
+job:
+  enableLogging: false
+  resources:
+    tasks: 1
+    cpusPerTask: 1
+    memPerCpu: 1024
+    gpusPerTask: 0
+  steps:
+    - name: catch block
+      catch:
+        - name: catch
+      run:
+        command: exit 1
+
+    - name: first catch block
+      catch:
+        - name: catch
+      finally:
+        - name: finally
+      run:
+        command: exit 1
+
+    - name: second catch block
+      catch:
+        - name: catch
+      finally:
+        - name: finally
+      run:
+        command: exit 1

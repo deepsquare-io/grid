@@ -569,6 +569,22 @@ input Step {
   Go name: "Use".
   """
   use: StepUse @goTag(key: "yaml", value: "use,omitempty")
+  """
+  Group of steps that will be run sequentially on error.
+
+  Go name: "Catch".
+  """
+  catch: [Step!]
+    @goTag(key: "yaml", value: "catch,omitempty")
+    @constraint(format: "omitempty,dive,required")
+  """
+  Group of steps that will be run sequentially after the group of steps or command finishes.
+
+  Go name: "Finally".
+  """
+  finally: [Step!]
+    @goTag(key: "yaml", value: "finally,omitempty")
+    @constraint(format: "omitempty,dive,required")
 }
 
 input StepUse {
@@ -4262,7 +4278,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "dependsOn", "if", "steps", "run", "for", "launch", "use"}
+	fieldsInOrder := [...]string{"name", "dependsOn", "if", "steps", "run", "for", "launch", "use", "catch", "finally"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4341,6 +4357,24 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 				return it, err
 			}
 			it.Use = data
+		case "catch":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("catch"))
+			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Catch = data
+		case "finally":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("finally"))
+			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Finally = data
 		}
 	}
 
