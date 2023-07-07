@@ -1,15 +1,12 @@
 package module
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"regexp"
 	"strings"
-	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
@@ -98,7 +95,7 @@ func Resolve(
 		return nil, fmt.Errorf("found module.yaml but failed to read module.yaml: %w", err)
 	}
 
-	rContents, err := render(j, s, string(contents))
+	rContents, err := Render(j, s, string(contents))
 	if err != nil {
 		return nil, err
 	}
@@ -109,32 +106,4 @@ func Resolve(
 	}
 
 	return module, nil
-}
-
-func render(j *model.Job, s *model.Step, template string) (string, error) {
-	tmpl, err := engine().Parse(template)
-	if err != nil {
-		return "", err
-	}
-
-	var out bytes.Buffer
-	if err = tmpl.Execute(&out, struct {
-		Job  *model.Job
-		Step *model.Step
-	}{
-		Job:  j,
-		Step: s,
-	}); err != nil {
-		return "", err
-	}
-	return out.String(), nil
-}
-
-func funcMap() template.FuncMap {
-	f := sprig.TxtFuncMap()
-	return f
-}
-
-func engine() *template.Template {
-	return template.New("gotpl").Funcs(funcMap())
 }

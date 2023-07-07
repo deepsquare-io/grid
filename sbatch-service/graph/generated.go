@@ -430,7 +430,7 @@ input Job {
   """
   env: [EnvVar!]
     @goTag(key: "yaml", value: "env,omitempty")
-    @constraint(format: "dive,required")
+    @constraint(format: "omitempty,dive,required")
   """
   EnableLogging enables the DeepSquare Grid Logger.
 
@@ -514,7 +514,7 @@ input Step {
   """
   dependsOn: [String!]
     @goTag(key: "yaml", value: "dependsOn,omitempty")
-    @constraint(format: "dive,alphanum_underscore")
+    @constraint(format: "omitempty,dive,alphanum_underscore")
   """
   "If" is a boolean test that skips the step if the test is false.
 
@@ -534,7 +534,9 @@ input Step {
 
   Go name: "Steps".
   """
-  steps: [Step!] @goTag(key: "yaml") @constraint(format: "dive,omitempty")
+  steps: [Step!]
+    @goTag(key: "yaml", value: "steps,omitempty")
+    @constraint(format: "omitempty,dive,required")
   """
   Run a command if not null.
 
@@ -603,6 +605,16 @@ input StepUse {
     @constraint(
       format: "omitempty,valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"
     )
+  """
+  Additional children steps to the module.
+
+  If the module allow children steps, these steps will be passed to the module to replace {{ .Step.Run.Steps }}.
+
+  Go name: "Steps".
+  """
+  steps: [Step!]
+    @goTag(key: "yaml", value: "steps,omitempty")
+    @constraint(format: "omitempty,dive,required")
 }
 
 """
@@ -722,7 +734,7 @@ input ContainerRun {
   """
   mounts: [Mount!]
     @goTag(key: "yaml", value: "mounts,omitempty")
-    @constraint(format: "dive,required")
+    @constraint(format: "omitempty,dive,required")
   """
   Username of a basic authentication.
 
@@ -805,7 +817,7 @@ input WireguardPeer {
   """
   allowedIPs: [String!]
     @goTag(key: "yaml", value: "allowedIPs,omitempty")
-    @constraint(format: "dive,cidr")
+    @constraint(format: "omitempty,dive,cidr")
   """
   The peer endpoint.
 
@@ -854,7 +866,7 @@ input Wireguard {
   """
   address: [String!]
     @goTag(key: "yaml", value: "address,omitempty")
-    @constraint(format: "dive,cidr")
+    @constraint(format: "omitempty,dive,cidr")
   """
   The client private key.
 
@@ -868,7 +880,7 @@ input Wireguard {
   """
   peers: [WireguardPeer!]
     @goTag(key: "yaml", value: "peers,omitempty")
-    @constraint(format: "dive,required")
+    @constraint(format: "omitempty,dive,required")
 }
 
 """
@@ -999,7 +1011,7 @@ input StepRun {
   """
   dns: [String!]
     @goTag(key: "yaml", value: "dns,omitempty")
-    @constraint(format: "dive,ip")
+    @constraint(format: "omitempty,dive,ip")
   """
   Add custom network interfaces.
 
@@ -1015,7 +1027,7 @@ input StepRun {
   """
   customNetworkInterfaces: [NetworkInterface!]
     @goTag(key: "yaml", value: "customNetworkInterfaces,omitempty")
-    @constraint(format: "dive,required")
+    @constraint(format: "omitempty,dive,required")
   """
   Environment variables accessible over the command.
 
@@ -1023,7 +1035,7 @@ input StepRun {
   """
   env: [EnvVar!]
     @goTag(key: "yaml", value: "env,omitempty")
-    @constraint(format: "dive,required")
+    @constraint(format: "omitempty,dive,required")
   """
   Remap UID to root. Does not grant elevated system permissions, despite appearances.
 
@@ -1187,7 +1199,7 @@ input StepAsyncLaunch {
 
   Go name: "Steps".
   """
-  steps: [Step!]! @goTag(key: "yaml")
+  steps: [Step!]! @goTag(key: "yaml") @constraint(format: "dive,required")
 }
 
 input ModuleInput {
@@ -1240,9 +1252,47 @@ The module.yaml file goes through a templating engine first before getting parse
 - {{ .Job }} and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.
 - {{ .Step }} and its childs, which represent the Step object using the module. Can be useful if you want the step name.
 
-Notice that the templating follows the Go format. You can also apply sprig templating functions.
+If you want your user to pass custom steps, you can use {{- .Step.Use.Steps | toYaml | nindent <n> }} which is the group of steps.
 
-To outputs environment variables, just append KEY=value to the "${DEEPSQUARE_ENV}" file.
+Example:
+
+` + "`" + `` + "`" + `` + "`" + `
+# module.yaml
+steps:
+  - name: my step
+  {{- .Step.Use.Steps | toYaml | nindent 2 }}
+  - name: my other step
+` + "`" + `` + "`" + `` + "`" + `
+
+` + "`" + `` + "`" + `` + "`" + `
+# job.yaml
+steps:
+  - name: module
+    use:
+      source: git/my-module
+      steps:
+        - name: step by user
+        - name: another step by user
+` + "`" + `` + "`" + `` + "`" + `
+
+Will render:
+
+` + "`" + `` + "`" + `` + "`" + `
+# module.yaml
+steps:
+  - name: my step
+  - name: step by user
+  - name: another step by user
+  - name: my other step
+` + "`" + `` + "`" + `` + "`" + `
+
+Notice that the templating follows the Go format. You can also apply [sprig](http://masterminds.github.io/sprig/) templating functions.
+
+To outputs environment variables, just append KEY=value to the "${DEEPSQUARE_ENV}" file, like this:
+
+` + "`" + `` + "`" + `` + "`" + `
+echo "KEY=value" >> "${DEEPSQUARE_ENV}"
+` + "`" + `` + "`" + `` + "`" + `
 """
 input Module {
   """
@@ -1270,7 +1320,7 @@ input Module {
   """
   inputs: [ModuleInput!]
     @goTag(key: "yaml", value: "inputs,omitempty")
-    @constraint(format: "dive,required")
+    @constraint(format: "omitempty,dive,required")
   """
   List of exported environment variables.
 
@@ -1278,7 +1328,7 @@ input Module {
   """
   outputs: [ModuleOutput!]
     @goTag(key: "yaml", value: "outputs,omitempty")
-    @constraint(format: "dive,required")
+    @constraint(format: "omitempty,dive,required")
   """
   Steps of the module.
 
@@ -4591,7 +4641,7 @@ func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"source", "args", "exportEnvAs"}
+	fieldsInOrder := [...]string{"source", "args", "exportEnvAs", "steps"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4625,6 +4675,15 @@ func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj inter
 				return it, err
 			}
 			it.ExportEnvAs = data
+		case "steps":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
+			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Steps = data
 		}
 	}
 

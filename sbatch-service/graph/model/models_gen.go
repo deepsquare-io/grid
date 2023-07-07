@@ -45,7 +45,7 @@ type ContainerRun struct {
 	// Please use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ...
 	//
 	// Go name: "Mounts".
-	Mounts []*Mount `json:"mounts,omitempty" yaml:"mounts,omitempty" validate:"dive,required"`
+	Mounts []*Mount `json:"mounts,omitempty" yaml:"mounts,omitempty" validate:"omitempty,dive,required"`
 	// Username of a basic authentication.
 	//
 	// Go name: "Username".
@@ -138,7 +138,7 @@ type Job struct {
 	// Environment variables accessible for the entire job.
 	//
 	// Go name: "Env".
-	Env []*EnvVar `json:"env,omitempty" yaml:"env,omitempty" validate:"dive,required"`
+	Env []*EnvVar `json:"env,omitempty" yaml:"env,omitempty" validate:"omitempty,dive,required"`
 	// EnableLogging enables the DeepSquare Grid Logger.
 	//
 	// Go name: "EnableLogging".
@@ -217,9 +217,50 @@ type JobResources struct {
 // - {{ .Job }} and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.
 // - {{ .Step }} and its childs, which represent the Step object using the module. Can be useful if you want the step name.
 //
-// Notice that the templating follows the Go format. You can also apply sprig templating functions.
+// If you want your user to pass custom steps, you can use {{- .Step.Use.Steps | toYaml | nindent <n> }} which is the group of steps.
 //
-// To outputs environment variables, just append KEY=value to the "${DEEPSQUARE_ENV}" file.
+// Example:
+//
+// ```
+// # module.yaml
+// steps:
+//   - name: my step
+//     {{- .Step.Use.Steps | toYaml | nindent 2 }}
+//   - name: my other step
+//
+// ```
+//
+// ```
+// # job.yaml
+// steps:
+//   - name: module
+//     use:
+//     source: git/my-module
+//     steps:
+//   - name: step by user
+//   - name: another step by user
+//
+// ```
+//
+// Will render:
+//
+// ```
+// # module.yaml
+// steps:
+//   - name: my step
+//   - name: step by user
+//   - name: another step by user
+//   - name: my other step
+//
+// ```
+//
+// Notice that the templating follows the Go format. You can also apply [sprig](http://masterminds.github.io/sprig/) templating functions.
+//
+// To outputs environment variables, just append KEY=value to the "${DEEPSQUARE_ENV}" file, like this:
+//
+// ```
+// echo "KEY=value" >> "${DEEPSQUARE_ENV}"
+// ```
 type Module struct {
 	// Name of the module.
 	//
@@ -236,11 +277,11 @@ type Module struct {
 	// List of allowed arguments.
 	//
 	// Go name: "Inputs".
-	Inputs []*ModuleInput `json:"inputs,omitempty" yaml:"inputs,omitempty" validate:"dive,required"`
+	Inputs []*ModuleInput `json:"inputs,omitempty" yaml:"inputs,omitempty" validate:"omitempty,dive,required"`
 	// List of exported environment variables.
 	//
 	// Go name: "Outputs".
-	Outputs []*ModuleOutput `json:"outputs,omitempty" yaml:"outputs,omitempty" validate:"dive,required"`
+	Outputs []*ModuleOutput `json:"outputs,omitempty" yaml:"outputs,omitempty" validate:"omitempty,dive,required"`
 	// Steps of the module.
 	//
 	// Go name: "Steps".
@@ -366,7 +407,7 @@ type Step struct {
 	// BE WARNED: Uncontrolled `dependsOn` may results in dead locks.
 	//
 	// Go name: "DependsOn".
-	DependsOn []string `json:"dependsOn,omitempty" yaml:"dependsOn,omitempty" validate:"dive,alphanum_underscore"`
+	DependsOn []string `json:"dependsOn,omitempty" yaml:"dependsOn,omitempty" validate:"omitempty,dive,alphanum_underscore"`
 	// "If" is a boolean test that skips the step if the test is false.
 	//
 	// The test format is bash and variables such as $PATH or $(pwd) can be expanded.
@@ -382,7 +423,7 @@ type Step struct {
 	// Is exclusive with "for", "launch", "use", "run".
 	//
 	// Go name: "Steps".
-	Steps []*Step `json:"steps,omitempty" yaml:"steps" validate:"dive,omitempty"`
+	Steps []*Step `json:"steps,omitempty" yaml:"steps,omitempty" validate:"omitempty,dive,required"`
 	// Run a command if not null.
 	//
 	// Is exclusive with "for", "launch", "use", "steps".
@@ -446,7 +487,7 @@ type StepAsyncLaunch struct {
 	// Steps are run sequentially.
 	//
 	// Go name: "Steps".
-	Steps []*Step `json:"steps" yaml:"steps"`
+	Steps []*Step `json:"steps" yaml:"steps" validate:"dive,required"`
 }
 
 // StepFor describes a for loop.
@@ -535,7 +576,7 @@ type StepRun struct {
 	// A comma-separated list of DNS IP.
 	//
 	// Go name: "DNS".
-	DNS []string `json:"dns,omitempty" yaml:"dns,omitempty" validate:"dive,ip"`
+	DNS []string `json:"dns,omitempty" yaml:"dns,omitempty" validate:"omitempty,dive,ip"`
 	// Add custom network interfaces.
 	//
 	// ONLY enabled if network is "slirp4netns".
@@ -547,11 +588,11 @@ type StepRun struct {
 	// The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
 	//
 	// Go name: "CustomNetworkInterfaces".
-	CustomNetworkInterfaces []*NetworkInterface `json:"customNetworkInterfaces,omitempty" yaml:"customNetworkInterfaces,omitempty" validate:"dive,required"`
+	CustomNetworkInterfaces []*NetworkInterface `json:"customNetworkInterfaces,omitempty" yaml:"customNetworkInterfaces,omitempty" validate:"omitempty,dive,required"`
 	// Environment variables accessible over the command.
 	//
 	// Go name: "Env".
-	Env []*EnvVar `json:"env,omitempty" yaml:"env,omitempty" validate:"dive,required"`
+	Env []*EnvVar `json:"env,omitempty" yaml:"env,omitempty" validate:"omitempty,dive,required"`
 	// Remap UID to root. Does not grant elevated system permissions, despite appearances.
 	//
 	// If the "default" (Enroot) container runtime is used, it will use the `--container-remap-root` flags.
@@ -656,6 +697,12 @@ type StepUse struct {
 	//
 	// Go name: "ExportEnvAs".
 	ExportEnvAs *string `json:"exportEnvAs,omitempty" yaml:"exportEnvAs,omitempty" validate:"omitempty,valid_envvar_name,ne=PATH,ne=LD_LIBRARY_PATH"`
+	// Additional children steps to the module.
+	//
+	// If the module allow children steps, these steps will be passed to the module to replace {{ .Step.Run.Steps }}.
+	//
+	// Go name: "Steps".
+	Steps []*Step `json:"steps,omitempty" yaml:"steps,omitempty" validate:"omitempty,dive,required"`
 }
 
 type TransportData struct {
@@ -686,7 +733,7 @@ type Wireguard struct {
 	// Recommendation is to take one IP from the 10.0.0.0/24 range (example: 10.0.0.2/24).
 	//
 	// Go name: "Address".
-	Address []string `json:"address,omitempty" yaml:"address,omitempty" validate:"dive,cidr"`
+	Address []string `json:"address,omitempty" yaml:"address,omitempty" validate:"omitempty,dive,cidr"`
 	// The client private key.
 	//
 	// Go name: "PrivateKey".
@@ -694,7 +741,7 @@ type Wireguard struct {
 	// The peers connected to the wireguard interface.
 	//
 	// Go name: "Peers".
-	Peers []*WireguardPeer `json:"peers,omitempty" yaml:"peers,omitempty" validate:"dive,required"`
+	Peers []*WireguardPeer `json:"peers,omitempty" yaml:"peers,omitempty" validate:"omitempty,dive,required"`
 }
 
 // A Wireguard Peer.
@@ -718,7 +765,7 @@ type WireguardPeer struct {
 	// <VPN IP range> would forward all packets to the tunnel with the local network as the destination. Useful if you want peers to communicate with each other and want the gateway to act as a router.
 	//
 	// Go name: "AllowedIPs".
-	AllowedIPs []string `json:"allowedIPs,omitempty" yaml:"allowedIPs,omitempty" validate:"dive,cidr"`
+	AllowedIPs []string `json:"allowedIPs,omitempty" yaml:"allowedIPs,omitempty" validate:"omitempty,dive,cidr"`
 	// The peer endpoint.
 	//
 	// Format is IP:port.
