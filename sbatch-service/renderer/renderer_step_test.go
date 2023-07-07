@@ -324,7 +324,9 @@ set -e
   --ntasks=1 \
   /bin/sh -c 'exit 1'
 ) # CATCH
-export DEEPSQUARE_ERROR_CODE=$?
+DEEPSQUARE_ERROR_CODE=$?
+export DEEPSQUARE_ERROR_CODE
+if [ $DEEPSQUARE_ERROR_CODE -ne 0 ]; then
 set -e
 
 /usr/bin/srun  \
@@ -334,6 +336,7 @@ set -e
   --gpus-per-task=1 \
   --ntasks=1 \
   /bin/sh -c 'echo $DEEPSQUARE_ERROR_CODE'
+fi
 ) # CATCH FINALLY`,
 			title: "Positive test with catch",
 		},
@@ -424,7 +427,9 @@ set -e
   --ntasks=1 \
   /bin/sh -c 'exit 1'
 ) # CATCH
-export DEEPSQUARE_ERROR_CODE=$?
+DEEPSQUARE_ERROR_CODE=$?
+export DEEPSQUARE_ERROR_CODE
+if [ $DEEPSQUARE_ERROR_CODE -ne 0 ]; then
 set -e
 
 /usr/bin/srun  \
@@ -434,6 +439,7 @@ set -e
   --gpus-per-task=1 \
   --ntasks=1 \
   /bin/sh -c 'echo $DEEPSQUARE_ERROR_CODE'
+fi
 ) # CATCH FINALLY`,
 			title: "Positive test with catch-finally",
 		},

@@ -16,15 +16,23 @@ job:
     - name: first catch block
       catch:
         - name: catch
+          run:
+            command: echo $DEEPSQUARE_ERROR_CODE
       finally:
         - name: finally
+          run:
+            command: 'echo $DEEPSQUARE_ERROR_CODE'
       run:
-        command: exit 1
+        command: exit 128
 
     - name: second catch block
       catch:
         - name: catch
+          run:
+            command: 'echo $DEEPSQUARE_ERROR_CODE'
       finally:
         - name: finally
+          run:
+            command: 'echo $DEEPSQUARE_ERROR_CODE'
       run:
-        command: exit 1
+        command: exit 0

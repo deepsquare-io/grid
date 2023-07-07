@@ -725,6 +725,28 @@ Go name: "Use".
 
 </td>
 </tr>
+<tr>
+<td colspan="2" valign="top"><strong>catch</strong></td>
+<td valign="top">[<a href="#step">Step</a>!]</td>
+<td>
+
+Group of steps that will be run sequentially on error.
+
+Go name: "Catch".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>finally</strong></td>
+<td valign="top">[<a href="#step">Step</a>!]</td>
+<td>
+
+Group of steps that will be run sequentially after the group of steps or command finishes.
+
+Go name: "Finally".
+
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -757,6 +779,79 @@ Go name: "Use".
       }
     ]
   }
+}
+```
+
+```json title="Step (if)"
+{
+  "name": "if example",
+  "if": "-f /tmp/lock",
+  "run": {
+    "command": "echo 'show only if /tmp/lock exists'"
+  }
+}
+```
+
+```json title="Step (try-catch)"
+{
+  "name": "catch block",
+  "catch": [
+    {
+      "name": "run only on non-zero error code",
+      "run": {
+        "command": "echo $DEEPSQUARE_ERROR_CODE"
+      }
+    }
+  ],
+  "run": {
+    "command": "exit 1"
+  }
+}
+```
+
+```json title="Step (defer)"
+{
+  "name": "defer block",
+  "finally": [
+    {
+      "name": "run at the end of the scope"
+    }
+  ],
+  "steps": [
+    {
+      "name": "run",
+      "run": {
+        "command": "echo 'do'"
+      }
+    }
+  ]
+}
+```
+
+```json title="Step (try-catch-finally)"
+{
+  "name": "catch-finally block",
+  "catch": [
+    {
+      "name": "run only on non-zero error code",
+      "run": {
+        "command": "echo $DEEPSQUARE_ERROR_CODE"
+      }
+    }
+  ],
+  "finally": [
+    {
+      "name": "run anyway"
+    }
+  ],
+  "steps": [
+    {
+      "name": "run",
+      "run": {
+        "command": "exit 1"
+      }
+    }
+  ]
 }
 ```
 

@@ -53,11 +53,14 @@ set -e
 {{- end -}}
 {{- if .Step.Catch }}
 ) # CATCH
-export DEEPSQUARE_ERROR_CODE=$?
+DEEPSQUARE_ERROR_CODE=$?
+export DEEPSQUARE_ERROR_CODE
+if [ $DEEPSQUARE_ERROR_CODE -ne 0 ]; then
 set -e
 {{- range $step := .Step.Catch }}
 {{ renderStep $.Job $step }}
 {{- end }}
+fi
 {{- end -}}
 {{- if or .Step.Catch .Step.Finally }}
 ) # CATCH FINALLY

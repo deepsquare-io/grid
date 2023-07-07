@@ -1100,6 +1100,28 @@ Go name: "Use".
 
 </td>
 </tr>
+<tr>
+<td colspan="2" valign="top"><strong>catch</strong></td>
+<td valign="top">[<a href="#step">Step</a>!]</td>
+<td>
+
+Group of steps that will be run sequentially on error.
+
+Go name: "Catch".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>finally</strong></td>
+<td valign="top">[<a href="#step">Step</a>!]</td>
+<td>
+
+Group of steps that will be run sequentially after the group of steps or command finishes.
+
+Go name: "Finally".
+
+</td>
+</tr>
 </tbody>
 </table>
 
