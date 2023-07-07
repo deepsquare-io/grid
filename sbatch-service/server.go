@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/deepsquare-io/the-grid/sbatch-service/cmd"
 	sbatchapiv1alpha1 "github.com/deepsquare-io/the-grid/sbatch-service/gen/go/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/the-grid/sbatch-service/graph"
+	"github.com/deepsquare-io/the-grid/sbatch-service/graph/playground"
 	"github.com/deepsquare-io/the-grid/sbatch-service/grpc/sbatch"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
