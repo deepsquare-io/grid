@@ -530,8 +530,28 @@
             "deprecationReason": null
           },
           {
+            "name": "steps",
+            "description": "Group of steps that will be run sequentially.\n\nIs exclusive with \"for\", \"launch\", \"use\", \"run\".\n\nGo name: \"Steps\".",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Step",
+                  "ofType": null
+                }
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "run",
-            "description": "Run a command if not null.\n\nIs exclusive with \"for\", \"launch\", \"use\".\n\nGo name: \"Run\".",
+            "description": "Run a command if not null.\n\nIs exclusive with \"for\", \"launch\", \"use\", \"steps\".\n\nGo name: \"Run\".",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "StepRun",
@@ -543,7 +563,7 @@
           },
           {
             "name": "for",
-            "description": "Run a for loop if not null.\n\nIs exclusive with \"run\", \"launch\", \"use\".\n\nGo name: \"For\".",
+            "description": "Run a for loop if not null.\n\nIs exclusive with \"run\", \"launch\", \"use\", \"steps\".\n\nGo name: \"For\".",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "StepFor",
@@ -555,7 +575,7 @@
           },
           {
             "name": "launch",
-            "description": "Launch a background process to run a group of commands if not null.\n\nIs exclusive with \"run\", \"for\", \"use\".\n\nGo name: \"Launch\".",
+            "description": "Launch a background process to run a group of commands if not null.\n\nIs exclusive with \"run\", \"for\", \"use\", \"steps\".\n\nGo name: \"Launch\".",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "StepAsyncLaunch",
@@ -567,7 +587,7 @@
           },
           {
             "name": "use",
-            "description": "Use a third-party group of steps.\n\nIs exclusive with \"run\", \"for\", \"launch\".\n\nGo name: \"Use\".",
+            "description": "Use a third-party group of steps.\n\nIs exclusive with \"run\", \"for\", \"launch\", \"steps\".\n\nGo name: \"Use\".",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "StepUse",
@@ -632,6 +652,26 @@
               "kind": "SCALAR",
               "name": "String",
               "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "steps",
+            "description": "Additional children steps to the module.\n\nIf the module allow children steps, these steps will be passed to the module to replace {{ .Step.Run.Steps }}.\n\nGo name: \"Steps\".",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Step",
+                  "ofType": null
+                }
+              }
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -1133,7 +1173,7 @@
       {
         "kind": "INPUT_OBJECT",
         "name": "StepRun",
-        "description": "StepRun is one script executed with the shell.\n\nA temporary shared storage is accessible through the $STORAGE_PATH environment variable.\n\nA shared cache per site is accessible via the $DEEPSQUARE_TMP environment variable. The $DEEPSQUARE_TMP directory is cleared periodically.\n\necho \"KEY=value\" >> \"$DEEPSQUARE_ENV\" can be used to share environment variables between steps.\n\n$DEEPSQUARE_INPUT is the path that contains imported files.\n\n$DEEPSQUARE_OUTPUT is the staging directory for uploading files.",
+        "description": "StepRun is one script executed with the shell.\n\nA temporary shared storage is accessible through the $STORAGE_PATH environment variable.\n\nAvailables caches can be used by invoking one of the following environment variable:\n\n| Environment variables                   | Lifecycle                        |\n| --------------------------------------- | -------------------------------- |\n| STORAGE_PATH                            | job duration                     |\n| DEEPSQUARE_TMP or DEEPSQUARE_SHARED_TMP | provider's policy                |\n| DEEPSQUARE_SHARED_WORLD_TMP             | provider's policy                |\n| DEEPSQUARE_DISK_TMP                     | node reboot or provider's policy |\n| DEEPSQUARE_DISK_WORLD_TMP               | node reboot or provider's policy |\n\necho \"KEY=value\" >> \"$DEEPSQUARE_ENV\" can be used to share environment variables between steps.\n\n$DEEPSQUARE_INPUT is the path that contains imported files.\n\n$DEEPSQUARE_OUTPUT is the staging directory for uploading files.",
         "specifiedByURL": null,
         "fields": null,
         "inputFields": [
@@ -1617,7 +1657,7 @@
       {
         "kind": "INPUT_OBJECT",
         "name": "Module",
-        "description": "A module is basically a group of steps.\n\nThe module.yaml file goes through a templating engine first before getting parsed. So some variables are available:\n\n- {{ .Job }} and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.\n- {{ .Step }} and its childs, which represent the Step object using the module. Can be useful if you want the step name.\n\nNotice that the templating follows the Go format. You can also apply sprig templating functions.\n\nTo outputs environment variables, just append KEY=value to the \"${DEEPSQUARE_ENV}\" file.",
+        "description": "A module is basically a group of steps.\n\nThe module.yaml file goes through a templating engine first before getting parsed. So some variables are available:\n\n- `{{ .Job }}` and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.\n- `{{ .Step }}` and its childs, which represent the Step object using the module. Can be useful if you want the step name.\n\nIf you want your user to pass custom steps, you can use `{{- .Step.Use.Steps | toYaml | nindent <n> }}` which is the group of steps.\n\nExample:\n\n```yaml\n# module.yaml\nsteps:\n  - name: my step\n  {{- .Step.Use.Steps | toYaml | nindent 2 }}\n  - name: my other step\n```\n\n```yaml\n# job.yaml\nsteps:\n  - name: module\n    use:\n      source: git/my-module\n      steps:\n        - name: step by user\n        - name: another step by user\n```\n\nWill render:\n\n```yaml\n# module.yaml\nsteps:\n  - name: my step\n  - name: step by user\n  - name: another step by user\n  - name: my other step\n```\n\nNotice that the templating follows the Go format. You can also apply [sprig](http://masterminds.github.io/sprig/) templating functions.\n\nTo outputs environment variables, just append KEY=value to the \"${DEEPSQUARE_ENV}\" file, like this:\n\n```\necho \"KEY=value\" >> \"${DEEPSQUARE_ENV}\"\n```",
         "specifiedByURL": null,
         "fields": null,
         "inputFields": [
@@ -2782,7 +2822,14 @@
         "name": "goModel",
         "description": null,
         "isRepeatable": false,
-        "locations": ["OBJECT", "INPUT_OBJECT", "SCALAR", "ENUM", "INTERFACE", "UNION"],
+        "locations": [
+          "OBJECT",
+          "INPUT_OBJECT",
+          "SCALAR",
+          "ENUM",
+          "INTERFACE",
+          "UNION"
+        ],
         "args": [
           {
             "name": "model",
@@ -2822,7 +2869,10 @@
         "name": "goField",
         "description": null,
         "isRepeatable": false,
-        "locations": ["INPUT_FIELD_DEFINITION", "FIELD_DEFINITION"],
+        "locations": [
+          "INPUT_FIELD_DEFINITION",
+          "FIELD_DEFINITION"
+        ],
         "args": [
           {
             "name": "forceResolver",
@@ -2854,7 +2904,10 @@
         "name": "goTag",
         "description": null,
         "isRepeatable": false,
-        "locations": ["INPUT_FIELD_DEFINITION", "FIELD_DEFINITION"],
+        "locations": [
+          "INPUT_FIELD_DEFINITION",
+          "FIELD_DEFINITION"
+        ],
         "args": [
           {
             "name": "key",
@@ -2890,7 +2943,10 @@
         "name": "constraint",
         "description": null,
         "isRepeatable": false,
-        "locations": ["INPUT_FIELD_DEFINITION", "FIELD_DEFINITION"],
+        "locations": [
+          "INPUT_FIELD_DEFINITION",
+          "FIELD_DEFINITION"
+        ],
         "args": [
           {
             "name": "format",
@@ -2910,7 +2966,11 @@
         "name": "include",
         "description": "Directs the executor to include this field or fragment only when the `if` argument is true.",
         "isRepeatable": false,
-        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
+        "locations": [
+          "FIELD",
+          "FRAGMENT_SPREAD",
+          "INLINE_FRAGMENT"
+        ],
         "args": [
           {
             "name": "if",
@@ -2934,7 +2994,11 @@
         "name": "skip",
         "description": "Directs the executor to skip this field or fragment when the `if` argument is true.",
         "isRepeatable": false,
-        "locations": ["FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
+        "locations": [
+          "FIELD",
+          "FRAGMENT_SPREAD",
+          "INLINE_FRAGMENT"
+        ],
         "args": [
           {
             "name": "if",
@@ -2958,7 +3022,12 @@
         "name": "deprecated",
         "description": "Marks an element of a GraphQL schema as no longer supported.",
         "isRepeatable": false,
-        "locations": ["FIELD_DEFINITION", "ARGUMENT_DEFINITION", "INPUT_FIELD_DEFINITION", "ENUM_VALUE"],
+        "locations": [
+          "FIELD_DEFINITION",
+          "ARGUMENT_DEFINITION",
+          "INPUT_FIELD_DEFINITION",
+          "ENUM_VALUE"
+        ],
         "args": [
           {
             "name": "reason",
@@ -2978,7 +3047,9 @@
         "name": "specifiedBy",
         "description": "Exposes a URL that specifies the behavior of this scalar.",
         "isRepeatable": false,
-        "locations": ["SCALAR"],
+        "locations": [
+          "SCALAR"
+        ],
         "args": [
           {
             "name": "url",

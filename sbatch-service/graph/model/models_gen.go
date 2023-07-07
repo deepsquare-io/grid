@@ -214,14 +214,14 @@ type JobResources struct {
 //
 // The module.yaml file goes through a templating engine first before getting parsed. So some variables are available:
 //
-// - {{ .Job }} and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.
-// - {{ .Step }} and its childs, which represent the Step object using the module. Can be useful if you want the step name.
+// - `{{ .Job }}` and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.
+// - `{{ .Step }}` and its childs, which represent the Step object using the module. Can be useful if you want the step name.
 //
-// If you want your user to pass custom steps, you can use {{- .Step.Use.Steps | toYaml | nindent <n> }} which is the group of steps.
+// If you want your user to pass custom steps, you can use `{{- .Step.Use.Steps | toYaml | nindent <n> }}` which is the group of steps.
 //
 // Example:
 //
-// ```
+// ```yaml
 // # module.yaml
 // steps:
 //   - name: my step
@@ -230,7 +230,7 @@ type JobResources struct {
 //
 // ```
 //
-// ```
+// ```yaml
 // # job.yaml
 // steps:
 //   - name: module
@@ -244,7 +244,7 @@ type JobResources struct {
 //
 // Will render:
 //
-// ```
+// ```yaml
 // # module.yaml
 // steps:
 //   - name: my step

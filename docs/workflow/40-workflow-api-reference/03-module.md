@@ -10,14 +10,52 @@ To create a module, a public git repository must be created with the `module.yam
 
 A module is basically a group of steps.
 
-The `module.yaml` file first goes through a templating engine before being parsed. So some variables are available:
+The module.yaml file goes through a templating engine first before getting parsed. So some variables are available:
 
-- [{{ .Job }}](job#job-top-level-object) and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.
-- [{{ .Step }}](job#steps-step) and its childs, which represent the Step object using the module. Can be useful if you want the step name.
+- [`{{ .Job }}`](job#job-top-level-object) and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.
+- [`{{ .Step }}`](job#steps-step) and its childs, which represent the Step object using the module. Can be useful if you want the step name.
+
+If you want your user to pass custom steps, you can use `{{- .Step.Use.Steps | toYaml | nindent <n> }}` which is the group of steps.
+
+Example:
+
+```yaml
+# module.yaml
+steps:
+  - name: my step
+  {{- .Step.Use.Steps | toYaml | nindent 2 }}
+  - name: my other step
+```
+
+```yaml
+# job.yaml
+steps:
+  - name: module
+    use:
+      source: git/my-module
+      steps:
+        - name: step by user
+        - name: another step by user
+```
+
+Will render:
+
+```yaml
+# module.yaml
+steps:
+  - name: my step
+  - name: step by user
+  - name: another step by user
+  - name: my other step
+```
 
 Notice that the templating follows the Go format. You can also apply [sprig](http://masterminds.github.io/sprig/) templating functions.
 
-To outputs environment variables, just append KEY=value to the "${DEEPSQUARE_ENV}" file.
+To outputs environment variables, just append KEY=value to the "${DEEPSQUARE_ENV}" file, like this:
+
+```shell
+echo "KEY=value" >> "${DEEPSQUARE_ENV}"
+```
 
 An example of module is available [here](https://github.com/deepsquare-io/workflow-module-example).
 

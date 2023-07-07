@@ -661,13 +661,26 @@ Go name: "If".
 </td>
 </tr>
 <tr>
+<td colspan="2" valign="top"><strong>steps</strong></td>
+<td valign="top">[<a href="#step">Step</a>!]</td>
+<td>
+
+Group of steps that will be run sequentially.
+
+Is exclusive with "for", "launch", "use", "run".
+
+Go name: "Steps".
+
+</td>
+</tr>
+<tr>
 <td colspan="2" valign="top"><strong>run</strong></td>
 <td valign="top"><a href="#steprun">StepRun</a></td>
 <td>
 
 Run a command if not null.
 
-Is exclusive with "for", "launch", "use".
+Is exclusive with "for", "launch", "use", "steps".
 
 Go name: "Run".
 
@@ -680,7 +693,7 @@ Go name: "Run".
 
 Run a for loop if not null.
 
-Is exclusive with "run", "launch", "use".
+Is exclusive with "run", "launch", "use", "steps".
 
 Go name: "For".
 
@@ -693,7 +706,7 @@ Go name: "For".
 
 Launch a background process to run a group of commands if not null.
 
-Is exclusive with "run", "for", "use".
+Is exclusive with "run", "for", "use", "steps".
 
 Go name: "Launch".
 
@@ -706,7 +719,7 @@ Go name: "Launch".
 
 Use a third-party group of steps.
 
-Is exclusive with "run", "for", "launch".
+Is exclusive with "run", "for", "launch", "steps".
 
 Go name: "Use".
 
@@ -755,7 +768,15 @@ StepRun is one script executed with the shell.
 
 A temporary shared storage is accessible through the $STORAGE_PATH environment variable.
 
-A shared cache per site is accessible via the $DEEPSQUARE_TMP environment variable. The $DEEPSQUARE_TMP directory is cleared periodically.
+Availables caches can be used by invoking one of the following environment variable:
+
+| Environment variables                   | Lifecycle                        |
+| --------------------------------------- | -------------------------------- |
+| STORAGE_PATH                            | job duration                     |
+| DEEPSQUARE_TMP or DEEPSQUARE_SHARED_TMP | provider's policy                |
+| DEEPSQUARE_SHARED_WORLD_TMP             | provider's policy                |
+| DEEPSQUARE_DISK_TMP                     | node reboot or provider's policy |
+| DEEPSQUARE_DISK_WORLD_TMP               | node reboot or provider's policy |
 
 echo "KEY=value" >> "$DEEPSQUARE_ENV" can be used to share environment variables between steps.
 
@@ -2156,6 +2177,19 @@ Environment variables exported with be prefixed with the value of this field.
 Exemple: If exportEnvAs=MY_MODULE, and KEY is exported. Then you can invoke ${MY_MODULE_KEY} environment variable.
 
 Go name: "ExportEnvAs".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>steps</strong></td>
+<td valign="top">[<a href="#step">Step</a>!]</td>
+<td>
+
+Additional children steps to the module.
+
+If the module allow children steps, these steps will be passed to the module to replace {{ .Step.Run.Steps }}.
+
+Go name: "Steps".
 
 </td>
 </tr>
