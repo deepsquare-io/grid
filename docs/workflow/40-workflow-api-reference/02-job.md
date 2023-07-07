@@ -662,7 +662,7 @@ Go name: "If".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>steps</strong></td>
-<td valign="top">[<a href="#step">Step</a>!]</td>
+<td valign="top">[<a href="#steps-step">Step</a>!]</td>
 <td>
 
 Group of steps that will be run sequentially.
@@ -727,7 +727,7 @@ Go name: "Use".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>catch</strong></td>
-<td valign="top">[<a href="#step">Step</a>!]</td>
+<td valign="top">[<a href="#steps-step">Step</a>!]</td>
 <td>
 
 Group of steps that will be run sequentially on error.
@@ -738,7 +738,7 @@ Go name: "Catch".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>finally</strong></td>
-<td valign="top">[<a href="#step">Step</a>!]</td>
+<td valign="top">[<a href="#steps-step">Step</a>!]</td>
 <td>
 
 Group of steps that will be run sequentially after the group of steps or command finishes.
@@ -2112,7 +2112,7 @@ Go name: "SignalOnParentStepExit".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>steps</strong></td>
-<td valign="top">[<a href="#step">Step</a>!]!</td>
+<td valign="top">[<a href="#steps-step">Step</a>!]!</td>
 <td>
 
 Steps are run sequentially.
@@ -2277,7 +2277,7 @@ Go name: "ExportEnvAs".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>steps</strong></td>
-<td valign="top">[<a href="#step">Step</a>!]</td>
+<td valign="top">[<a href="#steps-step">Step</a>!]</td>
 <td>
 
 Additional children steps to the module.
