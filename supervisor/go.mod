@@ -7,7 +7,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.7
-	github.com/vektra/mockery/v2 v2.30.18
+	github.com/vektra/mockery/v2 v2.31.1
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.11.0
 	google.golang.org/grpc v1.56.1
