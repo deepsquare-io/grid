@@ -14,8 +14,8 @@ devDependencies:
     specifier: 4.18.0
     version: 4.18.0
   '@babel/eslint-parser':
-    specifier: 7.22.7
-    version: 7.22.7(@babel/core@7.22.8)(eslint@8.44.0)
+    specifier: 7.22.9
+    version: 7.22.9(@babel/core@7.22.8)(eslint@8.44.0)
   '@babel/plugin-syntax-jsx':
     specifier: 7.22.5
     version: 7.22.5(@babel/core@7.22.8)
@@ -343,8 +343,8 @@ packages:
       - supports-color
     dev: true
 
-  /@babel/eslint-parser@7.22.7(@babel/core@7.22.8)(eslint@8.44.0):
-    resolution: {integrity: sha512-LH6HJqjOyu/Qtp7LuSycZXK/CYXQ4ohdkliEaL1QTdtOXVdOVpTBKVxAo/+eeyt+x/2SRzB+zUPduVl+xiEvdg==}
+  /@babel/eslint-parser@7.22.9(@babel/core@7.22.8)(eslint@8.44.0):
+    resolution: {integrity: sha512-xdMkt39/nviO/4vpVdrEYPwXCsYIXSSAr6mC7WQsNIlGnuxKyKE7GZjalcnbSWiC4OXGNNN3UQPeHfjSC6sTDA==}
     engines: {node: ^10.13.0 || ^12.13.0 || >=14.0.0}
     peerDependencies:
       '@babel/core': '>=7.11.0'
@@ -352,9 +352,9 @@ packages:
     dependencies:
       '@babel/core': 7.22.8
       '@nicolo-ribaudo/eslint-scope-5-internals': 5.1.1-v1
-      '@nicolo-ribaudo/semver-v6': 6.3.3
       eslint: 8.44.0
       eslint-visitor-keys: 2.1.0
+      semver: 6.3.1
     dev: true
 
   /@babel/generator@7.22.7:
@@ -8931,6 +8931,11 @@ packages:
     hasBin: true
     dev: true
 
+  /semver@6.3.1:
+    resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
+    hasBin: true
+    dev: true
+
   /semver@7.5.3:
     resolution: {integrity: sha512-QBlUtyVk/5EeHbi7X0fw6liDZc7BBmEaSYn01fMU1OUYbf6GPsbTtd8WmnqbI20SeycoHSeiybkE/q1Q+qlThQ==}
     engines: {node: '>=10'}
@@ -9516,7 +9521,7 @@ packages:
     dev: true
 
   /typesense-docsearch-css@0.4.0:
-    resolution: {integrity: sha512-hVTJC1Rg2BnNB4kl2Qi4GcgjFmPZY8YGu0aJ5V6iM6vK62yvtE7jObnAc1maYOp33NWFVLPgl/9PlBfWBlN0Dw==}
+    resolution: {integrity: sha512-hVTJC1Rg2BnNB4kl2Qi4GcgjFmPZY8YGu0aJ5V6iM6vK62yvtE7jObnAc1maYOp33NWFVLPgl/9PlBfWBlN0Dw==, tarball: https://registry.npmjs.org/typesense-docsearch-css/-/typesense-docsearch-css-0.4.0.tgz}
     dev: true
 
   /typesense-docsearch-react@3.4.0(@algolia/client-search@4.18.0)(@babel/runtime@7.22.6)(@types/react@18.2.14)(algoliasearch@4.18.0)(react-dom@18.2.0)(react@18.2.0):
