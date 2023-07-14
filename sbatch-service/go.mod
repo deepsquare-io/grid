@@ -6,7 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.34
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/btcsuite/btcutil v1.0.2
-	github.com/go-chi/chi/v5 v5.0.8
+	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/cors v1.2.1
 	github.com/go-git/go-billy/v5 v5.4.1
 	github.com/go-git/go-git/v5 v5.7.0

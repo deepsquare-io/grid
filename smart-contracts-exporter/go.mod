@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/99designs/gqlgen v0.17.34
 	github.com/ethereum/go-ethereum v1.12.0
-	github.com/go-chi/chi/v5 v5.0.8
+	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/cors v1.2.1
 	github.com/gorilla/websocket v1.5.0
 	github.com/prometheus/client_golang v1.16.0
