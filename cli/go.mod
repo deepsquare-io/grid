@@ -3,7 +3,7 @@ module github.com/deepsquare-io/the-grid/cli
 go 1.20
 
 require (
-	github.com/99designs/gqlgen v0.17.34
+	github.com/99designs/gqlgen v0.17.35
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.7.1
@@ -12,7 +12,7 @@ require (
 	github.com/knipferrc/teacup v0.3.1
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.7
-	github.com/vektah/gqlparser/v2 v2.5.6
+	github.com/vektah/gqlparser/v2 v2.5.7
 	go.uber.org/zap v1.24.0
 	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.31.0
