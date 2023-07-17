@@ -12,7 +12,7 @@ require (
 	github.com/knipferrc/teacup v0.3.1
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.7
-	github.com/vektah/gqlparser/v2 v2.5.7
+	github.com/vektah/gqlparser/v2 v2.5.8
 	go.uber.org/zap v1.24.0
 	google.golang.org/grpc v1.56.1
 	google.golang.org/protobuf v1.31.0
