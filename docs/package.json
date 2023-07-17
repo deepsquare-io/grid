@@ -37,7 +37,7 @@
     "@mui/joy": "5.0.0-alpha.87",
     "@tsconfig/docusaurus": "2.0.0",
     "@types/react": "18.2.15",
-    "clsx": "1.2.1",
+    "clsx": "2.0.0",
     "docusaurus-theme-search-typesense": "0.12.0",
     "eslint": "8.45.0",
     "eslint-config-prettier": "8.8.0",
