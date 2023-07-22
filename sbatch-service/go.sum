@@ -75,6 +75,8 @@ github.com/go-git/go-billy/v5 v5.4.1/go.mod h1:vjbugF6Fz7JIflbVpl1hJsGjSHNltrSw4
 github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20230305113008-0c11038e723f h1:Pz0DHeFij3XFhoBRGUDPzSJ+w2UcK5/0JvF8DRI58r8=
 github.com/go-git/go-git/v5 v5.7.0 h1:t9AudWVLmqzlo+4bqdf7GY+46SUuRsx59SboFxkq2aE=
 github.com/go-git/go-git/v5 v5.7.0/go.mod h1:coJHKEOk5kUClpsNlXrUvPrDxY3w3gjHvhcZd8Fodw8=
+github.com/go-git/go-git/v5 v5.8.0 h1:Rc543s6Tyq+YcyPwZRvU4jzZGM8rB/wWu94TnTIYALQ=
+github.com/go-git/go-git/v5 v5.8.0/go.mod h1:coJHKEOk5kUClpsNlXrUvPrDxY3w3gjHvhcZd8Fodw8=
 github.com/go-playground/assert/v2 v2.2.0 h1:JvknZsQTYeFEAhQwI4qEt9cyV5ONwRHC+lYKSsYSR8s=
 github.com/go-playground/locales v0.14.1 h1:EWaQ/wswjilfKLTECiXz7Rh+3BjFhfDFKv/oXslEjJA=
 github.com/go-playground/locales v0.14.1/go.mod h1:hxrqLVvrK65+Rwrd5Fc6F2O76J/NuW9t0sjnWqG1slY=
