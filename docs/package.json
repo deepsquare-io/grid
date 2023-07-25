@@ -36,7 +36,7 @@
     "@mui/icons-material": "5.14.1",
     "@mui/joy": "5.0.0-alpha.88",
     "@tsconfig/docusaurus": "2.0.0",
-    "@types/react": "18.2.15",
+    "@types/react": "18.2.16",
     "clsx": "2.0.0",
     "docusaurus-theme-search-typesense": "0.12.0",
     "eslint": "8.45.0",
