@@ -62,8 +62,8 @@ devDependencies:
     specifier: 5.14.1
     version: 5.14.1(@mui/material@5.13.7)(@types/react@18.2.16)(react@18.2.0)
   '@mui/joy':
-    specifier: 5.0.0-alpha.88
-    version: 5.0.0-alpha.88(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(@types/react@18.2.16)(react-dom@18.2.0)(react@18.2.0)
+    specifier: 5.0.0-alpha.89
+    version: 5.0.0-alpha.89(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(@types/react@18.2.16)(react-dom@18.2.0)(react@18.2.0)
   '@tsconfig/docusaurus':
     specifier: 2.0.0
     version: 2.0.0
@@ -3006,6 +3006,10 @@ packages:
     resolution: {integrity: sha512-mIa1WmDmNr1LoupV1Rbxt9bTFKMbIn10RHG1bnZ/FJCkAYpuU/D4n+R+ttiycgcZNngU++zyh/OQeJblzbQPzg==}
     dev: true
 
+  /@mui/core-downloads-tracker@5.14.2:
+    resolution: {integrity: sha512-x+c/MgDL1t/IIy5lDbMlrDouFG5DYZbl3DP4dbbuhlpPFBnE9glYwmJEee/orVHQpOPwLxCAIWQs+2DKSaBVWQ==}
+    dev: true
+
   /@mui/icons-material@5.14.1(@mui/material@5.13.7)(@types/react@18.2.16)(react@18.2.0):
     resolution: {integrity: sha512-xV/f26muQqtWzerzOIdGPrXoxp/OKaE2G2Wp9gnmG47mHua5Slup/tMc3fA4ZYUreGGrK6+tT81TEvt1Wsng8Q==}
     engines: {node: '>=12.0.0'}
@@ -3023,8 +3027,8 @@ packages:
       react: 18.2.0
     dev: true
 
-  /@mui/joy@5.0.0-alpha.88(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(@types/react@18.2.16)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-zG+kYy7JV07nQWHXtZP7+78pf3erv+X07aHetbwb9etx7pqGhxTxeBeT2WltH3hAUEUEr9GqfChcBe2MWy2ziQ==}
+  /@mui/joy@5.0.0-alpha.89(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(@types/react@18.2.16)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-CuU3RB0QCDhRWioJdMx4itjcI6x0sKQ4PHFW/IbhRmzxnmwXT8uMTixOcKvSp1xTTDJq7/WCu1ouUCKPcxkbEg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       '@emotion/react': ^11.5.0
@@ -3044,7 +3048,7 @@ packages:
       '@emotion/react': 11.11.1(@types/react@18.2.16)(react@18.2.0)
       '@emotion/styled': 11.11.0(@emotion/react@11.11.1)(@types/react@18.2.16)(react@18.2.0)
       '@mui/base': 5.0.0-beta.8(@types/react@18.2.16)(react-dom@18.2.0)(react@18.2.0)
-      '@mui/core-downloads-tracker': 5.14.1
+      '@mui/core-downloads-tracker': 5.14.2
       '@mui/system': 5.14.1(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(@types/react@18.2.16)(react@18.2.0)
       '@mui/types': 7.2.4(@types/react@18.2.16)
       '@mui/utils': 5.14.1(react@18.2.0)
