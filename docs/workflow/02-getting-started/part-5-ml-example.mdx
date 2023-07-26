@@ -104,14 +104,14 @@ Let's take our previous example [from Part 3, the Deep Layer Aggregation model u
                "acc": acc,
                "epoch": epoch,
            }
-           torch.save(state, "checkpoint.pth")
+           torch.save(state, "path/to/checkpoint.pth")
            BEST_ACC = acc
    ```
 
    You would load the model like this:
 
    ```python
-   checkpoint = torch.load(args.checkpoint_in)
+   checkpoint = torch.load("path/to/checkpoint.pth")
    model.load_state_dict(checkpoint["net"])
    BEST_ACC = checkpoint["acc"]
    start_epoch = checkpoint["epoch"]
