@@ -714,7 +714,7 @@ Go name: "Launch".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>use</strong></td>
-<td valign="top"><a href="#steprsuse-stepuse">StepUse</a></td>
+<td valign="top"><a href="#stepsuse-stepuse">StepUse</a></td>
 <td>
 
 Use a third-party group of steps.
@@ -2220,7 +2220,7 @@ Go name: "Steps".
 
 </details>
 
-### `.steprs[].use` _StepUse_
+### `.steps[].use` _StepUse_
 
 <table>
 <thead>
