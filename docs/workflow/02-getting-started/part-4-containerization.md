@@ -33,22 +33,22 @@ We'll use the same OpenMPI program from [Part 2](part-2-openmpi) which illustrat
 int main(int argc, char \*argv[]) {
 int rank, size, next, prev, message, tag = 201;
 
-/_ Start up MPI _/
+/* Start up MPI */
 
 MPI_Init(&argc, &argv);
 MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-/_ Calculate the rank of the next process in the ring. Use the
+/* Calculate the rank of the next process in the ring. Use the
 modulus operator so that the last process "wraps around" to
-rank zero. _/
+rank zero. */
 
 next = (rank + 1) % size;
 prev = (rank + size - 1) % size;
 
-/_ If we are the "master" process (i.e., MPI_COMM_WORLD rank 0),
+/* If we are the "master" process (i.e., MPI_COMM_WORLD rank 0),
 put the number of times to go around the ring in the
-message. _/
+message. */
 
 if (0 == rank) {
 message = 10;
@@ -60,13 +60,13 @@ message = 10;
 
 }
 
-/_ Pass the message around the ring. The exit mechanism works as
+/* Pass the message around the ring. The exit mechanism works as
 follows: the message (a positive integer) is passed around the
 ring. Each time it passes rank 0, it is decremented. When
 each processes receives a message containing a 0 value, it
 passes the message on to the next process and then quits. By
 passing the 0 message first, every process gets the 0 message
-and can quit normally. _/
+and can quit normally. */
 
 while (1) {
 MPI_Recv(&message, 1, MPI_INT, prev, tag, MPI_COMM_WORLD,
@@ -87,15 +87,15 @@ rank, message, next);
 
 }
 
-/_ The last process does one extra send to process 0, which needs
-to be received before the program can exit _/
+/* The last process does one extra send to process 0, which needs
+to be received before the program can exit */
 
 if (0 == rank) {
 MPI_Recv(&message, 1, MPI_INT, prev, tag, MPI_COMM_WORLD,
 MPI_STATUS_IGNORE);
 }
 
-/_ All done _/
+/* All done */
 
 MPI_Finalize();
 return 0;
