@@ -81,14 +81,26 @@ Let's take our previous example [from Part 3, the Deep Layer Aggregation model u
    ```python
    def test(epoch: int):
        global BEST_ACC
-       net.eval() # Execute test
 
-       # ... # Compute accuracy
+       # Use evaluation/test mode
+       model.eval()
 
+       # ...
+
+       # For each batch
+       for batch_idx, (inputs, targets) in enumerate(testloader):
+           # ...
+
+           outputs = model(inputs) # Test
+           loss = criterion(outputs, targets) # Compute loss
+
+           # ... # Count number of corrects
+
+       acc = 100.0 * correct / len(testsampler) # Compute accuracy = 100 * correct / total
        if acc > BEST_ACC and hvd.rank() == 0: # Checkpoint only if the model is better and only on worker 0.
            print("Saving..")
            state = {
-               "net": net.state_dict(),
+               "net": model.state_dict(),
                "acc": acc,
                "epoch": epoch,
            }
@@ -100,7 +112,7 @@ Let's take our previous example [from Part 3, the Deep Layer Aggregation model u
 
    ```python
    checkpoint = torch.load(args.checkpoint_in)
-   net.load_state_dict(checkpoint["net"])
+   model.load_state_dict(checkpoint["net"])
    BEST_ACC = checkpoint["acc"]
    start_epoch = checkpoint["epoch"]
    ```
