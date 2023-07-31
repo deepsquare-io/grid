@@ -113,6 +113,13 @@ export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
@@ -298,6 +305,13 @@ export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
@@ -513,6 +527,13 @@ export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
@@ -700,6 +721,13 @@ export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
@@ -865,6 +893,13 @@ export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
@@ -1053,6 +1088,13 @@ export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
@@ -1120,6 +1162,13 @@ export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do

@@ -11,8 +11,16 @@ job:
       resources:
       run:
         container:
+          apptainer: true
           registry: registry-1.docker.io
-          image: alpine:latest
+          image: library/alpine:latest
+          mounts: [
+            {
+              hostDir: '/opt/models/stable-diffusion',
+              containerDir: '/models',
+              options: 'ro',
+            },
+          ]
         resources:
           tasks: 4
         command: |-
