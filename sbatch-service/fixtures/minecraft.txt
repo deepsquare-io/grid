@@ -31,12 +31,16 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP" "$DEEPSQUARE_DISK_TMP"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
 
 cleanup() {
   /bin/rm -rf "$STORAGE_PATH"

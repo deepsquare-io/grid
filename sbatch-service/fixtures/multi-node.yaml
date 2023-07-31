@@ -1,0 +1,19 @@
+---
+job:
+  enableLogging: false
+  resources:
+    tasks: 4
+    cpusPerTask: 16
+    memPerCpu: 4096
+    gpusPerTask: 0
+  steps:
+    - name: do-stuff-in-foreground
+      resources:
+      run:
+        container:
+          registry: registry-1.docker.io
+          image: alpine:latest
+        resources:
+          tasks: 4
+        command: |-
+          echo Hello $HOSTNAME

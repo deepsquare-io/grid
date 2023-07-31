@@ -109,12 +109,16 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP" "$DEEPSQUARE_DISK_TMP"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
 
 cleanup() {
   /bin/rm -rf "$STORAGE_PATH"
@@ -145,9 +149,9 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
-  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
 set -e
 tries=1; while [ "$tries" -lt 10 ]; do
@@ -291,12 +295,16 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP" "$DEEPSQUARE_DISK_TMP"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
 
 cleanup() {
   /bin/rm -rf "$STORAGE_PATH"
@@ -349,9 +357,9 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
-  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
 set -e
 tries=1; while [ "$tries" -lt 10 ]; do
@@ -503,12 +511,16 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP" "$DEEPSQUARE_DISK_TMP"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
 
 cleanup() {
   /bin/rm -rf "$STORAGE_PATH"
@@ -547,9 +559,9 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
-  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
 set -e
 tries=1; while [ "$tries" -lt 10 ]; do
@@ -687,12 +699,16 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP" "$DEEPSQUARE_DISK_TMP"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
 
 cleanup() {
   /bin/rm -rf "$STORAGE_PATH"
@@ -743,9 +759,9 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
-  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
 set -e
 tries=1; while [ "$tries" -lt 10 ]; do
@@ -849,12 +865,16 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP" "$DEEPSQUARE_DISK_TMP"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
 
 cleanup() {
   /bin/rm -rf "$STORAGE_PATH"
@@ -884,9 +904,9 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
-  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
 set -e
 tries=1; while [ "$tries" -lt 10 ]; do
@@ -1034,12 +1054,16 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP" "$DEEPSQUARE_DISK_TMP"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
 
 cleanup() {
   /bin/rm -rf "$STORAGE_PATH"
@@ -1098,12 +1122,16 @@ export ENROOT_CACHE_PATH
 ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
 export ENROOT_DATA_PATH
 export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
-/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP" "$DEEPSQUARE_DISK_TMP"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
 /usr/bin/touch "$DEEPSQUARE_ENV"
 /usr/bin/chmod -R 700 "$STORAGE_PATH"
 /usr/bin/chmod 700 "$DEEPSQUARE_TMP"
 /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
 
 cleanup() {
   /bin/rm -rf "$STORAGE_PATH"
