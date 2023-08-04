@@ -6,7 +6,14 @@ When running a job, multiple volumes is available for use with different lifecyc
 
 Linux permissions define access rights for files and directories in a Linux-based operating system. These permissions are assigned to three different categories of users: the **owner** of the file or directory, the **group** to which the file or directory belongs, and all other users (**world**). Each category can have three types of permissions: **read, write, and execute**.
 
-The permissions notation can be seen by running `ls -la`: `rwxr--r--` which means the owner can read, write and execute, the group can read, and others can read. This notation can also be written is octal: `755`.
+The permissions notation can be seen by running `ls -la` during a job. The notation looks like `rwxr--r--` which means the owner can read, write and execute, the group can read, and others (world) can read. This notation can also be written in octal: `755`.
+
+Permissions can be managed by using `chmod` (change permissions bits) or `chown` (change owner). `umask` can also be used to make sure newly created files denies access automatically.
+
+Typical usage are:
+
+- `chmod 700 <file>` (read-write-execute for owner, nothing for group and world.) (`0o700` which is `0b111 000 000` which is `rwx --- ---`)
+- `umask 077` (allow any permissions for owner, denies all permissions for group and world for newly created files).
 
 **In the DeepSquare context, the default group can also be considered as the "world". All DeepSquare users are part of this common group**.
 
