@@ -4,6 +4,7 @@ package scheduler_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -22,7 +23,7 @@ type ServiceIntegrationTestSuite struct {
 	adminUser string
 	user      string
 	pkB64     string
-	impl      *scheduler.Slurm
+	impl      scheduler.Scheduler
 }
 
 func (suite *ServiceIntegrationTestSuite) submitJob() *scheduler.SubmitRequest {
@@ -30,12 +31,13 @@ func (suite *ServiceIntegrationTestSuite) submitJob() *scheduler.SubmitRequest {
 	ctx := context.Background()
 	name := utils.GenerateRandomString(6)
 	req := &scheduler.SubmitRequest{
-		Name: name,
-		User: suite.user,
+		Name:   name,
+		User:   suite.user,
+		Prefix: "supervisor",
 		JobDefinition: &scheduler.JobDefinition{
 			TimeLimit:    uint64(5),
 			NTasks:       1,
-			GPUsPerTask:  0,
+			GPUsPerTask:  utils.Ptr(uint64(0)),
 			CPUsPerTask:  1,
 			MemoryPerCPU: 512,
 			Body: `#!/bin/sh
@@ -62,11 +64,8 @@ func (suite *ServiceIntegrationTestSuite) BeforeTest(suiteName, testName string)
 	suite.impl = scheduler.NewSlurm(
 		service,
 		suite.adminUser,
-		"scancel",
-		"sbatch",
-		"squeue",
-		"scontrol",
 		"localhost",
+		"main",
 	)
 }
 
@@ -102,6 +101,90 @@ func (suite *ServiceIntegrationTestSuite) TestTopUp() {
 
 	// Assert
 	suite.NoError(err)
+}
+
+func (suite *ServiceIntegrationTestSuite) TestFindMemPerNode() {
+	// Arrange
+	ctx := context.Background()
+
+	// Act
+	mem, err := suite.impl.FindMemPerNode(ctx)
+
+	// Assert
+	suite.NoError(err)
+	fmt.Println(mem)
+}
+
+func (suite *ServiceIntegrationTestSuite) TestFindCPUsPerNode() {
+	// Arrange
+	ctx := context.Background()
+
+	// Act
+	cpu, err := suite.impl.FindCPUsPerNode(ctx)
+
+	// Assert
+	suite.NoError(err)
+	fmt.Println(cpu)
+}
+
+func (suite *ServiceIntegrationTestSuite) TestFindGPUsPerNode() {
+	// Arrange
+	ctx := context.Background()
+
+	// Act
+	gpu, err := suite.impl.FindGPUsPerNode(ctx)
+
+	// Assert
+	suite.NoError(err)
+	fmt.Println(gpu)
+}
+
+func (suite *ServiceIntegrationTestSuite) TestFindTotalGPUs() {
+	// Arrange
+	ctx := context.Background()
+
+	// Act
+	ret, err := suite.impl.FindTotalGPUs(ctx)
+
+	// Assert
+	suite.NoError(err)
+	fmt.Println(ret)
+}
+
+func (suite *ServiceIntegrationTestSuite) TestFindTotalMem() {
+	// Arrange
+	ctx := context.Background()
+
+	// Act
+	ret, err := suite.impl.FindTotalMem(ctx)
+
+	// Assert
+	suite.NoError(err)
+	fmt.Println(ret)
+}
+
+func (suite *ServiceIntegrationTestSuite) TestFindTotalCPUs() {
+	// Arrange
+	ctx := context.Background()
+
+	// Act
+	ret, err := suite.impl.FindTotalCPUs(ctx)
+
+	// Assert
+	suite.NoError(err)
+	fmt.Println(ret)
+}
+
+func (suite *ServiceIntegrationTestSuite) TestFindTotalNodes() {
+	// Arrange
+	ctx := context.Background()
+
+	// Act
+	ret, err := suite.impl.FindTotalNodes(ctx)
+
+	// Assert
+	suite.NoError(err)
+	fmt.Println(ret)
 }
 
 func TestServiceIntegrationTestSuite(t *testing.T) {

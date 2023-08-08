@@ -26,7 +26,7 @@ type ClientTestSuite struct {
 	suite.Suite
 	deployBackend   *mocks.DeployBackend
 	contractBackend *mocks.ContractBackend
-	impl            *metascheduler.Client
+	impl            metascheduler.MetaScheduler
 }
 
 var (

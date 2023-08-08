@@ -19,12 +19,12 @@ import (
 
 type ServerTestSuite struct {
 	suite.Suite
-	jobHandler *mocks.JobHandler
+	jobHandler *mocks.MetaScheduler
 	impl       *jobapi.Server
 }
 
 func (suite *ServerTestSuite) BeforeTest(suiteName, testName string) {
-	suite.jobHandler = mocks.NewJobHandler(suite.T())
+	suite.jobHandler = mocks.NewMetaScheduler(suite.T())
 	suite.impl = jobapi.New(suite.jobHandler, lock.NewResourceManager())
 	suite.impl.Timeout = time.Second
 	suite.impl.Delay = time.Second

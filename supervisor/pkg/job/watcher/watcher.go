@@ -264,6 +264,7 @@ func (w *Watcher) handleClaimNextJob(
 	req := &scheduler.SubmitRequest{
 		Name:          jobName,
 		User:          user,
+		Prefix:        "supervisor",
 		JobDefinition: &definition,
 	}
 
@@ -364,7 +365,7 @@ func MapJobDefinitionToScheduler(
 ) scheduler.JobDefinition {
 	return scheduler.JobDefinition{
 		NTasks:       j.Ntasks,
-		GPUsPerTask:  j.GpuPerTask,
+		GPUsPerTask:  &j.GpuPerTask,
 		CPUsPerTask:  j.CpuPerTask,
 		TimeLimit:    t,
 		MemoryPerCPU: j.MemPerCpu,

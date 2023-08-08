@@ -96,7 +96,8 @@ mocks:
 	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler --name=Scheduler
 	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch --name=Client
 	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler --name=MetaScheduler
-	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi --name=JobHandler
+	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark --name=Launcher
+	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/secret --name=Manager --structname=SecretManager --filename=secret_manager.go
 	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1 --name=Health_WatchServer
 	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/generated/logger/v1alpha1 --name=LoggerAPI_WriteClient
 	$(mockery) --srcpkg github.com/deepsquare-io/the-grid/supervisor/pkg/gridlogger --name=Dialer

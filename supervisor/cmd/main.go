@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"crypto/x509"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/debug"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/gridlogger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
@@ -53,15 +55,16 @@ var (
 	slurmSSHB64PK     string
 	slurmSSHAdminUser string
 
-	scancel  string
-	sbatch   string
-	squeue   string
-	scontrol string
+	scancel   string
+	sbatch    string
+	squeue    string
+	scontrol  string
+	nvidiaSMI string
+	partition string
 
-	nodes uint64
-	cpus  uint64
-	gpus  uint64
-	mem   uint64
+	benchmarkImage      string
+	benchmarkSingleNode bool
+	benchmarkDisable    bool
 
 	trace bool
 )
@@ -73,20 +76,23 @@ var flags = []cli.Flag{
 		Usage:       "Address to listen on. Is used for receiving job status via the job completion plugin.",
 		Destination: &listenAddress,
 		EnvVars:     []string{"LISTEN_ADDRESS"},
+		Category:    "Network:",
 	},
 	&cli.StringFlag{
 		Name:        "public-address",
 		Value:       "supervisor.example.com:3000",
-		Usage:       "Public address or address of the reverse proxy. Is used by the SLURL plugins to know where to report job statuses.",
+		Usage:       "Public address or address of the reverse proxy. Is used by the SLURM plugins to know where to report job statuses. Must be protected with TLS.",
 		Destination: &publicAddress,
 		EnvVars:     []string{"PUBLIC_ADDRESS"},
+		Category:    "Network:",
 	},
 	&cli.BoolFlag{
 		Name:        "tls",
 		Value:       false,
 		Destination: &tls,
-		Usage:       "Enable TLS for GRPC.",
+		Usage:       "Enable TLS for HTTP.",
 		EnvVars:     []string{"TLS_ENABLE"},
+		Category:    "Secure Transport:",
 	},
 	&cli.StringFlag{
 		Name:        "tls.key-file",
@@ -94,6 +100,7 @@ var flags = []cli.Flag{
 		Destination: &keyFile,
 		Usage:       "TLS Private Key file.",
 		EnvVars:     []string{"TLS_KEY"},
+		Category:    "Secure Transport:",
 	},
 	&cli.StringFlag{
 		Name:        "tls.cert-file",
@@ -101,20 +108,7 @@ var flags = []cli.Flag{
 		Destination: &certFile,
 		Usage:       "TLS Certificate file.",
 		EnvVars:     []string{"TLS_CERT"},
-	},
-	&cli.StringFlag{
-		Name:        "metascheduler.endpoint.rpc",
-		Value:       "https://testnet.deepsquare.run/rpc",
-		Usage:       "Metascheduler Avalanche C-Chain JSON-RPC endpoint.",
-		Destination: &ethEndpointRPC,
-		EnvVars:     []string{"METASCHEDULER_ENDPOINT_RPC"},
-	},
-	&cli.StringFlag{
-		Name:        "metascheduler.endpoint.ws",
-		Value:       "wss://testnet.deepsquare.run/ws",
-		Usage:       "Metascheduler Avalanche C-Chain WS endpoint.",
-		Destination: &ethEndpointWS,
-		EnvVars:     []string{"METASCHEDULER_ENDPOINT_WS"},
+		Category:    "Secure Transport:",
 	},
 	&cli.StringFlag{
 		Name:        "sbatch.endpoint",
@@ -122,6 +116,7 @@ var flags = []cli.Flag{
 		Usage:       "SBatch API gRPC endpoint.",
 		Destination: &sbatchEndpoint,
 		EnvVars:     []string{"SBATCH_ENDPOINT"},
+		Category:    "SBatch API:",
 	},
 	&cli.BoolFlag{
 		Name:        "sbatch.tls",
@@ -129,13 +124,15 @@ var flags = []cli.Flag{
 		Usage:       "Enable TLS for the SBatch API.",
 		Destination: &sbatchTLS,
 		EnvVars:     []string{"SBATCH_TLS_ENABLE"},
+		Category:    "SBatch API:",
 	},
 	&cli.BoolFlag{
 		Name:        "sbatch.tls.insecure",
 		Value:       false,
-		Usage:       "Skip TLS verification. By enabling it, sbatch.tls.ca and sbatch.tls.server-host-override are ignored.",
+		Usage:       "Skip TLS verification. By enabling it, sbatch.tls.ca is ignored.",
 		Destination: &sbatchTLSInsecure,
 		EnvVars:     []string{"SBATCH_TLS_INSECURE"},
+		Category:    "SBatch API:",
 	},
 	&cli.StringFlag{
 		Name:        "sbatch.tls.ca",
@@ -143,6 +140,23 @@ var flags = []cli.Flag{
 		Usage:       "Path to CA certificate for TLS verification.",
 		Destination: &sbatchCAFile,
 		EnvVars:     []string{"SBATCH_CA"},
+		Category:    "SBatch API:",
+	},
+	&cli.StringFlag{
+		Name:        "metascheduler.endpoint.rpc",
+		Value:       "https://testnet.deepsquare.run/rpc",
+		Usage:       "Metascheduler Avalanche C-Chain JSON-RPC endpoint.",
+		Destination: &ethEndpointRPC,
+		EnvVars:     []string{"METASCHEDULER_ENDPOINT_RPC"},
+		Category:    "MetaScheduler:",
+	},
+	&cli.StringFlag{
+		Name:        "metascheduler.endpoint.ws",
+		Value:       "wss://testnet.deepsquare.run/ws",
+		Usage:       "Metascheduler Avalanche C-Chain WS endpoint.",
+		Destination: &ethEndpointWS,
+		EnvVars:     []string{"METASCHEDULER_ENDPOINT_WS"},
+		Category:    "MetaScheduler:",
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
@@ -150,6 +164,7 @@ var flags = []cli.Flag{
 		Usage:       "Metascheduler smart-contract address.",
 		Destination: &metaschedulerSmartContract,
 		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
+		Category:    "MetaScheduler:",
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.private-key",
@@ -157,6 +172,7 @@ var flags = []cli.Flag{
 		Required:    true,
 		Destination: &ethHexPK,
 		EnvVars:     []string{"ETH_PRIVATE_KEY"},
+		Category:    "MetaScheduler:",
 	},
 	&cli.StringFlag{
 		Name:        "slurm.ssh.address",
@@ -164,6 +180,7 @@ var flags = []cli.Flag{
 		Required:    true,
 		Destination: &slurmSSHAddress,
 		EnvVars:     []string{"SLURM_SSH_ADDRESS"},
+		Category:    "Slurm:",
 	},
 	&cli.StringFlag{
 		Name:        "slurm.ssh.admin-user",
@@ -171,6 +188,7 @@ var flags = []cli.Flag{
 		Required:    true,
 		Destination: &slurmSSHAdminUser,
 		EnvVars:     []string{"SLURM_SSH_ADMIN_USER"},
+		Category:    "Slurm:",
 	},
 	&cli.StringFlag{
 		Name:        "slurm.ssh.private-key",
@@ -178,6 +196,7 @@ var flags = []cli.Flag{
 		Required:    true,
 		Destination: &slurmSSHB64PK,
 		EnvVars:     []string{"SLURM_SSH_PRIVATE_KEY"},
+		Category:    "Slurm:",
 	},
 	&cli.StringFlag{
 		Name:        "slurm.batch",
@@ -185,6 +204,7 @@ var flags = []cli.Flag{
 		Usage:       "Server-side SLURM sbatch path.",
 		Destination: &sbatch,
 		EnvVars:     []string{"SLURM_SBATCH_PATH"},
+		Category:    "Slurm:",
 	},
 	&cli.StringFlag{
 		Name:        "slurm.cancel",
@@ -192,6 +212,7 @@ var flags = []cli.Flag{
 		Usage:       "Server-side SLURM scancel path.",
 		Destination: &scancel,
 		EnvVars:     []string{"SLURM_SCANCEL_PATH"},
+		Category:    "Slurm:",
 	},
 	&cli.StringFlag{
 		Name:        "slurm.squeue",
@@ -199,6 +220,7 @@ var flags = []cli.Flag{
 		Usage:       "Server-side SLURM squeue path.",
 		Destination: &squeue,
 		EnvVars:     []string{"SLURM_SQUEUE_PATH"},
+		Category:    "Slurm:",
 	},
 	&cli.StringFlag{
 		Name:        "slurm.control",
@@ -206,50 +228,65 @@ var flags = []cli.Flag{
 		Usage:       "Server-side SLURM scontrol path.",
 		Destination: &scontrol,
 		EnvVars:     []string{"SLURM_SCONTROL_PATH"},
+		Category:    "Slurm:",
 	},
-	&cli.Uint64Flag{
-		Name:        "res.nodes",
-		Usage:       "Total number of Nodes reported by 'scontrol show partitions'",
-		Destination: &nodes,
-		Required:    true,
-		EnvVars:     []string{"TOTAL_NODES"},
+	&cli.StringFlag{
+		Name:        "slurm.partition",
+		Usage:       "Slurm partition used for jobs and registering.",
+		Destination: &partition,
+		Value:       "main",
+		EnvVars:     []string{"SLURM_PARTITION"},
+		Category:    "Slurm:",
 	},
-	&cli.Uint64Flag{
-		Name:        "res.cpus",
-		Usage:       "Total number of CPUs reported by 'scontrol show partitions'",
-		Destination: &cpus,
-		Required:    true,
-		EnvVars:     []string{"TOTAL_CPUS"},
+	&cli.StringFlag{
+		Name:        "nvidia-smi",
+		Value:       "nvidia-smi",
+		Usage:       "Server-side nvidia-smi path.",
+		Destination: &nvidiaSMI,
+		EnvVars:     []string{"NVIDIA_SMI_PATH"},
+		Category:    "Miscellaneous:",
 	},
-	&cli.Uint64Flag{
-		Name:        "res.gpus",
-		Usage:       "Total number of GPUs reported by 'scontrol show partitions'",
-		Destination: &gpus,
-		Required:    true,
-		EnvVars:     []string{"TOTAL_GPUS"},
+	&cli.StringFlag{
+		Name:        "benchmark.image",
+		Usage:       "Docker image used for benchmark",
+		Destination: &benchmarkImage,
+		Value:       "registry-1.deepsquare.run#library/hpc-benchmarks:21.4-hpl",
+		EnvVars:     []string{"BENCHMARK_IMAGE"},
+		Category:    "Benchmark:",
 	},
-	&cli.Uint64Flag{
-		Name:        "res.mem",
-		Usage:       "Total number of Memory (MB) reported by 'scontrol show partitions'",
-		Destination: &mem,
-		Required:    true,
-		EnvVars:     []string{"TOTAL_MEMORY"},
+	&cli.BoolFlag{
+		Name:        "benchmark.single-node",
+		Usage:       "Force single node benchmark.",
+		Destination: &benchmarkSingleNode,
+		Value:       false,
+		EnvVars:     []string{"BENCHMARK_SINGLE_NODE"},
+		Category:    "Benchmark:",
+	},
+	&cli.BoolFlag{
+		Name:        "benchmark.disable",
+		Usage:       "Disable benchmark (and registering).",
+		Destination: &benchmarkDisable,
+		Value:       false,
+		EnvVars:     []string{"BENCHMARK_DISABLE"},
+		Category:    "Benchmark:",
 	},
 	&cli.BoolFlag{
 		Name:        "trace",
 		Usage:       "Trace logging",
 		Destination: &trace,
 		EnvVars:     []string{"TRACE"},
+		Category:    "Miscellaneous:",
 	},
 }
 
 // Container stores the instances for dependency injection.
 type Container struct {
-	server        *server.Server
-	sbatchAPI     pkgsbatch.Client
-	metascheduler *metascheduler.Client
-	slurm         *scheduler.Slurm
-	jobWatcher    *watcher.Watcher
+	server            *http.Server
+	sbatchAPI         pkgsbatch.Client
+	metascheduler     metascheduler.MetaScheduler
+	scheduler         scheduler.Scheduler
+	jobWatcher        *watcher.Watcher
+	benchmarkLauncher benchmark.Launcher
 }
 
 func Init(ctx context.Context) *Container {
@@ -314,7 +351,7 @@ func Init(ctx context.Context) *Container {
 	if err != nil {
 		logger.I.Fatal("couldn't fetch chainID", zap.Error(err))
 	}
-	metascheduler := metascheduler.NewClient(
+	metaScheduler := metascheduler.NewClient(
 		chainID,
 		common.HexToAddress(metaschedulerSmartContract),
 		ethClientRPC,
@@ -326,14 +363,16 @@ func Init(ctx context.Context) *Container {
 		slurmSSHAddress,
 		slurmSSHB64PK,
 	)
-	slurmJobService := scheduler.NewSlurm(
+	slurmScheduler := scheduler.NewSlurm(
 		sshService,
 		slurmSSHAdminUser,
-		scancel,
-		sbatch,
-		squeue,
-		scontrol,
 		publicAddress,
+		"main",
+		scheduler.WithSBatch(sbatch),
+		scheduler.WithSCancel(scancel),
+		scheduler.WithSControl(scontrol),
+		scheduler.WithSQueue(squeue),
+		scheduler.WithNVidiaSMI(nvidiaSMI),
 	)
 	resourceManager := lock.NewResourceManager()
 
@@ -348,8 +387,8 @@ func Init(ctx context.Context) *Container {
 		})),
 	}
 	watcher := watcher.New(
-		metascheduler,
-		slurmJobService,
+		metaScheduler,
+		slurmScheduler,
 		sbatchClient,
 		time.Duration(5*time.Second),
 		resourceManager,
@@ -366,19 +405,23 @@ func Init(ctx context.Context) *Container {
 		}
 		opts = append(opts, grpc.Creds(creds))
 	}
+	bl := benchmark.NewLauncher(benchmarkImage, publicAddress, slurmScheduler)
 	server := server.New(
-		metascheduler,
+		metaScheduler,
 		resourceManager,
+		bl,
+		slurmScheduler,
 		slurmSSHB64PK,
 		opts...,
 	)
 
 	return &Container{
-		sbatchAPI:     sbatchClient,
-		metascheduler: metascheduler,
-		slurm:         slurmJobService,
-		jobWatcher:    watcher,
-		server:        server,
+		sbatchAPI:         sbatchClient,
+		metascheduler:     metaScheduler,
+		scheduler:         slurmScheduler,
+		jobWatcher:        watcher,
+		server:            server,
+		benchmarkLauncher: bl,
 	}
 }
 
@@ -391,16 +434,24 @@ var app = &cli.App{
 		ctx := cCtx.Context
 		container := Init(ctx)
 
-		// Register the cluster with the declared resources
-		// TODO: automatically fetch the resources limit
-		if err := container.metascheduler.Register(
-			ctx,
-			nodes,
-			cpus,
-			gpus,
-			mem,
-		); err != nil {
-			return err
+		// Launch benchmark which will register the node
+		if !benchmarkDisable {
+			go func() {
+				if err := container.scheduler.HealthCheck(ctx); err != nil {
+					logger.I.Fatal("failed to check slurm health", zap.Error(err))
+				}
+				nodes, err := container.scheduler.FindTotalNodes(ctx)
+				if err != nil {
+					logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
+				}
+				benchmarkNodes := nodes
+				if benchmarkSingleNode {
+					benchmarkNodes = 1
+				}
+				if err := container.benchmarkLauncher.RunPhase1(ctx, benchmarkNodes); err != nil {
+					logger.I.Fatal("failed to benchmark", zap.Error(err))
+				}
+			}()
 		}
 
 		go debug.WatchGoRoutines(ctx)
@@ -418,7 +469,12 @@ var app = &cli.App{
 		)
 
 		// gRPC server
-		return container.server.ListenAndServe(listenAddress)
+		lis, err := net.Listen("tcp", listenAddress)
+		if err != nil {
+			return err
+		}
+
+		return container.server.Serve(lis)
 	},
 }
 

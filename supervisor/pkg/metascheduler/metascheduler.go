@@ -34,4 +34,12 @@ type MetaScheduler interface {
 		status JobStatus,
 		jobDurationMinute uint64,
 	) error
+	Register(
+		ctx context.Context,
+		nodes uint64,
+		cpus uint64,
+		gpus uint64,
+		mem uint64,
+		flops float64,
+	) error
 }

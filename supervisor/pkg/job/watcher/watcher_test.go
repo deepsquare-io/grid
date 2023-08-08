@@ -257,6 +257,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 	suite.scheduler.EXPECT().Submit(mock.Anything, &scheduler.SubmitRequest{
 		Name:          hexutil.Encode(fixtureClaimNextJobEvent.JobId[:]),
 		User:          strings.ToLower(fixtureClaimNextJobEvent.CustomerAddr.Hex()),
+		Prefix:        "supervisor",
 		JobDefinition: &d,
 	}).Return(strconv.Itoa(fixtureSchedulerJobID), nil)
 
@@ -374,6 +375,7 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	suite.scheduler.EXPECT().Submit(mock.Anything, &scheduler.SubmitRequest{
 		Name:          hexutil.Encode(fixtureClaimNextJobEvent.JobId[:]),
 		User:          strings.ToLower(fixtureClaimNextJobEvent.CustomerAddr.Hex()),
+		Prefix:        "supervisor",
 		JobDefinition: &d,
 	}).Return("0", errors.New("expected error"))
 	// Must refuse job because we couldn't fetch the job batch script

@@ -26,7 +26,7 @@ var (
 type ServiceTestSuite struct {
 	suite.Suite
 	ssh  *mocks.Executor
-	impl *scheduler.Slurm
+	impl scheduler.Scheduler
 }
 
 func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
@@ -34,11 +34,8 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 	suite.impl = scheduler.NewSlurm(
 		suite.ssh,
 		admin,
-		"scancel",
-		"sbatch",
-		"squeue",
-		"scontrol",
 		"localhost",
+		"main",
 	)
 }
 
@@ -72,12 +69,13 @@ func (suite *ServiceTestSuite) TestSubmit() {
 	name := utils.GenerateRandomString(6)
 	expectedJobID := "123"
 	req := &scheduler.SubmitRequest{
-		Name: name,
-		User: user,
+		Name:   name,
+		User:   user,
+		Prefix: "supervisor",
 		JobDefinition: &scheduler.JobDefinition{
 			TimeLimit:    uint64(5),
 			NTasks:       1,
-			GPUsPerTask:  0,
+			GPUsPerTask:  utils.Ptr(uint64(0)),
 			CPUsPerTask:  1,
 			MemoryPerCPU: 512,
 			Body: `#!/bin/sh
@@ -92,11 +90,12 @@ srun sleep infinity
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "sbatch") &&
 				strings.Contains(cmd, strconv.FormatUint(req.CPUsPerTask, 10)) &&
-				strings.Contains(cmd, strconv.FormatUint(req.GPUsPerTask, 10)) &&
+				strings.Contains(cmd, strconv.FormatUint(*req.GPUsPerTask, 10)) &&
 				strings.Contains(cmd, strconv.FormatUint(req.MemoryPerCPU, 10)) &&
 				strings.Contains(cmd, strconv.FormatUint(req.NTasks, 10)) &&
 				strings.Contains(cmd, strconv.FormatUint(req.TimeLimit, 10)) &&
 				strings.Contains(cmd, req.Name) &&
+				strings.Contains(cmd, req.Prefix) &&
 				strings.Contains(cmd, req.Body)
 		}),
 	).Return(fmt.Sprintf("%s\n", expectedJobID), nil)

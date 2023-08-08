@@ -294,6 +294,53 @@ func (_c *MetaScheduler_RefuseJob_Call) RunAndReturn(run func(context.Context, [
 	return _c
 }
 
+// Register provides a mock function with given fields: ctx, nodes, cpus, gpus, mem, flops
+func (_m *MetaScheduler) Register(ctx context.Context, nodes uint64, cpus uint64, gpus uint64, mem uint64, flops float64) error {
+	ret := _m.Called(ctx, nodes, cpus, gpus, mem, flops)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64, uint64, float64) error); ok {
+		r0 = rf(ctx, nodes, cpus, gpus, mem, flops)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MetaScheduler_Register_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Register'
+type MetaScheduler_Register_Call struct {
+	*mock.Call
+}
+
+// Register is a helper method to define mock.On call
+//   - ctx context.Context
+//   - nodes uint64
+//   - cpus uint64
+//   - gpus uint64
+//   - mem uint64
+//   - flops float64
+func (_e *MetaScheduler_Expecter) Register(ctx interface{}, nodes interface{}, cpus interface{}, gpus interface{}, mem interface{}, flops interface{}) *MetaScheduler_Register_Call {
+	return &MetaScheduler_Register_Call{Call: _e.mock.On("Register", ctx, nodes, cpus, gpus, mem, flops)}
+}
+
+func (_c *MetaScheduler_Register_Call) Run(run func(ctx context.Context, nodes uint64, cpus uint64, gpus uint64, mem uint64, flops float64)) *MetaScheduler_Register_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64), args[3].(uint64), args[4].(uint64), args[5].(float64))
+	})
+	return _c
+}
+
+func (_c *MetaScheduler_Register_Call) Return(_a0 error) *MetaScheduler_Register_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MetaScheduler_Register_Call) RunAndReturn(run func(context.Context, uint64, uint64, uint64, uint64, float64) error) *MetaScheduler_Register_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetJobStatus provides a mock function with given fields: ctx, jobID, status, jobDurationMinute
 func (_m *MetaScheduler) SetJobStatus(ctx context.Context, jobID [32]byte, status metascheduler.JobStatus, jobDurationMinute uint64) error {
 	ret := _m.Called(ctx, jobID, status, jobDurationMinute)

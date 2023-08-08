@@ -70,7 +70,7 @@ func NewClient(
 	rpc bind.ContractBackend,
 	ws bind.ContractBackend,
 	pk *ecdsa.PrivateKey,
-) *Client {
+) MetaScheduler {
 	fromAddress := crypto.PubkeyToAddress(pk.PublicKey)
 
 	msRPC, err := metaschedulerabi.NewMetaScheduler(metaschedulerAddress, rpc)
@@ -179,7 +179,16 @@ func (c *Client) Register(
 	cpus uint64,
 	gpus uint64,
 	mem uint64,
+	flops float64,
 ) error {
+	logger.I.Info(
+		"called register",
+		zap.Uint64("nodes", nodes),
+		zap.Uint64("cpus", cpus),
+		zap.Uint64("mem", mem),
+		zap.Uint64("gpus", gpus),
+		zap.Float64("flops", flops),
+	)
 	// TODO: implements
 	// auth, err := c.auth(ctx)
 	// if err != nil {
