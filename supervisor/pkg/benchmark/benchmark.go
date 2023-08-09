@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -17,7 +18,6 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/secret"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/array"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/hash"
 	"go.uber.org/zap"
 )
@@ -134,7 +134,7 @@ func (l *launcher) runBenchmark(
 		params.Q,
 		nodes,
 		gpusPerNode,
-		array.Min(cpusPerNodes),
+		slices.Min(cpusPerNodes),
 	)
 	if err != nil {
 		log.Error("failed to create job definition", zap.Error(err))
@@ -191,7 +191,7 @@ func (l *launcher) RunPhase1(ctx context.Context, nodes uint64) error {
 	if len(memPerNodes) == 0 {
 		return errors.New("mem per node is empty")
 	}
-	memPerNode := array.Min(memPerNodes)
+	memPerNode := slices.Min(memPerNodes)
 	gpusPerNodes, err := l.Scheduler.FindGPUsPerNode(ctx)
 	if err != nil {
 		logger.I.Error("failed to find gpus per node", zap.Error(err))
@@ -200,7 +200,7 @@ func (l *launcher) RunPhase1(ctx context.Context, nodes uint64) error {
 	if len(gpusPerNodes) == 0 {
 		return errors.New("gpus per node is empty")
 	}
-	gpuPerNode := array.Min(gpusPerNodes)
+	gpuPerNode := slices.Min(gpusPerNodes)
 	p, q, err := CalculateProcessGrid(gpuPerNode, nodes)
 	if err != nil {
 		logger.I.Error("failed to compute p and q", zap.Error(err))
@@ -235,7 +235,7 @@ func (l *launcher) RunPhase2(
 	if len(gpusPerNodes) == 0 {
 		return errors.New("gpus per node is empty")
 	}
-	gpuPerNode := array.Min(gpusPerNodes)
+	gpuPerNode := slices.Min(gpusPerNodes)
 	params := &BenchmarkParams{
 		P:            newP,
 		Q:            newQ,

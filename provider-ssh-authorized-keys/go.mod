@@ -1,6 +1,6 @@
 module github.com/deepsquare-io/the-grid/provider-ssh-authorized-keys
 
-go 1.20
+go 1.21
 
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
