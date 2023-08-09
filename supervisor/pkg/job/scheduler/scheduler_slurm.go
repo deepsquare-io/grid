@@ -260,7 +260,7 @@ func (s *Slurm) TopUp(ctx context.Context, req *TopUpRequest) error {
 func (s *Slurm) HealthCheck(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := s.ExecAs(ctx, s.adminUser, s.squeue)
+	out, err := s.ExecAs(ctx, s.adminUser, fmt.Sprintf("timeout 10 %s", s.squeue))
 	if err != nil {
 		logger.I.Error("HealthCheck failed with error", zap.Error(err), zap.String("out", out))
 	}

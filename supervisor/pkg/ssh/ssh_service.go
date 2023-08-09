@@ -75,7 +75,7 @@ func (s *Service) establish(
 	}, nil
 }
 
-// ExecAs executes a command on the remote host with a timeout
+// ExecAs executes a command on the remote host
 func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, error) {
 	sess, close, err := s.establish(ctx, user)
 	if err != nil {
