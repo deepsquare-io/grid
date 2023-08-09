@@ -150,7 +150,7 @@ func (suite *ServiceTestSuite) TestHealthCheck() {
 	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		admin,
-		"squeue",
+		"timeout 10 squeue",
 	).Return("ok", nil)
 	ctx := context.Background()
 

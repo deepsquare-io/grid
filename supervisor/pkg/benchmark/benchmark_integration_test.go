@@ -40,6 +40,7 @@ func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName strin
 	)
 	suite.impl = benchmark.NewLauncher(
 		"registry-1.deepsquare.run#library/hpc-benchmarks:21.4-hpl",
+		"root",
 		suite.publicAddress,
 		suite.scheduler,
 	)

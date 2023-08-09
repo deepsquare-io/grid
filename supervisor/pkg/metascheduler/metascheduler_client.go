@@ -179,7 +179,7 @@ func (c *Client) Register(
 	cpus uint64,
 	gpus uint64,
 	mem uint64,
-	flops float64,
+	gflops float64,
 ) error {
 	logger.I.Info(
 		"called register",
@@ -187,7 +187,7 @@ func (c *Client) Register(
 		zap.Uint64("cpus", cpus),
 		zap.Uint64("mem", mem),
 		zap.Uint64("gpus", gpus),
-		zap.Float64("flops", flops),
+		zap.Float64("gflops", gflops),
 	)
 	// TODO: implements
 	// auth, err := c.auth(ctx)

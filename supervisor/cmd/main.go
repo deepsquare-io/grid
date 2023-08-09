@@ -65,6 +65,7 @@ var (
 	benchmarkImage      string
 	benchmarkSingleNode bool
 	benchmarkDisable    bool
+	benchmarkRunAs      string
 
 	trace bool
 )
@@ -254,6 +255,14 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"BENCHMARK_IMAGE"},
 		Category:    "Benchmark:",
 	},
+	&cli.StringFlag{
+		Name:        "benchmark.run-as",
+		Usage:       "User used for benchmark",
+		Destination: &benchmarkRunAs,
+		Value:       "root",
+		EnvVars:     []string{"BENCHMARK_RUN_AS"},
+		Category:    "Benchmark:",
+	},
 	&cli.BoolFlag{
 		Name:        "benchmark.single-node",
 		Usage:       "Force single node benchmark.",
@@ -405,7 +414,7 @@ func Init(ctx context.Context) *Container {
 		}
 		opts = append(opts, grpc.Creds(creds))
 	}
-	bl := benchmark.NewLauncher(benchmarkImage, publicAddress, slurmScheduler)
+	bl := benchmark.NewLauncher(benchmarkImage, benchmarkRunAs, publicAddress, slurmScheduler)
 	server := server.New(
 		metaScheduler,
 		resourceManager,
@@ -437,10 +446,14 @@ var app = &cli.App{
 		// Launch benchmark which will register the node
 		if !benchmarkDisable {
 			go func() {
-				logger.I.Info("preparing benchmark")
 				if err := container.scheduler.HealthCheck(ctx); err != nil {
 					logger.I.Fatal("failed to check slurm health", zap.Error(err))
 				}
+				logger.I.Info("cancelling old benchmarks")
+				if err := container.benchmarkLauncher.Cancel(ctx); err != nil {
+					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
+				}
+				logger.I.Info("launching new benchmarks")
 				nodes, err := container.scheduler.FindTotalNodes(ctx)
 				if err != nil {
 					logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
@@ -450,8 +463,8 @@ var app = &cli.App{
 					benchmarkNodes = 1
 				}
 				if err := container.benchmarkLauncher.RunPhase1(ctx, benchmarkNodes); err != nil {
-					logger.I.Error(
-						"failed phase1 benchmark failed or failed to be tracked",
+					logger.I.Fatal(
+						"phase1 benchmark failed or failed to be tracked",
 						zap.Error(err),
 					)
 				}

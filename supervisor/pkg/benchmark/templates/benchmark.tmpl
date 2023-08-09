@@ -38,8 +38,6 @@ done
 CPU_AFFINITY="${CPU_AFFINITY%:}"
 export CPU_AFFINITY
 
-mkdir -p /tmp/benchmark-result
-
 srun --mpi=pmix_v4 \
   --cpu-bind=none \
   --gpu-bind=none \
@@ -49,7 +47,6 @@ srun --mpi=pmix_v4 \
 {{- if ge (mul .JobDefinition.GPUsPerNode .JobDefinition.MaxNodes ) 4 }}
   --gpus-per-task=1 \
 {{- end }}
-  --container-mounts="/tmp/benchmark-result:/out:rw" \
   --container-image="{{ .Image }}" \
   sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && sed -Ei "s/:1//g" ./hpl.sh \

@@ -14,8 +14,7 @@ import (
 )
 
 var (
-	JobName = "HPL-Benchmark"
-	admin   = "root"
+	admin = "root"
 )
 
 type BenchmarkLauncherTestSuite struct {
@@ -31,6 +30,7 @@ func (suite *BenchmarkLauncherTestSuite) SetupSubTest() {
 
 	suite.impl = benchmark.NewLauncher(
 		"/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh",
+		admin,
 		"supervisor.example.com:3000",
 		suite.scheduler,
 		benchmark.WithSecretManager(suite.secretManager),
@@ -54,9 +54,9 @@ func (suite *BenchmarkLauncherTestSuite) TestRunPhase1() {
 			memPerNode:  128460,
 			nodes:       1,
 			expectedSubmitRequest: scheduler.SubmitRequest{
-				Name:   JobName,
+				Name:   suite.impl.GetJobName(),
 				User:   admin,
-				Prefix: "benchmark",
+				Prefix: suite.impl.GetJobName(),
 				JobDefinition: &scheduler.JobDefinition{
 					NTasks:        4,
 					NTasksPerNode: 4,
@@ -102,22 +102,19 @@ done
 CPU_AFFINITY="${CPU_AFFINITY%:}"
 export CPU_AFFINITY
 
-mkdir -p /tmp/benchmark-result
-
 srun --mpi=pmix_v4 \
   --cpu-bind=none \
   --gpu-bind=none \
   --nodes=1-1 \
   --ntasks=4 \
   --ntasks-per-node=4 \
-  --container-mounts="/tmp/benchmark-result:/out:rw" \
   --container-image="/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh" \
   sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && sed -Ei "s/:1//g" ./hpl.sh \
   && ./hpl.sh --xhpl-ai --cpu-affinity $CPU_AFFINITY --cpu-cores-per-rank 4 --gpu-affinity $GPU_AFFINITY --dat "/tmp/test.dat"
 HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
-/out/HPL.out      output file name (if any)
+HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
 10 # of problems sizes (N)
 95000 96000 97000 98000 100000 101000 102000 103000 105000 106000   Ns
@@ -166,9 +163,9 @@ curl -sS \
 			memPerNode:  128460,
 			nodes:       1,
 			expectedSubmitRequest: scheduler.SubmitRequest{
-				Name:   JobName,
+				Name:   suite.impl.GetJobName(),
 				User:   admin,
-				Prefix: "benchmark",
+				Prefix: suite.impl.GetJobName(),
 				JobDefinition: &scheduler.JobDefinition{
 					NTasks:        4,
 					NTasksPerNode: 4,
@@ -210,8 +207,6 @@ done
 CPU_AFFINITY="${CPU_AFFINITY%:}"
 export CPU_AFFINITY
 
-mkdir -p /tmp/benchmark-result
-
 srun --mpi=pmix_v4 \
   --cpu-bind=none \
   --gpu-bind=none \
@@ -219,14 +214,13 @@ srun --mpi=pmix_v4 \
   --ntasks=4 \
   --ntasks-per-node=4 \
   --gpus-per-task=1 \
-  --container-mounts="/tmp/benchmark-result:/out:rw" \
   --container-image="/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh" \
   sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && sed -Ei "s/:1//g" ./hpl.sh \
   && ./hpl.sh --xhpl-ai --cpu-affinity $CPU_AFFINITY --cpu-cores-per-rank 4 --gpu-affinity $GPU_AFFINITY --dat "/tmp/test.dat"
 HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
-/out/HPL.out      output file name (if any)
+HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
 10 # of problems sizes (N)
 95000 96000 97000 98000 100000 101000 102000 103000 105000 106000   Ns
@@ -275,9 +269,9 @@ curl -sS \
 			memPerNode:  128460,
 			nodes:       2,
 			expectedSubmitRequest: scheduler.SubmitRequest{
-				Name:   JobName,
+				Name:   suite.impl.GetJobName(),
 				User:   admin,
-				Prefix: "benchmark",
+				Prefix: suite.impl.GetJobName(),
 				JobDefinition: &scheduler.JobDefinition{
 					NTasks:        4,
 					NTasksPerNode: 2,
@@ -319,8 +313,6 @@ done
 CPU_AFFINITY="${CPU_AFFINITY%:}"
 export CPU_AFFINITY
 
-mkdir -p /tmp/benchmark-result
-
 srun --mpi=pmix_v4 \
   --cpu-bind=none \
   --gpu-bind=none \
@@ -328,14 +320,13 @@ srun --mpi=pmix_v4 \
   --ntasks=4 \
   --ntasks-per-node=2 \
   --gpus-per-task=1 \
-  --container-mounts="/tmp/benchmark-result:/out:rw" \
   --container-image="/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh" \
   sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && sed -Ei "s/:1//g" ./hpl.sh \
   && ./hpl.sh --xhpl-ai --cpu-affinity $CPU_AFFINITY --cpu-cores-per-rank 8 --gpu-affinity $GPU_AFFINITY --dat "/tmp/test.dat"
 HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
-/out/HPL.out      output file name (if any)
+HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
 10 # of problems sizes (N)
 134000 136000 137000 139000 141000 143000 145000 146000 148000 150000   Ns

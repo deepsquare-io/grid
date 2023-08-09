@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -17,14 +18,13 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/array"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/hash"
 	"go.uber.org/zap"
 )
 
 const (
-	User        = "root"
-	GBtoMB      = 1000
-	JobName     = "HPL-Benchmark"
-	DatFilePath = "hpl.dat"
+	GBtoMB        = 1000
+	jobNameFormat = "benchmark-%s"
 )
 
 //go:embed templates/*.tmpl
@@ -55,12 +55,17 @@ type Launcher interface {
 	) error
 	// Verify is used to check if a job came from the same launcher.
 	Verify(data []byte) bool
+	// Cancel cancels all running benchmark
+	Cancel(ctx context.Context) error
+	// Get the generated job name for benchmarks.
+	GetJobName() string
 }
 
 type launcher struct {
 	secretManager           secret.Manager
 	Image                   string
 	supervisorPublicAddress string
+	user                    string
 	Scheduler               scheduler.Scheduler
 }
 
@@ -84,6 +89,7 @@ func WithSecretManager(secretManager secret.Manager) LauncherOption {
 
 func NewLauncher(
 	image string,
+	user string,
 	supervisorPublicAddress string,
 	scheduler scheduler.Scheduler,
 	opts ...LauncherOption,
@@ -91,6 +97,7 @@ func NewLauncher(
 	l := &launcher{
 		Image:                   image,
 		Scheduler:               scheduler,
+		user:                    user,
 		supervisorPublicAddress: supervisorPublicAddress,
 		secretManager:           secret.NewManager(),
 	}
@@ -100,6 +107,11 @@ func NewLauncher(
 	return l
 }
 
+func (l *launcher) GetJobName() string {
+	hash := hash.GenerateAlphanumeric(l.supervisorPublicAddress)
+	return fmt.Sprintf(jobNameFormat, hash)
+}
+
 func (l *launcher) runBenchmark(
 	ctx context.Context,
 	params *BenchmarkParams,
@@ -107,9 +119,10 @@ func (l *launcher) runBenchmark(
 	nodes uint64,
 	gpusPerNode uint64,
 ) error {
+	log := logger.I.With(zap.String("phase", phase))
 	cpusPerNodes, err := l.Scheduler.FindCPUsPerNode(ctx)
 	if err != nil {
-		logger.I.Error("failed to find cpus per node", zap.Error(err))
+		log.Error("failed to find cpus per node", zap.Error(err))
 		return err
 	}
 	if len(cpusPerNodes) == 0 {
@@ -124,7 +137,7 @@ func (l *launcher) runBenchmark(
 		array.Min(cpusPerNodes),
 	)
 	if err != nil {
-		logger.I.Error("failed to create job definition", zap.Error(err))
+		log.Error("failed to create job definition", zap.Error(err))
 		return err
 	}
 
@@ -144,27 +157,27 @@ func (l *launcher) runBenchmark(
 	errC := make(chan error, 1)
 	go func() {
 		_, err := l.Scheduler.Submit(ctx, &scheduler.SubmitRequest{
-			Name:          JobName,
-			User:          User,
-			Prefix:        "benchmark",
+			Name:          l.GetJobName(),
+			User:          l.user,
+			Prefix:        l.GetJobName(),
 			JobDefinition: jobDefinition,
 		})
 		errC <- err
 	}()
 
-	logger.I.Info("benchmark started")
+	log.Info("benchmark started")
 
 	for {
 		select {
 		case err := <-errC:
 			if err != nil {
-				logger.I.Error("benchmark failed", zap.Error(err))
+				log.Error("benchmark failed", zap.Error(err))
 			} else {
-				logger.I.Info("benchmark succeeded")
+				log.Info("benchmark succeeded")
 			}
 			return err
 		case <-ticker.C:
-			logger.I.Info("benchmark is still running")
+			log.Info("benchmark is still running")
 		}
 	}
 }
@@ -300,6 +313,13 @@ func (l *launcher) createJobDefinition(
 	jobDefinition.Wait = true
 
 	return jobDefinition, nil
+}
+
+func (l *launcher) Cancel(ctx context.Context) error {
+	return l.Scheduler.CancelJob(ctx, &scheduler.CancelRequest{
+		Name: l.GetJobName(),
+		User: l.user,
+	})
 }
 
 // CalculateProcessGrid computes the optimal values of P and Q based on the number of GPUs available per nodes

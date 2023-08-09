@@ -40,6 +40,6 @@ type MetaScheduler interface {
 		cpus uint64,
 		gpus uint64,
 		mem uint64,
-		flops float64,
+		gflops float64,
 	) error
 }

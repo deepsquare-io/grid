@@ -294,13 +294,13 @@ func (_c *MetaScheduler_RefuseJob_Call) RunAndReturn(run func(context.Context, [
 	return _c
 }
 
-// Register provides a mock function with given fields: ctx, nodes, cpus, gpus, mem, flops
-func (_m *MetaScheduler) Register(ctx context.Context, nodes uint64, cpus uint64, gpus uint64, mem uint64, flops float64) error {
-	ret := _m.Called(ctx, nodes, cpus, gpus, mem, flops)
+// Register provides a mock function with given fields: ctx, nodes, cpus, gpus, mem, gflops
+func (_m *MetaScheduler) Register(ctx context.Context, nodes uint64, cpus uint64, gpus uint64, mem uint64, gflops float64) error {
+	ret := _m.Called(ctx, nodes, cpus, gpus, mem, gflops)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64, uint64, float64) error); ok {
-		r0 = rf(ctx, nodes, cpus, gpus, mem, flops)
+		r0 = rf(ctx, nodes, cpus, gpus, mem, gflops)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -319,12 +319,12 @@ type MetaScheduler_Register_Call struct {
 //   - cpus uint64
 //   - gpus uint64
 //   - mem uint64
-//   - flops float64
-func (_e *MetaScheduler_Expecter) Register(ctx interface{}, nodes interface{}, cpus interface{}, gpus interface{}, mem interface{}, flops interface{}) *MetaScheduler_Register_Call {
-	return &MetaScheduler_Register_Call{Call: _e.mock.On("Register", ctx, nodes, cpus, gpus, mem, flops)}
+//   - gflops float64
+func (_e *MetaScheduler_Expecter) Register(ctx interface{}, nodes interface{}, cpus interface{}, gpus interface{}, mem interface{}, gflops interface{}) *MetaScheduler_Register_Call {
+	return &MetaScheduler_Register_Call{Call: _e.mock.On("Register", ctx, nodes, cpus, gpus, mem, gflops)}
 }
 
-func (_c *MetaScheduler_Register_Call) Run(run func(ctx context.Context, nodes uint64, cpus uint64, gpus uint64, mem uint64, flops float64)) *MetaScheduler_Register_Call {
+func (_c *MetaScheduler_Register_Call) Run(run func(ctx context.Context, nodes uint64, cpus uint64, gpus uint64, mem uint64, gflops float64)) *MetaScheduler_Register_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64), args[3].(uint64), args[4].(uint64), args[5].(float64))
 	})
