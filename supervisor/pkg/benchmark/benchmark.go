@@ -159,8 +159,9 @@ func (l *launcher) runBenchmark(
 		case err := <-errC:
 			if err != nil {
 				logger.I.Error("benchmark failed", zap.Error(err))
+			} else {
+				logger.I.Info("benchmark succeeded")
 			}
-			logger.I.Error("benchmark succeeded")
 			return err
 		case <-ticker.C:
 			logger.I.Info("benchmark is still running")

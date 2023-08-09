@@ -437,6 +437,7 @@ var app = &cli.App{
 		// Launch benchmark which will register the node
 		if !benchmarkDisable {
 			go func() {
+				logger.I.Info("preparing benchmark")
 				if err := container.scheduler.HealthCheck(ctx); err != nil {
 					logger.I.Fatal("failed to check slurm health", zap.Error(err))
 				}
@@ -452,6 +453,8 @@ var app = &cli.App{
 					logger.I.Fatal("failed to benchmark", zap.Error(err))
 				}
 			}()
+		} else {
+			logger.I.Warn("benchmark disabled, will not register to the smart-contract")
 		}
 
 		go debug.WatchGoRoutines(ctx)

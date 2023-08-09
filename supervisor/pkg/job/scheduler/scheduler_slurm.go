@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
@@ -99,6 +100,8 @@ func (s *Slurm) CancelJob(ctx context.Context, req *CancelRequest) error {
 
 // Submit a sbatch definition script to the SLURM controller using the sbatch command.
 func (s *Slurm) Submit(ctx context.Context, req *SubmitRequest) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	eof := utils.GenerateRandomString(10)
 
 	cmd := fmt.Sprintf(`%s \
@@ -232,6 +235,8 @@ true
 
 // TopUp add additional time to a SLURM job
 func (s *Slurm) TopUp(ctx context.Context, req *TopUpRequest) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	// Fetch jobID
 	jobID, err := s.FindRunningJobByName(ctx, &FindRunningJobByNameRequest{
 		Name: req.Name,
@@ -253,6 +258,8 @@ func (s *Slurm) TopUp(ctx context.Context, req *TopUpRequest) error {
 
 // HealthCheck runs squeue to check if the queue is running
 func (s *Slurm) HealthCheck(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	out, err := s.ExecAs(ctx, s.adminUser, s.squeue)
 	if err != nil {
 		logger.I.Error("HealthCheck failed with error", zap.Error(err), zap.String("out", out))
@@ -265,6 +272,8 @@ func (s *Slurm) FindRunningJobByName(
 	ctx context.Context,
 	req *FindRunningJobByNameRequest,
 ) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	cmd := fmt.Sprintf("%s --name %s -O JobId:256 --noheader", s.squeue, req.Name)
 	out, err := s.ExecAs(ctx, req.User, cmd)
 	out = strings.TrimSpace(strings.TrimRight(string(out), "\n"))
@@ -281,6 +290,8 @@ func (s *Slurm) FindRunningJobByName(
 }
 
 func (s *Slurm) FindMemPerNode(ctx context.Context) ([]uint64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	cmd := fmt.Sprintf(
 		`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s' | sed -E 's/.*CfgTRES=[^ ]*mem=([0-9]+)[^0-9].*/\1/'`,
 		s.scontrol,
@@ -314,6 +325,8 @@ func (s *Slurm) FindMemPerNode(ctx context.Context) ([]uint64, error) {
 }
 
 func (s *Slurm) FindGPUsPerNode(ctx context.Context) ([]uint64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	cmd := fmt.Sprintf(
 		`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s' | sed -E 's|.*CfgTRES=[^ ]*gres/gpu=([0-9]+)[^0-9].*|\1|g'`,
 		s.scontrol,
@@ -347,6 +360,8 @@ func (s *Slurm) FindGPUsPerNode(ctx context.Context) ([]uint64, error) {
 }
 
 func (s *Slurm) FindCPUsPerNode(ctx context.Context) ([]uint64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	cmd := fmt.Sprintf(
 		`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s' | sed -E 's|.*CfgTRES=[^ ]*cpu=([0-9]+)[^0-9].*|\1|g'`,
 		s.scontrol,
@@ -380,6 +395,8 @@ func (s *Slurm) FindCPUsPerNode(ctx context.Context) ([]uint64, error) {
 }
 
 func (s *Slurm) FindTotalCPUs(ctx context.Context) (uint64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	cmd := fmt.Sprintf(
 		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*cpu=([0-9]+)[^0-9].*|\1|g'`,
 		s.scontrol,
@@ -409,6 +426,8 @@ func (s *Slurm) FindTotalCPUs(ctx context.Context) (uint64, error) {
 }
 
 func (s *Slurm) FindTotalMem(ctx context.Context) (uint64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	cmd := fmt.Sprintf(
 		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*mem=([0-9]+)[^0-9].*|\1|g'`,
 		s.scontrol,
@@ -438,6 +457,8 @@ func (s *Slurm) FindTotalMem(ctx context.Context) (uint64, error) {
 }
 
 func (s *Slurm) FindTotalGPUs(ctx context.Context) (uint64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	cmd := fmt.Sprintf(
 		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*gpu=([0-9]+)[^0-9].*|\1|g'`,
 		s.scontrol,
@@ -467,6 +488,8 @@ func (s *Slurm) FindTotalGPUs(ctx context.Context) (uint64, error) {
 }
 
 func (s *Slurm) FindTotalNodes(ctx context.Context) (uint64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	cmd := fmt.Sprintf(
 		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*node=([0-9]+)[^0-9].*|\1|g'`,
 		s.scontrol,

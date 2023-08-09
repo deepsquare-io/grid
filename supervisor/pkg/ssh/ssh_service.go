@@ -12,8 +12,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-const execTimeout = time.Duration(10 * time.Second)
-
 type Service struct {
 	address    string
 	authMethod ssh.AuthMethod
@@ -52,9 +50,6 @@ func (s *Service) establish(
 	d := net.Dialer{Timeout: config.Timeout}
 	conn, err := d.DialContext(ctx, "tcp", s.address)
 	if err != nil {
-		return nil, nil, err
-	}
-	if err := conn.SetDeadline(time.Now().Add(execTimeout)); err != nil {
 		return nil, nil, err
 	}
 	c, chans, reqs, err := ssh.NewClientConn(conn, s.address, config)
