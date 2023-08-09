@@ -450,7 +450,10 @@ var app = &cli.App{
 					benchmarkNodes = 1
 				}
 				if err := container.benchmarkLauncher.RunPhase1(ctx, benchmarkNodes); err != nil {
-					logger.I.Fatal("failed to benchmark", zap.Error(err))
+					logger.I.Error(
+						"failed phase1 benchmark failed or failed to be tracked",
+						zap.Error(err),
+					)
 				}
 			}()
 		} else {

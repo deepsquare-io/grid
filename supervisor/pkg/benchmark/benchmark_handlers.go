@@ -63,10 +63,14 @@ func NewPhase1Handler(benchmark Launcher) http.HandlerFunc {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
 			if err := benchmark.RunPhase2(ctx, optimal.P, optimal.Q, optimal.ProblemSize, optimal.NB, nodes); err != nil {
-				logger.I.Error("failed to run benchmark phase 2", zap.Error(err))
+				logger.I.Error(
+					"failed to run benchmark phase 2 or failed to be tracked",
+					zap.Error(err),
+				)
+				return
 			}
 			logger.I.Info(
-				"launched benchmark phase 2",
+				"benchmark phase 2 succeeded",
 				zap.Error(err),
 				zap.Uint64(
 					"p",
