@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"math"
 	"slices"
@@ -44,14 +43,13 @@ var benchmarkMemoryUsePercentage = []float64{
 }
 
 type Launcher interface {
-	RunPhase1(ctx context.Context, nodes uint64) error
+	RunPhase1(ctx context.Context) error
 	RunPhase2(
 		ctx context.Context,
 		newP uint64,
 		newQ uint64,
 		newProblemSize uint64,
 		newBlockSize uint64,
-		nodes uint64,
 	) error
 	// Verify is used to check if a job came from the same launcher.
 	Verify(data []byte) bool
@@ -67,6 +65,10 @@ type launcher struct {
 	supervisorPublicAddress string
 	user                    string
 	Scheduler               scheduler.Scheduler
+	nodes                   uint64
+	cpusPerNode             []uint64
+	memPerNode              []uint64
+	gpusPerNode             []uint64
 }
 
 type BenchmarkParams struct {
@@ -92,6 +94,10 @@ func NewLauncher(
 	user string,
 	supervisorPublicAddress string,
 	scheduler scheduler.Scheduler,
+	nodes uint64,
+	cpusPerNode []uint64,
+	memPerNode []uint64,
+	gpusPerNode []uint64,
 	opts ...LauncherOption,
 ) Launcher {
 	l := &launcher{
@@ -99,6 +105,10 @@ func NewLauncher(
 		Scheduler:               scheduler,
 		user:                    user,
 		supervisorPublicAddress: supervisorPublicAddress,
+		nodes:                   nodes,
+		cpusPerNode:             cpusPerNode,
+		gpusPerNode:             gpusPerNode,
+		memPerNode:              memPerNode,
 		secretManager:           secret.NewManager(),
 	}
 	for _, opt := range opts {
@@ -116,25 +126,15 @@ func (l *launcher) runBenchmark(
 	ctx context.Context,
 	params *BenchmarkParams,
 	phase string,
-	nodes uint64,
-	gpusPerNode uint64,
 ) error {
 	log := logger.I.With(zap.String("phase", phase))
-	cpusPerNodes, err := l.Scheduler.FindCPUsPerNode(ctx)
-	if err != nil {
-		log.Error("failed to find cpus per node", zap.Error(err))
-		return err
-	}
-	if len(cpusPerNodes) == 0 {
-		return errors.New("no cpus per node")
-	}
 	jobDefinition, err := l.createJobDefinition(
 		ctx,
 		params.P,
 		params.Q,
-		nodes,
-		gpusPerNode,
-		slices.Min(cpusPerNodes),
+		l.nodes,
+		slices.Min(l.gpusPerNode),
+		slices.Min(l.cpusPerNode),
 	)
 	if err != nil {
 		log.Error("failed to create job definition", zap.Error(err))
@@ -182,31 +182,13 @@ func (l *launcher) runBenchmark(
 	}
 }
 
-func (l *launcher) RunPhase1(ctx context.Context, nodes uint64) error {
-	memPerNodes, err := l.Scheduler.FindMemPerNode(ctx)
-	if err != nil {
-		logger.I.Error("failed to find mem per node", zap.Error(err))
-		return err
-	}
-	if len(memPerNodes) == 0 {
-		return errors.New("mem per node is empty")
-	}
-	memPerNode := slices.Min(memPerNodes)
-	gpusPerNodes, err := l.Scheduler.FindGPUsPerNode(ctx)
-	if err != nil {
-		logger.I.Error("failed to find gpus per node", zap.Error(err))
-		return err
-	}
-	if len(gpusPerNodes) == 0 {
-		return errors.New("gpus per node is empty")
-	}
-	gpuPerNode := slices.Min(gpusPerNodes)
-	p, q, err := CalculateProcessGrid(gpuPerNode, nodes)
+func (l *launcher) RunPhase1(ctx context.Context) error {
+	p, q, err := CalculateProcessGrid(slices.Min(l.gpusPerNode), l.nodes)
 	if err != nil {
 		logger.I.Error("failed to compute p and q", zap.Error(err))
 		return err
 	}
-	nProblemSize, problemSize := CalculateProblemSize(memPerNode, nodes)
+	nProblemSize, problemSize := CalculateProblemSize(slices.Min(l.memPerNode), l.nodes)
 	params := &BenchmarkParams{
 		P:            p,
 		Q:            q,
@@ -216,7 +198,7 @@ func (l *launcher) RunPhase1(ctx context.Context, nodes uint64) error {
 		BlockSize:    "64 128 224 256 384 512 640 768 896 1024",
 	}
 
-	return l.runBenchmark(ctx, params, "phase1", nodes, gpuPerNode)
+	return l.runBenchmark(ctx, params, "phase1")
 }
 
 func (l *launcher) RunPhase2(
@@ -225,17 +207,7 @@ func (l *launcher) RunPhase2(
 	newQ uint64,
 	newProblemSize uint64,
 	newBlockSize uint64,
-	nodes uint64,
 ) error {
-	gpusPerNodes, err := l.Scheduler.FindGPUsPerNode(ctx)
-	if err != nil {
-		logger.I.Error("failed to find gpus per node", zap.Error(err))
-		return err
-	}
-	if len(gpusPerNodes) == 0 {
-		return errors.New("gpus per node is empty")
-	}
-	gpuPerNode := slices.Min(gpusPerNodes)
 	params := &BenchmarkParams{
 		P:            newP,
 		Q:            newQ,
@@ -245,7 +217,7 @@ func (l *launcher) RunPhase2(
 		BlockSize:    strconv.FormatUint(newBlockSize, 10),
 	}
 
-	return l.runBenchmark(ctx, params, "phase2", nodes, gpuPerNode)
+	return l.runBenchmark(ctx, params, "phase2")
 }
 
 func (l *launcher) Verify(data []byte) bool {
@@ -316,10 +288,7 @@ func (l *launcher) createJobDefinition(
 }
 
 func (l *launcher) Cancel(ctx context.Context) error {
-	return l.Scheduler.CancelJob(ctx, &scheduler.CancelRequest{
-		Name: l.GetJobName(),
-		User: l.user,
-	})
+	return l.Scheduler.CancelJob(ctx, l.GetJobName(), l.user)
 }
 
 // CalculateProcessGrid computes the optimal values of P and Q based on the number of GPUs available per nodes

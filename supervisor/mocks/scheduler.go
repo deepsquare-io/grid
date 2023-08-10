@@ -22,13 +22,13 @@ func (_m *Scheduler) EXPECT() *Scheduler_Expecter {
 	return &Scheduler_Expecter{mock: &_m.Mock}
 }
 
-// CancelJob provides a mock function with given fields: ctx, req
-func (_m *Scheduler) CancelJob(ctx context.Context, req *scheduler.CancelRequest) error {
-	ret := _m.Called(ctx, req)
+// CancelJob provides a mock function with given fields: ctx, name, user
+func (_m *Scheduler) CancelJob(ctx context.Context, name string, user string) error {
+	ret := _m.Called(ctx, name, user)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *scheduler.CancelRequest) error); ok {
-		r0 = rf(ctx, req)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, name, user)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -43,14 +43,15 @@ type Scheduler_CancelJob_Call struct {
 
 // CancelJob is a helper method to define mock.On call
 //   - ctx context.Context
-//   - req *scheduler.CancelRequest
-func (_e *Scheduler_Expecter) CancelJob(ctx interface{}, req interface{}) *Scheduler_CancelJob_Call {
-	return &Scheduler_CancelJob_Call{Call: _e.mock.On("CancelJob", ctx, req)}
+//   - name string
+//   - user string
+func (_e *Scheduler_Expecter) CancelJob(ctx interface{}, name interface{}, user interface{}) *Scheduler_CancelJob_Call {
+	return &Scheduler_CancelJob_Call{Call: _e.mock.On("CancelJob", ctx, name, user)}
 }
 
-func (_c *Scheduler_CancelJob_Call) Run(run func(ctx context.Context, req *scheduler.CancelRequest)) *Scheduler_CancelJob_Call {
+func (_c *Scheduler_CancelJob_Call) Run(run func(ctx context.Context, name string, user string)) *Scheduler_CancelJob_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*scheduler.CancelRequest))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -60,30 +61,37 @@ func (_c *Scheduler_CancelJob_Call) Return(_a0 error) *Scheduler_CancelJob_Call 
 	return _c
 }
 
-func (_c *Scheduler_CancelJob_Call) RunAndReturn(run func(context.Context, *scheduler.CancelRequest) error) *Scheduler_CancelJob_Call {
+func (_c *Scheduler_CancelJob_Call) RunAndReturn(run func(context.Context, string, string) error) *Scheduler_CancelJob_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindCPUsPerNode provides a mock function with given fields: ctx
-func (_m *Scheduler) FindCPUsPerNode(ctx context.Context) ([]uint64, error) {
-	ret := _m.Called(ctx)
+// FindCPUsPerNode provides a mock function with given fields: ctx, opts
+func (_m *Scheduler) FindCPUsPerNode(ctx context.Context, opts ...scheduler.FindSpecOption) ([]uint64, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 []uint64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]uint64, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, ...scheduler.FindSpecOption) ([]uint64, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []uint64); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, ...scheduler.FindSpecOption) []uint64); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]uint64)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, ...scheduler.FindSpecOption) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -98,13 +106,21 @@ type Scheduler_FindCPUsPerNode_Call struct {
 
 // FindCPUsPerNode is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Scheduler_Expecter) FindCPUsPerNode(ctx interface{}) *Scheduler_FindCPUsPerNode_Call {
-	return &Scheduler_FindCPUsPerNode_Call{Call: _e.mock.On("FindCPUsPerNode", ctx)}
+//   - opts ...scheduler.FindSpecOption
+func (_e *Scheduler_Expecter) FindCPUsPerNode(ctx interface{}, opts ...interface{}) *Scheduler_FindCPUsPerNode_Call {
+	return &Scheduler_FindCPUsPerNode_Call{Call: _e.mock.On("FindCPUsPerNode",
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *Scheduler_FindCPUsPerNode_Call) Run(run func(ctx context.Context)) *Scheduler_FindCPUsPerNode_Call {
+func (_c *Scheduler_FindCPUsPerNode_Call) Run(run func(ctx context.Context, opts ...scheduler.FindSpecOption)) *Scheduler_FindCPUsPerNode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		variadicArgs := make([]scheduler.FindSpecOption, len(args)-1)
+		for i, a := range args[1:] {
+			if a != nil {
+				variadicArgs[i] = a.(scheduler.FindSpecOption)
+			}
+		}
+		run(args[0].(context.Context), variadicArgs...)
 	})
 	return _c
 }
@@ -114,30 +130,37 @@ func (_c *Scheduler_FindCPUsPerNode_Call) Return(_a0 []uint64, _a1 error) *Sched
 	return _c
 }
 
-func (_c *Scheduler_FindCPUsPerNode_Call) RunAndReturn(run func(context.Context) ([]uint64, error)) *Scheduler_FindCPUsPerNode_Call {
+func (_c *Scheduler_FindCPUsPerNode_Call) RunAndReturn(run func(context.Context, ...scheduler.FindSpecOption) ([]uint64, error)) *Scheduler_FindCPUsPerNode_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindGPUsPerNode provides a mock function with given fields: ctx
-func (_m *Scheduler) FindGPUsPerNode(ctx context.Context) ([]uint64, error) {
-	ret := _m.Called(ctx)
+// FindGPUsPerNode provides a mock function with given fields: ctx, opts
+func (_m *Scheduler) FindGPUsPerNode(ctx context.Context, opts ...scheduler.FindSpecOption) ([]uint64, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 []uint64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]uint64, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, ...scheduler.FindSpecOption) ([]uint64, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []uint64); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, ...scheduler.FindSpecOption) []uint64); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]uint64)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, ...scheduler.FindSpecOption) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -152,13 +175,21 @@ type Scheduler_FindGPUsPerNode_Call struct {
 
 // FindGPUsPerNode is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Scheduler_Expecter) FindGPUsPerNode(ctx interface{}) *Scheduler_FindGPUsPerNode_Call {
-	return &Scheduler_FindGPUsPerNode_Call{Call: _e.mock.On("FindGPUsPerNode", ctx)}
+//   - opts ...scheduler.FindSpecOption
+func (_e *Scheduler_Expecter) FindGPUsPerNode(ctx interface{}, opts ...interface{}) *Scheduler_FindGPUsPerNode_Call {
+	return &Scheduler_FindGPUsPerNode_Call{Call: _e.mock.On("FindGPUsPerNode",
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *Scheduler_FindGPUsPerNode_Call) Run(run func(ctx context.Context)) *Scheduler_FindGPUsPerNode_Call {
+func (_c *Scheduler_FindGPUsPerNode_Call) Run(run func(ctx context.Context, opts ...scheduler.FindSpecOption)) *Scheduler_FindGPUsPerNode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		variadicArgs := make([]scheduler.FindSpecOption, len(args)-1)
+		for i, a := range args[1:] {
+			if a != nil {
+				variadicArgs[i] = a.(scheduler.FindSpecOption)
+			}
+		}
+		run(args[0].(context.Context), variadicArgs...)
 	})
 	return _c
 }
@@ -168,30 +199,37 @@ func (_c *Scheduler_FindGPUsPerNode_Call) Return(_a0 []uint64, _a1 error) *Sched
 	return _c
 }
 
-func (_c *Scheduler_FindGPUsPerNode_Call) RunAndReturn(run func(context.Context) ([]uint64, error)) *Scheduler_FindGPUsPerNode_Call {
+func (_c *Scheduler_FindGPUsPerNode_Call) RunAndReturn(run func(context.Context, ...scheduler.FindSpecOption) ([]uint64, error)) *Scheduler_FindGPUsPerNode_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindMemPerNode provides a mock function with given fields: ctx
-func (_m *Scheduler) FindMemPerNode(ctx context.Context) ([]uint64, error) {
-	ret := _m.Called(ctx)
+// FindMemPerNode provides a mock function with given fields: ctx, opts
+func (_m *Scheduler) FindMemPerNode(ctx context.Context, opts ...scheduler.FindSpecOption) ([]uint64, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 []uint64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]uint64, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, ...scheduler.FindSpecOption) ([]uint64, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []uint64); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, ...scheduler.FindSpecOption) []uint64); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]uint64)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, ...scheduler.FindSpecOption) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -206,13 +244,21 @@ type Scheduler_FindMemPerNode_Call struct {
 
 // FindMemPerNode is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Scheduler_Expecter) FindMemPerNode(ctx interface{}) *Scheduler_FindMemPerNode_Call {
-	return &Scheduler_FindMemPerNode_Call{Call: _e.mock.On("FindMemPerNode", ctx)}
+//   - opts ...scheduler.FindSpecOption
+func (_e *Scheduler_Expecter) FindMemPerNode(ctx interface{}, opts ...interface{}) *Scheduler_FindMemPerNode_Call {
+	return &Scheduler_FindMemPerNode_Call{Call: _e.mock.On("FindMemPerNode",
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *Scheduler_FindMemPerNode_Call) Run(run func(ctx context.Context)) *Scheduler_FindMemPerNode_Call {
+func (_c *Scheduler_FindMemPerNode_Call) Run(run func(ctx context.Context, opts ...scheduler.FindSpecOption)) *Scheduler_FindMemPerNode_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		variadicArgs := make([]scheduler.FindSpecOption, len(args)-1)
+		for i, a := range args[1:] {
+			if a != nil {
+				variadicArgs[i] = a.(scheduler.FindSpecOption)
+			}
+		}
+		run(args[0].(context.Context), variadicArgs...)
 	})
 	return _c
 }
@@ -222,28 +268,28 @@ func (_c *Scheduler_FindMemPerNode_Call) Return(_a0 []uint64, _a1 error) *Schedu
 	return _c
 }
 
-func (_c *Scheduler_FindMemPerNode_Call) RunAndReturn(run func(context.Context) ([]uint64, error)) *Scheduler_FindMemPerNode_Call {
+func (_c *Scheduler_FindMemPerNode_Call) RunAndReturn(run func(context.Context, ...scheduler.FindSpecOption) ([]uint64, error)) *Scheduler_FindMemPerNode_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindRunningJobByName provides a mock function with given fields: ctx, req
-func (_m *Scheduler) FindRunningJobByName(ctx context.Context, req *scheduler.FindRunningJobByNameRequest) (int, error) {
-	ret := _m.Called(ctx, req)
+// FindRunningJobByName provides a mock function with given fields: ctx, name, user
+func (_m *Scheduler) FindRunningJobByName(ctx context.Context, name string, user string) (int, error) {
+	ret := _m.Called(ctx, name, user)
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *scheduler.FindRunningJobByNameRequest) (int, error)); ok {
-		return rf(ctx, req)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (int, error)); ok {
+		return rf(ctx, name, user)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *scheduler.FindRunningJobByNameRequest) int); ok {
-		r0 = rf(ctx, req)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) int); ok {
+		r0 = rf(ctx, name, user)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *scheduler.FindRunningJobByNameRequest) error); ok {
-		r1 = rf(ctx, req)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, name, user)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -258,14 +304,15 @@ type Scheduler_FindRunningJobByName_Call struct {
 
 // FindRunningJobByName is a helper method to define mock.On call
 //   - ctx context.Context
-//   - req *scheduler.FindRunningJobByNameRequest
-func (_e *Scheduler_Expecter) FindRunningJobByName(ctx interface{}, req interface{}) *Scheduler_FindRunningJobByName_Call {
-	return &Scheduler_FindRunningJobByName_Call{Call: _e.mock.On("FindRunningJobByName", ctx, req)}
+//   - name string
+//   - user string
+func (_e *Scheduler_Expecter) FindRunningJobByName(ctx interface{}, name interface{}, user interface{}) *Scheduler_FindRunningJobByName_Call {
+	return &Scheduler_FindRunningJobByName_Call{Call: _e.mock.On("FindRunningJobByName", ctx, name, user)}
 }
 
-func (_c *Scheduler_FindRunningJobByName_Call) Run(run func(ctx context.Context, req *scheduler.FindRunningJobByNameRequest)) *Scheduler_FindRunningJobByName_Call {
+func (_c *Scheduler_FindRunningJobByName_Call) Run(run func(ctx context.Context, name string, user string)) *Scheduler_FindRunningJobByName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*scheduler.FindRunningJobByNameRequest))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
@@ -275,7 +322,7 @@ func (_c *Scheduler_FindRunningJobByName_Call) Return(_a0 int, _a1 error) *Sched
 	return _c
 }
 
-func (_c *Scheduler_FindRunningJobByName_Call) RunAndReturn(run func(context.Context, *scheduler.FindRunningJobByNameRequest) (int, error)) *Scheduler_FindRunningJobByName_Call {
+func (_c *Scheduler_FindRunningJobByName_Call) RunAndReturn(run func(context.Context, string, string) (int, error)) *Scheduler_FindRunningJobByName_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -436,23 +483,30 @@ func (_c *Scheduler_FindTotalMem_Call) RunAndReturn(run func(context.Context) (u
 	return _c
 }
 
-// FindTotalNodes provides a mock function with given fields: ctx
-func (_m *Scheduler) FindTotalNodes(ctx context.Context) (uint64, error) {
-	ret := _m.Called(ctx)
+// FindTotalNodes provides a mock function with given fields: ctx, opts
+func (_m *Scheduler) FindTotalNodes(ctx context.Context, opts ...scheduler.FindSpecOption) (uint64, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 uint64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
-		return rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, ...scheduler.FindSpecOption) (uint64, error)); ok {
+		return rf(ctx, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, ...scheduler.FindSpecOption) uint64); ok {
+		r0 = rf(ctx, opts...)
 	} else {
 		r0 = ret.Get(0).(uint64)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, ...scheduler.FindSpecOption) error); ok {
+		r1 = rf(ctx, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -467,13 +521,21 @@ type Scheduler_FindTotalNodes_Call struct {
 
 // FindTotalNodes is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Scheduler_Expecter) FindTotalNodes(ctx interface{}) *Scheduler_FindTotalNodes_Call {
-	return &Scheduler_FindTotalNodes_Call{Call: _e.mock.On("FindTotalNodes", ctx)}
+//   - opts ...scheduler.FindSpecOption
+func (_e *Scheduler_Expecter) FindTotalNodes(ctx interface{}, opts ...interface{}) *Scheduler_FindTotalNodes_Call {
+	return &Scheduler_FindTotalNodes_Call{Call: _e.mock.On("FindTotalNodes",
+		append([]interface{}{ctx}, opts...)...)}
 }
 
-func (_c *Scheduler_FindTotalNodes_Call) Run(run func(ctx context.Context)) *Scheduler_FindTotalNodes_Call {
+func (_c *Scheduler_FindTotalNodes_Call) Run(run func(ctx context.Context, opts ...scheduler.FindSpecOption)) *Scheduler_FindTotalNodes_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		variadicArgs := make([]scheduler.FindSpecOption, len(args)-1)
+		for i, a := range args[1:] {
+			if a != nil {
+				variadicArgs[i] = a.(scheduler.FindSpecOption)
+			}
+		}
+		run(args[0].(context.Context), variadicArgs...)
 	})
 	return _c
 }
@@ -483,7 +545,7 @@ func (_c *Scheduler_FindTotalNodes_Call) Return(_a0 uint64, _a1 error) *Schedule
 	return _c
 }
 
-func (_c *Scheduler_FindTotalNodes_Call) RunAndReturn(run func(context.Context) (uint64, error)) *Scheduler_FindTotalNodes_Call {
+func (_c *Scheduler_FindTotalNodes_Call) RunAndReturn(run func(context.Context, ...scheduler.FindSpecOption) (uint64, error)) *Scheduler_FindTotalNodes_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -583,13 +645,13 @@ func (_c *Scheduler_Submit_Call) RunAndReturn(run func(context.Context, *schedul
 	return _c
 }
 
-// TopUp provides a mock function with given fields: ctx, req
-func (_m *Scheduler) TopUp(ctx context.Context, req *scheduler.TopUpRequest) error {
-	ret := _m.Called(ctx, req)
+// TopUp provides a mock function with given fields: ctx, name, additionalTime
+func (_m *Scheduler) TopUp(ctx context.Context, name string, additionalTime uint64) error {
+	ret := _m.Called(ctx, name, additionalTime)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *scheduler.TopUpRequest) error); ok {
-		r0 = rf(ctx, req)
+	if rf, ok := ret.Get(0).(func(context.Context, string, uint64) error); ok {
+		r0 = rf(ctx, name, additionalTime)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -604,14 +666,15 @@ type Scheduler_TopUp_Call struct {
 
 // TopUp is a helper method to define mock.On call
 //   - ctx context.Context
-//   - req *scheduler.TopUpRequest
-func (_e *Scheduler_Expecter) TopUp(ctx interface{}, req interface{}) *Scheduler_TopUp_Call {
-	return &Scheduler_TopUp_Call{Call: _e.mock.On("TopUp", ctx, req)}
+//   - name string
+//   - additionalTime uint64
+func (_e *Scheduler_Expecter) TopUp(ctx interface{}, name interface{}, additionalTime interface{}) *Scheduler_TopUp_Call {
+	return &Scheduler_TopUp_Call{Call: _e.mock.On("TopUp", ctx, name, additionalTime)}
 }
 
-func (_c *Scheduler_TopUp_Call) Run(run func(ctx context.Context, req *scheduler.TopUpRequest)) *Scheduler_TopUp_Call {
+func (_c *Scheduler_TopUp_Call) Run(run func(ctx context.Context, name string, additionalTime uint64)) *Scheduler_TopUp_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*scheduler.TopUpRequest))
+		run(args[0].(context.Context), args[1].(string), args[2].(uint64))
 	})
 	return _c
 }
@@ -621,7 +684,7 @@ func (_c *Scheduler_TopUp_Call) Return(_a0 error) *Scheduler_TopUp_Call {
 	return _c
 }
 
-func (_c *Scheduler_TopUp_Call) RunAndReturn(run func(context.Context, *scheduler.TopUpRequest) error) *Scheduler_TopUp_Call {
+func (_c *Scheduler_TopUp_Call) RunAndReturn(run func(context.Context, string, uint64) error) *Scheduler_TopUp_Call {
 	_c.Call.Return(run)
 	return _c
 }

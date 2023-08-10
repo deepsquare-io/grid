@@ -63,13 +63,54 @@ func (_c *Launcher_Cancel_Call) RunAndReturn(run func(context.Context) error) *L
 	return _c
 }
 
-// RunPhase1 provides a mock function with given fields: ctx, nodes
-func (_m *Launcher) RunPhase1(ctx context.Context, nodes uint64) error {
-	ret := _m.Called(ctx, nodes)
+// GetJobName provides a mock function with given fields:
+func (_m *Launcher) GetJobName() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// Launcher_GetJobName_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetJobName'
+type Launcher_GetJobName_Call struct {
+	*mock.Call
+}
+
+// GetJobName is a helper method to define mock.On call
+func (_e *Launcher_Expecter) GetJobName() *Launcher_GetJobName_Call {
+	return &Launcher_GetJobName_Call{Call: _e.mock.On("GetJobName")}
+}
+
+func (_c *Launcher_GetJobName_Call) Run(run func()) *Launcher_GetJobName_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Launcher_GetJobName_Call) Return(_a0 string) *Launcher_GetJobName_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Launcher_GetJobName_Call) RunAndReturn(run func() string) *Launcher_GetJobName_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RunPhase1 provides a mock function with given fields: ctx
+func (_m *Launcher) RunPhase1(ctx context.Context) error {
+	ret := _m.Called(ctx)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
-		r0 = rf(ctx, nodes)
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -84,14 +125,13 @@ type Launcher_RunPhase1_Call struct {
 
 // RunPhase1 is a helper method to define mock.On call
 //   - ctx context.Context
-//   - nodes uint64
-func (_e *Launcher_Expecter) RunPhase1(ctx interface{}, nodes interface{}) *Launcher_RunPhase1_Call {
-	return &Launcher_RunPhase1_Call{Call: _e.mock.On("RunPhase1", ctx, nodes)}
+func (_e *Launcher_Expecter) RunPhase1(ctx interface{}) *Launcher_RunPhase1_Call {
+	return &Launcher_RunPhase1_Call{Call: _e.mock.On("RunPhase1", ctx)}
 }
 
-func (_c *Launcher_RunPhase1_Call) Run(run func(ctx context.Context, nodes uint64)) *Launcher_RunPhase1_Call {
+func (_c *Launcher_RunPhase1_Call) Run(run func(ctx context.Context)) *Launcher_RunPhase1_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64))
+		run(args[0].(context.Context))
 	})
 	return _c
 }
@@ -101,18 +141,18 @@ func (_c *Launcher_RunPhase1_Call) Return(_a0 error) *Launcher_RunPhase1_Call {
 	return _c
 }
 
-func (_c *Launcher_RunPhase1_Call) RunAndReturn(run func(context.Context, uint64) error) *Launcher_RunPhase1_Call {
+func (_c *Launcher_RunPhase1_Call) RunAndReturn(run func(context.Context) error) *Launcher_RunPhase1_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// RunPhase2 provides a mock function with given fields: ctx, newP, newQ, newProblemSize, newBlockSize, nodes
-func (_m *Launcher) RunPhase2(ctx context.Context, newP uint64, newQ uint64, newProblemSize uint64, newBlockSize uint64, nodes uint64) error {
-	ret := _m.Called(ctx, newP, newQ, newProblemSize, newBlockSize, nodes)
+// RunPhase2 provides a mock function with given fields: ctx, newP, newQ, newProblemSize, newBlockSize
+func (_m *Launcher) RunPhase2(ctx context.Context, newP uint64, newQ uint64, newProblemSize uint64, newBlockSize uint64) error {
+	ret := _m.Called(ctx, newP, newQ, newProblemSize, newBlockSize)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64, uint64, uint64) error); ok {
-		r0 = rf(ctx, newP, newQ, newProblemSize, newBlockSize, nodes)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64, uint64) error); ok {
+		r0 = rf(ctx, newP, newQ, newProblemSize, newBlockSize)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -131,14 +171,13 @@ type Launcher_RunPhase2_Call struct {
 //   - newQ uint64
 //   - newProblemSize uint64
 //   - newBlockSize uint64
-//   - nodes uint64
-func (_e *Launcher_Expecter) RunPhase2(ctx interface{}, newP interface{}, newQ interface{}, newProblemSize interface{}, newBlockSize interface{}, nodes interface{}) *Launcher_RunPhase2_Call {
-	return &Launcher_RunPhase2_Call{Call: _e.mock.On("RunPhase2", ctx, newP, newQ, newProblemSize, newBlockSize, nodes)}
+func (_e *Launcher_Expecter) RunPhase2(ctx interface{}, newP interface{}, newQ interface{}, newProblemSize interface{}, newBlockSize interface{}) *Launcher_RunPhase2_Call {
+	return &Launcher_RunPhase2_Call{Call: _e.mock.On("RunPhase2", ctx, newP, newQ, newProblemSize, newBlockSize)}
 }
 
-func (_c *Launcher_RunPhase2_Call) Run(run func(ctx context.Context, newP uint64, newQ uint64, newProblemSize uint64, newBlockSize uint64, nodes uint64)) *Launcher_RunPhase2_Call {
+func (_c *Launcher_RunPhase2_Call) Run(run func(ctx context.Context, newP uint64, newQ uint64, newProblemSize uint64, newBlockSize uint64)) *Launcher_RunPhase2_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64), args[3].(uint64), args[4].(uint64), args[5].(uint64))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64), args[3].(uint64), args[4].(uint64))
 	})
 	return _c
 }
@@ -148,7 +187,7 @@ func (_c *Launcher_RunPhase2_Call) Return(_a0 error) *Launcher_RunPhase2_Call {
 	return _c
 }
 
-func (_c *Launcher_RunPhase2_Call) RunAndReturn(run func(context.Context, uint64, uint64, uint64, uint64, uint64) error) *Launcher_RunPhase2_Call {
+func (_c *Launcher_RunPhase2_Call) RunAndReturn(run func(context.Context, uint64, uint64, uint64, uint64) error) *Launcher_RunPhase2_Call {
 	_c.Call.Return(run)
 	return _c
 }

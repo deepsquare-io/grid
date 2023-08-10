@@ -28,6 +28,7 @@ type BenchmarkIntegrationTestSuite struct {
 }
 
 func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName string) {
+	ctx := context.Background()
 	service := ssh.New(
 		suite.address,
 		suite.pkB64,
@@ -38,16 +39,26 @@ func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName strin
 		suite.publicAddress,
 		"main",
 	)
+	cpusPerNode, err := suite.scheduler.FindCPUsPerNode(ctx)
+	suite.Require().NoError(err)
+	gpusPerNode, err := suite.scheduler.FindGPUsPerNode(ctx)
+	suite.Require().NoError(err)
+	memPerNode, err := suite.scheduler.FindMemPerNode(ctx)
+	suite.Require().NoError(err)
 	suite.impl = benchmark.NewLauncher(
 		"registry-1.deepsquare.run#library/hpc-benchmarks:21.4-hpl",
 		"root",
 		suite.publicAddress,
 		suite.scheduler,
+		1,
+		cpusPerNode,
+		memPerNode,
+		gpusPerNode,
 	)
 }
 
 func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1() {
-	err := suite.impl.RunPhase1(context.Background(), 1)
+	err := suite.impl.RunPhase1(context.Background())
 
 	suite.Require().NoError(err)
 }
@@ -59,7 +70,6 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunPhase2() {
 		2,
 		95000,
 		1024,
-		1,
 	)
 
 	suite.Require().NoError(err)

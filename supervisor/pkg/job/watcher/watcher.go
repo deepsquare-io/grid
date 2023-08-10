@@ -315,10 +315,7 @@ func (w *Watcher) handleClaimNextCancellingJobEvent(
 			if err := try.Do(
 				5, 5*time.Second,
 				func(_ int) error {
-					return w.scheduler.CancelJob(ctx, &scheduler.CancelRequest{
-						Name: hexutil.Encode(event.JobId[:]),
-						User: strings.ToLower(event.CustomerAddr.Hex()),
-					})
+					return w.scheduler.CancelJob(ctx, hexutil.Encode(event.JobId[:]), strings.ToLower(event.CustomerAddr.Hex()))
 				}); err != nil {
 				logger.I.Error("CancelJob failed, abort handleClaimNextCancellingJobEvent", zap.Error(err))
 				return err
@@ -349,10 +346,7 @@ func (w *Watcher) handleClaimNextTopUpEvent(
 	event *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent,
 ) {
 	if err := try.Do(5, 5*time.Second, func(_ int) error {
-		return w.scheduler.TopUp(ctx, &scheduler.TopUpRequest{
-			Name:           hexutil.Encode(event.JobId[:]),
-			AdditionalTime: event.MaxDurationMinute,
-		})
+		return w.scheduler.TopUp(ctx, hexutil.Encode(event.JobId[:]), event.MaxDurationMinute)
 	}); err != nil {
 		logger.I.Error("failed to topup", zap.Error(err))
 	}

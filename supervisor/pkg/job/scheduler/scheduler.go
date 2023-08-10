@@ -39,13 +39,6 @@ type JobDefinition struct {
 	Wait bool
 }
 
-type CancelRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation.
-	User string
-}
-
 type SubmitRequest struct {
 	// Name of the job
 	Name string
@@ -57,18 +50,25 @@ type SubmitRequest struct {
 	*JobDefinition
 }
 
-type TopUpRequest struct {
-	// Name of the job
-	Name string
-	// AdditionalTime is the number of minutes to be added
-	AdditionalTime uint64
+type findSpecOptions struct {
+	onlyResponding bool
+}
+type FindSpecOption func(*findSpecOptions)
+
+func newFindSpecOptions(opts ...FindSpecOption) *findSpecOptions {
+	o := &findSpecOptions{
+		onlyResponding: false,
+	}
+	for _, opt := range opts {
+		opt(o)
+	}
+	return o
 }
 
-type FindRunningJobByNameRequest struct {
-	// Name of the job
-	Name string
-	// User is a UNIX User used for impersonation. This user should be SLURM admin.
-	User string
+func WithOnlyResponding() FindSpecOption {
+	return func(fso *findSpecOptions) {
+		fso.onlyResponding = true
+	}
 }
 
 type Scheduler interface {
@@ -77,15 +77,15 @@ type Scheduler interface {
 	// Submit a job to the scheduler.
 	Submit(ctx context.Context, req *SubmitRequest) (string, error)
 	// CancelJob kills a job.
-	CancelJob(ctx context.Context, req *CancelRequest) error
-	// TopUp increases the time limit of a job.
-	TopUp(ctx context.Context, req *TopUpRequest) error
+	CancelJob(ctx context.Context, name string, user string) error
+	// TopUp increases the time limit in minutes of a job.
+	TopUp(ctx context.Context, name string, additionalTime uint64) error
 	// Find the memory (MB) per node
-	FindMemPerNode(ctx context.Context) ([]uint64, error)
+	FindMemPerNode(ctx context.Context, opts ...FindSpecOption) ([]uint64, error)
 	// Find the GPU per node.
-	FindGPUsPerNode(ctx context.Context) ([]uint64, error)
+	FindGPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]uint64, error)
 	// Find the CPU per node.
-	FindCPUsPerNode(ctx context.Context) ([]uint64, error)
+	FindCPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]uint64, error)
 	// Find the total number of memory (MB) available
 	FindTotalMem(ctx context.Context) (uint64, error)
 	// Find the total number of GPUs available.
@@ -93,11 +93,12 @@ type Scheduler interface {
 	// Find the total number of CPUs available.
 	FindTotalCPUs(ctx context.Context) (uint64, error)
 	// Find the total number of nodes available.
-	FindTotalNodes(ctx context.Context) (uint64, error)
+	FindTotalNodes(ctx context.Context, opts ...FindSpecOption) (uint64, error)
 	// FindRunningJobByName find a running job using squeue.
 	FindRunningJobByName(
 		ctx context.Context,
-		req *FindRunningJobByNameRequest,
+		name string,
+		user string,
 	) (int, error)
 }
 

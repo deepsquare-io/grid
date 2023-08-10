@@ -62,7 +62,7 @@ func NewPhase1Handler(benchmark Launcher) http.HandlerFunc {
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
-			if err := benchmark.RunPhase2(ctx, optimal.P, optimal.Q, optimal.ProblemSize, optimal.NB, nodes); err != nil {
+			if err := benchmark.RunPhase2(ctx, optimal.P, optimal.Q, optimal.ProblemSize, optimal.NB); err != nil {
 				logger.I.Fatal(
 					"phase2 benchmark failed or failed to be tracked",
 					zap.Error(err),
@@ -146,6 +146,5 @@ func NewPhase2Handler(
 				logger.I.Fatal("failed to register", zap.Error(err))
 			}
 		}()
-
 	}
 }

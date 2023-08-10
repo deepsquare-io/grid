@@ -405,8 +405,8 @@ func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEvent() {
 		Return(status, nil)
 	suite.metaScheduler.EXPECT().GetProviderAddress().Return(fixtureCancellingEvent.ProviderAddr)
 	suite.scheduler.EXPECT().
-		CancelJob(mock.Anything, mock.Anything).
-		RunAndReturn(func(ctx context.Context, cr *scheduler.CancelRequest) error {
+		CancelJob(mock.Anything, mock.Anything, mock.Anything).
+		RunAndReturn(func(ctx context.Context, s1, s2 string) error {
 			status = metascheduler.JobStatusCancelled
 			return nil
 		})
@@ -452,7 +452,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEventIgnoresEvent(
 func (suite *WatcherTestSuite) TestWatchClaimNextTopUpJobEvent() {
 	// Arrange
 	suite.arrangeEmitClaimNextTopUpJobEvent(fixtureClaimNextTopUpJobEvent)
-	suite.scheduler.EXPECT().TopUp(mock.Anything, mock.Anything).Return(nil)
+	suite.scheduler.EXPECT().TopUp(mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	suite.metaScheduler.EXPECT().
 		GetProviderAddress().
 		Return(fixtureClaimNextTopUpJobEvent.ProviderAddr)

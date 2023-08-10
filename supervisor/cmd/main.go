@@ -62,10 +62,11 @@ var (
 	nvidiaSMI string
 	partition string
 
-	benchmarkImage      string
-	benchmarkSingleNode bool
-	benchmarkDisable    bool
-	benchmarkRunAs      string
+	benchmarkImage        string
+	benchmarkSingleNode   bool
+	benchmarkDisable      bool
+	benchmarkRunAs        string
+	benchmarkUnresponsive bool
 
 	trace bool
 )
@@ -232,8 +233,10 @@ var flags = []cli.Flag{
 		Category:    "Slurm:",
 	},
 	&cli.StringFlag{
-		Name:        "slurm.partition",
-		Usage:       "Slurm partition used for jobs and registering.",
+		Name: "slurm.partition",
+		Usage: `Slurm partition used for jobs and registering.
+
+All the specifications returned by 'scontrol show partition' will be registered to the blockchain.`,
 		Destination: &partition,
 		Value:       "main",
 		EnvVars:     []string{"SLURM_PARTITION"},
@@ -269,6 +272,14 @@ var flags = []cli.Flag{
 		Destination: &benchmarkSingleNode,
 		Value:       false,
 		EnvVars:     []string{"BENCHMARK_SINGLE_NODE"},
+		Category:    "Benchmark:",
+	},
+	&cli.BoolFlag{
+		Name:        "benchmark.include-unresponsive",
+		Usage:       "Force benchmark on unresponsive nodes (sinfo --responding --partition=<partition>).",
+		Destination: &benchmarkUnresponsive,
+		Value:       false,
+		EnvVars:     []string{"BENCHMARK_UNRESPONSIVE"},
 		Category:    "Benchmark:",
 	},
 	&cli.BoolFlag{
@@ -414,7 +425,45 @@ func Init(ctx context.Context) *Container {
 		}
 		opts = append(opts, grpc.Creds(creds))
 	}
-	bl := benchmark.NewLauncher(benchmarkImage, benchmarkRunAs, publicAddress, slurmScheduler)
+	if err := slurmScheduler.HealthCheck(ctx); err != nil {
+		logger.I.Fatal("failed to check slurm health", zap.Error(err))
+	}
+	logger.I.Info("searching for cluster specs...")
+	var benchmarkOpts []scheduler.FindSpecOption
+	if !benchmarkUnresponsive {
+		benchmarkOpts = append(benchmarkOpts, scheduler.WithOnlyResponding())
+	}
+	var benchmarkNodes uint64
+	if benchmarkSingleNode {
+		benchmarkNodes = 1
+	} else {
+		benchmarkNodes, err = slurmScheduler.FindTotalNodes(ctx, benchmarkOpts...)
+		if err != nil {
+			logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
+		}
+	}
+	cpusPerNode, err := slurmScheduler.FindCPUsPerNode(ctx, benchmarkOpts...)
+	if err != nil {
+		logger.I.Fatal("failed to check cpus per node", zap.Error(err))
+	}
+	gpusPerNode, err := slurmScheduler.FindGPUsPerNode(ctx, benchmarkOpts...)
+	if err != nil {
+		logger.I.Fatal("failed to check gpus per node", zap.Error(err))
+	}
+	memPerNode, err := slurmScheduler.FindMemPerNode(ctx, benchmarkOpts...)
+	if err != nil {
+		logger.I.Fatal("failed to check mem per node", zap.Error(err))
+	}
+	bl := benchmark.NewLauncher(
+		benchmarkImage,
+		benchmarkRunAs,
+		publicAddress,
+		slurmScheduler,
+		benchmarkNodes,
+		cpusPerNode,
+		memPerNode,
+		gpusPerNode,
+	)
 	server := server.New(
 		metaScheduler,
 		resourceManager,
@@ -446,23 +495,14 @@ var app = &cli.App{
 		// Launch benchmark which will register the node
 		if !benchmarkDisable {
 			go func() {
-				if err := container.scheduler.HealthCheck(ctx); err != nil {
-					logger.I.Fatal("failed to check slurm health", zap.Error(err))
-				}
+
 				logger.I.Info("cancelling old benchmarks")
 				if err := container.benchmarkLauncher.Cancel(ctx); err != nil {
 					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
 				}
 				logger.I.Info("launching new benchmarks")
-				nodes, err := container.scheduler.FindTotalNodes(ctx)
-				if err != nil {
-					logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
-				}
-				benchmarkNodes := nodes
-				if benchmarkSingleNode {
-					benchmarkNodes = 1
-				}
-				if err := container.benchmarkLauncher.RunPhase1(ctx, benchmarkNodes); err != nil {
+
+				if err := container.benchmarkLauncher.RunPhase1(ctx); err != nil {
 					logger.I.Fatal(
 						"phase1 benchmark failed or failed to be tracked",
 						zap.Error(err),

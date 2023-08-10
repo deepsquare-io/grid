@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	defaultSInfo     = "sinfo"
 	defaultSCancel   = "scancel"
 	defaultSBatch    = "sbatch"
 	defaultSQueue    = "squeue"
@@ -21,6 +22,12 @@ const (
 )
 
 type SlurmOption func(*Slurm)
+
+func WithSInfo(path string) SlurmOption {
+	return func(s *Slurm) {
+		s.sinfo = path
+	}
+}
 
 func WithSCancel(path string) SlurmOption {
 	return func(s *Slurm) {
@@ -55,6 +62,7 @@ func WithNVidiaSMI(path string) SlurmOption {
 type Slurm struct {
 	Executor
 	adminUser               string
+	sinfo                   string
 	scancel                 string
 	sbatch                  string
 	squeue                  string
@@ -74,6 +82,7 @@ func NewSlurm(
 	s := &Slurm{
 		Executor:                executor,
 		adminUser:               adminUser,
+		sinfo:                   defaultSInfo,
 		scancel:                 defaultSCancel,
 		sbatch:                  defaultSBatch,
 		squeue:                  defaultSQueue,
@@ -89,9 +98,9 @@ func NewSlurm(
 }
 
 // CancelJob kills a job using scancel command.
-func (s *Slurm) CancelJob(ctx context.Context, req *CancelRequest) error {
-	cmd := fmt.Sprintf("%s --name=%s --me", s.scancel, req.Name)
-	out, err := s.ExecAs(ctx, req.User, cmd)
+func (s *Slurm) CancelJob(ctx context.Context, name string, user string) error {
+	cmd := fmt.Sprintf("%s --name=%s --me", s.scancel, name)
+	out, err := s.ExecAs(ctx, user, cmd)
 	if err != nil {
 		logger.I.Error("CancelJob failed with error", zap.Error(err), zap.String("out", out))
 	}
@@ -233,20 +242,16 @@ true
 	return out, nil
 }
 
-// TopUp add additional time to a SLURM job
-func (s *Slurm) TopUp(ctx context.Context, req *TopUpRequest) error {
+func (s *Slurm) TopUp(ctx context.Context, name string, additionalTime uint64) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	// Fetch jobID
-	jobID, err := s.FindRunningJobByName(ctx, &FindRunningJobByNameRequest{
-		Name: req.Name,
-		User: s.adminUser,
-	})
+	jobID, err := s.FindRunningJobByName(ctx, name, s.adminUser)
 	if err != nil {
 		return err
 	}
 
-	cmd := fmt.Sprintf("%s update job %d TimeLimit+=%d", s.scontrol, jobID, req.AdditionalTime)
+	cmd := fmt.Sprintf("%s update job %d TimeLimit+=%d", s.scontrol, jobID, additionalTime)
 	out, err := s.ExecAs(ctx, s.adminUser, cmd)
 	out = strings.TrimSpace(strings.TrimRight(string(out), "\n"))
 	if err != nil {
@@ -270,12 +275,13 @@ func (s *Slurm) HealthCheck(ctx context.Context) error {
 // FindRunningJobByName find a running job using squeue.
 func (s *Slurm) FindRunningJobByName(
 	ctx context.Context,
-	req *FindRunningJobByNameRequest,
+	name string,
+	user string,
 ) (int, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	cmd := fmt.Sprintf("%s --name %s -O JobId:256 --noheader", s.squeue, req.Name)
-	out, err := s.ExecAs(ctx, req.User, cmd)
+	cmd := fmt.Sprintf("%s --name %s -O JobId:256 --noheader", s.squeue, name)
+	out, err := s.ExecAs(ctx, user, cmd)
 	out = strings.TrimSpace(strings.TrimRight(string(out), "\n"))
 	if err != nil {
 		logger.I.Error(
@@ -289,13 +295,17 @@ func (s *Slurm) FindRunningJobByName(
 	return strconv.Atoi(out)
 }
 
-func (s *Slurm) FindMemPerNode(ctx context.Context) ([]uint64, error) {
+func (s *Slurm) FindMemPerNode(ctx context.Context, opts ...FindSpecOption) ([]uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	cmd := fmt.Sprintf(
-		`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s' | sed -E 's/.*CfgTRES=[^ ]*mem=([0-9]+)[^0-9].*/\1/'`,
-		s.scontrol,
-		s.partition,
+	o := newFindSpecOptions(opts...)
+	cmd := fmt.Sprintf(`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s'`, s.scontrol, s.partition)
+	if o.onlyResponding {
+		cmd = fmt.Sprintf(`%s | grep -v NOT_RESPONDING`, cmd)
+	}
+	cmd = fmt.Sprintf(
+		`%s | sed -E 's/.*CfgTRES=[^ ]*mem=([0-9]+)[^0-9].*/\1/'`,
+		cmd,
 	)
 	out, err := s.ExecAs(ctx, s.adminUser, cmd)
 	if err != nil {
@@ -324,13 +334,17 @@ func (s *Slurm) FindMemPerNode(ctx context.Context) ([]uint64, error) {
 	return memPerN, nil
 }
 
-func (s *Slurm) FindGPUsPerNode(ctx context.Context) ([]uint64, error) {
+func (s *Slurm) FindGPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	cmd := fmt.Sprintf(
-		`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s' | sed -E 's|.*CfgTRES=[^ ]*gres/gpu=([0-9]+)[^0-9].*|\1|g'`,
-		s.scontrol,
-		s.partition,
+	o := newFindSpecOptions(opts...)
+	cmd := fmt.Sprintf(`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s'`, s.scontrol, s.partition)
+	if o.onlyResponding {
+		cmd = fmt.Sprintf(`%s | grep -v NOT_RESPONDING`, cmd)
+	}
+	cmd = fmt.Sprintf(
+		`%s | sed -E 's|.*CfgTRES=[^ ]*gres/gpu=([0-9]+)[^0-9].*|\1|g'`,
+		cmd,
 	)
 	out, err := s.ExecAs(ctx, s.adminUser, cmd)
 	if err != nil {
@@ -359,13 +373,17 @@ func (s *Slurm) FindGPUsPerNode(ctx context.Context) ([]uint64, error) {
 	return gpusPerN, nil
 }
 
-func (s *Slurm) FindCPUsPerNode(ctx context.Context) ([]uint64, error) {
+func (s *Slurm) FindCPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	cmd := fmt.Sprintf(
-		`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s' | sed -E 's|.*CfgTRES=[^ ]*cpu=([0-9]+)[^0-9].*|\1|g'`,
-		s.scontrol,
-		s.partition,
+	o := newFindSpecOptions(opts...)
+	cmd := fmt.Sprintf(`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s'`, s.scontrol, s.partition)
+	if o.onlyResponding {
+		cmd = fmt.Sprintf(`%s | grep -v NOT_RESPONDING`, cmd)
+	}
+	cmd = fmt.Sprintf(
+		`%s | sed -E 's|.*CfgTRES=[^ ]*cpu=([0-9]+)[^0-9].*|\1|g'`,
+		cmd,
 	)
 	out, err := s.ExecAs(ctx, s.adminUser, cmd)
 	if err != nil {
@@ -487,14 +505,24 @@ func (s *Slurm) FindTotalGPUs(ctx context.Context) (uint64, error) {
 	return gpu, nil
 }
 
-func (s *Slurm) FindTotalNodes(ctx context.Context) (uint64, error) {
+func (s *Slurm) FindTotalNodes(ctx context.Context, opts ...FindSpecOption) (uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	cmd := fmt.Sprintf(
-		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*node=([0-9]+)[^0-9].*|\1|g'`,
-		s.scontrol,
-		s.partition,
-	)
+	o := newFindSpecOptions(opts...)
+	var cmd string
+	if o.onlyResponding {
+		cmd = fmt.Sprintf(
+			`%s --partition='%s' --responding --Format=Nodes:10 --noheader`,
+			s.sinfo,
+			s.partition,
+		)
+	} else {
+		cmd = fmt.Sprintf(
+			`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*node=([0-9]+)[^0-9].*|\1|g'`,
+			s.scontrol,
+			s.partition,
+		)
+	}
 	out, err := s.ExecAs(ctx, s.adminUser, cmd)
 	if err != nil {
 		logger.I.Error(
@@ -505,7 +533,7 @@ func (s *Slurm) FindTotalNodes(ctx context.Context) (uint64, error) {
 		return 0, err
 	}
 
-	mem, err := strconv.ParseUint(strings.TrimSpace(out), 10, 64)
+	ret, err := strconv.ParseUint(strings.TrimSpace(out), 10, 64)
 	if err != nil {
 		logger.I.Error(
 			"FindTotalNodes failed with error",
@@ -515,5 +543,5 @@ func (s *Slurm) FindTotalNodes(ctx context.Context) (uint64, error) {
 		return 0, err
 	}
 
-	return mem, nil
+	return ret, nil
 }

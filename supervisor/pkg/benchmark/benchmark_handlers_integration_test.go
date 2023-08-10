@@ -41,7 +41,7 @@ func TestPhase1Handler(t *testing.T) {
 	launcher.EXPECT().Verify([]byte("SECRET")).Return(true)
 	// Expect to launch phase 2
 	launcher.EXPECT().
-		RunPhase2(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		RunPhase2(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(nil)
 
 	// Arrangements to handle race conditions and asserts

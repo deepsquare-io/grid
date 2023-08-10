@@ -27,14 +27,6 @@ type BenchmarkLauncherTestSuite struct {
 func (suite *BenchmarkLauncherTestSuite) SetupSubTest() {
 	suite.scheduler = mocks.NewScheduler(suite.T())
 	suite.secretManager = mocks.NewSecretManager(suite.T())
-
-	suite.impl = benchmark.NewLauncher(
-		"/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh",
-		admin,
-		"supervisor.example.com:3000",
-		suite.scheduler,
-		benchmark.WithSecretManager(suite.secretManager),
-	)
 }
 
 func (suite *BenchmarkLauncherTestSuite) TestRunPhase1() {
@@ -54,9 +46,9 @@ func (suite *BenchmarkLauncherTestSuite) TestRunPhase1() {
 			memPerNode:  128460,
 			nodes:       1,
 			expectedSubmitRequest: scheduler.SubmitRequest{
-				Name:   suite.impl.GetJobName(),
+				Name:   "benchmark-PImgV9iURiyb7GUxHstZRO4Txx1aPFR41roqHCXwBoE",
 				User:   admin,
-				Prefix: suite.impl.GetJobName(),
+				Prefix: "benchmark-PImgV9iURiyb7GUxHstZRO4Txx1aPFR41roqHCXwBoE",
 				JobDefinition: &scheduler.JobDefinition{
 					NTasks:        4,
 					NTasksPerNode: 4,
@@ -163,9 +155,9 @@ curl -sS \
 			memPerNode:  128460,
 			nodes:       1,
 			expectedSubmitRequest: scheduler.SubmitRequest{
-				Name:   suite.impl.GetJobName(),
+				Name:   "benchmark-PImgV9iURiyb7GUxHstZRO4Txx1aPFR41roqHCXwBoE",
 				User:   admin,
-				Prefix: suite.impl.GetJobName(),
+				Prefix: "benchmark-PImgV9iURiyb7GUxHstZRO4Txx1aPFR41roqHCXwBoE",
 				JobDefinition: &scheduler.JobDefinition{
 					NTasks:        4,
 					NTasksPerNode: 4,
@@ -269,9 +261,9 @@ curl -sS \
 			memPerNode:  128460,
 			nodes:       2,
 			expectedSubmitRequest: scheduler.SubmitRequest{
-				Name:   suite.impl.GetJobName(),
+				Name:   "benchmark-PImgV9iURiyb7GUxHstZRO4Txx1aPFR41roqHCXwBoE",
 				User:   admin,
-				Prefix: suite.impl.GetJobName(),
+				Prefix: "benchmark-PImgV9iURiyb7GUxHstZRO4Txx1aPFR41roqHCXwBoE",
 				JobDefinition: &scheduler.JobDefinition{
 					NTasks:        4,
 					NTasksPerNode: 2,
@@ -372,22 +364,24 @@ curl -sS \
 
 	for _, tt := range tests {
 		suite.Run(tt.title, func() {
+			suite.impl = benchmark.NewLauncher(
+				"/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh",
+				admin,
+				"supervisor.example.com:3000",
+				suite.scheduler,
+				tt.nodes,
+				[]uint64{tt.cpusPerNode},
+				[]uint64{tt.memPerNode},
+				[]uint64{tt.gpusPerNode},
+				benchmark.WithSecretManager(suite.secretManager),
+			)
 			suite.secretManager.EXPECT().Get().Return([]byte("SECRET"))
-			suite.scheduler.EXPECT().
-				FindCPUsPerNode(mock.Anything).
-				Return([]uint64{tt.cpusPerNode}, nil)
-			suite.scheduler.EXPECT().
-				FindGPUsPerNode(mock.Anything).
-				Return([]uint64{tt.gpusPerNode}, nil)
-			suite.scheduler.EXPECT().
-				FindMemPerNode(mock.Anything).
-				Return([]uint64{tt.memPerNode}, nil)
 			suite.scheduler.EXPECT().
 				Submit(mock.Anything, &tt.expectedSubmitRequest).
 				Return("success", nil)
 
 			// Act
-			err := suite.impl.RunPhase1(context.Background(), tt.nodes)
+			err := suite.impl.RunPhase1(context.Background())
 
 			// Assert
 			suite.NoError(err)

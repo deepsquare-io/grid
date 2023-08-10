@@ -42,22 +42,18 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 func (suite *ServiceTestSuite) TestCancel() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
-	req := &scheduler.CancelRequest{
-		Name: name,
-		User: user,
-	}
 	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		user,
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "scancel") &&
-				strings.Contains(cmd, req.Name)
+				strings.Contains(cmd, name)
 		}),
 	).Return("ok", nil)
 	ctx := context.Background()
 
 	// Act
-	err := suite.impl.CancelJob(ctx, req)
+	err := suite.impl.CancelJob(ctx, name, user)
 
 	// Assert
 	suite.NoError(err)
@@ -114,16 +110,13 @@ func (suite *ServiceTestSuite) TestTopUp() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	jobID := "123"
-	req := &scheduler.TopUpRequest{
-		Name:           name,
-		AdditionalTime: 30,
-	}
+	additionalTime := uint64(30)
 	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		admin,
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "squeue") &&
-				strings.Contains(cmd, req.Name)
+				strings.Contains(cmd, name)
 		}),
 	).Return(jobID, nil)
 	suite.ssh.EXPECT().ExecAs(
@@ -132,13 +125,13 @@ func (suite *ServiceTestSuite) TestTopUp() {
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "scontrol") &&
 				strings.Contains(cmd, jobID) &&
-				strings.Contains(cmd, strconv.FormatUint(req.AdditionalTime, 10))
+				strings.Contains(cmd, strconv.FormatUint(additionalTime, 10))
 		}),
 	).Return("ok", nil)
 	ctx := context.Background()
 
 	// Act
-	err := suite.impl.TopUp(ctx, req)
+	err := suite.impl.TopUp(ctx, name, additionalTime)
 
 	// Assert
 	suite.NoError(err)
@@ -166,10 +159,6 @@ func (suite *ServiceTestSuite) TestFindRunningJobByName() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	jobID := 123
-	req := &scheduler.FindRunningJobByNameRequest{
-		Name: name,
-		User: user,
-	}
 	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		user,
@@ -181,7 +170,7 @@ func (suite *ServiceTestSuite) TestFindRunningJobByName() {
 	ctx := context.Background()
 
 	// Act
-	out, err := suite.impl.FindRunningJobByName(ctx, req)
+	out, err := suite.impl.FindRunningJobByName(ctx, name, user)
 
 	// Assert
 	suite.NoError(err)

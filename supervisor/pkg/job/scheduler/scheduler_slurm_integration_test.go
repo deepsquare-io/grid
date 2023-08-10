@@ -79,10 +79,7 @@ func (suite *ServiceIntegrationTestSuite) TestCancel() {
 	req := suite.submitJob()
 
 	// Act
-	err := suite.impl.CancelJob(ctx, &scheduler.CancelRequest{
-		Name: req.Name,
-		User: suite.user,
-	})
+	err := suite.impl.CancelJob(ctx, req.Name, suite.user)
 
 	// Assert
 	suite.NoError(err)
@@ -94,10 +91,7 @@ func (suite *ServiceIntegrationTestSuite) TestTopUp() {
 	req := suite.submitJob()
 
 	// Act
-	err := suite.impl.TopUp(ctx, &scheduler.TopUpRequest{
-		Name:           req.Name,
-		AdditionalTime: 5,
-	})
+	err := suite.impl.TopUp(ctx, req.Name, 5)
 
 	// Assert
 	suite.NoError(err)
