@@ -27,6 +27,7 @@ GLOBAL OPTIONS:
    --benchmark.include-unresponsive  Force benchmark on unresponsive nodes (sinfo --responding --partition=<partition>). (default: false) [$BENCHMARK_UNRESPONSIVE]
    --benchmark.run-as value          User used for benchmark (default: "root") [$BENCHMARK_RUN_AS]
    --benchmark.single-node           Force single node benchmark. (default: false) [$BENCHMARK_SINGLE_NODE]
+   --benchmark.time-limit value      Time limit (syntax is golang duration style). (default: 24h0m0s) [$BENCHMARK_TIME_LIMIT]
 
    MetaScheduler:
 

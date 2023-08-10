@@ -296,7 +296,7 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		Usage:       "Time limit (syntax is golang duration style).",
 		Destination: &benchmarkTimeLimit,
 		Value:       24 * time.Hour,
-		EnvVars:     []string{"BENCHMARK_DURATION"},
+		EnvVars:     []string{"BENCHMARK_TIME_LIMIT"},
 		Category:    "Benchmark:",
 	},
 	&cli.BoolFlag{
