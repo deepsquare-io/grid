@@ -59,6 +59,7 @@ var (
 	sbatch    string
 	squeue    string
 	scontrol  string
+	sinfo     string
 	nvidiaSMI string
 	partition string
 
@@ -233,6 +234,14 @@ var flags = []cli.Flag{
 		Category:    "Slurm:",
 	},
 	&cli.StringFlag{
+		Name:        "slurm.info",
+		Value:       "/usr/bin/sinfo",
+		Usage:       "Server-side SLURM info path.",
+		Destination: &sinfo,
+		EnvVars:     []string{"SLURM_SINFO_PATH"},
+		Category:    "Slurm:",
+	},
+	&cli.StringFlag{
 		Name: "slurm.partition",
 		Usage: `Slurm partition used for jobs and registering.
 
@@ -392,6 +401,7 @@ func Init(ctx context.Context) *Container {
 		scheduler.WithSCancel(scancel),
 		scheduler.WithSControl(scontrol),
 		scheduler.WithSQueue(squeue),
+		scheduler.WithSInfo(sinfo),
 		scheduler.WithNVidiaSMI(nvidiaSMI),
 	)
 	resourceManager := lock.NewResourceManager()

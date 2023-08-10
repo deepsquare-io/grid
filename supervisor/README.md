@@ -22,9 +22,11 @@ GLOBAL OPTIONS:
 
    Benchmark:
 
-   --benchmark.disable      Disable benchmark (and registering). (default: false) [$BENCHMARK_DISABLE]
-   --benchmark.image value  Docker image used for benchmark (default: "registry-1.deepsquare.run#library/hpc-benchmarks:21.4-hpl") [$BENCHMARK_IMAGE]
-   --benchmark.single-node  Force single node benchmark. (default: false) [$BENCHMARK_SINGLE_NODE]
+   --benchmark.disable               Disable benchmark (and registering). (default: false) [$BENCHMARK_DISABLE]
+   --benchmark.image value           Docker image used for benchmark (default: "registry-1.deepsquare.run#library/hpc-benchmarks:21.4-hpl") [$BENCHMARK_IMAGE]
+   --benchmark.include-unresponsive  Force benchmark on unresponsive nodes (sinfo --responding --partition=<partition>). (default: false) [$BENCHMARK_UNRESPONSIVE]
+   --benchmark.run-as value          User used for benchmark (default: "root") [$BENCHMARK_RUN_AS]
+   --benchmark.single-node           Force single node benchmark. (default: false) [$BENCHMARK_SINGLE_NODE]
 
    MetaScheduler:
 
@@ -58,10 +60,13 @@ GLOBAL OPTIONS:
 
    Slurm:
 
-   --slurm.batch value              Server-side SLURM sbatch path. (default: "/usr/bin/sbatch") [$SLURM_SBATCH_PATH]
-   --slurm.cancel value             Server-side SLURM scancel path. (default: "/usr/bin/scancel") [$SLURM_SCANCEL_PATH]
-   --slurm.control value            Server-side SLURM scontrol path. (default: "/usr/bin/scontrol") [$SLURM_SCONTROL_PATH]
-   --slurm.partition value          Slurm partition used for jobs and registering. (default: "main") [$SLURM_PARTITION]
+   --slurm.batch value      Server-side SLURM sbatch path. (default: "/usr/bin/sbatch") [$SLURM_SBATCH_PATH]
+   --slurm.cancel value     Server-side SLURM scancel path. (default: "/usr/bin/scancel") [$SLURM_SCANCEL_PATH]
+   --slurm.control value    Server-side SLURM scontrol path. (default: "/usr/bin/scontrol") [$SLURM_SCONTROL_PATH]
+   --slurm.info value       Server-side SLURM info path. (default: "/usr/bin/sinfo") [$SLURM_SINFO_PATH]
+   --slurm.partition value  Slurm partition used for jobs and registering.
+
+All the specifications returned by 'scontrol show partition' will be registered to the blockchain. (default: "main") [$SLURM_PARTITION]
    --slurm.squeue value             Server-side SLURM squeue path. (default: "/usr/bin/squeue") [$SLURM_SQUEUE_PATH]
    --slurm.ssh.address value        Address of the Slurm login node. [$SLURM_SSH_ADDRESS]
    --slurm.ssh.admin-user scontrol  SLURM admin user used for calling scontrol commands. [$SLURM_SSH_ADMIN_USER]
