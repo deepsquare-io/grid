@@ -6,6 +6,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
@@ -54,6 +55,7 @@ func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName strin
 		cpusPerNode,
 		memPerNode,
 		gpusPerNode,
+		time.Hour,
 	)
 }
 

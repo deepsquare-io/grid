@@ -67,6 +67,7 @@ var (
 	benchmarkDisable      bool
 	benchmarkRunAs        string
 	benchmarkUnresponsive bool
+	benchmarkTimeLimit    time.Duration
 
 	trace bool
 )
@@ -288,6 +289,14 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		Destination: &benchmarkUnresponsive,
 		Value:       false,
 		EnvVars:     []string{"BENCHMARK_UNRESPONSIVE"},
+		Category:    "Benchmark:",
+	},
+	&cli.DurationFlag{
+		Name:        "benchmark.time-limit",
+		Usage:       "Time limit (syntax is golang duration style).",
+		Destination: &benchmarkTimeLimit,
+		Value:       24 * time.Hour,
+		EnvVars:     []string{"BENCHMARK_DURATION"},
 		Category:    "Benchmark:",
 	},
 	&cli.BoolFlag{
@@ -514,6 +523,7 @@ var app = &cli.App{
 			cpusPerNode,
 			memPerNode,
 			gpusPerNode,
+			benchmarkTimeLimit,
 		)
 		container.server.AddBenchmarkRoutes(
 			container.metascheduler,

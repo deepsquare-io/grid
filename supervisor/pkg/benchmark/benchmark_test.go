@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks/mocksecret"
@@ -374,6 +375,7 @@ curl -sS \
 				[]uint64{tt.cpusPerNode},
 				[]uint64{tt.memPerNode},
 				[]uint64{tt.gpusPerNode},
+				time.Hour,
 				benchmark.WithSecretManager(suite.secretManager),
 			)
 			suite.secretManager.EXPECT().Get().Return([]byte("SECRET"))

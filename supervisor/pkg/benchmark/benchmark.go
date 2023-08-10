@@ -69,6 +69,7 @@ type launcher struct {
 	cpusPerNode             []uint64
 	memPerNode              []uint64
 	gpusPerNode             []uint64
+	timeLimit               time.Duration
 }
 
 type BenchmarkParams struct {
@@ -98,6 +99,7 @@ func NewLauncher(
 	cpusPerNode []uint64,
 	memPerNode []uint64,
 	gpusPerNode []uint64,
+	timeLimit time.Duration,
 	opts ...LauncherOption,
 ) Launcher {
 	l := &launcher{
@@ -109,6 +111,7 @@ func NewLauncher(
 		cpusPerNode:             cpusPerNode,
 		gpusPerNode:             gpusPerNode,
 		memPerNode:              memPerNode,
+		timeLimit:               timeLimit,
 		secretManager:           secret.NewManager(),
 	}
 	for _, opt := range opts {
@@ -281,7 +284,7 @@ func (l *launcher) createJobDefinition(
 	jobDefinition.CPUsPerNode = cpusPerNode
 	jobDefinition.GPUsPerNode = gpusPerNode
 	jobDefinition.Memory = utils.Ptr(uint64(0))
-	jobDefinition.TimeLimit = 60
+	jobDefinition.TimeLimit = uint64(l.timeLimit.Minutes())
 	jobDefinition.Wait = true
 
 	return jobDefinition, nil
