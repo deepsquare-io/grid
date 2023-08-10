@@ -12,7 +12,6 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/debug"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/gridlogger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
@@ -310,12 +309,11 @@ All the specifications returned by 'scontrol show partition' will be registered 
 
 // Container stores the instances for dependency injection.
 type Container struct {
-	server            *http.Server
-	sbatchAPI         pkgsbatch.Client
-	metascheduler     metascheduler.MetaScheduler
-	scheduler         scheduler.Scheduler
-	jobWatcher        *watcher.Watcher
-	benchmarkLauncher benchmark.Launcher
+	server        *server.Server
+	sbatchAPI     pkgsbatch.Client
+	metascheduler metascheduler.MetaScheduler
+	scheduler     scheduler.Scheduler
+	jobWatcher    *watcher.Watcher
 }
 
 func Init(ctx context.Context) *Container {
@@ -438,58 +436,19 @@ func Init(ctx context.Context) *Container {
 	if err := slurmScheduler.HealthCheck(ctx); err != nil {
 		logger.I.Fatal("failed to check slurm health", zap.Error(err))
 	}
-	logger.I.Info("searching for cluster specs...")
-	var benchmarkOpts []scheduler.FindSpecOption
-	if !benchmarkUnresponsive {
-		benchmarkOpts = append(benchmarkOpts, scheduler.WithOnlyResponding())
-	}
-	var benchmarkNodes uint64
-	if benchmarkSingleNode {
-		benchmarkNodes = 1
-	} else {
-		benchmarkNodes, err = slurmScheduler.FindTotalNodes(ctx, benchmarkOpts...)
-		if err != nil {
-			logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
-		}
-	}
-	cpusPerNode, err := slurmScheduler.FindCPUsPerNode(ctx, benchmarkOpts...)
-	if err != nil {
-		logger.I.Fatal("failed to check cpus per node", zap.Error(err))
-	}
-	gpusPerNode, err := slurmScheduler.FindGPUsPerNode(ctx, benchmarkOpts...)
-	if err != nil {
-		logger.I.Fatal("failed to check gpus per node", zap.Error(err))
-	}
-	memPerNode, err := slurmScheduler.FindMemPerNode(ctx, benchmarkOpts...)
-	if err != nil {
-		logger.I.Fatal("failed to check mem per node", zap.Error(err))
-	}
-	bl := benchmark.NewLauncher(
-		benchmarkImage,
-		benchmarkRunAs,
-		publicAddress,
-		slurmScheduler,
-		benchmarkNodes,
-		cpusPerNode,
-		memPerNode,
-		gpusPerNode,
-	)
 	server := server.New(
 		metaScheduler,
 		resourceManager,
-		bl,
-		slurmScheduler,
 		slurmSSHB64PK,
 		opts...,
 	)
 
 	return &Container{
-		sbatchAPI:         sbatchClient,
-		metascheduler:     metaScheduler,
-		scheduler:         slurmScheduler,
-		jobWatcher:        watcher,
-		server:            server,
-		benchmarkLauncher: bl,
+		sbatchAPI:     sbatchClient,
+		metascheduler: metaScheduler,
+		scheduler:     slurmScheduler,
+		jobWatcher:    watcher,
+		server:        server,
 	}
 }
 
@@ -498,21 +457,80 @@ var app = &cli.App{
 	Version: version,
 	Usage:   "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
 	Flags:   flags,
-	Action: func(cCtx *cli.Context) error {
+	Action: func(cCtx *cli.Context) (err error) {
 		ctx := cCtx.Context
 		container := Init(ctx)
+
+		go func() {
+			logger.I.Info(
+				"listening",
+				zap.String("address", listenAddress),
+				zap.String("version", version),
+			)
+
+			// gRPC server
+			lis, err := net.Listen("tcp", listenAddress)
+			if err != nil {
+				logger.I.Fatal("failed to listen", zap.Error(err))
+			}
+
+			if err := container.server.Serve(lis); err != nil {
+				logger.I.Fatal("http server crashed", zap.Error(err))
+			}
+		}()
+
+		logger.I.Info("searching for cluster specs...")
+		var benchmarkOpts []scheduler.FindSpecOption
+		if !benchmarkUnresponsive {
+			benchmarkOpts = append(benchmarkOpts, scheduler.WithOnlyResponding())
+		}
+		var benchmarkNodes uint64
+		if benchmarkSingleNode {
+			benchmarkNodes = 1
+		} else {
+			benchmarkNodes, err = container.scheduler.FindTotalNodes(ctx, benchmarkOpts...)
+			if err != nil {
+				logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
+			}
+		}
+		cpusPerNode, err := container.scheduler.FindCPUsPerNode(ctx, benchmarkOpts...)
+		if err != nil {
+			logger.I.Fatal("failed to check cpus per node", zap.Error(err))
+		}
+		gpusPerNode, err := container.scheduler.FindGPUsPerNode(ctx, benchmarkOpts...)
+		if err != nil {
+			logger.I.Fatal("failed to check gpus per node", zap.Error(err))
+		}
+		memPerNode, err := container.scheduler.FindMemPerNode(ctx, benchmarkOpts...)
+		if err != nil {
+			logger.I.Fatal("failed to check mem per node", zap.Error(err))
+		}
+		bl := benchmark.NewLauncher(
+			benchmarkImage,
+			benchmarkRunAs,
+			publicAddress,
+			container.scheduler,
+			benchmarkNodes,
+			cpusPerNode,
+			memPerNode,
+			gpusPerNode,
+		)
+		container.server.AddBenchmarkRoutes(
+			container.metascheduler,
+			container.scheduler,
+			bl,
+		)
 
 		// Launch benchmark which will register the node
 		if !benchmarkDisable {
 			go func() {
-
 				logger.I.Info("cancelling old benchmarks")
-				if err := container.benchmarkLauncher.Cancel(ctx); err != nil {
+				if err := bl.Cancel(ctx); err != nil {
 					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
 				}
 				logger.I.Info("launching new benchmarks")
 
-				if err := container.benchmarkLauncher.RunPhase1(ctx); err != nil {
+				if err := bl.RunPhase1(ctx); err != nil {
 					logger.I.Fatal(
 						"phase1 benchmark failed or failed to be tracked",
 						zap.Error(err),
@@ -523,27 +541,7 @@ var app = &cli.App{
 			logger.I.Warn("benchmark disabled, will not register to the smart-contract")
 		}
 
-		go debug.WatchGoRoutines(ctx)
-
-		go func(ctx context.Context) {
-			if err := container.jobWatcher.Watch(ctx); err != nil {
-				logger.I.Fatal("jobWatcher crashed", zap.Error(err))
-			}
-		}(ctx)
-
-		logger.I.Info(
-			"listening",
-			zap.String("address", listenAddress),
-			zap.String("version", version),
-		)
-
-		// gRPC server
-		lis, err := net.Listen("tcp", listenAddress)
-		if err != nil {
-			return err
-		}
-
-		return container.server.Serve(lis)
+		return container.jobWatcher.Watch(ctx)
 	},
 }
 

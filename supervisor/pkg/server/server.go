@@ -1,6 +1,7 @@
 package server
 
 import (
+	"net"
 	"net/http"
 	"strings"
 
@@ -20,14 +21,18 @@ import (
 	"google.golang.org/grpc"
 )
 
+type Server struct {
+	http1Router *chi.Mux
+	http2       *http2.Server
+	http1       *http.Server
+}
+
 func New(
 	ms metascheduler.MetaScheduler,
 	resourceManager *lock.ResourceManager,
-	benchmarkLauncher benchmark.Launcher,
-	scheduler scheduler.Scheduler,
 	pkB64 string,
 	opts ...grpc.ServerOption,
-) *http.Server {
+) *Server {
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
@@ -36,10 +41,6 @@ func New(
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
-	r.Route("/benchmark", func(r chi.Router) {
-		r.Put("/phase1", benchmark.NewPhase1Handler(benchmarkLauncher))
-		r.Put("/phase2", benchmark.NewPhase2Handler(benchmarkLauncher, scheduler, ms))
-	})
 	g := grpc.NewServer(opts...)
 	supervisorv1alpha1.RegisterJobAPIServer(
 		g,
@@ -58,7 +59,26 @@ func New(
 	http2Server := &http2.Server{}
 	http1Server := &http.Server{Handler: h2c.NewHandler(rg, http2Server)}
 
-	return http1Server
+	return &Server{
+		http1Router: r,
+		http1:       http1Server,
+		http2:       http2Server,
+	}
+}
+
+func (s *Server) AddBenchmarkRoutes(
+	ms metascheduler.MetaScheduler,
+	scheduler scheduler.Scheduler,
+	benchmarkLauncher benchmark.Launcher,
+) {
+	s.http1Router.Route("/benchmark", func(r chi.Router) {
+		r.Put("/phase1", benchmark.NewPhase1Handler(benchmarkLauncher))
+		r.Put("/phase2", benchmark.NewPhase2Handler(benchmarkLauncher, scheduler, ms))
+	})
+}
+
+func (s *Server) Serve(l net.Listener) error {
+	return s.http1.Serve(l)
 }
 
 func mixedHandler(httpHand http.Handler, grpcHandler http.Handler) http.Handler {

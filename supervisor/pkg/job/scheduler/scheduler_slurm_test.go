@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/stretchr/testify/mock"
@@ -25,12 +25,12 @@ var (
 
 type ServiceTestSuite struct {
 	suite.Suite
-	ssh  *mocks.Executor
+	ssh  *mockscheduler.Executor
 	impl scheduler.Scheduler
 }
 
 func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
-	suite.ssh = mocks.NewExecutor(suite.T())
+	suite.ssh = mockscheduler.NewExecutor(suite.T())
 	suite.impl = scheduler.NewSlurm(
 		suite.ssh,
 		admin,

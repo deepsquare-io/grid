@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mocksecret"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
@@ -19,14 +20,14 @@ var (
 
 type BenchmarkLauncherTestSuite struct {
 	suite.Suite
-	scheduler     *mocks.Scheduler
-	secretManager *mocks.SecretManager
+	scheduler     *mockscheduler.Scheduler
+	secretManager *mocksecret.Manager
 	impl          benchmark.Launcher
 }
 
 func (suite *BenchmarkLauncherTestSuite) SetupSubTest() {
-	suite.scheduler = mocks.NewScheduler(suite.T())
-	suite.secretManager = mocks.NewSecretManager(suite.T())
+	suite.scheduler = mockscheduler.NewScheduler(suite.T())
+	suite.secretManager = mocksecret.NewManager(suite.T())
 }
 
 func (suite *BenchmarkLauncherTestSuite) TestRunPhase1() {
@@ -143,7 +144,7 @@ curl -sS \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: U0VDUkVU" \
-  "https://supervisor.example.com:3000/benchmark/phase1?nodes=1"
+  "https://supervisor.example.com:3000/benchmark/phase1"
 `,
 				},
 			},
@@ -249,7 +250,7 @@ curl -sS \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: U0VDUkVU" \
-  "https://supervisor.example.com:3000/benchmark/phase1?nodes=1"
+  "https://supervisor.example.com:3000/benchmark/phase1"
 `,
 				},
 			},
@@ -355,7 +356,7 @@ curl -sS \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: U0VDUkVU" \
-  "https://supervisor.example.com:3000/benchmark/phase1?nodes=2"
+  "https://supervisor.example.com:3000/benchmark/phase1"
 `,
 				},
 			},

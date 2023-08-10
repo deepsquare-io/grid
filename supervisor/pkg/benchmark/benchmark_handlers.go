@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
@@ -32,17 +31,6 @@ func NewPhase1Handler(benchmark Launcher) http.HandlerFunc {
 				w,
 				fmt.Sprintf("invalid secret: %s", err),
 				http.StatusBadRequest,
-			)
-			return
-		}
-		nodesStr := r.URL.Query().Get("nodes")
-		nodes, err := strconv.ParseUint(nodesStr, 10, 64)
-		if err != nil {
-			logger.I.Error("failed to convert query nodes to int", zap.Error(err))
-			http.Error(
-				w,
-				fmt.Sprintf("internal server error: %s", err),
-				http.StatusInternalServerError,
 			)
 			return
 		}
@@ -78,7 +66,6 @@ func NewPhase1Handler(benchmark Launcher) http.HandlerFunc {
 				zap.Uint64("q", optimal.Q),
 				zap.Uint64("n", optimal.ProblemSize),
 				zap.Uint64("nb", optimal.NB),
-				zap.Uint64("nodes", nodes),
 			)
 		}()
 

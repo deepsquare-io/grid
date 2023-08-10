@@ -14,7 +14,9 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockbenchmark"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockmetascheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -35,7 +37,7 @@ func TestPhase1Handler(t *testing.T) {
 	fmt.Printf("created tmp fixture: %s", file.Name())
 
 	// Mocks
-	launcher := mocks.NewLauncher(t)
+	launcher := mockbenchmark.NewLauncher(t)
 	impl := benchmark.NewPhase1Handler(launcher)
 	// Expect verify
 	launcher.EXPECT().Verify([]byte("SECRET")).Return(true)
@@ -66,7 +68,7 @@ func TestPhase1Handler(t *testing.T) {
 		"X-Secret: U0VDUkVU",
 		"--upload-file",
 		file.Name(),
-		"http://localhost:3000/benchmark/phase1?nodes=1",
+		"http://localhost:3000/benchmark/phase1",
 	)
 	_, err = cmd.CombinedOutput()
 	require.NoError(t, err)
@@ -92,9 +94,9 @@ func TestPhase2Handler(t *testing.T) {
 
 	// Mocks
 	doneRegister := make(chan struct{})
-	launcher := mocks.NewLauncher(t)
-	ms := mocks.NewMetaScheduler(t)
-	scheduler := mocks.NewScheduler(t)
+	launcher := mockbenchmark.NewLauncher(t)
+	ms := mockmetascheduler.NewMetaScheduler(t)
+	scheduler := mockscheduler.NewScheduler(t)
 	impl := benchmark.NewPhase2Handler(launcher, scheduler, ms)
 	// Expect verify
 	launcher.EXPECT().Verify([]byte("SECRET")).Return(true)
@@ -131,7 +133,7 @@ func TestPhase2Handler(t *testing.T) {
 		"X-Secret: U0VDUkVU",
 		"--upload-file",
 		file.Name(),
-		"http://localhost:3000/benchmark/phase2?nodes=1",
+		"http://localhost:3000/benchmark/phase2",
 	)
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)

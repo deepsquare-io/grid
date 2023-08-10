@@ -10,9 +10,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/deepsquare-io/the-grid/meta-scheduler/mocks"
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockgridlogger"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockloggerv1alpha1"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockmetascheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mocksbatch"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/watcher"
@@ -53,18 +58,18 @@ srun hostname
 
 type WatcherTestSuite struct {
 	suite.Suite
-	metaScheduler    *mocks.MetaScheduler
-	scheduler        *mocks.Scheduler
-	sbatch           *mocks.Client
-	gridLoggerDialer *mocks.Dialer
+	metaScheduler    *mockmetascheduler.MetaScheduler
+	scheduler        *mockscheduler.Scheduler
+	sbatch           *mocksbatch.Client
+	gridLoggerDialer *mockgridlogger.Dialer
 	impl             *watcher.Watcher
 }
 
 func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
-	suite.metaScheduler = mocks.NewMetaScheduler(suite.T())
-	suite.scheduler = mocks.NewScheduler(suite.T())
-	suite.sbatch = mocks.NewClient(suite.T())
-	suite.gridLoggerDialer = mocks.NewDialer(suite.T())
+	suite.metaScheduler = mockmetascheduler.NewMetaScheduler(suite.T())
+	suite.scheduler = mockscheduler.NewScheduler(suite.T())
+	suite.sbatch = mocksbatch.NewClient(suite.T())
+	suite.gridLoggerDialer = mockgridlogger.NewDialer(suite.T())
 	suite.impl = watcher.New(
 		suite.metaScheduler,
 		suite.scheduler,
@@ -75,8 +80,8 @@ func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
 	)
 }
 
-func (suite *WatcherTestSuite) expectLoggerSend() *mocks.LoggerAPI_WriteClient {
-	c := mocks.NewLoggerAPI_WriteClient(suite.T())
+func (suite *WatcherTestSuite) expectLoggerSend() *mockloggerv1alpha1.LoggerAPI_WriteClient {
+	c := mockloggerv1alpha1.NewLoggerAPI_WriteClient(suite.T())
 	suite.gridLoggerDialer.EXPECT().
 		DialContext(mock.Anything, mock.Anything).
 		Return(c, func() error { return nil }, nil)

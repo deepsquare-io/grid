@@ -60,5 +60,5 @@ curl -sS \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: {{ .Secret }}" \
-  "https://{{ .SupervisorPublicAddress }}/benchmark/{{ .Phase }}?nodes={{ .JobDefinition.MaxNodes }}"
+  "https://{{ .SupervisorPublicAddress }}/benchmark/{{ .Phase }}"
 {{ end -}}
