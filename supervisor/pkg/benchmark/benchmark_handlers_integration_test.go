@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//go:embed fixtures/1n2gpu16cpu.log
+//go:embed result/fixtures/1n2gpu16cpu.log
 var fixture []byte
 
 func TestPhase1Handler(t *testing.T) {

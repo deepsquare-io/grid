@@ -5,9 +5,14 @@ import (
 	"testing"
 	"time"
 
+	_ "embed"
+
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/result"
 	"github.com/stretchr/testify/require"
 )
+
+//go:embed fixtures/2n2gpu16cpuucxrdma.log
+var fixture string
 
 func TestFindMaxGflopsResult(t *testing.T) {
 	tests := []struct {
@@ -33,6 +38,21 @@ HPL_AI WRC01 95000 512 2 2 14.93 3.828e+04 5.76942 2 2.761e+04`,
 				Refine:            5.77248,
 				Iterations:        2,
 				GflopsWRefinement: 2.785e4,
+			},
+		},
+		{
+			name: "Real test",
+			data: fixture,
+			expected: &result.Result{
+				ProblemSize:       0x29bf8,
+				NB:                0x80,
+				P:                 2,
+				Q:                 3,
+				Time:              time.Duration(46810000000),
+				Gflops:            71220,
+				Refine:            6.64575,
+				Iterations:        2,
+				GflopsWRefinement: 62370,
 			},
 		},
 	}
