@@ -51,11 +51,14 @@ func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName strin
 		"root",
 		suite.publicAddress,
 		suite.scheduler,
-		1,
+		3,
 		cpusPerNode,
 		memPerNode,
 		gpusPerNode,
 		time.Hour,
+		// benchmark.WithUCX("mlx5_2:1|mlx5_2:1", ""),
+		benchmark.WithUCX("eno2np1|eno2np1|eno2np1", ""),
+		benchmark.WithNoWait(),
 	)
 }
 

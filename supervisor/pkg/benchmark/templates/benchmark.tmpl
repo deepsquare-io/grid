@@ -9,33 +9,42 @@
 #SBATCH --gpus-per-node={{ .JobDefinition.GPUsPerNode }}
 #SBATCH --cpus-per-task={{ div .JobDefinition.CPUsPerNode .JobDefinition.NTasksPerNode }}
 
+{{- if .UCX }}
+# Select UCX as MPI P2P communications
+export PMIX_MCA_pml=ucx
+# Select  as Byte-Transport Layer
+export PMIX_MCA_btl=^vader,uct,openib,tcp
+export OMPI_MCA_pml=ucx
+export OMPI_MCA_btl=^vader,uct,openib,tcp
+{{- else }}
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
-# Select shared-memory as Byte-Transport Layer
+# Select shared-memory or TCP as Byte-Transport Layer
 export PMIX_MCA_btl=vader,self,tcp
 export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=vader,self,tcp
+{{- end }}
 
 GPU_AFFINITY=""
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
-  GPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"':'"'"'')"
+  GPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
   {{- if lt (mul .JobDefinition.GPUsPerNode .JobDefinition.MaxNodes ) 4 }}
   # Add affinity for GPU sharing
-  GPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"':'"'"'')"
+  GPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
   {{- end }}
 done
-GPU_AFFINITY="${GPU_AFFINITY%:}"
+GPU_AFFINITY="${GPU_AFFINITY%|}"
 export GPU_AFFINITY
 
 CPU_AFFINITY=""
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
-  CPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $7}'"'"' | tr '"'"'\n'"'"' '"'"':'"'"'')"
+  CPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $7}'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
   {{- if lt (mul .JobDefinition.GPUsPerNode .JobDefinition.MaxNodes ) 4 }}
   # Add affinity for GPU sharing
-  CPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"':'"'"'')"
+  CPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
   {{- end }}
 done
-CPU_AFFINITY="${CPU_AFFINITY%:}"
+CPU_AFFINITY="${CPU_AFFINITY%|}"
 export CPU_AFFINITY
 
 srun --mpi=pmix_v4 \
@@ -50,7 +59,21 @@ srun --mpi=pmix_v4 \
   --container-image="{{ .Image }}" \
   sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && sed -Ei "s/:1//g" ./hpl.sh \
-  && ./hpl.sh --xhpl-ai --cpu-affinity $CPU_AFFINITY --cpu-cores-per-rank {{ .BenchmarkParams.CPUsPerTask }} --gpu-affinity $GPU_AFFINITY --dat "/tmp/test.dat"
+  && sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh \
+  && ./hpl.sh \
+  --xhpl-ai \
+  --cpu-affinity "$CPU_AFFINITY" \
+  --cpu-cores-per-rank {{ .BenchmarkParams.CPUsPerTask }} \
+  --gpu-affinity "$GPU_AFFINITY" \
+{{- if .UCX }}
+{{- if .UCXAffinity }}
+  --ucx-affinity '"'"'{{ .UCXAffinity }}'"'"' \
+{{- end }}
+{{- if .UCXTransport }}
+  --ucx-tls '"'"'{{ .UCXTransport }}'"'"' \
+{{- end }}
+{{- end }}
+  --dat "/tmp/test.dat"
 {{- template "datfile" .BenchmarkParams -}}
 EOF'
 

@@ -28,6 +28,21 @@ GLOBAL OPTIONS:
    --benchmark.run-as value          User used for benchmark (default: "root") [$BENCHMARK_RUN_AS]
    --benchmark.single-node           Force single node benchmark. (default: false) [$BENCHMARK_SINGLE_NODE]
    --benchmark.time-limit value      Time limit (syntax is golang duration style). (default: 24h0m0s) [$BENCHMARK_TIME_LIMIT]
+   --benchmark.ucx                   Use UCX transport for MPI. Choose this for RDMA. Do not for TCP. (default: false) [$BENCHMARK_UCX]
+   --benchmark.ucx.affinity value    UCX Affinity. Select the devices with the format devices_for_node_1|devices_for_node_2|...
+
+See 'ucx_info -bd' to see available devices.
+
+Examples:
+  mlx5_0:1|mlx5_0:1 means that cn1 will use mlx5_0 port 1 and cn2 will use mlx5_0 port 1
+  mlx5_0:1,mlx5_0:1|mlx5_0:1 means that cn1 will use mlx5_0 port 1 or mlx5_0 port 1, and cn2 will use mlx5_0 port 1 [$BENCHMARK_UCX_AFFINITY]
+   --benchmark.ucx.transport value  UCX Tranport. Select the common transport.
+
+See 'ucx_info -bd' to see available tranports.
+
+Value is often: sm,self,rc (shared memory, self, rdma reliable connected). Set to empty to set automatically.
+
+Note that TCP is not supported at the moment. [$BENCHMARK_UCX_TRANSPORT]
 
    MetaScheduler:
 

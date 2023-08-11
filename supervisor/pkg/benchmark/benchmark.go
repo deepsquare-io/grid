@@ -70,6 +70,10 @@ type launcher struct {
 	memPerNode              []uint64
 	gpusPerNode             []uint64
 	timeLimit               time.Duration
+	ucx                     bool
+	ucxAffinity             string
+	ucxTransport            string
+	wait                    bool
 }
 
 type BenchmarkParams struct {
@@ -87,6 +91,20 @@ type LauncherOption func(*launcher)
 func WithSecretManager(secretManager secret.Manager) LauncherOption {
 	return func(l *launcher) {
 		l.secretManager = secretManager
+	}
+}
+
+func WithUCX(affinity string, transport string) LauncherOption {
+	return func(l *launcher) {
+		l.ucx = true
+		l.ucxTransport = transport
+		l.ucxAffinity = affinity
+	}
+}
+
+func WithNoWait() LauncherOption {
+	return func(l *launcher) {
+		l.wait = false
 	}
 }
 
@@ -113,6 +131,7 @@ func NewLauncher(
 		memPerNode:              memPerNode,
 		timeLimit:               timeLimit,
 		secretManager:           secret.NewManager(),
+		wait:                    true,
 	}
 	for _, opt := range opts {
 		opt(l)
@@ -251,6 +270,9 @@ func (l *launcher) generateBody(
 		SupervisorPublicAddress string
 		Phase                   string
 		Secret                  string
+		UCX                     bool
+		UCXAffinity             string
+		UCXTransport            string
 	}{
 		Image:                   l.Image,
 		BenchmarkParams:         *params,
@@ -258,6 +280,9 @@ func (l *launcher) generateBody(
 		SupervisorPublicAddress: l.supervisorPublicAddress,
 		Phase:                   phase,
 		Secret:                  base64.StdEncoding.EncodeToString(l.secretManager.Get()),
+		UCX:                     l.ucx,
+		UCXAffinity:             l.ucxAffinity,
+		UCXTransport:            l.ucxTransport,
 	}); err != nil {
 		logger.I.Error("sbatch templating failed", zap.Error(err))
 		return "", err
@@ -285,7 +310,7 @@ func (l *launcher) createJobDefinition(
 	jobDefinition.GPUsPerNode = gpusPerNode
 	jobDefinition.Memory = utils.Ptr(uint64(0))
 	jobDefinition.TimeLimit = uint64(l.timeLimit.Minutes())
-	jobDefinition.Wait = true
+	jobDefinition.Wait = l.wait
 
 	return jobDefinition, nil
 }

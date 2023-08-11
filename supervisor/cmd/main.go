@@ -69,6 +69,10 @@ var (
 	benchmarkUnresponsive bool
 	benchmarkTimeLimit    time.Duration
 
+	benchmarkUCX          bool
+	benchmarkUCXAffinity  string
+	benchmarkUCXTransport string
+
 	trace bool
 )
 
@@ -300,6 +304,47 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		Category:    "Benchmark:",
 	},
 	&cli.BoolFlag{
+		Name:        "benchmark.ucx",
+		Usage:       "Use UCX transport for MPI. Choose this for RDMA. Do not for TCP.",
+		Destination: &benchmarkUCX,
+		Value:       false,
+		EnvVars:     []string{"BENCHMARK_UCX"},
+		Category:    "Benchmark:",
+	},
+	&cli.StringFlag{
+		Name: "benchmark.ucx.affinity",
+		Usage: `UCX Affinity. Select the devices with the format devices_for_node_1|devices_for_node_2|...
+
+See 'ucx_info -bd' to see available devices.
+
+Examples:
+  mlx5_0:1|mlx5_0:1 means that cn1 will use mlx5_0 port 1 and cn2 will use mlx5_0 port 1
+  mlx5_0:1,mlx5_0:1|mlx5_0:1 means that cn1 will use mlx5_0 port 1 or mlx5_0 port 1, and cn2 will use mlx5_0 port 1
+
+`,
+
+		Destination: &benchmarkUCXAffinity,
+		Required:    false,
+		EnvVars:     []string{"BENCHMARK_UCX_AFFINITY"},
+		Category:    "Benchmark:",
+	},
+	&cli.StringFlag{
+		Name: "benchmark.ucx.transport",
+		Usage: `UCX Tranport. Select the common transport.
+
+See 'ucx_info -bd' to see available tranports.
+
+Value is often: sm,self,rc (shared memory, self, rdma reliable connected). Set to empty to set automatically.
+
+Note that TCP is not supported at the moment.
+
+`,
+
+		Destination: &benchmarkUCXTransport,
+		EnvVars:     []string{"BENCHMARK_UCX_TRANSPORT"},
+		Category:    "Benchmark:",
+	},
+	&cli.BoolFlag{
 		Name:        "benchmark.disable",
 		Usage:       "Disable benchmark (and registering).",
 		Destination: &benchmarkDisable,
@@ -514,6 +559,10 @@ var app = &cli.App{
 		if err != nil {
 			logger.I.Fatal("failed to check mem per node", zap.Error(err))
 		}
+		launcherOpts := []benchmark.LauncherOption{}
+		if benchmarkUCX {
+			launcherOpts = append(launcherOpts, benchmark.WithUCX(benchmarkUCXAffinity, benchmarkUCXTransport))
+		}
 		bl := benchmark.NewLauncher(
 			benchmarkImage,
 			benchmarkRunAs,
@@ -524,6 +573,7 @@ var app = &cli.App{
 			memPerNode,
 			gpusPerNode,
 			benchmarkTimeLimit,
+			launcherOpts...,
 		)
 		container.server.AddBenchmarkRoutes(
 			container.metascheduler,
