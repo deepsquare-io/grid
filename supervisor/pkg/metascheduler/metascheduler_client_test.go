@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/meta-scheduler/mocks"
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockbind"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockethereum"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -259,7 +259,7 @@ func (suite *ClientTestSuite) TestWatchEvents() {
 		chan *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent,
 		100,
 	)
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	sub.EXPECT().Unsubscribe()
 	suite.contractBackend.EXPECT().SubscribeFilterLogs(
 		mock.Anything,

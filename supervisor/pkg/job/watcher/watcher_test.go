@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/meta-scheduler/mocks"
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockethereum"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockgridlogger"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockloggerv1alpha1"
 	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockmetascheduler"
@@ -92,7 +92,7 @@ func (suite *WatcherTestSuite) expectLoggerSend() *mockloggerv1alpha1.LoggerAPI_
 
 func (suite *WatcherTestSuite) arrangeNoEvent() {
 	// Arrange
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	suite.metaScheduler.EXPECT().WatchEvents(
 		mock.Anything,
 		mock.Anything,
@@ -109,7 +109,7 @@ func (suite *WatcherTestSuite) arrangeEmitClaimNextJobEvent(
 	e *metaschedulerabi.MetaSchedulerClaimJobEvent,
 ) {
 	// Arrange
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	suite.metaScheduler.EXPECT().WatchEvents(
 		mock.Anything,
 		mock.Anything,
@@ -134,7 +134,7 @@ func (suite *WatcherTestSuite) arrangeEmitClaimNextCancellingJobEvent(
 	e *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent,
 ) {
 	// Arrange
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	suite.metaScheduler.EXPECT().
 		WatchEvents(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		RunAndReturn(func(ctx context.Context, c1 chan<- *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent, c2 chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent, c3 chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent) (event.Subscription, error) {
@@ -156,7 +156,7 @@ func (suite *WatcherTestSuite) arrangeEmitClaimNextTopUpJobEvent(
 	e *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent,
 ) {
 	// Arrange
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	suite.metaScheduler.EXPECT().
 		WatchEvents(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		RunAndReturn(func(ctx context.Context, c1 chan<- *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent, c2 chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent, c3 chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent) (event.Subscription, error) {
