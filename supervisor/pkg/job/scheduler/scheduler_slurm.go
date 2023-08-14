@@ -292,6 +292,10 @@ func (s *Slurm) FindRunningJobByName(
 		return 0, fmt.Errorf("failed to find job: %w, %s", err, out)
 	}
 
+	if out == "" {
+		return 0, nil
+	}
+
 	return strconv.Atoi(out)
 }
 
@@ -299,7 +303,11 @@ func (s *Slurm) FindMemPerNode(ctx context.Context, opts ...FindSpecOption) ([]u
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	o := newFindSpecOptions(opts...)
-	cmd := fmt.Sprintf(`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s'`, s.scontrol, s.partition)
+	cmd := fmt.Sprintf(
+		`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s'`,
+		s.scontrol,
+		s.partition,
+	)
 	if o.onlyResponding {
 		cmd = fmt.Sprintf(`%s | grep -v NOT_RESPONDING`, cmd)
 	}
@@ -338,7 +346,11 @@ func (s *Slurm) FindGPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	o := newFindSpecOptions(opts...)
-	cmd := fmt.Sprintf(`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s'`, s.scontrol, s.partition)
+	cmd := fmt.Sprintf(
+		`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s'`,
+		s.scontrol,
+		s.partition,
+	)
 	if o.onlyResponding {
 		cmd = fmt.Sprintf(`%s | grep -v NOT_RESPONDING`, cmd)
 	}
@@ -377,7 +389,11 @@ func (s *Slurm) FindCPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	o := newFindSpecOptions(opts...)
-	cmd := fmt.Sprintf(`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s'`, s.scontrol, s.partition)
+	cmd := fmt.Sprintf(
+		`%s show nodes --oneliner | grep 'Partitions=[^ ]*%s'`,
+		s.scontrol,
+		s.partition,
+	)
 	if o.onlyResponding {
 		cmd = fmt.Sprintf(`%s | grep -v NOT_RESPONDING`, cmd)
 	}

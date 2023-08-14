@@ -155,6 +155,61 @@ func (_c *MetaScheduler_ClaimTopUp_Call) RunAndReturn(run func(context.Context) 
 	return _c
 }
 
+// GetJob provides a mock function with given fields: ctx, jobID
+func (_m *MetaScheduler) GetJob(ctx context.Context, jobID [32]byte) (*metascheduler.Job, error) {
+	ret := _m.Called(ctx, jobID)
+
+	var r0 *metascheduler.Job
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, [32]byte) (*metascheduler.Job, error)); ok {
+		return rf(ctx, jobID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, [32]byte) *metascheduler.Job); ok {
+		r0 = rf(ctx, jobID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*metascheduler.Job)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, [32]byte) error); ok {
+		r1 = rf(ctx, jobID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MetaScheduler_GetJob_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetJob'
+type MetaScheduler_GetJob_Call struct {
+	*mock.Call
+}
+
+// GetJob is a helper method to define mock.On call
+//   - ctx context.Context
+//   - jobID [32]byte
+func (_e *MetaScheduler_Expecter) GetJob(ctx interface{}, jobID interface{}) *MetaScheduler_GetJob_Call {
+	return &MetaScheduler_GetJob_Call{Call: _e.mock.On("GetJob", ctx, jobID)}
+}
+
+func (_c *MetaScheduler_GetJob_Call) Run(run func(ctx context.Context, jobID [32]byte)) *MetaScheduler_GetJob_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([32]byte))
+	})
+	return _c
+}
+
+func (_c *MetaScheduler_GetJob_Call) Return(_a0 *metascheduler.Job, _a1 error) *MetaScheduler_GetJob_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MetaScheduler_GetJob_Call) RunAndReturn(run func(context.Context, [32]byte) (*metascheduler.Job, error)) *MetaScheduler_GetJob_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetJobStatus provides a mock function with given fields: ctx, jobID
 func (_m *MetaScheduler) GetJobStatus(ctx context.Context, jobID [32]byte) (metascheduler.JobStatus, error) {
 	ret := _m.Called(ctx, jobID)
@@ -204,6 +259,60 @@ func (_c *MetaScheduler_GetJobStatus_Call) Return(_a0 metascheduler.JobStatus, _
 }
 
 func (_c *MetaScheduler_GetJobStatus_Call) RunAndReturn(run func(context.Context, [32]byte) (metascheduler.JobStatus, error)) *MetaScheduler_GetJobStatus_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetJobs provides a mock function with given fields: ctx
+func (_m *MetaScheduler) GetJobs(ctx context.Context) (*metascheduler.ProviderJobIterator, error) {
+	ret := _m.Called(ctx)
+
+	var r0 *metascheduler.ProviderJobIterator
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (*metascheduler.ProviderJobIterator, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) *metascheduler.ProviderJobIterator); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*metascheduler.ProviderJobIterator)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MetaScheduler_GetJobs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetJobs'
+type MetaScheduler_GetJobs_Call struct {
+	*mock.Call
+}
+
+// GetJobs is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MetaScheduler_Expecter) GetJobs(ctx interface{}) *MetaScheduler_GetJobs_Call {
+	return &MetaScheduler_GetJobs_Call{Call: _e.mock.On("GetJobs", ctx)}
+}
+
+func (_c *MetaScheduler_GetJobs_Call) Run(run func(ctx context.Context)) *MetaScheduler_GetJobs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *MetaScheduler_GetJobs_Call) Return(_a0 *metascheduler.ProviderJobIterator, _a1 error) *MetaScheduler_GetJobs_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MetaScheduler_GetJobs_Call) RunAndReturn(run func(context.Context) (*metascheduler.ProviderJobIterator, error)) *MetaScheduler_GetJobs_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -95,6 +95,8 @@ type Scheduler interface {
 	// Find the total number of nodes available.
 	FindTotalNodes(ctx context.Context, opts ...FindSpecOption) (uint64, error)
 	// FindRunningJobByName find a running job using squeue.
+	//
+	// Returns 0 if not found.
 	FindRunningJobByName(
 		ctx context.Context,
 		name string,

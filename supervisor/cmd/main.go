@@ -12,6 +12,7 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/gc"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/gridlogger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
@@ -368,6 +369,7 @@ type Container struct {
 	metascheduler metascheduler.MetaScheduler
 	scheduler     scheduler.Scheduler
 	jobWatcher    *watcher.Watcher
+	gc            *gc.GC
 }
 
 func Init(ctx context.Context) *Container {
@@ -493,6 +495,7 @@ func Init(ctx context.Context) *Container {
 		slurmSSHB64PK,
 		opts...,
 	)
+	gc := gc.NewGC(metaScheduler, slurmScheduler)
 
 	return &Container{
 		sbatchAPI:     sbatchClient,
@@ -500,6 +503,7 @@ func Init(ctx context.Context) *Container {
 		scheduler:     slurmScheduler,
 		jobWatcher:    watcher,
 		server:        server,
+		gc:            gc,
 	}
 }
 
@@ -600,6 +604,8 @@ var app = &cli.App{
 		} else {
 			logger.I.Warn("benchmark disabled, will not register to the smart-contract")
 		}
+
+		go container.gc.Loop(ctx)
 
 		return container.jobWatcher.Watch(ctx)
 	},
