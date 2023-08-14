@@ -605,7 +605,11 @@ var app = &cli.App{
 			logger.I.Warn("benchmark disabled, will not register to the smart-contract")
 		}
 
-		go container.gc.Loop(ctx)
+		go func() {
+			if err := container.gc.Loop(ctx); err != nil {
+				logger.I.Fatal("gc stopped", zap.Error(err))
+			}
+		}()
 
 		return container.jobWatcher.Watch(ctx)
 	},
