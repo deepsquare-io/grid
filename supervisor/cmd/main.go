@@ -487,9 +487,6 @@ func Init(ctx context.Context) *Container {
 		}
 		opts = append(opts, grpc.Creds(creds))
 	}
-	if err := slurmScheduler.HealthCheck(ctx); err != nil {
-		logger.I.Fatal("failed to check slurm health", zap.Error(err))
-	}
 	server := server.New(
 		metaScheduler,
 		resourceManager,
@@ -561,7 +558,10 @@ var app = &cli.App{
 		}
 		launcherOpts := []benchmark.LauncherOption{}
 		if benchmarkUCX {
-			launcherOpts = append(launcherOpts, benchmark.WithUCX(benchmarkUCXAffinity, benchmarkUCXTransport))
+			launcherOpts = append(
+				launcherOpts,
+				benchmark.WithUCX(benchmarkUCXAffinity, benchmarkUCXTransport),
+			)
 		}
 		bl := benchmark.NewLauncher(
 			benchmarkImage,
