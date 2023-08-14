@@ -30,19 +30,8 @@ func NewGC(
 func (gc *GC) Loop(ctx context.Context) error {
 	for {
 		logger.I.Info("running gc")
-		jobs, err := gc.FindUnhandledJobs(ctx)
-		if err != nil {
+		if err := gc.FindAndCancelUnhandledJobs(ctx); err != nil {
 			logger.I.Error("gc failed")
-			continue
-		}
-		for _, job := range jobs {
-			logger.I.Warn(
-				"putting zombie job to FAILED",
-				zap.String("jobID", hexutil.Encode(job.JobID[:])),
-			)
-			if err := gc.ms.SetJobStatus(ctx, job.JobID, metascheduler.JobStatusFailed, 0); err != nil {
-				logger.I.Error("failed to put zombie job in FAILED", zap.Error(err))
-			}
 		}
 		select {
 		case <-time.After(15 * time.Minute):
@@ -53,14 +42,16 @@ func (gc *GC) Loop(ctx context.Context) error {
 	}
 }
 
-// FindUnhandledJobs matches jobs from the metascheduler to the scheduler.
+// FindAndCancelUnhandledJobs matches jobs from the metascheduler to the scheduler.
 //
 // Jobs that doesn't appear in squeue and is RUNNING on the metascheduler is considered as a zombie.
-func (gc *GC) FindUnhandledJobs(ctx context.Context) (jobs []*metascheduler.Job, err error) {
+func (gc *GC) FindAndCancelUnhandledJobs(
+	ctx context.Context,
+) (err error) {
 	it, err := gc.ms.GetJobs(ctx)
 	if err != nil {
 		logger.I.Error("GetJobs failed", zap.Error(err))
-		return jobs, err
+		return err
 	}
 
 	for it.Next(ctx) {
@@ -77,18 +68,19 @@ func (gc *GC) FindUnhandledJobs(ctx context.Context) (jobs []*metascheduler.Job,
 					zap.String("name", hexutil.Encode(it.Job.JobID[:])),
 					zap.String("user", strings.ToLower(it.Job.CustomerAddr.Hex())),
 				)
-				return jobs, err
+				return err
 			}
 			if id == 0 {
 				logger.I.Warn(
-					"found zombie job",
-					zap.String("ID", hexutil.Encode(it.Job.JobID[:])),
-					zap.Error(err),
+					"found zombie job, putting zombie job to FAILED",
+					zap.String("jobID", hexutil.Encode(it.Job.JobID[:])),
 				)
-				jobs = append(jobs, it.Job)
+				if err := gc.ms.SetJobStatus(ctx, it.Job.JobID, metascheduler.JobStatusFailed, 0); err != nil {
+					logger.I.Error("failed to put zombie job in FAILED", zap.Error(err))
+				}
 			}
 		}
 	}
 
-	return jobs, nil
+	return nil
 }

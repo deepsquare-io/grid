@@ -94,7 +94,7 @@ func (suite *GCTestSuite) BeforeTest(suiteName, testName string) {
 
 func (suite *GCTestSuite) TestFindUnhandledJobs() {
 	ctx := context.Background()
-	_, err := suite.impl.FindUnhandledJobs(ctx)
+	err := suite.impl.FindAndCancelUnhandledJobs(ctx)
 	suite.Require().NoError(err)
 }
 
