@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/gc"
@@ -95,6 +96,13 @@ func (suite *GCTestSuite) TestFindUnhandledJobs() {
 	ctx := context.Background()
 	_, err := suite.impl.FindUnhandledJobs(ctx)
 	suite.Require().NoError(err)
+}
+
+func (suite *GCTestSuite) TestLoop() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := suite.impl.Loop(ctx)
+	suite.Require().EqualError(err, context.DeadlineExceeded.Error())
 }
 
 func TestGCTestSuite(t *testing.T) {

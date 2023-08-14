@@ -29,23 +29,24 @@ func NewGC(
 
 func (gc *GC) Loop(ctx context.Context) error {
 	for {
+		logger.I.Info("running gc")
+		jobs, err := gc.FindUnhandledJobs(ctx)
+		if err != nil {
+			logger.I.Error("gc failed")
+			continue
+		}
+		for _, job := range jobs {
+			logger.I.Warn(
+				"putting zombie job to FAILED",
+				zap.String("jobID", hexutil.Encode(job.JobID[:])),
+			)
+			if err := gc.ms.SetJobStatus(ctx, job.JobID, metascheduler.JobStatusFailed, 0); err != nil {
+				logger.I.Error("failed to put zombie job in FAILED", zap.Error(err))
+			}
+		}
 		select {
 		case <-time.After(15 * time.Minute):
-			logger.I.Info("running gc")
-			jobs, err := gc.FindUnhandledJobs(ctx)
-			if err != nil {
-				logger.I.Error("gc failed")
-				continue
-			}
-			for _, job := range jobs {
-				logger.I.Warn(
-					"putting zombie job to FAILED",
-					zap.String("jobID", hexutil.Encode(job.JobID[:])),
-				)
-				if err := gc.ms.SetJobStatus(ctx, job.JobID, metascheduler.JobStatusFailed, 0); err != nil {
-					logger.I.Error("failed to put zombie job in FAILED", zap.Error(err))
-				}
-			}
+			// Pass
 		case <-ctx.Done():
 			return ctx.Err()
 		}
