@@ -76,7 +76,11 @@ func (gc *GC) FindAndCancelUnhandledJobs(
 					zap.String("jobID", hexutil.Encode(it.Job.JobID[:])),
 				)
 				if err := gc.ms.SetJobStatus(ctx, it.Job.JobID, metascheduler.JobStatusFailed, 0); err != nil {
-					logger.I.Error("failed to put zombie job in FAILED", zap.Error(err))
+					logger.I.Error(
+						"failed to put zombie job in FAILED",
+						zap.Error(err),
+						zap.Any("job", it.Job),
+					)
 				}
 			}
 		}
