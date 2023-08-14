@@ -22,6 +22,7 @@ import (
 	pkgsbatch "github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/ssh"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -533,6 +534,13 @@ var app = &cli.App{
 				logger.I.Fatal("http server crashed", zap.Error(err))
 			}
 		}()
+
+		logger.I.Info("initial slurm healthcheck...")
+		if err := try.Do(10, 10*time.Second, func(try int) error {
+			return container.scheduler.HealthCheck(ctx)
+		}); err != nil {
+			logger.I.Fatal("healthcheck failed", zap.Error(err))
+		}
 
 		logger.I.Info("searching for cluster specs...")
 		var benchmarkOpts []scheduler.FindSpecOption
