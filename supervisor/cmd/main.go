@@ -70,6 +70,7 @@ var (
 	benchmarkRunAs        string
 	benchmarkUnresponsive bool
 	benchmarkTimeLimit    time.Duration
+	benchmarkTrace        bool
 
 	benchmarkUCX          bool
 	benchmarkUCXAffinity  string
@@ -269,7 +270,7 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		Name:        "benchmark.image",
 		Usage:       "Docker image used for benchmark",
 		Destination: &benchmarkImage,
-		Value:       "registry-1.deepsquare.run#library/hpc-benchmarks:21.4-hpl",
+		Value:       "registry-1.deepsquare.run#library/hpc-benchmarks:23.5",
 		EnvVars:     []string{"BENCHMARK_IMAGE"},
 		Category:    "Benchmark:",
 	},
@@ -344,6 +345,13 @@ Note that TCP is not supported at the moment.
 
 		Destination: &benchmarkUCXTransport,
 		EnvVars:     []string{"BENCHMARK_UCX_TRANSPORT"},
+		Category:    "Benchmark:",
+	},
+	&cli.BoolFlag{
+		Name:        "benchmark.trace",
+		Usage:       `Enables benchmark trace logging. Very verbose.`,
+		Destination: &benchmarkTrace,
+		EnvVars:     []string{"BENCHMARK_TRACE"},
 		Category:    "Benchmark:",
 	},
 	&cli.BoolFlag{
@@ -573,6 +581,12 @@ var app = &cli.App{
 			launcherOpts = append(
 				launcherOpts,
 				benchmark.WithUCX(benchmarkUCXAffinity, benchmarkUCXTransport),
+			)
+		}
+		if benchmarkTrace {
+			launcherOpts = append(
+				launcherOpts,
+				benchmark.WithTrace(),
 			)
 		}
 		bl := benchmark.NewLauncher(

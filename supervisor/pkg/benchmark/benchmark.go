@@ -74,6 +74,8 @@ type launcher struct {
 	ucxAffinity             string
 	ucxTransport            string
 	wait                    bool
+	// trace enables benchmark trace logging.
+	trace bool
 }
 
 type BenchmarkParams struct {
@@ -83,7 +85,6 @@ type BenchmarkParams struct {
 	BlockSize    string
 	P            uint64
 	Q            uint64
-	CPUsPerTask  uint64
 }
 
 type LauncherOption func(*launcher)
@@ -105,6 +106,12 @@ func WithUCX(affinity string, transport string) LauncherOption {
 func WithNoWait() LauncherOption {
 	return func(l *launcher) {
 		l.wait = false
+	}
+}
+
+func WithTrace() LauncherOption {
+	return func(l *launcher) {
+		l.trace = true
 	}
 }
 
@@ -164,8 +171,7 @@ func (l *launcher) runBenchmark(
 	}
 
 	// Compute CPUsPerTask to be passed as a srun params (and not as a jobDefinition)
-	cpusPerTasks := jobDefinition.CPUsPerNode / jobDefinition.NTasksPerNode
-	params.CPUsPerTask = cpusPerTasks
+	jobDefinition.CPUsPerTask = jobDefinition.CPUsPerNode / jobDefinition.NTasksPerNode
 
 	body, err := l.generateBody(ctx, params, jobDefinition, phase)
 	if err != nil {
@@ -273,6 +279,7 @@ func (l *launcher) generateBody(
 		UCX                     bool
 		UCXAffinity             string
 		UCXTransport            string
+		Trace                   bool
 	}{
 		Image:                   l.Image,
 		BenchmarkParams:         *params,
@@ -283,6 +290,7 @@ func (l *launcher) generateBody(
 		UCX:                     l.ucx,
 		UCXAffinity:             l.ucxAffinity,
 		UCXTransport:            l.ucxTransport,
+		Trace:                   l.trace,
 	}); err != nil {
 		logger.I.Error("sbatch templating failed", zap.Error(err))
 		return "", err
@@ -331,11 +339,11 @@ func CalculateProcessGrid(
 	sqrtTotalGPUS := uint64(math.Sqrt(float64(totalGPUs)))
 
 	for i := sqrtTotalGPUS; i > 0; i-- {
-		if totalGPUs%i == 0 && i != 1 {
-			return i, totalGPUs / i, nil
+		if totalGPUs%i == 0 {
+			return totalGPUs / i, i, nil
 		}
 	}
-	return 2, totalGPUs, nil // If no other valid P is found, default to 2
+	return totalGPUs, 1, nil // If no other valid P is found, default to 2
 }
 
 // CalculateProblemSize computes the problem size from the ram available

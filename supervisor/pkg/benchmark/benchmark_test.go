@@ -53,35 +53,38 @@ func (suite *BenchmarkLauncherTestSuite) TestRunPhase1() {
 				User:   admin,
 				Prefix: "benchmark-PImgV9iURiyb7GUxHstZRO4Txx1aPFR41roqHCXwBoE",
 				JobDefinition: &scheduler.JobDefinition{
-					NTasks:        4,
-					NTasksPerNode: 4,
+					NTasks:        2,
+					NTasksPerNode: 2,
 					MinNodes:      1,
 					MaxNodes:      1,
 					GPUsPerNode:   2,
 					CPUsPerNode:   16,
+					CPUsPerTask:   8,
 					Memory:        utils.Ptr(uint64(0)),
 					Wait:          true,
 					TimeLimit:     60,
 					Body: `#!/bin/bash
 
 #SBATCH -N 1-1
-#SBATCH --ntasks=4
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks=2
+#SBATCH --ntasks-per-node=2
 #SBATCH --mem=0
 #SBATCH --mincpus=16
 #SBATCH --gpus-per-node=2
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
+
+set -x
+export NCCL_P2P_DISABLE=1
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
 # Select shared-memory or TCP as Byte-Transport Layer
 export PMIX_MCA_btl=vader,self,tcp
 export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=vader,self,tcp
+export NCCL_IB_DISABLE=1
 
 GPU_AFFINITY=""
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
-  GPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task=2 --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
-  # Add affinity for GPU sharing
   GPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task=2 --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
 done
 GPU_AFFINITY="${GPU_AFFINITY%|}"
@@ -90,8 +93,6 @@ export GPU_AFFINITY
 CPU_AFFINITY=""
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
   CPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task=2 --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $7}'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
-  # Add affinity for GPU sharing
-  CPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task=2 --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
 done
 CPU_AFFINITY="${CPU_AFFINITY%|}"
 export CPU_AFFINITY
@@ -100,8 +101,9 @@ srun --mpi=pmix_v4 \
   --cpu-bind=none \
   --gpu-bind=none \
   --nodes=1-1 \
-  --ntasks=4 \
-  --ntasks-per-node=4 \
+  --ntasks=2 \
+  --ntasks-per-node=2 \
+  --gpus-per-task=1 \
   --container-image="/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh" \
   sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && sed -Ei "s/:1//g" ./hpl.sh \
@@ -109,7 +111,6 @@ srun --mpi=pmix_v4 \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
-  --cpu-cores-per-rank 4 \
   --gpu-affinity "$GPU_AFFINITY" \
   --dat "/tmp/test.dat"
 HPLinpack benchmark input file
@@ -123,7 +124,7 @@ HPL.out      output file name (if any)
 0            PMAP process mapping (0=Row-,1=Column-major)
 1            # of process grids (P x Q)
 2            Ps
-2            Qs
+1            Qs
 16.0         threshold
 1            # of panel fact
 2            PFACTs (0=left, 1=Crout, 2=Right)
@@ -174,6 +175,7 @@ curl -sS \
 					GPUsPerNode:   4,
 					CPUsPerNode:   16,
 					TimeLimit:     60,
+					CPUsPerTask:   4,
 					Wait:          true,
 					Memory:        utils.Ptr(uint64(0)),
 					Body: `#!/bin/bash
@@ -185,12 +187,16 @@ curl -sS \
 #SBATCH --mincpus=16
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-task=4
+
+set -x
+export NCCL_P2P_DISABLE=1
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
 # Select shared-memory or TCP as Byte-Transport Layer
 export PMIX_MCA_btl=vader,self,tcp
 export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=vader,self,tcp
+export NCCL_IB_DISABLE=1
 
 GPU_AFFINITY=""
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
@@ -220,7 +226,6 @@ srun --mpi=pmix_v4 \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
-  --cpu-cores-per-rank 4 \
   --gpu-affinity "$GPU_AFFINITY" \
   --dat "/tmp/test.dat"
 HPLinpack benchmark input file
@@ -285,6 +290,7 @@ curl -sS \
 					GPUsPerNode:   2,
 					CPUsPerNode:   16,
 					TimeLimit:     60,
+					CPUsPerTask:   8,
 					Wait:          true,
 					Memory:        utils.Ptr(uint64(0)),
 					Body: `#!/bin/bash
@@ -296,12 +302,16 @@ curl -sS \
 #SBATCH --mincpus=16
 #SBATCH --gpus-per-node=2
 #SBATCH --cpus-per-task=8
+
+set -x
+export NCCL_P2P_DISABLE=1
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
 # Select shared-memory or TCP as Byte-Transport Layer
 export PMIX_MCA_btl=vader,self,tcp
 export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=vader,self,tcp
+export NCCL_IB_DISABLE=1
 
 GPU_AFFINITY=""
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
@@ -331,7 +341,6 @@ srun --mpi=pmix_v4 \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
-  --cpu-cores-per-rank 8 \
   --gpu-affinity "$GPU_AFFINITY" \
   --dat "/tmp/test.dat"
 HPLinpack benchmark input file
@@ -399,6 +408,7 @@ curl -sS \
 					GPUsPerNode:   2,
 					CPUsPerNode:   16,
 					TimeLimit:     60,
+					CPUsPerTask:   8,
 					Wait:          true,
 					Memory:        utils.Ptr(uint64(0)),
 					Body: `#!/bin/bash
@@ -410,12 +420,15 @@ curl -sS \
 #SBATCH --mincpus=16
 #SBATCH --gpus-per-node=2
 #SBATCH --cpus-per-task=8
+
+set -x
+export NCCL_P2P_DISABLE=1
 # Select UCX as MPI P2P communications
 export PMIX_MCA_pml=ucx
-# Select  as Byte-Transport Layer
-export PMIX_MCA_btl=^vader,uct,openib,tcp
+# Select UCX as Byte-Transport Layer
+export PMIX_MCA_btl=^vader,openib,tcp
 export OMPI_MCA_pml=ucx
-export OMPI_MCA_btl=^vader,uct,openib,tcp
+export OMPI_MCA_btl=^vader,openib,tcp
 
 GPU_AFFINITY=""
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
@@ -445,7 +458,6 @@ srun --mpi=pmix_v4 \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
-  --cpu-cores-per-rank 8 \
   --gpu-affinity "$GPU_AFFINITY" \
   --ucx-affinity '"'"'mlx5_2:1|mlx5_2:1'"'"' \
   --ucx-tls '"'"'rc'"'"' \
@@ -513,8 +525,12 @@ curl -sS \
 			)
 			suite.secretManager.EXPECT().Get().Return([]byte("SECRET"))
 			suite.scheduler.EXPECT().
-				Submit(mock.Anything, &tt.expectedSubmitRequest).
-				Return("success", nil)
+				Submit(mock.Anything, mock.Anything).
+				RunAndReturn(func(ctx context.Context, sr *scheduler.SubmitRequest) (string, error) {
+					suite.Equal(tt.expectedSubmitRequest, *sr)
+					suite.Equal(tt.expectedSubmitRequest.Body, sr.Body)
+					return "success", nil
+				})
 
 			// Act
 			err := suite.impl.RunPhase1(context.Background())
@@ -537,19 +553,19 @@ func (suite *BenchmarkLauncherTestSuite) TestCalculateProcessGrid() {
 			gpusPerNode: 2,
 			nodes:       1,
 			expectedP:   2,
-			expectedQ:   2,
+			expectedQ:   1,
 		},
 		{
 			nodes:       3,
 			gpusPerNode: 5,
-			expectedP:   3,
-			expectedQ:   5,
+			expectedP:   5,
+			expectedQ:   3,
 		},
 		{
 			nodes:       1,
 			gpusPerNode: 15,
-			expectedP:   3,
-			expectedQ:   5,
+			expectedP:   5,
+			expectedQ:   3,
 		},
 	}
 

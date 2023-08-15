@@ -9,13 +9,24 @@
 #SBATCH --gpus-per-node={{ .JobDefinition.GPUsPerNode }}
 #SBATCH --cpus-per-task={{ div .JobDefinition.CPUsPerNode .JobDefinition.NTasksPerNode }}
 
+set -x
+
+{{- if .Trace }}
+export NCCL_DEBUG=TRACE
+export NCCL_DEBUG_SUBSYS=ALL
+{{- end }}
+
+{{- if le .JobDefinition.MaxNodes 1 }}
+export NCCL_P2P_DISABLE=1
+{{- end }}
+
 {{- if .UCX }}
 # Select UCX as MPI P2P communications
 export PMIX_MCA_pml=ucx
-# Select  as Byte-Transport Layer
-export PMIX_MCA_btl=^vader,uct,openib,tcp
+# Select UCX as Byte-Transport Layer
+export PMIX_MCA_btl=^vader,openib,tcp
 export OMPI_MCA_pml=ucx
-export OMPI_MCA_btl=^vader,uct,openib,tcp
+export OMPI_MCA_btl=^vader,openib,tcp
 {{- else }}
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
@@ -23,15 +34,12 @@ export PMIX_MCA_pml=ob1
 export PMIX_MCA_btl=vader,self,tcp
 export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=vader,self,tcp
+export NCCL_IB_DISABLE=1
 {{- end }}
 
 GPU_AFFINITY=""
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
   GPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
-  {{- if lt (mul .JobDefinition.GPUsPerNode .JobDefinition.MaxNodes ) 4 }}
-  # Add affinity for GPU sharing
-  GPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
-  {{- end }}
 done
 GPU_AFFINITY="${GPU_AFFINITY%|}"
 export GPU_AFFINITY
@@ -39,10 +47,6 @@ export GPU_AFFINITY
 CPU_AFFINITY=""
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
   CPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $7}'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
-  {{- if lt (mul .JobDefinition.GPUsPerNode .JobDefinition.MaxNodes ) 4 }}
-  # Add affinity for GPU sharing
-  CPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .JobDefinition.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
-  {{- end }}
 done
 CPU_AFFINITY="${CPU_AFFINITY%|}"
 export CPU_AFFINITY
@@ -53,9 +57,7 @@ srun --mpi=pmix_v4 \
   --nodes={{ .JobDefinition.MaxNodes }}-{{ .JobDefinition.MaxNodes }} \
   --ntasks={{ .JobDefinition.NTasks }} \
   --ntasks-per-node={{ .JobDefinition.NTasksPerNode }} \
-{{- if ge (mul .JobDefinition.GPUsPerNode .JobDefinition.MaxNodes ) 4 }}
   --gpus-per-task=1 \
-{{- end }}
   --container-image="{{ .Image }}" \
   sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && sed -Ei "s/:1//g" ./hpl.sh \
@@ -63,7 +65,6 @@ srun --mpi=pmix_v4 \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
-  --cpu-cores-per-rank {{ .BenchmarkParams.CPUsPerTask }} \
   --gpu-affinity "$GPU_AFFINITY" \
 {{- if .UCX }}
 {{- if .UCXAffinity }}

@@ -29,7 +29,6 @@ type BenchmarkIntegrationTestSuite struct {
 }
 
 func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName string) {
-	ctx := context.Background()
 	service := ssh.New(
 		suite.address,
 		suite.pkB64,
@@ -40,6 +39,10 @@ func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName strin
 		suite.publicAddress,
 		"main",
 	)
+}
+
+func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1SingleNode() {
+	ctx := context.Background()
 	cpusPerNode, err := suite.scheduler.FindCPUsPerNode(ctx)
 	suite.Require().NoError(err)
 	gpusPerNode, err := suite.scheduler.FindGPUsPerNode(ctx)
@@ -47,7 +50,33 @@ func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName strin
 	memPerNode, err := suite.scheduler.FindMemPerNode(ctx)
 	suite.Require().NoError(err)
 	suite.impl = benchmark.NewLauncher(
-		"registry-1.deepsquare.run#library/hpc-benchmarks:21.4-hpl",
+		"registry-1.deepsquare.run#library/hpc-benchmarks:23.5",
+		"root",
+		suite.publicAddress,
+		suite.scheduler,
+		1,
+		cpusPerNode,
+		memPerNode,
+		gpusPerNode,
+		2*time.Hour,
+		benchmark.WithNoWait(),
+	)
+
+	err = suite.impl.RunPhase1(context.Background())
+
+	suite.Require().NoError(err)
+}
+
+func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1ThreeNodes() {
+	ctx := context.Background()
+	cpusPerNode, err := suite.scheduler.FindCPUsPerNode(ctx)
+	suite.Require().NoError(err)
+	gpusPerNode, err := suite.scheduler.FindGPUsPerNode(ctx)
+	suite.Require().NoError(err)
+	memPerNode, err := suite.scheduler.FindMemPerNode(ctx)
+	suite.Require().NoError(err)
+	suite.impl = benchmark.NewLauncher(
+		"registry-1.deepsquare.run#library/hpc-benchmarks:23.5",
 		"root",
 		suite.publicAddress,
 		suite.scheduler,
@@ -55,27 +84,12 @@ func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName strin
 		cpusPerNode,
 		memPerNode,
 		gpusPerNode,
-		time.Hour,
-		// benchmark.WithUCX("mlx5_2:1|mlx5_2:1", ""),
-		benchmark.WithUCX("eno2np1|eno2np1|eno2np1", ""),
+		2*time.Hour,
+		benchmark.WithUCX("mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1", ""),
 		benchmark.WithNoWait(),
 	)
-}
 
-func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1() {
-	err := suite.impl.RunPhase1(context.Background())
-
-	suite.Require().NoError(err)
-}
-
-func (suite *BenchmarkIntegrationTestSuite) TestRunPhase2() {
-	err := suite.impl.RunPhase2(
-		context.Background(),
-		2,
-		2,
-		95000,
-		1024,
-	)
+	err = suite.impl.RunPhase1(context.Background())
 
 	suite.Require().NoError(err)
 }
