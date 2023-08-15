@@ -85,7 +85,8 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1ThreeNodes() {
 		memPerNode,
 		gpusPerNode,
 		2*time.Hour,
-		benchmark.WithUCX("mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1", ""),
+		// benchmark.WithUCX("mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1", ""),
+		benchmark.WithUCX("eno2np1|eno2np1|eno2np1|eno2np1|eno2np1|eno2np1", ""),
 		benchmark.WithNoWait(),
 	)
 

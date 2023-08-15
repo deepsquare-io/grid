@@ -11,8 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//go:embed fixtures/2n2gpu16cpuucxrdma.log
-var fixture string
+//go:embed fixtures/3n2gpu16cpuucxrdma.log
+var fixture3n2gpu16cpuucxrdma string
+
+//go:embed fixtures/3n2gpu16cpuucxtcp.log
+var fixture3n2gpu16cpuucxtcp string
+
+//go:embed fixtures/1n2gpu16cpu.log
+var fixture1n2gpu16cpu string
 
 func TestFindMaxGflopsResult(t *testing.T) {
 	tests := []struct {
@@ -41,18 +47,48 @@ HPL_AI WRC01 95000 512 2 2 14.93 3.828e+04 5.76942 2 2.761e+04`,
 			},
 		},
 		{
-			name: "Real test",
-			data: fixture,
+			name: "Real test 1",
+			data: fixture1n2gpu16cpu,
 			expected: &result.Result{
-				ProblemSize:       0x29bf8,
-				NB:                0x80,
+				ProblemSize:       97000,
+				NB:                1024,
 				P:                 2,
-				Q:                 3,
-				Time:              time.Duration(46810000000),
-				Gflops:            71220,
-				Refine:            6.64575,
+				Q:                 1,
+				Time:              time.Duration(6300000000),
+				Gflops:            96510,
+				Refine:            7.1469,
 				Iterations:        2,
-				GflopsWRefinement: 62370,
+				GflopsWRefinement: 45230,
+			},
+		},
+		{
+			name: "Real test 2",
+			data: fixture3n2gpu16cpuucxrdma,
+			expected: &result.Result{
+				ProblemSize:       168000,
+				NB:                1024,
+				P:                 3,
+				Q:                 2,
+				Time:              time.Duration(9340000000),
+				Gflops:            338300,
+				Refine:            15.12079,
+				Iterations:        5,
+				GflopsWRefinement: 129200,
+			},
+		},
+		{
+			name: "Real test 3",
+			data: fixture3n2gpu16cpuucxtcp,
+			expected: &result.Result{
+				ProblemSize:       166000,
+				NB:                1024,
+				P:                 3,
+				Q:                 2,
+				Time:              time.Duration(22840000000),
+				Gflops:            133500,
+				Refine:            14.50631,
+				Iterations:        5,
+				GflopsWRefinement: 81660,
 			},
 		},
 	}
