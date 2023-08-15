@@ -43,7 +43,7 @@
     "eslint-config-prettier": "9.0.0",
     "eslint-plugin-deprecation": "1.5.0",
     "eslint-plugin-prettier": "5.0.0",
-    "graphql": "16.7.1",
+    "graphql": "16.8.0",
     "graphql-markdown": "7.0.0",
     "prettier": "3.0.1",
     "prism-react-renderer": "2.0.6",
