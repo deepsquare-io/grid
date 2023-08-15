@@ -304,7 +304,6 @@ curl -sS \
 #SBATCH --cpus-per-task=8
 
 set -x
-export NCCL_P2P_DISABLE=1
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
 # Select shared-memory or TCP as Byte-Transport Layer
@@ -422,7 +421,6 @@ curl -sS \
 #SBATCH --cpus-per-task=8
 
 set -x
-export NCCL_P2P_DISABLE=1
 # Select UCX as MPI P2P communications
 export PMIX_MCA_pml=ucx
 # Select UCX as Byte-Transport Layer
