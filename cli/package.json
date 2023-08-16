@@ -11,7 +11,7 @@
     "eslint-plugin-prettier": "5.0.0",
     "graphql": "16.8.0",
     "graphql-2-json-schema": "0.10.0",
-    "prettier": "3.0.1"
+    "prettier": "3.0.2"
   },
   "type": "module"
 }
