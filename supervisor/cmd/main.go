@@ -663,7 +663,7 @@ var app = &cli.App{
 						minGPUsPerNode,
 						minMemPerNode,
 					),
-					benchmark.WithImage(benchmarkHPLImage),
+					benchmark.WithImage(benchmarkOSUImage),
 				)
 
 				speedtestOpts := append(
@@ -674,7 +674,7 @@ var app = &cli.App{
 						minGPUsPerNode,
 						minMemPerNode,
 					),
-					benchmark.WithImage(benchmarkHPLImage),
+					benchmark.WithImage(benchmarkSpeedTestImage),
 				)
 
 				launchBenchmarks(
