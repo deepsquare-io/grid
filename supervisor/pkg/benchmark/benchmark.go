@@ -23,7 +23,7 @@ const (
 
 type Benchmark scheduler.JobDefinition
 
-type benchmarkOptions struct {
+type options struct {
 	nodes       uint64
 	cpusPerNode uint64
 	gpusPerNode uint64
@@ -41,15 +41,15 @@ type benchmarkOptions struct {
 	trace bool
 }
 
-type BenchmarkOption func(*benchmarkOptions)
+type Option func(*options)
 
 func WithClusterSpecs(
 	nodes uint64,
 	cpusPerNode uint64,
 	gpusPerNode uint64,
 	memPerNode uint64,
-) BenchmarkOption {
-	return func(o *benchmarkOptions) {
+) Option {
+	return func(o *options) {
 		o.nodes = nodes
 		o.cpusPerNode = cpusPerNode
 		o.gpusPerNode = gpusPerNode
@@ -59,26 +59,26 @@ func WithClusterSpecs(
 
 func WithImage(
 	image string,
-) BenchmarkOption {
-	return func(o *benchmarkOptions) {
+) Option {
+	return func(o *options) {
 		o.image = image
 	}
 }
 
-func WithTrace() BenchmarkOption {
-	return func(o *benchmarkOptions) {
+func WithTrace() Option {
+	return func(o *options) {
 		o.trace = true
 	}
 }
 
-func WithSupervisorPublicAddress(supervisorPublicAddress string) BenchmarkOption {
-	return func(o *benchmarkOptions) {
+func WithSupervisorPublicAddress(supervisorPublicAddress string) Option {
+	return func(o *options) {
 		o.supervisorPublicAddress = supervisorPublicAddress
 	}
 }
 
-func WithUCX(affinity string, transport string) BenchmarkOption {
-	return func(o *benchmarkOptions) {
+func WithUCX(affinity string, transport string) Option {
+	return func(o *options) {
 		o.ucx = true
 		o.ucxTransport = transport
 		o.ucxAffinity = affinity

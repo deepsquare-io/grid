@@ -15,12 +15,12 @@ func TestGenerateOSUBenchmark(t *testing.T) {
 	// Arrange
 	tests := []struct {
 		title    string
-		opts     []benchmark.BenchmarkOption
+		opts     []benchmark.Option
 		expected *benchmark.Benchmark
 	}{
 		{
 			title: "3 nodes, 2 gpus per node",
-			opts: []benchmark.BenchmarkOption{
+			opts: []benchmark.Option{
 				benchmark.WithImage("registry-1.deepsquare.run#library/osu-benchmarks:latest"),
 				benchmark.WithSupervisorPublicAddress("localhost:3000"),
 				benchmark.WithClusterSpecs(3, 16, 2, 100000),

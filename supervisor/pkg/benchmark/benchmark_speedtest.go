@@ -14,8 +14,8 @@ import (
 
 const DefaultSpeedTestImage = "registry-1.docker.io#gists/speedtest-cli:1.2.0"
 
-func applySpeedTestOptions(opts []BenchmarkOption) *benchmarkOptions {
-	o := &benchmarkOptions{
+func applySpeedTestOptions(opts []Option) *options {
+	o := &options{
 		image:  DefaultSpeedTestImage,
 		secret: base64.StdEncoding.EncodeToString(secret.Get()),
 	}
@@ -26,7 +26,7 @@ func applySpeedTestOptions(opts []BenchmarkOption) *benchmarkOptions {
 }
 
 func GenerateSpeedTestBenchmark(
-	opts ...BenchmarkOption,
+	opts ...Option,
 ) (*Benchmark, error) {
 	o := applySpeedTestOptions(opts)
 	benchmark := &Benchmark{

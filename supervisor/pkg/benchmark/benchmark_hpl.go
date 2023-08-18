@@ -30,8 +30,8 @@ var benchmarkMemoryUsePercentage = []float64{
 	0.84,
 }
 
-func applyHPLOptions(opts []BenchmarkOption) *benchmarkOptions {
-	o := &benchmarkOptions{
+func applyHPLOptions(opts []Option) *options {
+	o := &options{
 		image:                   DefaultHPLImage,
 		nodes:                   1,
 		secret:                  base64.StdEncoding.EncodeToString(secret.Get()),
@@ -53,7 +53,7 @@ type hplParams struct {
 }
 
 func GeneratePhase1HPLBenchmark(
-	opts ...BenchmarkOption,
+	opts ...Option,
 ) (*Benchmark, error) {
 	o := applyHPLOptions(opts)
 	o.phase = "phase1"
@@ -79,7 +79,7 @@ func GeneratePhase2HPLBenchmark(
 	newQ uint64,
 	newProblemSize uint64,
 	newBlockSize uint64,
-	opts ...BenchmarkOption,
+	opts ...Option,
 ) (*Benchmark, error) {
 	o := applyHPLOptions(opts)
 	o.phase = "phase2"
@@ -97,7 +97,7 @@ func GeneratePhase2HPLBenchmark(
 
 func prepareHPLJobDefinition(
 	params *hplParams,
-	o *benchmarkOptions,
+	o *options,
 ) (*Benchmark, error) {
 	benchmark := &Benchmark{
 		MinNodes:      1,

@@ -44,7 +44,7 @@ func TestPhase1Handler(t *testing.T) {
 	fmt.Printf("created tmp fixture: %s", file.Name())
 
 	impl := benchmark.NewHPLPhase1Handler(
-		func(optimal *hpl.Result, opts ...benchmark.BenchmarkOption) error {
+		func(optimal *hpl.Result, opts ...benchmark.Option) error {
 			require.NotEmpty(t, optimal)
 			return nil
 		},

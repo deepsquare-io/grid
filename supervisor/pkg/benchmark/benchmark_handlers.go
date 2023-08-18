@@ -72,9 +72,8 @@ func NewSpeedTestHandler(
 func NewHPLPhase1Handler(
 	next func(
 		optimal *hpl.Result,
-		opts ...BenchmarkOption,
+		opts ...Option,
 	) error,
-	opts ...BenchmarkOption,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nodes, err := strconv.ParseUint(r.URL.Query().Get("nodes"), 10, 64)
@@ -131,10 +130,9 @@ func NewHPLPhase1Handler(
 			return
 		}
 
-		opts = append(
-			opts,
+		opts := []Option{
 			WithClusterSpecs(nodes, cpusPerNode, gpusPerNode, memPerNode),
-		)
+		}
 
 		if err := next(optimal, opts...); err != nil {
 			http.Error(

@@ -15,12 +15,12 @@ func TestGenerateSpeedTestBenchmark(t *testing.T) {
 	// Arrange
 	tests := []struct {
 		title    string
-		opts     []benchmark.BenchmarkOption
+		opts     []benchmark.Option
 		expected *benchmark.Benchmark
 	}{
 		{
 			title: "3 nodes, 2 gpus per node",
-			opts: []benchmark.BenchmarkOption{
+			opts: []benchmark.Option{
 				benchmark.WithImage("registry-1.docker.io#gists/speedtest-cli:1.2.0"),
 				benchmark.WithSupervisorPublicAddress("localhost:3000"),
 			},

@@ -15,12 +15,12 @@ func TestGenerateHPLPhase1JobDefinition(t *testing.T) {
 	// Arrange
 	tests := []struct {
 		title    string
-		opts     []BenchmarkOption
+		opts     []Option
 		expected *Benchmark
 	}{
 		{
 			title: "1 node, 2 gpus per node",
-			opts: []BenchmarkOption{
+			opts: []Option{
 				WithImage("registry-1.deepsquare.run#library/hpc-benchmarks:23.5"),
 				WithClusterSpecs(1, 16, 2, 128460),
 			},
@@ -128,7 +128,7 @@ curl -fsSL \
 		},
 		{
 			title: "1 node, 4 gpus per node",
-			opts: []BenchmarkOption{
+			opts: []Option{
 				WithImage("registry-1.deepsquare.run#library/hpc-benchmarks:23.5"),
 				WithClusterSpecs(1, 16, 4, 128460),
 			},
@@ -236,7 +236,7 @@ curl -fsSL \
 		},
 		{
 			title: "2 nodes, 2 gpus per node",
-			opts: []BenchmarkOption{
+			opts: []Option{
 				WithImage("registry-1.deepsquare.run#library/hpc-benchmarks:23.5"),
 				WithClusterSpecs(2, 16, 2, 128460),
 			},
@@ -343,7 +343,7 @@ curl -fsSL \
 		},
 		{
 			title: "2 nodes, 2 gpus per node with UCX",
-			opts: []BenchmarkOption{
+			opts: []Option{
 				WithImage("registry-1.deepsquare.run#library/hpc-benchmarks:23.5"),
 				WithClusterSpecs(2, 16, 2, 128460),
 				WithUCX("mlx5_2:1|mlx5_2:1", "rc"),
@@ -473,7 +473,7 @@ func TestGenerateHPLPhase2JobDefinition(t *testing.T) {
 		q           uint64
 		problemSize uint64
 		blockSize   uint64
-		opts        []BenchmarkOption
+		opts        []Option
 		expected    *Benchmark
 	}{
 		{
@@ -482,7 +482,7 @@ func TestGenerateHPLPhase2JobDefinition(t *testing.T) {
 			q:           3,
 			problemSize: 12,
 			blockSize:   13,
-			opts: []BenchmarkOption{
+			opts: []Option{
 				WithImage("registry-1.deepsquare.run#library/hpc-benchmarks:23.5"),
 				WithClusterSpecs(3, 16, 2, 128460),
 			},

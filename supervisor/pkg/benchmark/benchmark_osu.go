@@ -14,8 +14,8 @@ import (
 
 const DefaultOSUImage = "registry-1.deepsquare.run#library/osu-benchmarks:latest"
 
-func applyOSUOptions(opts []BenchmarkOption) *benchmarkOptions {
-	o := &benchmarkOptions{
+func applyOSUOptions(opts []Option) *options {
+	o := &options{
 		image:                   DefaultOSUImage,
 		nodes:                   1,
 		secret:                  base64.StdEncoding.EncodeToString(secret.Get()),
@@ -28,7 +28,7 @@ func applyOSUOptions(opts []BenchmarkOption) *benchmarkOptions {
 }
 
 func GenerateOSUBenchmark(
-	opts ...BenchmarkOption,
+	opts ...Option,
 ) (*Benchmark, error) {
 	o := applyOSUOptions(opts)
 	benchmark := &Benchmark{

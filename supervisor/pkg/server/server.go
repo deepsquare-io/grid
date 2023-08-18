@@ -31,6 +31,7 @@ func New(
 	resourceManager *lock.ResourceManager,
 	launcher benchmark.Launcher,
 	pkB64 string,
+	hplOpts []benchmark.Option,
 	opts ...grpc.ServerOption,
 ) *http.Server {
 	r := chi.NewRouter()
@@ -69,7 +70,8 @@ func New(
 			r.Put(
 				"/phase1",
 				benchmark.NewHPLPhase1Handler(
-					func(optimal *hpl.Result, opts ...benchmark.BenchmarkOption) error {
+					func(optimal *hpl.Result, opts ...benchmark.Option) error {
+						opts = append(hplOpts, opts...)
 						b, err := benchmark.GeneratePhase2HPLBenchmark(
 							optimal.P,
 							optimal.Q,

@@ -41,6 +41,8 @@ var (
 	listenAddress string
 	publicAddress string
 
+	commonBenchmarkOpts = []benchmark.Option{}
+
 	tls      bool
 	keyFile  string
 	certFile string
@@ -525,11 +527,16 @@ func Init(ctx context.Context) *Container {
 		slurmScheduler,
 		benchmark.WithTimeLimit(benchmarkTimeLimit),
 	)
+	hplOpts := append(
+		commonBenchmarkOpts,
+		benchmark.WithImage(benchmarkHPLImage),
+	)
 	server := server.New(
 		metaScheduler,
 		resourceManager,
 		bl,
 		slurmSSHB64PK,
+		hplOpts,
 		opts...,
 	)
 	gc := gc.NewGC(metaScheduler, slurmScheduler)
@@ -552,6 +559,22 @@ var app = &cli.App{
 	Flags:   flags,
 	Action: func(cCtx *cli.Context) (err error) {
 		ctx := cCtx.Context
+		commonBenchmarkOpts = append(
+			commonBenchmarkOpts,
+			benchmark.WithSupervisorPublicAddress(publicAddress),
+		)
+		if benchmarkUCX {
+			commonBenchmarkOpts = append(
+				commonBenchmarkOpts,
+				benchmark.WithUCX(benchmarkUCXAffinity, benchmarkUCXTransport),
+			)
+		}
+		if benchmarkTrace {
+			commonBenchmarkOpts = append(
+				commonBenchmarkOpts,
+				benchmark.WithTrace(),
+			)
+		}
 		container := Init(ctx)
 
 		go func() {
@@ -574,22 +597,6 @@ var app = &cli.App{
 
 		// Launch benchmark which will register the node
 		if !benchmarkDisable {
-			benchmarkOpts := []benchmark.BenchmarkOption{
-				benchmark.WithSupervisorPublicAddress(publicAddress),
-			}
-			if benchmarkUCX {
-				benchmarkOpts = append(
-					benchmarkOpts,
-					benchmark.WithUCX(benchmarkUCXAffinity, benchmarkUCXTransport),
-				)
-			}
-			if benchmarkTrace {
-				benchmarkOpts = append(
-					benchmarkOpts,
-					benchmark.WithTrace(),
-				)
-			}
-
 			go func() {
 				logger.I.Info("initial slurm healthcheck...")
 				if err := try.Do(10, 10*time.Second, func(try int) error {
@@ -645,7 +652,7 @@ var app = &cli.App{
 				minMemPerNode := slices.Min(memPerNode)
 
 				hplOpts := append(
-					benchmarkOpts,
+					commonBenchmarkOpts,
 					benchmark.WithClusterSpecs(
 						hplNodes,
 						minCPUsPerNode,
@@ -656,7 +663,7 @@ var app = &cli.App{
 				)
 
 				osuOpts := append(
-					benchmarkOpts,
+					commonBenchmarkOpts,
 					benchmark.WithClusterSpecs(
 						nodes,
 						minCPUsPerNode,
@@ -667,7 +674,7 @@ var app = &cli.App{
 				)
 
 				speedtestOpts := append(
-					benchmarkOpts,
+					commonBenchmarkOpts,
 					benchmark.WithClusterSpecs(
 						nodes,
 						minCPUsPerNode,
@@ -702,9 +709,9 @@ var app = &cli.App{
 func launchBenchmarks(
 	ctx context.Context,
 	benchmarkLauncher benchmark.Launcher,
-	hplOpts []benchmark.BenchmarkOption,
-	osuOpts []benchmark.BenchmarkOption,
-	speedtestOpts []benchmark.BenchmarkOption,
+	hplOpts []benchmark.Option,
+	osuOpts []benchmark.Option,
+	speedtestOpts []benchmark.Option,
 ) {
 	var wg sync.WaitGroup
 	wg.Add(3)
