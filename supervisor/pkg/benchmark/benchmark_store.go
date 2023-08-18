@@ -30,7 +30,7 @@ type Store struct {
 
 func NewStore() *Store {
 	return &Store{
-		refresh: make(chan struct{}, 4),
+		refresh: make(chan struct{}, 1),
 	}
 }
 
@@ -38,7 +38,10 @@ func (s *Store) SetUploadBandwidth(upload uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data.UploadBandwidth = upload
-	s.refresh <- struct{}{}
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
 	logger.I.Info("stored benchmark result", zap.Uint64("upload-bandwidth", upload))
 }
 
@@ -46,7 +49,10 @@ func (s *Store) SetDownloadBandwidth(download uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data.DownloadBandwidth = download
-	s.refresh <- struct{}{}
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
 	logger.I.Info("stored benchmark result", zap.Uint64("download-bandwidth", download))
 }
 
@@ -54,7 +60,10 @@ func (s *Store) SetGFLOPS(gflops float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data.GFLOPS = gflops
-	s.refresh <- struct{}{}
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
 	logger.I.Info("stored benchmark result", zap.Float64("gflops", gflops))
 }
 
@@ -62,7 +71,10 @@ func (s *Store) SetP2PBidirectionalBandwidth(bandwidth float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data.P2PBidirectionalBandwidth = bandwidth
-	s.refresh <- struct{}{}
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
 	logger.I.Info("stored benchmark result", zap.Float64("p2p-bibw", bandwidth))
 }
 
@@ -70,7 +82,10 @@ func (s *Store) SetAllToAllCollectiveLatency(latency float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data.AllToAllCollectiveLatency = latency
-	s.refresh <- struct{}{}
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
 	logger.I.Info("stored benchmark result", zap.Float64("alltoall-latency", latency))
 }
 
@@ -78,7 +93,10 @@ func (s *Store) SetP2PLatency(latency float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.data.P2PLatency = latency
-	s.refresh <- struct{}{}
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
 	logger.I.Info("stored benchmark result", zap.Float64("p2p-latency", latency))
 }
 

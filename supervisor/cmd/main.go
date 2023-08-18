@@ -600,16 +600,16 @@ var app = &cli.App{
 
 				logger.I.Info("cancelling old benchmarks")
 				if err := container.benchmarkLauncher.Cancel(ctx, "osu"); err != nil {
-					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
+					logger.I.Warn("failed to cancel osu benchmark", zap.Error(err))
 				}
 				if err := container.benchmarkLauncher.Cancel(ctx, "speedtest"); err != nil {
-					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
+					logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
 				}
 				if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
-					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
+					logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
 				}
 				if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase2"); err != nil {
-					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
+					logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
 				}
 				logger.I.Info("launching new benchmarks")
 
@@ -708,18 +708,23 @@ func launchBenchmarks(
 ) {
 	var wg sync.WaitGroup
 	wg.Add(3)
+	errc := make(chan error, 1)
 	go func() {
 		defer wg.Done()
 		b, err := benchmark.GeneratePhase1HPLBenchmark(hplOpts...)
 		if err != nil {
-			logger.I.Fatal("failed to generate hpl phase 1 benchmark", zap.Error(err))
+			logger.I.Error("failed to generate hpl phase 1 benchmark", zap.Error(err))
+			errc <- err
+			return
 		}
 
 		if err := benchmarkLauncher.Launch(ctx, "hpl-phase1", b); err != nil {
-			logger.I.Fatal(
+			logger.I.Error(
 				"hpl-phase1 benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
+			errc <- err
+			return
 		}
 	}()
 
@@ -727,14 +732,18 @@ func launchBenchmarks(
 		defer wg.Done()
 		b, err := benchmark.GenerateOSUBenchmark(osuOpts...)
 		if err != nil {
-			logger.I.Fatal("failed to generate osu benchmark", zap.Error(err))
+			logger.I.Error("failed to generate osu benchmark", zap.Error(err))
+			errc <- err
+			return
 		}
 
 		if err := benchmarkLauncher.Launch(ctx, "osu", b); err != nil {
-			logger.I.Fatal(
+			logger.I.Error(
 				"osu benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
+			errc <- err
+			return
 		}
 	}()
 
@@ -742,17 +751,42 @@ func launchBenchmarks(
 		defer wg.Done()
 		b, err := benchmark.GenerateSpeedTestBenchmark(speedtestOpts...)
 		if err != nil {
-			logger.I.Fatal("failed to generate speedtest benchmark", zap.Error(err))
+			logger.I.Error("failed to generate speedtest benchmark", zap.Error(err))
+			errc <- err
+			return
 		}
 
 		if err := benchmarkLauncher.Launch(ctx, "speedtest", b); err != nil {
-			logger.I.Fatal(
+			logger.I.Error(
 				"speedtest benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
+			errc <- err
+			return
 		}
 	}()
-	wg.Wait()
+
+	go func() {
+		wg.Wait()
+		close(errc)
+	}()
+
+	if err := <-errc; err != nil {
+		logger.I.Warn("cancelling benchmarks due to failure")
+		if err := benchmarkLauncher.Cancel(ctx, "osu"); err != nil {
+			logger.I.Warn("failed to cancel osu benchmark", zap.Error(err))
+		}
+		if err := benchmarkLauncher.Cancel(ctx, "speedtest"); err != nil {
+			logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
+		}
+		if err := benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
+			logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
+		}
+		if err := benchmarkLauncher.Cancel(ctx, "hpl-phase2"); err != nil {
+			logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
+		}
+		logger.I.Fatal("benchmarks failed", zap.Error(err))
+	}
 
 	benchmark.DefaultStore.WaitForCompletion(ctx)
 
