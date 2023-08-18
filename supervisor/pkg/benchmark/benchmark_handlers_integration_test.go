@@ -4,7 +4,9 @@ package benchmark_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -14,43 +16,45 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockbenchmark"
-	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockmetascheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
-	"github.com/stretchr/testify/mock"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/hpl"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/secret"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/speedtest"
 	"github.com/stretchr/testify/require"
 )
 
-//go:embed result/fixtures/1n2gpu16cpu.log
-var fixture []byte
+var (
+	//go:embed hpl/fixtures/1n2gpu16cpu.log
+	hplFixture []byte
+	//go:embed osu/fixtures/alltoall.log
+	osuFixture []byte
+	//go:embed speedtest/fixtures/result.json
+	speedtestFixture []byte
+)
 
 func TestPhase1Handler(t *testing.T) {
 	// Arrange
 	// Prepare fixture
 	file, err := os.CreateTemp("", "test-tmp")
 	require.NoError(t, err)
-	file.Write(fixture)
+	file.Write(hplFixture)
 	err = file.Close()
 	require.NoError(t, err)
 	defer os.Remove(file.Name())
 	fmt.Printf("created tmp fixture: %s", file.Name())
 
-	// Mocks
-	launcher := mockbenchmark.NewLauncher(t)
-	impl := benchmark.NewPhase1Handler(launcher)
-	// Expect verify
-	launcher.EXPECT().Verify([]byte("SECRET")).Return(true)
-	// Expect to launch phase 2
-	launcher.EXPECT().
-		RunPhase2(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(nil)
+	impl := benchmark.NewHPLPhase1Handler(
+		func(optimal *hpl.Result, opts ...benchmark.BenchmarkOption) error {
+			require.NotEmpty(t, optimal)
+			return nil
+		},
+	)
 
 	// Arrangements to handle race conditions and asserts
 	done := make(chan struct{}, 1)
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	http.HandleFunc("/benchmark/phase1", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/benchmark/hpl/phase1", func(w http.ResponseWriter, r *http.Request) {
 		impl(w, r)
 		out, err := httputil.DumpRequest(r, false)
 		require.NoError(t, err)
@@ -59,16 +63,23 @@ func TestPhase1Handler(t *testing.T) {
 	})
 
 	// Act
-	go http.ListenAndServe(":3000", nil)
+	port := generateRandomPort()
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf("localhost:%d", port), nil)
+		require.NoError(t, err)
+	}()
 
 	cmd := exec.Command(
 		"curl",
-		"-sS",
+		"-fsSL",
 		"-H",
-		"X-Secret: U0VDUkVU",
+		fmt.Sprintf("X-Secret: %s", base64.StdEncoding.EncodeToString(secret.Get())),
 		"--upload-file",
 		file.Name(),
-		"http://localhost:3000/benchmark/phase1",
+		fmt.Sprintf(
+			"http://localhost:%d/benchmark/hpl/phase1?nodes=1&cpusPerNode=16&gpusPerNode=2&memPerNode=100000",
+			port,
+		),
 	)
 	_, err = cmd.CombinedOutput()
 	require.NoError(t, err)
@@ -86,36 +97,23 @@ func TestPhase2Handler(t *testing.T) {
 	// Prepare fixture
 	file, err := os.CreateTemp("", "test-tmp")
 	require.NoError(t, err)
-	file.Write(fixture)
+	file.Write(hplFixture)
 	err = file.Close()
 	require.NoError(t, err)
 	defer os.Remove(file.Name())
 	fmt.Printf("created tmp fixture: %s", file.Name())
 
 	// Mocks
-	doneRegister := make(chan struct{})
-	launcher := mockbenchmark.NewLauncher(t)
-	ms := mockmetascheduler.NewMetaScheduler(t)
-	scheduler := mockscheduler.NewScheduler(t)
-	impl := benchmark.NewPhase2Handler(launcher, scheduler, ms)
-	// Expect verify
-	launcher.EXPECT().Verify([]byte("SECRET")).Return(true)
-	scheduler.EXPECT().FindTotalNodes(mock.Anything).Return(1, nil)
-	scheduler.EXPECT().FindTotalCPUs(mock.Anything).Return(16, nil)
-	scheduler.EXPECT().FindTotalGPUs(mock.Anything).Return(2, nil)
-	scheduler.EXPECT().FindTotalMem(mock.Anything).Return(128000, nil)
-	ms.EXPECT().
-		Register(mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		RunAndReturn(func(ctx context.Context, u1, u2, u3, u4 uint64, f float64) error {
-			doneRegister <- struct{}{}
-			return nil
-		})
+	impl := benchmark.NewHPLPhase2Handler(func(gflops float64) error {
+		require.NotEmpty(t, gflops)
+		return nil
+	})
 
 	// Arrangements to handle race conditions and asserts
 	done := make(chan struct{}, 1)
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	http.HandleFunc("/benchmark/phase2", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/benchmark/hpl/phase2", func(w http.ResponseWriter, r *http.Request) {
 		impl(w, r)
 		out, err := httputil.DumpRequest(r, false)
 		require.NoError(t, err)
@@ -124,16 +122,20 @@ func TestPhase2Handler(t *testing.T) {
 	})
 
 	// Act
-	go http.ListenAndServe(":3000", nil)
+	port := generateRandomPort()
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf("localhost:%d", port), nil)
+		require.NoError(t, err)
+	}()
 
 	cmd := exec.Command(
 		"curl",
-		"-sS",
+		"-fsSL",
 		"-H",
-		"X-Secret: U0VDUkVU",
+		fmt.Sprintf("X-Secret: %s", base64.StdEncoding.EncodeToString(secret.Get())),
 		"--upload-file",
 		file.Name(),
-		"http://localhost:3000/benchmark/phase2",
+		fmt.Sprintf("http://localhost:%d/benchmark/hpl/phase2", port),
 	)
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err)
@@ -145,11 +147,124 @@ func TestPhase2Handler(t *testing.T) {
 	case <-ctx.Done():
 		require.NoError(t, ctx.Err())
 	}
+}
+
+func TestSpeedTestHandler(t *testing.T) {
+	// Arrange
+	// Prepare fixture
+	file, err := os.CreateTemp("", "test-tmp")
+	require.NoError(t, err)
+	file.Write(speedtestFixture)
+	err = file.Close()
+	require.NoError(t, err)
+	defer os.Remove(file.Name())
+	fmt.Printf("created tmp fixture: %s", file.Name())
+
+	// Mocks
+	impl := benchmark.NewSpeedTestHandler(func(res *speedtest.Result) error {
+		require.NotEmpty(t, res)
+		return nil
+	})
+
+	// Arrangements to handle race conditions and asserts
+	done := make(chan struct{}, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	http.HandleFunc("/benchmark/speedtest", func(w http.ResponseWriter, r *http.Request) {
+		impl(w, r)
+		out, err := httputil.DumpRequest(r, false)
+		require.NoError(t, err)
+		fmt.Printf("received request\n%s", string(out))
+		done <- struct{}{}
+	})
+
+	// Act
+	port := generateRandomPort()
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf("localhost:%d", port), nil)
+		require.NoError(t, err)
+	}()
+
+	cmd := exec.Command(
+		"curl",
+		"-fsSL",
+		"-H",
+		fmt.Sprintf("X-Secret: %s", base64.StdEncoding.EncodeToString(secret.Get())),
+		"--upload-file",
+		file.Name(),
+		fmt.Sprintf("http://localhost:%d/benchmark/speedtest", port),
+	)
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	fmt.Println(string(out))
 
 	select {
-	case <-doneRegister:
+	case <-done:
 		// Pass
 	case <-ctx.Done():
 		require.NoError(t, ctx.Err())
 	}
+}
+
+func TestOSUHandler(t *testing.T) {
+	// Arrange
+	// Prepare fixture
+	file, err := os.CreateTemp("", "test-tmp")
+	require.NoError(t, err)
+	file.Write(osuFixture)
+	err = file.Close()
+	require.NoError(t, err)
+	defer os.Remove(file.Name())
+	fmt.Printf("created tmp fixture: %s", file.Name())
+
+	// Mocks
+	impl := benchmark.NewOSUHandler(func(res float64) error {
+		require.NotEmpty(t, res)
+		return nil
+	})
+
+	// Arrangements to handle race conditions and asserts
+	done := make(chan struct{}, 1)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	http.HandleFunc("/benchmark/osu", func(w http.ResponseWriter, r *http.Request) {
+		impl(w, r)
+		out, err := httputil.DumpRequest(r, false)
+		require.NoError(t, err)
+		fmt.Printf("received request\n%s", string(out))
+		done <- struct{}{}
+	})
+
+	// Act
+	port := generateRandomPort()
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf("localhost:%d", port), nil)
+		require.NoError(t, err)
+	}()
+
+	cmd := exec.Command(
+		"curl",
+		"-fsSL",
+		"-H",
+		fmt.Sprintf("X-Secret: %s", base64.StdEncoding.EncodeToString(secret.Get())),
+		"--upload-file",
+		file.Name(),
+		fmt.Sprintf("http://localhost:%d/benchmark/osu", port),
+	)
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	fmt.Println(string(out))
+
+	select {
+	case <-done:
+		// Pass
+	case <-ctx.Done():
+		require.NoError(t, ctx.Err())
+	}
+}
+
+func generateRandomPort() int {
+	minPort := 49152
+	maxPort := 65535
+	return rand.Intn(maxPort-minPort+1) + minPort
 }

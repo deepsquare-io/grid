@@ -1,0 +1,55 @@
+{
+  "type": "result",
+  "timestamp": "2023-08-17T13:33:11Z",
+  "ping": {
+    "jitter": 0.044,
+    "latency": 0.52,
+    "low": 0.493,
+    "high": 0.612
+  },
+  "download": {
+    "bandwidth": 1135906059,
+    "bytes": 4086586352,
+    "elapsed": 3601,
+    "latency": {
+      "iqm": 1.689,
+      "low": 0.867,
+      "high": 3.638,
+      "jitter": 0.434
+    }
+  },
+  "upload": {
+    "bandwidth": 1167130833,
+    "bytes": 4199979048,
+    "elapsed": 3600,
+    "latency": {
+      "iqm": 1.339,
+      "low": 0.322,
+      "high": 2.768,
+      "jitter": 0.343
+    }
+  },
+  "packetLoss": 0,
+  "isp": "IWB Industrielle Werke Basel",
+  "interface": {
+    "internalIp": "10.10.2.51",
+    "name": "eno2np1",
+    "macAddr": "18:C0:4D:B7:83:A3",
+    "isVpn": false,
+    "externalIp": "185.69.137.138"
+  },
+  "server": {
+    "id": 48663,
+    "host": "speedtest.iwbtelekom.net",
+    "port": 8080,
+    "name": "IWB Telekom",
+    "location": "Basel",
+    "country": "Switzerland",
+    "ip": "77.73.243.34"
+  },
+  "result": {
+    "id": "2ccf89fd-591c-49f5-a5fc-5be08274d8c0",
+    "url": "https://www.speedtest.net/result/c/2ccf89fd-591c-49f5-a5fc-5be08274d8c0",
+    "persisted": true
+  }
+}

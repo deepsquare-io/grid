@@ -5551,5 +5551,5 @@ srun: error: cn1: tasks 0-1: Killed
 ++ grep StdOut=
 ++ sed 's/.*StdOut=//g'
 + LOG_FILE=/tmp/benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-awrziLmnqR.log
-+ curl -sS --upload-file /tmp/benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-awrziLmnqR.log -H 'X-Secret: 9QXRMGB5PGAMGk393feAos+BbTCZAuohJ6qMG9i+/GKZZVwWrI24VqpBQ+Hit4tg05vQPjHldVAoivS2olVedw==' https:///benchmark/phase1
++ curl -fsSL --upload-file /tmp/benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-awrziLmnqR.log -H 'X-Secret: 9QXRMGB5PGAMGk393feAos+BbTCZAuohJ6qMG9i+/GKZZVwWrI24VqpBQ+Hit4tg05vQPjHldVAoivS2olVedw==' https:///benchmark/hpl/phase1
 curl: (6) Could not resolve host: benchmark

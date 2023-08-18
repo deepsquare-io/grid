@@ -1,4 +1,4 @@
-package result
+package hpl
 
 import (
 	"bufio"
@@ -47,6 +47,9 @@ func (r *Reader) ReadAsResult() (*Result, error) {
 	var line string
 	for {
 		if !r.logs.Scan() {
+			if err := r.logs.Err(); err != nil {
+				return nil, err
+			}
 			return nil, io.EOF
 		}
 		line = strings.TrimSpace(r.logs.Text())

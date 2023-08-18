@@ -5,6 +5,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"slices"
+	"sync"
 	"time"
 
 	cryptotls "crypto/tls"
@@ -64,13 +66,15 @@ var (
 	nvidiaSMI string
 	partition string
 
-	benchmarkImage        string
-	benchmarkSingleNode   bool
-	benchmarkDisable      bool
-	benchmarkRunAs        string
-	benchmarkUnresponsive bool
-	benchmarkTimeLimit    time.Duration
-	benchmarkTrace        bool
+	benchmarkHPLImage       string
+	benchmarkSpeedTestImage string
+	benchmarkOSUImage       string
+	benchmarkHPLSingleNode  bool
+	benchmarkDisable        bool
+	benchmarkRunAs          string
+	benchmarkUnresponsive   bool
+	benchmarkTimeLimit      time.Duration
+	benchmarkTrace          bool
 
 	benchmarkUCX          bool
 	benchmarkUCXAffinity  string
@@ -267,11 +271,19 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		Category:    "Miscellaneous:",
 	},
 	&cli.StringFlag{
-		Name:        "benchmark.image",
-		Usage:       "Docker image used for benchmark",
-		Destination: &benchmarkImage,
-		Value:       "registry-1.deepsquare.run#library/hpc-benchmarks:23.5",
-		EnvVars:     []string{"BENCHMARK_IMAGE"},
+		Name:        "benchmark.speedtest.image",
+		Usage:       "Docker image used for SpeedTest benchmark",
+		Destination: &benchmarkSpeedTestImage,
+		Value:       benchmark.DefaultSpeedTestImage,
+		EnvVars:     []string{"BENCHMARK_SPEEDTEST_IMAGE"},
+		Category:    "Benchmark:",
+	},
+	&cli.StringFlag{
+		Name:        "benchmark.osu.image",
+		Usage:       "Docker image used for OSU benchmark",
+		Destination: &benchmarkOSUImage,
+		Value:       benchmark.DefaultOSUImage,
+		EnvVars:     []string{"BENCHMARK_OSU_IMAGE"},
 		Category:    "Benchmark:",
 	},
 	&cli.StringFlag{
@@ -282,12 +294,20 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		EnvVars:     []string{"BENCHMARK_RUN_AS"},
 		Category:    "Benchmark:",
 	},
+	&cli.StringFlag{
+		Name:        "benchmark.hpl.image",
+		Usage:       "Docker image used for HPL benchmark",
+		Destination: &benchmarkHPLImage,
+		Value:       benchmark.DefaultHPLImage,
+		EnvVars:     []string{"BENCHMARK_HPL_IMAGE"},
+		Category:    "Benchmark:",
+	},
 	&cli.BoolFlag{
-		Name:        "benchmark.single-node",
-		Usage:       "Force single node benchmark.",
-		Destination: &benchmarkSingleNode,
+		Name:        "benchmark.hpl.single-node",
+		Usage:       "Force single node benchmark for HPL.",
+		Destination: &benchmarkHPLSingleNode,
 		Value:       false,
-		EnvVars:     []string{"BENCHMARK_SINGLE_NODE"},
+		EnvVars:     []string{"BENCHMARK_HPL_SINGLE_NODE"},
 		Category:    "Benchmark:",
 	},
 	&cli.BoolFlag{
@@ -302,7 +322,7 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		Name:        "benchmark.time-limit",
 		Usage:       "Time limit (syntax is golang duration style).",
 		Destination: &benchmarkTimeLimit,
-		Value:       24 * time.Hour,
+		Value:       benchmark.DefaultTimeLimit,
 		EnvVars:     []string{"BENCHMARK_TIME_LIMIT"},
 		Category:    "Benchmark:",
 	},
@@ -373,12 +393,13 @@ Note that TCP is not supported at the moment.
 
 // Container stores the instances for dependency injection.
 type Container struct {
-	server        *server.Server
-	sbatchAPI     pkgsbatch.Client
-	metascheduler metascheduler.MetaScheduler
-	scheduler     scheduler.Scheduler
-	jobWatcher    *watcher.Watcher
-	gc            *gc.GC
+	server            *http.Server
+	sbatchAPI         pkgsbatch.Client
+	metascheduler     metascheduler.MetaScheduler
+	scheduler         scheduler.Scheduler
+	jobWatcher        *watcher.Watcher
+	gc                *gc.GC
+	benchmarkLauncher benchmark.Launcher
 }
 
 func Init(ctx context.Context) *Container {
@@ -498,21 +519,29 @@ func Init(ctx context.Context) *Container {
 		}
 		opts = append(opts, grpc.Creds(creds))
 	}
+	bl := benchmark.NewLauncher(
+		benchmarkRunAs,
+		publicAddress,
+		slurmScheduler,
+		benchmark.WithTimeLimit(benchmarkTimeLimit),
+	)
 	server := server.New(
 		metaScheduler,
 		resourceManager,
+		bl,
 		slurmSSHB64PK,
 		opts...,
 	)
 	gc := gc.NewGC(metaScheduler, slurmScheduler)
 
 	return &Container{
-		sbatchAPI:     sbatchClient,
-		metascheduler: metaScheduler,
-		scheduler:     slurmScheduler,
-		jobWatcher:    watcher,
-		server:        server,
-		gc:            gc,
+		sbatchAPI:         sbatchClient,
+		metascheduler:     metaScheduler,
+		scheduler:         slurmScheduler,
+		jobWatcher:        watcher,
+		benchmarkLauncher: bl,
+		server:            server,
+		gc:                gc,
 	}
 }
 
@@ -543,85 +572,118 @@ var app = &cli.App{
 			}
 		}()
 
-		logger.I.Info("initial slurm healthcheck...")
-		if err := try.Do(10, 10*time.Second, func(try int) error {
-			return container.scheduler.HealthCheck(ctx)
-		}); err != nil {
-			logger.I.Fatal("healthcheck failed", zap.Error(err))
-		}
-
-		logger.I.Info("searching for cluster specs...")
-		var benchmarkOpts []scheduler.FindSpecOption
-		if !benchmarkUnresponsive {
-			benchmarkOpts = append(benchmarkOpts, scheduler.WithOnlyResponding())
-		}
-		var benchmarkNodes uint64
-		if benchmarkSingleNode {
-			benchmarkNodes = 1
-		} else {
-			benchmarkNodes, err = container.scheduler.FindTotalNodes(ctx, benchmarkOpts...)
-			if err != nil {
-				logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
-			}
-		}
-		cpusPerNode, err := container.scheduler.FindCPUsPerNode(ctx, benchmarkOpts...)
-		if err != nil {
-			logger.I.Fatal("failed to check cpus per node", zap.Error(err))
-		}
-		gpusPerNode, err := container.scheduler.FindGPUsPerNode(ctx, benchmarkOpts...)
-		if err != nil {
-			logger.I.Fatal("failed to check gpus per node", zap.Error(err))
-		}
-		memPerNode, err := container.scheduler.FindMemPerNode(ctx, benchmarkOpts...)
-		if err != nil {
-			logger.I.Fatal("failed to check mem per node", zap.Error(err))
-		}
-		launcherOpts := []benchmark.LauncherOption{}
-		if benchmarkUCX {
-			launcherOpts = append(
-				launcherOpts,
-				benchmark.WithUCX(benchmarkUCXAffinity, benchmarkUCXTransport),
-			)
-		}
-		if benchmarkTrace {
-			launcherOpts = append(
-				launcherOpts,
-				benchmark.WithTrace(),
-			)
-		}
-		bl := benchmark.NewLauncher(
-			benchmarkImage,
-			benchmarkRunAs,
-			publicAddress,
-			container.scheduler,
-			benchmarkNodes,
-			cpusPerNode,
-			memPerNode,
-			gpusPerNode,
-			benchmarkTimeLimit,
-			launcherOpts...,
-		)
-		container.server.AddBenchmarkRoutes(
-			container.metascheduler,
-			container.scheduler,
-			bl,
-		)
-
 		// Launch benchmark which will register the node
 		if !benchmarkDisable {
+			benchmarkOpts := []benchmark.BenchmarkOption{
+				benchmark.WithSupervisorPublicAddress(publicAddress),
+			}
+			if benchmarkUCX {
+				benchmarkOpts = append(
+					benchmarkOpts,
+					benchmark.WithUCX(benchmarkUCXAffinity, benchmarkUCXTransport),
+				)
+			}
+			if benchmarkTrace {
+				benchmarkOpts = append(
+					benchmarkOpts,
+					benchmark.WithTrace(),
+				)
+			}
+
 			go func() {
+				logger.I.Info("initial slurm healthcheck...")
+				if err := try.Do(10, 10*time.Second, func(try int) error {
+					return container.scheduler.HealthCheck(ctx)
+				}); err != nil {
+					logger.I.Fatal("healthcheck failed", zap.Error(err))
+				}
+
 				logger.I.Info("cancelling old benchmarks")
-				if err := bl.Cancel(ctx); err != nil {
+				if err := container.benchmarkLauncher.Cancel(ctx, "osu"); err != nil {
+					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
+				}
+				if err := container.benchmarkLauncher.Cancel(ctx, "speedtest"); err != nil {
+					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
+				}
+				if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
+					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
+				}
+				if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase2"); err != nil {
 					logger.I.Warn("failed to cancel old benchmarks", zap.Error(err))
 				}
 				logger.I.Info("launching new benchmarks")
 
-				if err := bl.RunPhase1(ctx); err != nil {
-					logger.I.Fatal(
-						"phase1 benchmark failed or failed to be tracked",
-						zap.Error(err),
-					)
+				logger.I.Info("searching for cluster specs...")
+				var findOpts []scheduler.FindSpecOption
+				if !benchmarkUnresponsive {
+					findOpts = append(findOpts, scheduler.WithOnlyResponding())
 				}
+				nodes, err := container.scheduler.FindTotalNodes(ctx, findOpts...)
+				if err != nil {
+					logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
+				}
+				var hplNodes uint64
+				if benchmarkHPLSingleNode {
+					hplNodes = 1
+				} else {
+					hplNodes = nodes
+				}
+				cpusPerNode, err := container.scheduler.FindCPUsPerNode(ctx, findOpts...)
+				if err != nil {
+					logger.I.Fatal("failed to check cpus per node", zap.Error(err))
+				}
+				minCPUsPerNode := slices.Min(cpusPerNode)
+				gpusPerNode, err := container.scheduler.FindGPUsPerNode(ctx, findOpts...)
+				if err != nil {
+					logger.I.Fatal("failed to check gpus per node", zap.Error(err))
+				}
+				minGPUsPerNode := slices.Min(gpusPerNode)
+				memPerNode, err := container.scheduler.FindMemPerNode(ctx, findOpts...)
+				if err != nil {
+					logger.I.Fatal("failed to check mem per node", zap.Error(err))
+				}
+				minMemPerNode := slices.Min(memPerNode)
+
+				hplOpts := append(
+					benchmarkOpts,
+					benchmark.WithClusterSpecs(
+						hplNodes,
+						minCPUsPerNode,
+						minGPUsPerNode,
+						minMemPerNode,
+					),
+					benchmark.WithImage(benchmarkHPLImage),
+				)
+
+				osuOpts := append(
+					benchmarkOpts,
+					benchmark.WithClusterSpecs(
+						nodes,
+						minCPUsPerNode,
+						minGPUsPerNode,
+						minMemPerNode,
+					),
+					benchmark.WithImage(benchmarkHPLImage),
+				)
+
+				speedtestOpts := append(
+					benchmarkOpts,
+					benchmark.WithClusterSpecs(
+						nodes,
+						minCPUsPerNode,
+						minGPUsPerNode,
+						minMemPerNode,
+					),
+					benchmark.WithImage(benchmarkHPLImage),
+				)
+
+				launchBenchmarks(
+					ctx,
+					container.benchmarkLauncher,
+					hplOpts,
+					osuOpts,
+					speedtestOpts,
+				)
 			}()
 		} else {
 			logger.I.Warn("benchmark disabled, will not register to the smart-contract")
@@ -635,6 +697,66 @@ var app = &cli.App{
 
 		return container.jobWatcher.Watch(ctx)
 	},
+}
+
+func launchBenchmarks(
+	ctx context.Context,
+	benchmarkLauncher benchmark.Launcher,
+	hplOpts []benchmark.BenchmarkOption,
+	osuOpts []benchmark.BenchmarkOption,
+	speedtestOpts []benchmark.BenchmarkOption,
+) {
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		b, err := benchmark.GeneratePhase1HPLBenchmark(hplOpts...)
+		if err != nil {
+			logger.I.Fatal("failed to generate hpl phase 1 benchmark", zap.Error(err))
+		}
+
+		if err := benchmarkLauncher.Launch(ctx, "hpl-phase1", b); err != nil {
+			logger.I.Fatal(
+				"hpl-phase1 benchmark failed or failed to be tracked",
+				zap.Error(err),
+			)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		b, err := benchmark.GenerateOSUBenchmark(osuOpts...)
+		if err != nil {
+			logger.I.Fatal("failed to generate osu benchmark", zap.Error(err))
+		}
+
+		if err := benchmarkLauncher.Launch(ctx, "osu", b); err != nil {
+			logger.I.Fatal(
+				"osu benchmark failed or failed to be tracked",
+				zap.Error(err),
+			)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		b, err := benchmark.GenerateSpeedTestBenchmark(speedtestOpts...)
+		if err != nil {
+			logger.I.Fatal("failed to generate speedtest benchmark", zap.Error(err))
+		}
+
+		if err := benchmarkLauncher.Launch(ctx, "speedtest", b); err != nil {
+			logger.I.Fatal(
+				"speedtest benchmark failed or failed to be tracked",
+				zap.Error(err),
+			)
+		}
+	}()
+	wg.Wait()
+
+	benchmark.DefaultStore.WaitForCompletion(ctx)
+
+	logger.I.Info("benchmark has finished", zap.Any("results", benchmark.DefaultStore.Dump()))
 }
 
 func main() {

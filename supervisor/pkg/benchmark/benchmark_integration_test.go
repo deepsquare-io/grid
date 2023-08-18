@@ -5,8 +5,8 @@ package benchmark_test
 import (
 	"context"
 	"os"
+	"slices"
 	"testing"
-	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
@@ -50,25 +50,31 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1SingleNode() {
 	memPerNode, err := suite.scheduler.FindMemPerNode(ctx)
 	suite.Require().NoError(err)
 	suite.impl = benchmark.NewLauncher(
-		"registry-1.deepsquare.run#library/hpc-benchmarks:23.5",
 		"root",
 		suite.publicAddress,
 		suite.scheduler,
-		1,
-		cpusPerNode,
-		memPerNode,
-		gpusPerNode,
-		2*time.Hour,
 		benchmark.WithNoWait(),
 	)
 
-	err = suite.impl.RunPhase1(context.Background())
+	b, err := benchmark.GeneratePhase1HPLBenchmark(
+		benchmark.WithClusterSpecs(
+			1,
+			slices.Min(cpusPerNode),
+			slices.Min(gpusPerNode),
+			slices.Min(memPerNode),
+		),
+		benchmark.WithSupervisorPublicAddress(suite.publicAddress),
+	)
+	suite.Require().NoError(err)
 
+	err = suite.impl.Launch(ctx, "test", b)
 	suite.Require().NoError(err)
 }
 
-func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1ThreeNodes() {
+func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1() {
 	ctx := context.Background()
+	nodes, err := suite.scheduler.FindTotalNodes(ctx, scheduler.WithOnlyResponding())
+	suite.Require().NoError(err)
 	cpusPerNode, err := suite.scheduler.FindCPUsPerNode(ctx)
 	suite.Require().NoError(err)
 	gpusPerNode, err := suite.scheduler.FindGPUsPerNode(ctx)
@@ -76,22 +82,74 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1ThreeNodes() {
 	memPerNode, err := suite.scheduler.FindMemPerNode(ctx)
 	suite.Require().NoError(err)
 	suite.impl = benchmark.NewLauncher(
-		"registry-1.deepsquare.run#library/hpc-benchmarks:23.5",
 		"root",
 		suite.publicAddress,
 		suite.scheduler,
-		3,
-		cpusPerNode,
-		memPerNode,
-		gpusPerNode,
-		2*time.Hour,
-		// benchmark.WithUCX("mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1|mlx5_2:1", ""),
-		benchmark.WithUCX("eno2np1|eno2np1|eno2np1|eno2np1|eno2np1|eno2np1", ""),
 		benchmark.WithNoWait(),
 	)
 
-	err = suite.impl.RunPhase1(context.Background())
+	b, err := benchmark.GeneratePhase1HPLBenchmark(
+		benchmark.WithClusterSpecs(
+			nodes,
+			slices.Min(cpusPerNode),
+			slices.Min(gpusPerNode),
+			slices.Min(memPerNode),
+		),
+		benchmark.WithSupervisorPublicAddress(suite.publicAddress),
+	)
+	suite.Require().NoError(err)
 
+	err = suite.impl.Launch(ctx, "test", b)
+	suite.Require().NoError(err)
+}
+
+func (suite *BenchmarkIntegrationTestSuite) TestRunSpeedTest() {
+	ctx := context.Background()
+	suite.impl = benchmark.NewLauncher(
+		"root",
+		suite.publicAddress,
+		suite.scheduler,
+		benchmark.WithNoWait(),
+	)
+
+	b, err := benchmark.GenerateSpeedTestBenchmark(
+		benchmark.WithSupervisorPublicAddress(suite.publicAddress),
+	)
+	suite.Require().NoError(err)
+
+	err = suite.impl.Launch(ctx, "test", b)
+	suite.Require().NoError(err)
+}
+
+func (suite *BenchmarkIntegrationTestSuite) TestRunOSU() {
+	ctx := context.Background()
+	nodes, err := suite.scheduler.FindTotalNodes(ctx, scheduler.WithOnlyResponding())
+	suite.Require().NoError(err)
+	cpusPerNode, err := suite.scheduler.FindCPUsPerNode(ctx)
+	suite.Require().NoError(err)
+	gpusPerNode, err := suite.scheduler.FindGPUsPerNode(ctx)
+	suite.Require().NoError(err)
+	memPerNode, err := suite.scheduler.FindMemPerNode(ctx)
+	suite.Require().NoError(err)
+	suite.impl = benchmark.NewLauncher(
+		"root",
+		suite.publicAddress,
+		suite.scheduler,
+		benchmark.WithNoWait(),
+	)
+
+	b, err := benchmark.GenerateOSUBenchmark(
+		benchmark.WithClusterSpecs(
+			nodes,
+			slices.Min(cpusPerNode),
+			slices.Min(gpusPerNode),
+			slices.Min(memPerNode),
+		),
+		benchmark.WithSupervisorPublicAddress(suite.publicAddress),
+	)
+	suite.Require().NoError(err)
+
+	err = suite.impl.Launch(ctx, "test", b)
 	suite.Require().NoError(err)
 }
 

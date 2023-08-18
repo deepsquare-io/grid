@@ -5,6 +5,8 @@ package mockbenchmark
 import (
 	context "context"
 
+	benchmark "github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
+
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -21,13 +23,13 @@ func (_m *Launcher) EXPECT() *Launcher_Expecter {
 	return &Launcher_Expecter{mock: &_m.Mock}
 }
 
-// Cancel provides a mock function with given fields: ctx
-func (_m *Launcher) Cancel(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// Cancel provides a mock function with given fields: ctx, name
+func (_m *Launcher) Cancel(ctx context.Context, name string) error {
+	ret := _m.Called(ctx, name)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, name)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -42,13 +44,14 @@ type Launcher_Cancel_Call struct {
 
 // Cancel is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Launcher_Expecter) Cancel(ctx interface{}) *Launcher_Cancel_Call {
-	return &Launcher_Cancel_Call{Call: _e.mock.On("Cancel", ctx)}
+//   - name string
+func (_e *Launcher_Expecter) Cancel(ctx interface{}, name interface{}) *Launcher_Cancel_Call {
+	return &Launcher_Cancel_Call{Call: _e.mock.On("Cancel", ctx, name)}
 }
 
-func (_c *Launcher_Cancel_Call) Run(run func(ctx context.Context)) *Launcher_Cancel_Call {
+func (_c *Launcher_Cancel_Call) Run(run func(ctx context.Context, name string)) *Launcher_Cancel_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -58,18 +61,18 @@ func (_c *Launcher_Cancel_Call) Return(_a0 error) *Launcher_Cancel_Call {
 	return _c
 }
 
-func (_c *Launcher_Cancel_Call) RunAndReturn(run func(context.Context) error) *Launcher_Cancel_Call {
+func (_c *Launcher_Cancel_Call) RunAndReturn(run func(context.Context, string) error) *Launcher_Cancel_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetJobName provides a mock function with given fields:
-func (_m *Launcher) GetJobName() string {
-	ret := _m.Called()
+// GetJobName provides a mock function with given fields: name
+func (_m *Launcher) GetJobName(name string) string {
+	ret := _m.Called(name)
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(string) string); ok {
+		r0 = rf(name)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
@@ -83,13 +86,14 @@ type Launcher_GetJobName_Call struct {
 }
 
 // GetJobName is a helper method to define mock.On call
-func (_e *Launcher_Expecter) GetJobName() *Launcher_GetJobName_Call {
-	return &Launcher_GetJobName_Call{Call: _e.mock.On("GetJobName")}
+//   - name string
+func (_e *Launcher_Expecter) GetJobName(name interface{}) *Launcher_GetJobName_Call {
+	return &Launcher_GetJobName_Call{Call: _e.mock.On("GetJobName", name)}
 }
 
-func (_c *Launcher_GetJobName_Call) Run(run func()) *Launcher_GetJobName_Call {
+func (_c *Launcher_GetJobName_Call) Run(run func(name string)) *Launcher_GetJobName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(string))
 	})
 	return _c
 }
@@ -99,18 +103,18 @@ func (_c *Launcher_GetJobName_Call) Return(_a0 string) *Launcher_GetJobName_Call
 	return _c
 }
 
-func (_c *Launcher_GetJobName_Call) RunAndReturn(run func() string) *Launcher_GetJobName_Call {
+func (_c *Launcher_GetJobName_Call) RunAndReturn(run func(string) string) *Launcher_GetJobName_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// RunPhase1 provides a mock function with given fields: ctx
-func (_m *Launcher) RunPhase1(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// Launch provides a mock function with given fields: ctx, name, _a2
+func (_m *Launcher) Launch(ctx context.Context, name string, _a2 *benchmark.Benchmark) error {
+	ret := _m.Called(ctx, name, _a2)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, string, *benchmark.Benchmark) error); ok {
+		r0 = rf(ctx, name, _a2)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -118,118 +122,32 @@ func (_m *Launcher) RunPhase1(ctx context.Context) error {
 	return r0
 }
 
-// Launcher_RunPhase1_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RunPhase1'
-type Launcher_RunPhase1_Call struct {
+// Launcher_Launch_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Launch'
+type Launcher_Launch_Call struct {
 	*mock.Call
 }
 
-// RunPhase1 is a helper method to define mock.On call
+// Launch is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *Launcher_Expecter) RunPhase1(ctx interface{}) *Launcher_RunPhase1_Call {
-	return &Launcher_RunPhase1_Call{Call: _e.mock.On("RunPhase1", ctx)}
+//   - name string
+//   - _a2 *benchmark.Benchmark
+func (_e *Launcher_Expecter) Launch(ctx interface{}, name interface{}, _a2 interface{}) *Launcher_Launch_Call {
+	return &Launcher_Launch_Call{Call: _e.mock.On("Launch", ctx, name, _a2)}
 }
 
-func (_c *Launcher_RunPhase1_Call) Run(run func(ctx context.Context)) *Launcher_RunPhase1_Call {
+func (_c *Launcher_Launch_Call) Run(run func(ctx context.Context, name string, _a2 *benchmark.Benchmark)) *Launcher_Launch_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		run(args[0].(context.Context), args[1].(string), args[2].(*benchmark.Benchmark))
 	})
 	return _c
 }
 
-func (_c *Launcher_RunPhase1_Call) Return(_a0 error) *Launcher_RunPhase1_Call {
+func (_c *Launcher_Launch_Call) Return(_a0 error) *Launcher_Launch_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *Launcher_RunPhase1_Call) RunAndReturn(run func(context.Context) error) *Launcher_RunPhase1_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// RunPhase2 provides a mock function with given fields: ctx, newP, newQ, newProblemSize, newBlockSize
-func (_m *Launcher) RunPhase2(ctx context.Context, newP uint64, newQ uint64, newProblemSize uint64, newBlockSize uint64) error {
-	ret := _m.Called(ctx, newP, newQ, newProblemSize, newBlockSize)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64, uint64) error); ok {
-		r0 = rf(ctx, newP, newQ, newProblemSize, newBlockSize)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Launcher_RunPhase2_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RunPhase2'
-type Launcher_RunPhase2_Call struct {
-	*mock.Call
-}
-
-// RunPhase2 is a helper method to define mock.On call
-//   - ctx context.Context
-//   - newP uint64
-//   - newQ uint64
-//   - newProblemSize uint64
-//   - newBlockSize uint64
-func (_e *Launcher_Expecter) RunPhase2(ctx interface{}, newP interface{}, newQ interface{}, newProblemSize interface{}, newBlockSize interface{}) *Launcher_RunPhase2_Call {
-	return &Launcher_RunPhase2_Call{Call: _e.mock.On("RunPhase2", ctx, newP, newQ, newProblemSize, newBlockSize)}
-}
-
-func (_c *Launcher_RunPhase2_Call) Run(run func(ctx context.Context, newP uint64, newQ uint64, newProblemSize uint64, newBlockSize uint64)) *Launcher_RunPhase2_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64), args[3].(uint64), args[4].(uint64))
-	})
-	return _c
-}
-
-func (_c *Launcher_RunPhase2_Call) Return(_a0 error) *Launcher_RunPhase2_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *Launcher_RunPhase2_Call) RunAndReturn(run func(context.Context, uint64, uint64, uint64, uint64) error) *Launcher_RunPhase2_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// Verify provides a mock function with given fields: data
-func (_m *Launcher) Verify(data []byte) bool {
-	ret := _m.Called(data)
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func([]byte) bool); ok {
-		r0 = rf(data)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
-// Launcher_Verify_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Verify'
-type Launcher_Verify_Call struct {
-	*mock.Call
-}
-
-// Verify is a helper method to define mock.On call
-//   - data []byte
-func (_e *Launcher_Expecter) Verify(data interface{}) *Launcher_Verify_Call {
-	return &Launcher_Verify_Call{Call: _e.mock.On("Verify", data)}
-}
-
-func (_c *Launcher_Verify_Call) Run(run func(data []byte)) *Launcher_Verify_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([]byte))
-	})
-	return _c
-}
-
-func (_c *Launcher_Verify_Call) Return(_a0 bool) *Launcher_Verify_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *Launcher_Verify_Call) RunAndReturn(run func([]byte) bool) *Launcher_Verify_Call {
+func (_c *Launcher_Launch_Call) RunAndReturn(run func(context.Context, string, *benchmark.Benchmark) error) *Launcher_Launch_Call {
 	_c.Call.Return(run)
 	return _c
 }

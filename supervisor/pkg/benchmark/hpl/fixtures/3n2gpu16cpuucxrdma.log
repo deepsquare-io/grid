@@ -5253,5 +5253,5 @@ srun: error: cn3: tasks 2-3: Killed
 ++ grep StdOut=
 ++ sed 's/.*StdOut=//g'
 + LOG_FILE=/tmp/benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-iXmAMRINsv.log
-+ curl -sS --upload-file /tmp/benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-iXmAMRINsv.log -H 'X-Secret: 8BH1rNEVjsp/zzUJtZ6ZaR/U553LUi3rCLnTAhouePV4xyGIMBYz2vxLXolRmhlMBZnkfBqyjTtL8EtJ/xrwFQ==' https:///benchmark/phase1
++ curl -fsSL --upload-file /tmp/benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-benchmark-47DEQpj8HBSaTImW5JCeuQeRkm5NMpJWZG3hSuFU-iXmAMRINsv.log -H 'X-Secret: 8BH1rNEVjsp/zzUJtZ6ZaR/U553LUi3rCLnTAhouePV4xyGIMBYz2vxLXolRmhlMBZnkfBqyjTtL8EtJ/xrwFQ==' https:///benchmark/hpl/phase1
 curl: (6) Could not resolve host: benchmark

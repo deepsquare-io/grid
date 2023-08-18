@@ -1,4 +1,4 @@
-package result_test
+package hpl_test
 
 import (
 	"strings"
@@ -7,7 +7,7 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/result"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/hpl"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +24,7 @@ func TestFindMaxGflopsResult(t *testing.T) {
 	tests := []struct {
 		name     string
 		data     string
-		expected *result.Result
+		expected *hpl.Result
 	}{
 		{
 			name: "Valid test",
@@ -34,7 +34,7 @@ HPL_AI WRC01 95000 224 2 2 19.00 3.009e+04 5.74521 2 2.310e+04
 HPL_AI WRC01 95000 256 2 2 17.30 3.304e+04 5.71711 2 2.483e+04
 HPL_AI WRC01 95000 384 2 2 14.75 3.876e+04 5.77248 2 2.785e+04
 HPL_AI WRC01 95000 512 2 2 14.93 3.828e+04 5.76942 2 2.761e+04`,
-			expected: &result.Result{
+			expected: &hpl.Result{
 				ProblemSize:       95000,
 				NB:                384,
 				P:                 2,
@@ -49,7 +49,7 @@ HPL_AI WRC01 95000 512 2 2 14.93 3.828e+04 5.76942 2 2.761e+04`,
 		{
 			name: "Real test 1",
 			data: fixture1n2gpu16cpu,
-			expected: &result.Result{
+			expected: &hpl.Result{
 				ProblemSize:       97000,
 				NB:                1024,
 				P:                 2,
@@ -64,7 +64,7 @@ HPL_AI WRC01 95000 512 2 2 14.93 3.828e+04 5.76942 2 2.761e+04`,
 		{
 			name: "Real test 2",
 			data: fixture3n2gpu16cpuucxrdma,
-			expected: &result.Result{
+			expected: &hpl.Result{
 				ProblemSize:       168000,
 				NB:                1024,
 				P:                 3,
@@ -79,7 +79,7 @@ HPL_AI WRC01 95000 512 2 2 14.93 3.828e+04 5.76942 2 2.761e+04`,
 		{
 			name: "Real test 3",
 			data: fixture3n2gpu16cpuucxtcp,
-			expected: &result.Result{
+			expected: &hpl.Result{
 				ProblemSize:       166000,
 				NB:                1024,
 				P:                 3,
@@ -95,7 +95,7 @@ HPL_AI WRC01 95000 512 2 2 14.93 3.828e+04 5.76942 2 2.761e+04`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			inputReader := strings.NewReader(tt.data)
-			got, err := result.FindMaxGflopsResult(result.NewReader(inputReader))
+			got, err := hpl.FindMaxGflopsResult(hpl.NewReader(inputReader))
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, got)
 		})
@@ -122,7 +122,7 @@ HPL_AI WRC01 95000 512 2 2 14.93 3.828e+04 5.76942 2 2.761e+04`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			inputReader := strings.NewReader(tt.data)
-			got, err := result.ComputeAvgGflopsResult(result.NewReader(inputReader))
+			got, err := hpl.ComputeAvgGflopsResult(hpl.NewReader(inputReader))
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, got)
 		})

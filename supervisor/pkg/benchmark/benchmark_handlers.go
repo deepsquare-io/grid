@@ -1,24 +1,85 @@
 package benchmark
 
 import (
-	"context"
-	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
+	"strconv"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/result"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/hpl"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/osu"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/speedtest"
 	"go.uber.org/zap"
 )
 
-func NewPhase1Handler(benchmark Launcher) http.HandlerFunc {
+func NewOSUHandler(
+	next func(res float64) error,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		secretB64 := r.Header.Get("X-Secret")
-		data, err := base64.StdEncoding.DecodeString(secretB64)
+		res, err := osu.ParseOSULog(r.Body)
 		if err != nil {
+			logger.I.Error("failed to parse osu logs", zap.Error(err))
+			http.Error(
+				w,
+				fmt.Sprintf("internal server error: %s", err),
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		if err := next(res); err != nil {
+			http.Error(
+				w,
+				fmt.Sprintf("internal server error: %s", err),
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		fmt.Fprint(w, "success")
+	}
+}
+
+func NewSpeedTestHandler(
+	next func(res *speedtest.Result) error,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var res speedtest.Result
+		if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+			logger.I.Error("failed to parse body as speedtest.Result", zap.Error(err))
+			http.Error(
+				w,
+				fmt.Sprintf("internal server error: %s", err),
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		if err := next(&res); err != nil {
+			http.Error(
+				w,
+				fmt.Sprintf("internal server error: %s", err),
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		fmt.Fprint(w, "success")
+	}
+}
+
+func NewHPLPhase1Handler(
+	next func(
+		optimal *hpl.Result,
+		opts ...BenchmarkOption,
+	) error,
+	opts ...BenchmarkOption,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		nodes, err := strconv.ParseUint(r.URL.Query().Get("nodes"), 10, 64)
+		if err != nil {
+			logger.I.Error("failed to parse nodes", zap.Error(err))
 			http.Error(
 				w,
 				fmt.Sprintf("bad request: %s", err),
@@ -26,17 +87,40 @@ func NewPhase1Handler(benchmark Launcher) http.HandlerFunc {
 			)
 			return
 		}
-		if !benchmark.Verify(data) {
+		cpusPerNode, err := strconv.ParseUint(r.URL.Query().Get("cpusPerNode"), 10, 64)
+		if err != nil {
+			logger.I.Error("failed to parse cpusPerNode", zap.Error(err))
 			http.Error(
 				w,
-				fmt.Sprintf("invalid secret: %s", err),
+				fmt.Sprintf("bad request: %s", err),
 				http.StatusBadRequest,
 			)
 			return
 		}
-		reader := result.NewReader(r.Body)
+		gpusPerNode, err := strconv.ParseUint(r.URL.Query().Get("gpusPerNode"), 10, 64)
+		if err != nil {
+			logger.I.Error("failed to parse gpusPerNode", zap.Error(err))
+			http.Error(
+				w,
+				fmt.Sprintf("bad request: %s", err),
+				http.StatusBadRequest,
+			)
+			return
+		}
+		memPerNode, err := strconv.ParseUint(r.URL.Query().Get("memPerNode"), 10, 64)
+		if err != nil {
+			logger.I.Error("failed to parse memPerNode", zap.Error(err))
+			http.Error(
+				w,
+				fmt.Sprintf("bad request: %s", err),
+				http.StatusBadRequest,
+			)
+			return
+		}
 
-		optimal, err := result.FindMaxGflopsResult(reader)
+		reader := hpl.NewReader(r.Body)
+
+		optimal, err := hpl.FindMaxGflopsResult(reader)
 		if err != nil {
 			logger.I.Error("failed to find max Gflops", zap.Error(err))
 			http.Error(
@@ -47,59 +131,30 @@ func NewPhase1Handler(benchmark Launcher) http.HandlerFunc {
 			return
 		}
 
-		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-			defer cancel()
-			if err := benchmark.RunPhase2(ctx, optimal.P, optimal.Q, optimal.ProblemSize, optimal.NB); err != nil {
-				logger.I.Fatal(
-					"phase2 benchmark failed or failed to be tracked",
-					zap.Error(err),
-				)
-			}
-			logger.I.Info(
-				"benchmark phase 2 succeeded",
-				zap.Error(err),
-				zap.Uint64(
-					"p",
-					optimal.P,
-				),
-				zap.Uint64("q", optimal.Q),
-				zap.Uint64("n", optimal.ProblemSize),
-				zap.Uint64("nb", optimal.NB),
+		opts = append(
+			opts,
+			WithClusterSpecs(nodes, cpusPerNode, gpusPerNode, memPerNode),
+		)
+
+		if err := next(optimal, opts...); err != nil {
+			http.Error(
+				w,
+				fmt.Sprintf("internal server error: %s", err),
+				http.StatusInternalServerError,
 			)
-		}()
+			return
+		}
 
 		fmt.Fprint(w, "success")
 	}
 }
 
-func NewPhase2Handler(
-	benchmark Launcher,
-	scheduler scheduler.Scheduler,
-	ms metascheduler.MetaScheduler,
+func NewHPLPhase2Handler(
+	next func(gflops float64) error,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		secretB64 := r.Header.Get("X-Secret")
-		data, err := base64.StdEncoding.DecodeString(secretB64)
-		if err != nil {
-			http.Error(
-				w,
-				fmt.Sprintf("bad request: %s", err),
-				http.StatusBadRequest,
-			)
-			return
-		}
-		if !benchmark.Verify(data) {
-			http.Error(
-				w,
-				fmt.Sprintf("invalid secret: %s", err),
-				http.StatusBadRequest,
-			)
-			return
-		}
-
-		reader := result.NewReader(r.Body)
-		flops, err := result.ComputeAvgGflopsResult(reader)
+		reader := hpl.NewReader(r.Body)
+		gflops, err := hpl.ComputeAvgGflopsResult(reader)
 		if err != nil {
 			logger.I.Error("failed to compute avg", zap.Error(err))
 			http.Error(
@@ -110,28 +165,13 @@ func NewPhase2Handler(
 			return
 		}
 
-		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-			defer cancel()
-			nodes, err := scheduler.FindTotalNodes(ctx)
-			if err != nil {
-				logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
-			}
-			cpus, err := scheduler.FindTotalCPUs(ctx)
-			if err != nil {
-				logger.I.Fatal("failed to find total number of cpus", zap.Error(err))
-			}
-			gpus, err := scheduler.FindTotalGPUs(ctx)
-			if err != nil {
-				logger.I.Fatal("failed to find total number of gpus", zap.Error(err))
-			}
-			mem, err := scheduler.FindTotalMem(ctx)
-			if err != nil {
-				logger.I.Fatal("failed to find total mem", zap.Error(err))
-			}
-			if err := ms.Register(ctx, nodes, cpus, gpus, mem, flops); err != nil {
-				logger.I.Fatal("failed to register", zap.Error(err))
-			}
-		}()
+		if err := next(gflops); err != nil {
+			http.Error(
+				w,
+				fmt.Sprintf("internal server error: %s", err),
+				http.StatusInternalServerError,
+			)
+			return
+		}
 	}
 }

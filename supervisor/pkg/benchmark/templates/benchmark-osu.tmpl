@@ -1,0 +1,95 @@
+{{- define "benchmark" -}}
+#!/bin/bash
+
+#SBATCH -N {{ .Benchmark.MinNodes }}-{{ .Benchmark.MaxNodes }}
+#SBATCH --ntasks={{ .Benchmark.NTasks }}
+#SBATCH --ntasks-per-node={{ .Benchmark.NTasksPerNode }}
+#SBATCH --gpus-per-node={{ .Benchmark.GPUsPerNode }}
+#SBATCH --cpus-per-task={{ .Benchmark.CPUsPerTask }}
+#SBATCH --mem=0
+
+set -x
+
+{{- if .Trace }}
+export NCCL_DEBUG=TRACE
+export NCCL_DEBUG_SUBSYS=ALL
+{{- end }}
+
+{{- if le .Benchmark.MaxNodes 1 }}
+export NCCL_P2P_DISABLE=1
+{{- end }}
+
+{{- if .UCX }}
+# Select UCX as MPI P2P communications
+export PMIX_MCA_pml=ucx
+# Select UCX as Byte-Transport Layer
+export PMIX_MCA_btl=^vader,openib,tcp
+export OMPI_MCA_pml=ucx
+export OMPI_MCA_btl=^vader,openib,tcp
+{{- else }}
+# Select obi-wan as MPI P2P communications
+export PMIX_MCA_pml=ob1
+# Select shared-memory or TCP as Byte-Transport Layer
+export PMIX_MCA_btl=vader,self,tcp
+export OMPI_MCA_pml=ob1
+export OMPI_MCA_btl=vader,self,tcp
+export NCCL_IB_DISABLE=1
+{{- end }}
+
+# P2P Bidirectional Latency
+file1="$(mktemp -t benchmark.XXXXXX)"
+dir="$(dirname "$file1")"
+srun \
+  --cpu-bind=none \
+  --gpu-bind=none \
+  --gpus-per-task=1 \
+  --container-mounts="$dir:$dir:rw" \
+  --nodes=2-2 \
+  --ntasks=2 \
+  --container-image="{{ .Image }}" \
+  /osu-micro-benchmarks/mpi/pt2pt/osu_latency | tee "$file1"
+
+# P2P Bidirectional Bandwidth
+file2="$(mktemp -t benchmark.XXXXXX)"
+dir="$(dirname "$file2")"
+srun \
+  --cpu-bind=none \
+  --gpu-bind=none \
+  --gpus-per-task=1 \
+  --container-mounts="$dir:$dir:rw" \
+  --nodes=2-2 \
+  --ntasks=2 \
+  --container-image="{{ .Image }}" \
+  /osu-micro-benchmarks/mpi/pt2pt/osu_bibw | tee "$file2"
+
+# All to all
+file3="$(mktemp -t benchmark.XXXXXX)"
+dir="$(dirname "$file3")"
+srun \
+  --cpu-bind=none \
+  --gpu-bind=none \
+  --gpus-per-task=1 \
+  --container-mounts="$dir:$dir:rw" \
+  --nodes={{ .Benchmark.MaxNodes }}-{{ .Benchmark.MaxNodes }} \
+  --ntasks={{ .Benchmark.NTasks }} \
+  --container-image="{{ .Image }}" \
+  /osu-micro-benchmarks/mpi/collective/osu_alltoall | tee "$file3"
+
+curl -fsSL \
+  --upload-file \
+  "$file1" \
+  -H "X-Secret: {{ .Secret }}" \
+  "https://{{ .SupervisorPublicAddress }}/benchmark/osu/pt2pt-latency"
+
+curl -fsSL \
+  --upload-file \
+  "$file2" \
+  -H "X-Secret: {{ .Secret }}" \
+  "https://{{ .SupervisorPublicAddress }}/benchmark/osu/pt2pt-bibw"
+
+curl -fsSL \
+  --upload-file \
+  "$file3" \
+  -H "X-Secret: {{ .Secret }}" \
+  "https://{{ .SupervisorPublicAddress }}/benchmark/osu/alltoall"
+{{ end -}}
