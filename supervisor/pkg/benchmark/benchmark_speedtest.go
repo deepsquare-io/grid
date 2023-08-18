@@ -8,6 +8,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/secret"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"go.uber.org/zap"
 )
 
@@ -29,7 +30,9 @@ func GenerateSpeedTestBenchmark(
 ) (*Benchmark, error) {
 	o := applySpeedTestOptions(opts)
 	benchmark := &Benchmark{
-		NTasks: 1,
+		NTasks:      1,
+		CPUsPerTask: 1,
+		Memory:      utils.Ptr(uint64(0)),
 	}
 	sbatchTmpl := template.Must(
 		template.New("benchmark").

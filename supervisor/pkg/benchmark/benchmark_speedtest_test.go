@@ -7,32 +7,27 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/secret"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGenerateSpeedTestBenchmark(t *testing.T) {
 	// Arrange
 	tests := []struct {
-		title       string
-		p           uint64
-		q           uint64
-		problemSize uint64
-		blockSize   uint64
-		opts        []benchmark.BenchmarkOption
-		expected    *benchmark.Benchmark
+		title    string
+		opts     []benchmark.BenchmarkOption
+		expected *benchmark.Benchmark
 	}{
 		{
-			title:       "3 nodes, 2 gpus per node",
-			p:           2,
-			q:           3,
-			problemSize: 12,
-			blockSize:   13,
+			title: "3 nodes, 2 gpus per node",
 			opts: []benchmark.BenchmarkOption{
 				benchmark.WithImage("registry-1.docker.io#gists/speedtest-cli:1.2.0"),
 				benchmark.WithSupervisorPublicAddress("localhost:3000"),
 			},
 			expected: &benchmark.Benchmark{
-				NTasks: 1,
+				NTasks:      1,
+				CPUsPerTask: 1,
+				Memory:      utils.Ptr(uint64(0)),
 				Body: fmt.Sprintf(`#!/bin/bash
 
 set -e
