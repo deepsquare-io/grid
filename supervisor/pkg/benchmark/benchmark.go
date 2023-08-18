@@ -168,7 +168,7 @@ func (l *launcher) Launch(
 		errC <- err
 	}()
 
-	logger.I.Info("benchmark started")
+	logger.I.Info("benchmark started", zap.String("name", name))
 
 	for {
 		select {
