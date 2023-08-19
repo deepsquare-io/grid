@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"slices"
-	"sync"
 	"time"
 
 	cryptotls "crypto/tls"
@@ -713,15 +712,15 @@ func launchBenchmarks(
 	osuOpts []benchmark.Option,
 	speedtestOpts []benchmark.Option,
 ) {
-	var wg sync.WaitGroup
-	wg.Add(3)
 	errc := make(chan error, 1)
 	go func() {
-		defer wg.Done()
 		b, err := benchmark.GeneratePhase1HPLBenchmark(hplOpts...)
 		if err != nil {
 			logger.I.Error("failed to generate hpl phase 1 benchmark", zap.Error(err))
-			errc <- err
+			select {
+			case errc <- err:
+			default:
+			}
 			return
 		}
 
@@ -730,17 +729,22 @@ func launchBenchmarks(
 				"hpl-phase1 benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
-			errc <- err
+			select {
+			case errc <- err:
+			default:
+			}
 			return
 		}
 	}()
 
 	go func() {
-		defer wg.Done()
 		b, err := benchmark.GenerateOSUBenchmark(osuOpts...)
 		if err != nil {
 			logger.I.Error("failed to generate osu benchmark", zap.Error(err))
-			errc <- err
+			select {
+			case errc <- err:
+			default:
+			}
 			return
 		}
 
@@ -749,17 +753,22 @@ func launchBenchmarks(
 				"osu benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
-			errc <- err
+			select {
+			case errc <- err:
+			default:
+			}
 			return
 		}
 	}()
 
 	go func() {
-		defer wg.Done()
 		b, err := benchmark.GenerateSpeedTestBenchmark(speedtestOpts...)
 		if err != nil {
 			logger.I.Error("failed to generate speedtest benchmark", zap.Error(err))
-			errc <- err
+			select {
+			case errc <- err:
+			default:
+			}
 			return
 		}
 
@@ -768,34 +777,34 @@ func launchBenchmarks(
 				"speedtest benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
-			errc <- err
+			select {
+			case errc <- err:
+			default:
+			}
 			return
 		}
 	}()
 
-	go func() {
-		wg.Wait()
-		close(errc)
-	}()
-
-	if err := <-errc; err != nil {
-		logger.I.Warn("cancelling benchmarks due to failure")
-		if err := benchmarkLauncher.Cancel(ctx, "osu"); err != nil {
-			logger.I.Warn("failed to cancel osu benchmark", zap.Error(err))
+	select {
+	case err := <-errc:
+		if err != nil {
+			logger.I.Warn("cancelling benchmarks due to failure")
+			if err := benchmarkLauncher.Cancel(ctx, "osu"); err != nil {
+				logger.I.Warn("failed to cancel osu benchmark", zap.Error(err))
+			}
+			if err := benchmarkLauncher.Cancel(ctx, "speedtest"); err != nil {
+				logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
+			}
+			if err := benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
+				logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
+			}
+			if err := benchmarkLauncher.Cancel(ctx, "hpl-phase2"); err != nil {
+				logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
+			}
+			logger.I.Fatal("benchmarks failed", zap.Error(err))
 		}
-		if err := benchmarkLauncher.Cancel(ctx, "speedtest"); err != nil {
-			logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
-		}
-		if err := benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
-			logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
-		}
-		if err := benchmarkLauncher.Cancel(ctx, "hpl-phase2"); err != nil {
-			logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
-		}
-		logger.I.Fatal("benchmarks failed", zap.Error(err))
+	case <-benchmark.DefaultStore.WaitForCompletion(ctx):
 	}
-
-	benchmark.DefaultStore.WaitForCompletion(ctx)
 
 	logger.I.Info("benchmark has finished", zap.Any("results", benchmark.DefaultStore.Dump()))
 }

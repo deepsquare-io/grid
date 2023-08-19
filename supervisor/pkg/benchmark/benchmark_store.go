@@ -118,15 +118,21 @@ func (s *Store) IsComplete() bool {
 		s.data.P2PLatency != 0)
 }
 
-func (s *Store) WaitForCompletion(ctx context.Context) {
-	for {
-		select {
-		case <-s.refresh:
-			if s.IsComplete() {
+func (s *Store) WaitForCompletion(ctx context.Context) chan struct{} {
+	done := make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-s.refresh:
+				if s.IsComplete() {
+					done <- struct{}{}
+				}
+			case <-ctx.Done():
 				return
 			}
-		case <-ctx.Done():
-			return
 		}
-	}
+	}()
+
+	return done
 }
