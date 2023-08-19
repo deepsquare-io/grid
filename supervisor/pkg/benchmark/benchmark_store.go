@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var DefaultStore = &Store{}
+var DefaultStore = NewStore()
 
 type Data struct {
 	UploadBandwidth           uint64
