@@ -11,12 +11,17 @@ import (
 var DefaultStore = NewStore()
 
 type Data struct {
-	UploadBandwidth           uint64
-	DownloadBandwidth         uint64
-	GFLOPS                    float64
+	// UploadBandwidth is in bps
+	UploadBandwidth uint64
+	// DownloadBandwidth is in bps
+	DownloadBandwidth uint64
+	GFLOPS            float64
+	// P2PBidirectionalBandwidth is in MB/s
 	P2PBidirectionalBandwidth float64
+	// P2PBidirectionalBandwidth is in us
 	AllToAllCollectiveLatency float64
-	P2PLatency                float64
+	// P2PLatency is in us
+	P2PLatency float64
 }
 
 // Store is a simple store with hard-coded keys to store benchmark results.
