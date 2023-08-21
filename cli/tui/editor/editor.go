@@ -27,7 +27,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
-	"github.com/knipferrc/teacup/code"
+	"github.com/mistakenelf/teacup/code"
 )
 
 func max(a, b int) int {
