@@ -64,6 +64,7 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1SingleNode() {
 			slices.Min(memPerNode),
 		),
 		benchmark.WithSupervisorPublicAddress(suite.publicAddress),
+		benchmark.WithUCX("eno2np1|eno2np1|eno2np1", ""),
 	)
 	suite.Require().NoError(err)
 
@@ -146,6 +147,40 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunOSU() {
 			slices.Min(memPerNode),
 		),
 		benchmark.WithSupervisorPublicAddress(suite.publicAddress),
+		benchmark.WithUCX("eno2np1|eno2np1|eno2np1", ""),
+	)
+	suite.Require().NoError(err)
+
+	err = suite.impl.Launch(ctx, "test", b)
+	suite.Require().NoError(err)
+}
+
+func (suite *BenchmarkIntegrationTestSuite) TestRunIOR() {
+	ctx := context.Background()
+	nodes, err := suite.scheduler.FindTotalNodes(ctx, scheduler.WithOnlyResponding())
+	suite.Require().NoError(err)
+	cpusPerNode, err := suite.scheduler.FindCPUsPerNode(ctx)
+	suite.Require().NoError(err)
+	gpusPerNode, err := suite.scheduler.FindGPUsPerNode(ctx)
+	suite.Require().NoError(err)
+	memPerNode, err := suite.scheduler.FindMemPerNode(ctx)
+	suite.Require().NoError(err)
+	suite.impl = benchmark.NewLauncher(
+		"root",
+		suite.publicAddress,
+		suite.scheduler,
+		benchmark.WithNoWait(),
+	)
+
+	b, err := benchmark.GenerateIORBenchmark(
+		benchmark.WithClusterSpecs(
+			nodes,
+			slices.Min(cpusPerNode),
+			slices.Min(gpusPerNode),
+			slices.Min(memPerNode),
+		),
+		benchmark.WithSupervisorPublicAddress(suite.publicAddress),
+		benchmark.WithUCX("eno2np1|eno2np1|eno2np1", ""),
 	)
 	suite.Require().NoError(err)
 

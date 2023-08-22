@@ -8,10 +8,39 @@ import (
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/hpl"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/ior"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/osu"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/speedtest"
 	"go.uber.org/zap"
 )
+
+func NewIORHandler(
+	next func(avgr *ior.Result, avgw *ior.Result) error,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		avgr, avgw, err := ior.ComputeAvgReadWrite(ior.NewReader(r.Body))
+		if err != nil {
+			logger.I.Error("failed to parse osu logs", zap.Error(err))
+			http.Error(
+				w,
+				fmt.Sprintf("internal server error: %s", err),
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		if err := next(avgr, avgw); err != nil {
+			http.Error(
+				w,
+				fmt.Sprintf("internal server error: %s", err),
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		fmt.Fprint(w, "success")
+	}
+}
 
 func NewOSUHandler(
 	next func(res float64) error,

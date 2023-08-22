@@ -11,6 +11,7 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/hpl"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/ior"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/secret"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/speedtest"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
@@ -66,6 +67,28 @@ func New(
 				return nil
 			}))
 		})
+		r.Route("/ior", func(r chi.Router) {
+			r.Put("/scratch", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
+				benchmark.DefaultStore.SetScratchResult(avgr, avgw)
+				return nil
+			}))
+			r.Put("/shared-world-tmp", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
+				benchmark.DefaultStore.SetSharedWorldTmpResult(avgr, avgw)
+				return nil
+			}))
+			r.Put("/shared-tmp", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
+				benchmark.DefaultStore.SetSharedTmpResult(avgr, avgw)
+				return nil
+			}))
+			r.Put("/disk-tmp", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
+				benchmark.DefaultStore.SetDiskTmpResult(avgr, avgw)
+				return nil
+			}))
+			r.Put("/disk-world-tmp", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
+				benchmark.DefaultStore.SetDiskWorldTmpResult(avgr, avgw)
+				return nil
+			}))
+		})
 		r.Route("/hpl", func(r chi.Router) {
 			r.Put(
 				"/phase1",
@@ -117,7 +140,8 @@ func New(
 				func(gflops float64) error {
 					benchmark.DefaultStore.SetGFLOPS(gflops)
 					return nil
-				}))
+				},
+			))
 		})
 	})
 	g := grpc.NewServer(opts...)

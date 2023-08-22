@@ -59,21 +59,23 @@ srun \
   --ntasks-per-node={{ .Benchmark.NTasksPerNode }} \
   --gpus-per-task=1 \
   --container-image="{{ .Image }}" \
-  sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
-  && sed -Ei "s/:1//g" ./hpl.sh \
-  && sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh \
+  bash -c 'sed -Ei "s/:1//g" ./hpl.sh
+sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh
+{{- if .UCX }}
+{{- if .UCXAffinity }}
+readarray -t UCX_AFFINITY_MAP <<<"$(tr '"'"'|'"'"' '"'"'\n'"'"'<<<"{{ .UCXAffinity }}")"
+UCX_NET_DEVICES="${UCX_AFFINITY_MAP[${SLURM_NODEID}]}"
+export UCX_NET_DEVICES
+{{- end }}
+{{- if .UCXTransport }}
+export UCX_TLS='"'"'{{ .UCXTransport }}'"'"'
+{{- end }}
+{{- end }}
+cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
   --gpu-affinity "$GPU_AFFINITY" \
-{{- if .UCX }}
-{{- if .UCXAffinity }}
-  --ucx-affinity '"'"'{{ .UCXAffinity }}'"'"' \
-{{- end }}
-{{- if .UCXTransport }}
-  --ucx-tls '"'"'{{ .UCXTransport }}'"'"' \
-{{- end }}
-{{- end }}
   --dat "/tmp/test.dat"
 {{- template "datfile" .BenchmarkParams -}}
 EOF'

@@ -8,18 +8,6 @@ import (
 	"time"
 )
 
-var CSVHeader = []string{
-	"ProblemSize",
-	"NB",
-	"P",
-	"Q",
-	"Time",
-	"Gflops",
-	"Refine",
-	"Iter",
-	"Gflops_wrefinement",
-}
-
 type Result struct {
 	ProblemSize       uint64
 	NB                uint64

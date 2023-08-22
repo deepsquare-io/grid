@@ -26,13 +26,14 @@ GLOBAL OPTIONS:
    --benchmark.hpl.image value        Docker image used for HPL benchmark (default: "registry-1.deepsquare.run#library/hpc-benchmarks:23.5") [$BENCHMARK_HPL_IMAGE]
    --benchmark.hpl.single-node        Force single node benchmark for HPL. (default: false) [$BENCHMARK_HPL_SINGLE_NODE]
    --benchmark.include-unresponsive   Force benchmark on unresponsive nodes (sinfo --responding --partition=<partition>). (default: false) [$BENCHMARK_UNRESPONSIVE]
+   --benchmark.ior.image value        Docker image used for IOR benchmark (default: "registry-1.deepsquare.run#library/ior-benchmarks:latest") [$BENCHMARK_IOR_IMAGE]
    --benchmark.osu.image value        Docker image used for OSU benchmark (default: "registry-1.deepsquare.run#library/osu-benchmarks:latest") [$BENCHMARK_OSU_IMAGE]
    --benchmark.run-as value           User used for benchmark (default: "root") [$BENCHMARK_RUN_AS]
    --benchmark.speedtest.image value  Docker image used for SpeedTest benchmark (default: "registry-1.docker.io#gists/speedtest-cli:1.2.0") [$BENCHMARK_SPEEDTEST_IMAGE]
    --benchmark.time-limit value       Time limit (syntax is golang duration style). (default: 24h0m0s) [$BENCHMARK_TIME_LIMIT]
    --benchmark.trace                  Enables benchmark trace logging. Very verbose. (default: false) [$BENCHMARK_TRACE]
    --benchmark.ucx                    Use UCX transport for MPI. Choose this for RDMA. Do not for TCP. (default: false) [$BENCHMARK_UCX]
-   --benchmark.ucx.affinity value     UCX Affinity. Select the devices with the format devices_for_node_1|devices_for_node_2|...
+   --benchmark.ucx.affinity value     UCX Affinity for each node. Select the network devices with the format devices_for_node_1|devices_for_node_2|...
 
 See 'ucx_info -bd' to see available devices.
 

@@ -52,8 +52,9 @@ export OMPI_MCA_btl=vader,self,tcp
 export NCCL_IB_DISABLE=1
 
 # P2P Bidirectional Latency
-file1="$(mktemp -t benchmark.XXXXXX)"
-dir="$(dirname "$file1")"
+OUTPUT="$(mktemp -t benchmark.XXXXXX)"
+export OUTPUT
+dir="$(dirname "$OUTPUT")"
 srun \
   --cpu-bind=none \
   --gpu-bind=none \
@@ -62,11 +63,19 @@ srun \
   --nodes=2-2 \
   --ntasks=2 \
   --container-image="registry-1.deepsquare.run#library/osu-benchmarks:latest" \
-  /osu-micro-benchmarks/mpi/pt2pt/osu_latency | tee "$file1"
+  bash -c '
+/osu-micro-benchmarks/mpi/pt2pt/osu_latency | tee "$OUTPUT"'
+
+curl -fsSL \
+  --upload-file \
+  "$OUTPUT" \
+  -H "X-Secret: %s" \
+  "https://localhost:3000/benchmark/osu/pt2pt-latency"
 
 # P2P Bidirectional Bandwidth
-file2="$(mktemp -t benchmark.XXXXXX)"
-dir="$(dirname "$file2")"
+OUTPUT="$(mktemp -t benchmark.XXXXXX)"
+export OUTPUT
+dir="$(dirname "$OUTPUT")"
 srun \
   --cpu-bind=none \
   --gpu-bind=none \
@@ -75,11 +84,19 @@ srun \
   --nodes=2-2 \
   --ntasks=2 \
   --container-image="registry-1.deepsquare.run#library/osu-benchmarks:latest" \
-  /osu-micro-benchmarks/mpi/pt2pt/osu_bibw | tee "$file2"
+  bash -c '
+/osu-micro-benchmarks/mpi/pt2pt/osu_bibw | tee "$OUTPUT"'
+
+curl -fsSL \
+  --upload-file \
+  "$OUTPUT" \
+  -H "X-Secret: %s" \
+  "https://localhost:3000/benchmark/osu/pt2pt-bibw"
 
 # All to all
-file3="$(mktemp -t benchmark.XXXXXX)"
-dir="$(dirname "$file3")"
+OUTPUT="$(mktemp -t benchmark.XXXXXX)"
+export OUTPUT
+dir="$(dirname "$OUTPUT")"
 srun \
   --cpu-bind=none \
   --gpu-bind=none \
@@ -88,23 +105,12 @@ srun \
   --nodes=3-3 \
   --ntasks=3 \
   --container-image="registry-1.deepsquare.run#library/osu-benchmarks:latest" \
-  /osu-micro-benchmarks/mpi/collective/osu_alltoall | tee "$file3"
+  bash -c '
+/osu-micro-benchmarks/mpi/collective/osu_alltoall | tee "$OUTPUT"'
 
 curl -fsSL \
   --upload-file \
-  "$file1" \
-  -H "X-Secret: %s" \
-  "https://localhost:3000/benchmark/osu/pt2pt-latency"
-
-curl -fsSL \
-  --upload-file \
-  "$file2" \
-  -H "X-Secret: %s" \
-  "https://localhost:3000/benchmark/osu/pt2pt-bibw"
-
-curl -fsSL \
-  --upload-file \
-  "$file3" \
+  "$OUTPUT" \
   -H "X-Secret: %s" \
   "https://localhost:3000/benchmark/osu/alltoall"
 `,
@@ -121,6 +127,7 @@ curl -fsSL \
 			b, err := benchmark.GenerateOSUBenchmark(tt.opts...)
 
 			// Assert
+			fmt.Println(b.Body)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.Body, b.Body)
 			assert.Equal(t, tt.expected, b)

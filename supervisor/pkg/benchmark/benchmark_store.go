@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/ior"
 	"go.uber.org/zap"
 )
 
@@ -21,7 +22,17 @@ type Data struct {
 	// P2PBidirectionalBandwidth is in us
 	AllToAllCollectiveLatency float64
 	// P2PLatency is in us
-	P2PLatency float64
+	P2PLatency             float64
+	ScratchAvgRead         *ior.Result
+	ScratchAvgWrite        *ior.Result
+	SharedWorldTmpAvgRead  *ior.Result
+	SharedWorldTmpAvgWrite *ior.Result
+	SharedTmpAvgRead       *ior.Result
+	SharedTmpAvgWrite      *ior.Result
+	DiskWorldTmpAvgRead    *ior.Result
+	DiskWorldTmpAvgWrite   *ior.Result
+	DiskTmpAvgRead         *ior.Result
+	DiskTmpAvgWrite        *ior.Result
 }
 
 // Store is a simple store with hard-coded keys to store benchmark results.
@@ -105,6 +116,82 @@ func (s *Store) SetP2PLatency(latency float64) {
 	logger.I.Info("stored benchmark result", zap.Float64("p2p-latency", latency))
 }
 
+func (s *Store) SetScratchResult(avgr, avgw *ior.Result) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data.ScratchAvgRead = avgr
+	s.data.ScratchAvgWrite = avgw
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
+	logger.I.Info(
+		"stored benchmark result",
+		zap.Any("scratch-read", avgr),
+		zap.Any("scratch-write", avgw),
+	)
+}
+func (s *Store) SetSharedWorldTmpResult(avgr, avgw *ior.Result) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data.SharedWorldTmpAvgRead = avgr
+	s.data.SharedWorldTmpAvgWrite = avgw
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
+	logger.I.Info(
+		"stored benchmark result",
+		zap.Any("shared-world-tmp-read", avgr),
+		zap.Any("shared-world-tmp-write", avgw),
+	)
+}
+func (s *Store) SetSharedTmpResult(avgr, avgw *ior.Result) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data.SharedTmpAvgRead = avgr
+	s.data.SharedTmpAvgWrite = avgw
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
+	logger.I.Info(
+		"stored benchmark result",
+		zap.Any("shared-tmp-read", avgr),
+		zap.Any("shared-tmp-write", avgw),
+	)
+}
+func (s *Store) SetDiskWorldTmpResult(avgr, avgw *ior.Result) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data.DiskWorldTmpAvgRead = avgr
+	s.data.DiskWorldTmpAvgWrite = avgw
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
+	logger.I.Info(
+		"stored benchmark result",
+		zap.Any("disk-world-tmp-read", avgr),
+		zap.Any("disk-world-tmp-write", avgw),
+	)
+}
+func (s *Store) SetDiskTmpResult(avgr, avgw *ior.Result) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data.DiskTmpAvgRead = avgr
+	s.data.DiskTmpAvgWrite = avgw
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
+	logger.I.Info(
+		"stored benchmark result",
+		zap.Any("disk-tmp-read", avgr),
+		zap.Any("disk-tmp-write", avgw),
+	)
+}
+
 func (s *Store) Dump() Data {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -120,7 +207,17 @@ func (s *Store) IsComplete() bool {
 		s.data.GFLOPS != 0 &&
 		s.data.P2PBidirectionalBandwidth != 0 &&
 		s.data.AllToAllCollectiveLatency != 0 &&
-		s.data.P2PLatency != 0)
+		s.data.P2PLatency != 0 &&
+		s.data.ScratchAvgRead != nil &&
+		s.data.ScratchAvgWrite != nil &&
+		s.data.SharedWorldTmpAvgRead != nil &&
+		s.data.SharedWorldTmpAvgWrite != nil &&
+		s.data.SharedTmpAvgRead != nil &&
+		s.data.SharedTmpAvgWrite != nil &&
+		s.data.DiskTmpAvgRead != nil &&
+		s.data.DiskTmpAvgWrite != nil &&
+		s.data.DiskWorldTmpAvgRead != nil &&
+		s.data.DiskWorldTmpAvgWrite != nil)
 }
 
 func (s *Store) WaitForCompletion(ctx context.Context) chan struct{} {

@@ -75,9 +75,9 @@ srun \
   --ntasks-per-node=2 \
   --gpus-per-task=1 \
   --container-image="registry-1.deepsquare.run#library/hpc-benchmarks:23.5" \
-  sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
-  && sed -Ei "s/:1//g" ./hpl.sh \
-  && sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh \
+  bash -c 'sed -Ei "s/:1//g" ./hpl.sh
+sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh
+cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
@@ -183,9 +183,9 @@ srun \
   --ntasks-per-node=4 \
   --gpus-per-task=1 \
   --container-image="registry-1.deepsquare.run#library/hpc-benchmarks:23.5" \
-  sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
-  && sed -Ei "s/:1//g" ./hpl.sh \
-  && sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh \
+  bash -c 'sed -Ei "s/:1//g" ./hpl.sh
+sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh
+cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
@@ -290,9 +290,9 @@ srun \
   --ntasks-per-node=2 \
   --gpus-per-task=1 \
   --container-image="registry-1.deepsquare.run#library/hpc-benchmarks:23.5" \
-  sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
-  && sed -Ei "s/:1//g" ./hpl.sh \
-  && sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh \
+  bash -c 'sed -Ei "s/:1//g" ./hpl.sh
+sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh
+cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
@@ -397,15 +397,17 @@ srun \
   --ntasks-per-node=2 \
   --gpus-per-task=1 \
   --container-image="registry-1.deepsquare.run#library/hpc-benchmarks:23.5" \
-  sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
-  && sed -Ei "s/:1//g" ./hpl.sh \
-  && sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh \
+  bash -c 'sed -Ei "s/:1//g" ./hpl.sh
+sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh
+readarray -t UCX_AFFINITY_MAP <<<"$(tr '"'"'|'"'"' '"'"'\n'"'"'<<<"mlx5_2:1|mlx5_2:1")"
+UCX_NET_DEVICES="${UCX_AFFINITY_MAP[${SLURM_NODEID}]}"
+export UCX_NET_DEVICES
+export UCX_TLS='"'"'rc'"'"'
+cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \
   --gpu-affinity "$GPU_AFFINITY" \
-  --ucx-affinity '"'"'mlx5_2:1|mlx5_2:1'"'"' \
-  --ucx-tls '"'"'rc'"'"' \
   --dat "/tmp/test.dat"
 HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
@@ -536,9 +538,9 @@ srun \
   --ntasks-per-node=2 \
   --gpus-per-task=1 \
   --container-image="registry-1.deepsquare.run#library/hpc-benchmarks:23.5" \
-  sh -c 'cat << '"'"'EOF'"'"' > /tmp/test.dat \
-  && sed -Ei "s/:1//g" ./hpl.sh \
-  && sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh \
+  bash -c 'sed -Ei "s/:1//g" ./hpl.sh
+sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh
+cat << '"'"'EOF'"'"' > /tmp/test.dat \
   && ./hpl.sh \
   --xhpl-ai \
   --cpu-affinity "$CPU_AFFINITY" \

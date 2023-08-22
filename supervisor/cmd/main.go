@@ -70,6 +70,7 @@ var (
 	benchmarkHPLImage       string
 	benchmarkSpeedTestImage string
 	benchmarkOSUImage       string
+	benchmarkIORImage       string
 	benchmarkHPLSingleNode  bool
 	benchmarkDisable        bool
 	benchmarkRunAs          string
@@ -288,6 +289,14 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		Category:    "Benchmark:",
 	},
 	&cli.StringFlag{
+		Name:        "benchmark.ior.image",
+		Usage:       "Docker image used for IOR benchmark",
+		Destination: &benchmarkIORImage,
+		Value:       benchmark.DefaultIORImage,
+		EnvVars:     []string{"BENCHMARK_IOR_IMAGE"},
+		Category:    "Benchmark:",
+	},
+	&cli.StringFlag{
 		Name:        "benchmark.run-as",
 		Usage:       "User used for benchmark",
 		Destination: &benchmarkRunAs,
@@ -337,7 +346,7 @@ All the specifications returned by 'scontrol show partition' will be registered 
 	},
 	&cli.StringFlag{
 		Name: "benchmark.ucx.affinity",
-		Usage: `UCX Affinity. Select the devices with the format devices_for_node_1|devices_for_node_2|...
+		Usage: `UCX Affinity for each node. Select the network devices with the format devices_for_node_1|devices_for_node_2|...
 
 See 'ucx_info -bd' to see available devices.
 
@@ -617,6 +626,9 @@ var app = &cli.App{
 				if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase2"); err != nil {
 					logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
 				}
+				if err := container.benchmarkLauncher.Cancel(ctx, "ior"); err != nil {
+					logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))
+				}
 				logger.I.Info("launching new benchmarks")
 
 				logger.I.Info("searching for cluster specs...")
@@ -672,6 +684,17 @@ var app = &cli.App{
 					benchmark.WithImage(benchmarkOSUImage),
 				)
 
+				iorOpts := append(
+					commonBenchmarkOpts,
+					benchmark.WithClusterSpecs(
+						nodes,
+						minCPUsPerNode,
+						minGPUsPerNode,
+						minMemPerNode,
+					),
+					benchmark.WithImage(benchmarkIORImage),
+				)
+
 				speedtestOpts := append(
 					commonBenchmarkOpts,
 					benchmark.WithClusterSpecs(
@@ -689,6 +712,7 @@ var app = &cli.App{
 					hplOpts,
 					osuOpts,
 					speedtestOpts,
+					iorOpts,
 				)
 			}()
 		} else {
@@ -711,32 +735,10 @@ func launchBenchmarks(
 	hplOpts []benchmark.Option,
 	osuOpts []benchmark.Option,
 	speedtestOpts []benchmark.Option,
+	iorOpts []benchmark.Option,
 ) {
+	start := time.Now()
 	errc := make(chan error, 1)
-	go func() {
-		b, err := benchmark.GeneratePhase1HPLBenchmark(hplOpts...)
-		if err != nil {
-			logger.I.Error("failed to generate hpl phase 1 benchmark", zap.Error(err))
-			select {
-			case errc <- err:
-			default:
-			}
-			return
-		}
-
-		if err := benchmarkLauncher.Launch(ctx, "hpl-phase1", b); err != nil {
-			logger.I.Error(
-				"hpl-phase1 benchmark failed or failed to be tracked",
-				zap.Error(err),
-			)
-			select {
-			case errc <- err:
-			default:
-			}
-			return
-		}
-	}()
-
 	go func() {
 		b, err := benchmark.GenerateOSUBenchmark(osuOpts...)
 		if err != nil {
@@ -785,6 +787,54 @@ func launchBenchmarks(
 		}
 	}()
 
+	go func() {
+		b, err := benchmark.GeneratePhase1HPLBenchmark(hplOpts...)
+		if err != nil {
+			logger.I.Error("failed to generate hpl phase 1 benchmark", zap.Error(err))
+			select {
+			case errc <- err:
+			default:
+			}
+			return
+		}
+
+		if err := benchmarkLauncher.Launch(ctx, "hpl-phase1", b); err != nil {
+			logger.I.Error(
+				"hpl-phase1 benchmark failed or failed to be tracked",
+				zap.Error(err),
+			)
+			select {
+			case errc <- err:
+			default:
+			}
+			return
+		}
+	}()
+
+	go func() {
+		b, err := benchmark.GenerateIORBenchmark(iorOpts...)
+		if err != nil {
+			logger.I.Error("failed to generate ior benchmark", zap.Error(err))
+			select {
+			case errc <- err:
+			default:
+			}
+			return
+		}
+
+		if err := benchmarkLauncher.Launch(ctx, "ior", b); err != nil {
+			logger.I.Error(
+				"ior benchmark failed or failed to be tracked",
+				zap.Error(err),
+			)
+			select {
+			case errc <- err:
+			default:
+			}
+			return
+		}
+	}()
+
 	select {
 	case err := <-errc:
 		if err != nil {
@@ -801,12 +851,18 @@ func launchBenchmarks(
 			if err := benchmarkLauncher.Cancel(ctx, "hpl-phase2"); err != nil {
 				logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
 			}
+			if err := benchmarkLauncher.Cancel(ctx, "ior"); err != nil {
+				logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))
+			}
 			logger.I.Fatal("benchmarks failed", zap.Error(err))
 		}
 	case <-benchmark.DefaultStore.WaitForCompletion(ctx):
 	}
 
-	logger.I.Info("benchmark has finished", zap.Any("results", benchmark.DefaultStore.Dump()))
+	logger.I.Info("benchmark has finished",
+		zap.Any("results", benchmark.DefaultStore.Dump()),
+		zap.Duration("duration", time.Since(start)),
+	)
 }
 
 func main() {
