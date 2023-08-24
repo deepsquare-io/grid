@@ -6,7 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.36
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
-	github.com/charmbracelet/lipgloss v0.7.1
+	github.com/charmbracelet/lipgloss v0.8.0
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/joho/godotenv v1.5.1
 	github.com/mistakenelf/teacup v0.4.1
