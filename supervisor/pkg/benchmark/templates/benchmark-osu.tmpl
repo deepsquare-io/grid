@@ -1,0 +1,128 @@
+{{- define "benchmark" -}}
+#!/bin/bash
+
+#SBATCH -N {{ .Benchmark.MinNodes }}-{{ .Benchmark.MaxNodes }}
+#SBATCH --ntasks={{ .Benchmark.NTasks }}
+#SBATCH --ntasks-per-node={{ .Benchmark.NTasksPerNode }}
+#SBATCH --gpus-per-node={{ .Benchmark.GPUsPerNode }}
+#SBATCH --cpus-per-task={{ .Benchmark.CPUsPerTask }}
+#SBATCH --mem=0
+
+set -x
+
+{{- if .Trace }}
+export NCCL_DEBUG=TRACE
+export NCCL_DEBUG_SUBSYS=ALL
+{{- end }}
+
+{{- if le .Benchmark.MaxNodes 1 }}
+export NCCL_P2P_DISABLE=1
+{{- end }}
+
+{{- if .UCX }}
+# Select UCX as MPI P2P communications
+export PMIX_MCA_pml=ucx
+# Select UCX as Byte-Transport Layer
+export PMIX_MCA_btl=^vader,openib,tcp
+export OMPI_MCA_pml=ucx
+export OMPI_MCA_btl=^vader,openib,tcp
+{{- else }}
+# Select obi-wan as MPI P2P communications
+export PMIX_MCA_pml=ob1
+# Select shared-memory or TCP as Byte-Transport Layer
+export PMIX_MCA_btl=vader,self,tcp
+export OMPI_MCA_pml=ob1
+export OMPI_MCA_btl=vader,self,tcp
+export NCCL_IB_DISABLE=1
+{{- end }}
+
+# P2P Bidirectional Latency
+OUTPUT="$(mktemp -t benchmark.XXXXXX)"
+export OUTPUT
+dir="$(dirname "$OUTPUT")"
+srun \
+  --cpu-bind=none \
+  --gpu-bind=none \
+  --gpus-per-task=1 \
+  --container-mounts="$dir:$dir:rw" \
+  --nodes=2-2 \
+  --ntasks=2 \
+  --container-image="{{ .Image }}" \
+  bash -c '{{- if .UCX }}
+{{- if .UCXAffinity }}
+readarray -t UCX_AFFINITY_MAP <<<"$(tr '"'"'|'"'"' '"'"'\n'"'"'<<<"{{ .UCXAffinity }}")"
+UCX_NET_DEVICES="${UCX_AFFINITY_MAP[${SLURM_NODEID}]}"
+export UCX_NET_DEVICES
+{{- end }}
+{{- if .UCXTransport }}
+export UCX_TLS='"'"'{{ .UCXTransport }}'"'"'
+{{- end }}
+{{- end }}
+/osu-micro-benchmarks/mpi/pt2pt/osu_latency | tee "$OUTPUT"'
+
+curl -fsSL \
+  --upload-file \
+  "$OUTPUT" \
+  -H "X-Secret: {{ .Secret }}" \
+  "https://{{ .SupervisorPublicAddress }}/benchmark/osu/pt2pt-latency"
+
+# P2P Bidirectional Bandwidth
+OUTPUT="$(mktemp -t benchmark.XXXXXX)"
+export OUTPUT
+dir="$(dirname "$OUTPUT")"
+srun \
+  --cpu-bind=none \
+  --gpu-bind=none \
+  --gpus-per-task=1 \
+  --container-mounts="$dir:$dir:rw" \
+  --nodes=2-2 \
+  --ntasks=2 \
+  --container-image="{{ .Image }}" \
+  bash -c '{{- if .UCX }}
+{{- if .UCXAffinity }}
+readarray -t UCX_AFFINITY_MAP <<<"$(tr '"'"'|'"'"' '"'"'\n'"'"'<<<"{{ .UCXAffinity }}")"
+UCX_NET_DEVICES="${UCX_AFFINITY_MAP[${SLURM_NODEID}]}"
+export UCX_NET_DEVICES
+{{- end }}
+{{- if .UCXTransport }}
+export UCX_TLS='"'"'{{ .UCXTransport }}'"'"'
+{{- end }}
+{{- end }}
+/osu-micro-benchmarks/mpi/pt2pt/osu_bibw | tee "$OUTPUT"'
+
+curl -fsSL \
+  --upload-file \
+  "$OUTPUT" \
+  -H "X-Secret: {{ .Secret }}" \
+  "https://{{ .SupervisorPublicAddress }}/benchmark/osu/pt2pt-bibw"
+
+# All to all
+OUTPUT="$(mktemp -t benchmark.XXXXXX)"
+export OUTPUT
+dir="$(dirname "$OUTPUT")"
+srun \
+  --cpu-bind=none \
+  --gpu-bind=none \
+  --gpus-per-task=1 \
+  --container-mounts="$dir:$dir:rw" \
+  --nodes={{ .Benchmark.MaxNodes }}-{{ .Benchmark.MaxNodes }} \
+  --ntasks={{ .Benchmark.NTasks }} \
+  --container-image="{{ .Image }}" \
+  bash -c '{{- if .UCX }}
+{{- if .UCXAffinity }}
+readarray -t UCX_AFFINITY_MAP <<<"$(tr '"'"'|'"'"' '"'"'\n'"'"'<<<"{{ .UCXAffinity }}")"
+UCX_NET_DEVICES="${UCX_AFFINITY_MAP[${SLURM_NODEID}]}"
+export UCX_NET_DEVICES
+{{- end }}
+{{- if .UCXTransport }}
+export UCX_TLS='"'"'{{ .UCXTransport }}'"'"'
+{{- end }}
+{{- end }}
+/osu-micro-benchmarks/mpi/collective/osu_alltoall | tee "$OUTPUT"'
+
+curl -fsSL \
+  --upload-file \
+  "$OUTPUT" \
+  -H "X-Secret: {{ .Secret }}" \
+  "https://{{ .SupervisorPublicAddress }}/benchmark/osu/alltoall"
+{{ end -}}

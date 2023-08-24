@@ -34,7 +34,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/internal/validator"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
-	"github.com/knipferrc/teacup/code"
+	"github.com/mistakenelf/teacup/code"
 	"gopkg.in/yaml.v3"
 )
 

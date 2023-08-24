@@ -17,6 +17,60 @@ var (
 	errorsABI *abi.ABI
 )
 
+type PanicError byte
+
+const (
+	PanicErrorAssertionError                     PanicError = 0x1
+	PanicErrorArithmeticUnderOrOverflow          PanicError = 0x11
+	PanicErrorDivisionByZero                     PanicError = 0x12
+	PanicErrorEnumConversionOutOfBounds          PanicError = 0x21
+	PanicErrorIncorrectlyEncodedStorageByteArray PanicError = 0x22
+	PanicErrorPopOnEmptyArray                    PanicError = 0x31
+	PanicErrorArrayAccessOutOfBounds             PanicError = 0x32
+	PanicErrorTooMuchMemoryAllocated             PanicError = 0x41
+	PanicErrorZeroInitializedVariable            PanicError = 0x51
+)
+
+func IsPanicError(value byte) bool {
+	switch value {
+	case byte(PanicErrorAssertionError),
+		byte(PanicErrorArithmeticUnderOrOverflow),
+		byte(PanicErrorDivisionByZero),
+		byte(PanicErrorEnumConversionOutOfBounds),
+		byte(PanicErrorIncorrectlyEncodedStorageByteArray),
+		byte(PanicErrorPopOnEmptyArray),
+		byte(PanicErrorArrayAccessOutOfBounds),
+		byte(PanicErrorTooMuchMemoryAllocated),
+		byte(PanicErrorZeroInitializedVariable):
+		return true
+	}
+	return false
+}
+
+func (e PanicError) Error() string {
+	switch e {
+	case PanicErrorAssertionError:
+		return "Assertion error"
+	case PanicErrorArithmeticUnderOrOverflow:
+		return "Arithmetic operation underflowed or overflowed outside of an unchecked block"
+	case PanicErrorDivisionByZero:
+		return "Division or modulo division by zero"
+	case PanicErrorEnumConversionOutOfBounds:
+		return "Tried to convert a value into an enum, but the value was too big or negative"
+	case PanicErrorIncorrectlyEncodedStorageByteArray:
+		return "Incorrectly encoded storage byte array"
+	case PanicErrorPopOnEmptyArray:
+		return ".pop() was called on an empty array"
+	case PanicErrorArrayAccessOutOfBounds:
+		return "Array accessed at an out-of-bounds or negative index"
+	case PanicErrorTooMuchMemoryAllocated:
+		return "Too much memory was allocated, or an array was created that is too large"
+	case PanicErrorZeroInitializedVariable:
+		return "Called a zero-initialized variable of internal function type"
+	}
+	return "Unknown error"
+}
+
 type DoubleEndedQueueEmpty struct{}
 
 func ParseDoubleEndedQueueEmpty(inputs []interface{}) *DoubleEndedQueueEmpty {
@@ -601,6 +655,11 @@ func WrapError(originalErr error) error {
 
 	if err := parseABIError(errorsABI.Errors, data, ParseError); err != nil {
 		return err
+	}
+
+	// Check for panic error
+	if IsPanicError(data[len(data)-1]) {
+		return PanicError(data[len(data)-1])
 	}
 
 	err := fmt.Errorf("%w, data: %s", originalErr, data)

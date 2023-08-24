@@ -15,9 +15,13 @@ DeepSquare leverages the power of supercomputers, primarily designed for robust 
 
 A critical enabler of this high-performance parallel computing is the Message Passing Interface (MPI). This communication protocol, extensively used in supercomputers, facilitates data exchange and coordination between different processors and nodes during parallel computing tasks. The unique advantages of MPI include scalability, flexibility, low-latency, and high-bandwidth communication, making it an integral component of DeepSquare's ecosystem and many scientific and engineering applications.
 
-## Adapting the ML example for multi-node distributed training
+## Adapting the ML example for distributed training
 
-To distribute the training of our machine learning models across multiple nodes, we'll be leveraging [Horovod](https://horovod.ai/), an open-source tool designed for distributed training of deep learning models. Here's how we can adapt our code:
+### Modifying the source code to allow distributed training
+
+To distribute the training of our machine learning models across multiple nodes, we'll be leveraging [Horovod](https://horovod.ai/), an open-source tool designed for distributed training of deep learning models.
+
+Let's take our previous example [from Part 3, the Deep Layer Aggregation model used on CIFAR 10](part-3-storage).
 
 1. **Initialize Horovod:** Begin by initializing Horovod at the start of your script with:
 
@@ -25,7 +29,7 @@ To distribute the training of our machine learning models across multiple nodes,
    hvd.init()
    ```
 
-   at the initialization of the script.
+   at the initialization of the script. `hvd.init()` will load the environment variables from MPI.
 
 2. **Assign a GPU per process:** Check if a GPU is available and assign one to each process using `hvd.local_rank()`
 
@@ -34,18 +38,92 @@ To distribute the training of our machine learning models across multiple nodes,
        torch.cuda.set_device(hvd.local_rank())
    ```
 
-3. **Wrap the optimizer:** Use the `hvd.DistributedOptimizer` to wrap your optimizer.
+3. **Partition dataset among workers:**
 
-4. **Broadcast the initial variable states:** Ensure all processes are on the same page by broadcasting the initial variable states from rank 0 to all other processes.
+   We use PyTorch's `DistributedSampler`.
+
+   ```python
+   trainset = torchvision.datasets.CIFAR10(train=True, ...)
+   trainsampler = torch.utils.data.distributed.DistributedSampler(
+       trainset, num_replicas=hvd.size(), rank=hvd.rank()
+   )
+   trainloader = torch.utils.data.DataLoader(
+       trainset, batch_size=128, sampler=trainsampler
+   )
+
+   testset = torchvision.datasets.CIFAR10(train=False, ...)
+   testsampler = torch.utils.data.distributed.DistributedSampler(
+       testset, num_replicas=hvd.size(), rank=hvd.rank()
+   )
+   testloader = torch.utils.data.DataLoader(
+       testset, batch_size=100, sampler=testsampler
+   )
+   ```
+
+4. **Wrap the optimizer:** Use the `hvd.DistributedOptimizer` to wrap your optimizer.
+
+   ```python
+   # The optimizer was the Stochastic Gradient Descent optimizer
+   optimizer = optim.SGD(model.parameters())
+   optimizer = hvd.DistributedOptimizer(
+      optimizer, named_parameters=model.named_parameters()
+   )
+   ```
+
+5. **Broadcast the initial variable states:** Ensure all processes are on the same page by broadcasting the initial variable states from rank 0 to all other processes.
 
    ```python
    hvd.broadcast_parameters(model.state_dict(), root_rank=0)
-   hvd.broadcast_optimizer_state(optimizer, root_rank=0)
    ```
 
-5. **Save checkpoints on worker 0 only:** Modify your code to save checkpoints only on **worker 0** to prevent potential corruption from other workers.
+6. **Save checkpoints on worker 0 only:** Modify your code to save checkpoints only on **worker 0** to prevent potential corruption from other workers.
+
+   ```python
+   def test(epoch: int):
+       global BEST_ACC
+
+       # Use evaluation/test mode
+       model.eval()
+
+       # ...
+
+       # For each batch
+       for batch_idx, (inputs, targets) in enumerate(testloader):
+           # ...
+
+           outputs = model(inputs) # Test
+           loss = criterion(outputs, targets) # Compute loss
+
+           # ... # Count number of corrects
+
+       acc = 100.0 * correct / len(testsampler) # Compute accuracy = 100 * correct / total
+       if acc > BEST_ACC and hvd.rank() == 0: # Checkpoint only if the model is better and only on worker 0.
+           print("Saving..")
+           state = {
+               "net": model.state_dict(),
+               "acc": acc,
+               "epoch": epoch,
+           }
+           torch.save(state, "path/to/checkpoint.pth")
+           BEST_ACC = acc
+   ```
+
+   You would load the model like this:
+
+   ```python
+   checkpoint = torch.load("path/to/checkpoint.pth")
+   model.load_state_dict(checkpoint["net"])
+   BEST_ACC = checkpoint["acc"]
+   start_epoch = checkpoint["epoch"]
+   ```
 
 As we allocate a GPU per process, the resource **allocation** and **usage** will change accordingly.
+
+**[Here's the completed code](https://github.com/deepsquare-io/cifar-10-example/blob/main/main.py).** The code includes options such as `--no-cuda` to disable GPU, or `--horovod` to enable Horovod. As a result, you can compare the code with or without Horovod, taking into account or not `args.horovod`, respectively.
+
+To learn more about Horovod, please read the [official documentation of Horovod](https://horovod.readthedocs.io/en/stable/).
+
+### Adapting the workflow to run on MPI
 
 Now, let's look at how to incorporate these changes in different types of workflows:
 

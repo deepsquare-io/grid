@@ -2,23 +2,6 @@
 
 The middleman between the job scheduler and the DeepSquare Meta-scheduler.
 
-```mermaid
-flowchart LR
-    subgraph grid [DeepSquare Grid]
-        ms[Metascheduler\nSmart Contract]
-        customer[Customer API]
-    end
-
-  subgraph cluster [Cluster]
-        login[Scheduler\nLogin Node]
-
-        supervisor -- submit --> login
-  end
-
-    ms -- claim --> supervisor
-    customer -- fetch scripts --> supervisor
-```
-
 ## Usage
 
 ### Summary
@@ -34,114 +17,80 @@ COMMANDS:
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --grpc.listen-address value                Address to listen on. Is used for receiving job status via the job completion plugin. (default: ":3000") [$LISTEN_ADDRESS]
-   --tls                                      Enable TLS for GRPC. (default: false) [$TLS_ENABLE]
-   --tls.key-file value                       TLS Private Key file. [$TLS_KEY]
-   --tls.cert-file value                      TLS Certificate file. [$TLS_CERT]
-   --metascheduler.endpoint.rpc value         Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_ENDPOINT_RPC]
-   --metascheduler.endpoint.ws value          Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_ENDPOINT_WS]
-   --customer.endpoint value                  Oracle gRPC endpoint. (default: "127.0.0.1:443") [$CUSTOMER_ENDPOINT]
-   --customer.tls                             Enable TLS for the Customer API. (default: true) [$CUSTOMER_TLS_ENABLE]
-   --customer.tls.insecure                    Skip TLS verification. By enabling it, customer.tls.ca and customer.tls.server-host-override are ignored. (default: false) [$CUSTOMER_TLS_INSECURE]
-   --customer.tls.ca value                    Path to CA certificate for TLS verification. [$CUSTOMER_CA]
-   --customer.tls.server-host-override value  The server name used to verify the hostname returned by the TLS handshake. (default: "customer.deepsquare.io") [$CUSTOMER_SERVER_HOST_OVERRIDE]
-   --metascheduler.smart-contract value       Metascheduler smart-contract address. (default: "0x") [$METASCHEDULER_SMART_CONTRACT]
-   --eth.private-key value                    An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
-   --slurm.ssh.address value                  Address of the Slurm login node. [$SLURM_SSH_ADDRESS]
-   --slurm.ssh.admin-user scontrol            SLURM admin user used for calling scontrol commands. [$SLURM_SSH_ADMIN_USER]
-   --slurm.ssh.private-key value              Base64-encoded one line SSH private key used for impersonation. The public key must be inserted in the authorized_keys file of each user. [$SLURM_SSH_PRIVATE_KEY]
-   --slurm.batch value                        Server-side SLURM sbatch path. (default: "/usr/bin/sbatch") [$SLURM_SBATCH_PATH]
-   --slurm.cancel value                       Server-side SLURM scancel path. (default: "/usr/bin/scancel") [$SLURM_SCANCEL_PATH]
-   --slurm.squeue value                       Server-side SLURM squeue path. (default: "/usr/bin/ssqueue") [$SLURM_SQUEUE_PATH]
-   --slurm.control value                      Server-side SLURM scontrol path. (default: "/usr/bin/scontrol") [$SLURM_SCONTROL_PATH]
-   --res.nodes value                          Total number of Nodes reported by 'scontrol show partitions' (default: 0) [$TOTAL_NODES]
-   --res.cpus value                           Total number of CPUs reported by 'scontrol show partitions' (default: 0) [$TOTAL_CPUS]
-   --res.gpus value                           Total number of GPUs reported by 'scontrol show partitions' (default: 0) [$TOTAL_GPUS]
-   --res.mem value                            Total number of Memory (MB) reported by 'scontrol show partitions' (default: 0) [$TOTAL_MEMORY]
-   --help, -h
-```
+   --help, -h     show help
+   --version, -v  print the version
 
-### Detailed configuration
+   Benchmark:
 
-#### gRPC server configuration
+   --benchmark.disable                Disable benchmark (and registering). (default: false) [$BENCHMARK_DISABLE]
+   --benchmark.hpl.image value        Docker image used for HPL benchmark (default: "registry-1.deepsquare.run#library/hpc-benchmarks:23.5") [$BENCHMARK_HPL_IMAGE]
+   --benchmark.hpl.single-node        Force single node benchmark for HPL. (default: false) [$BENCHMARK_HPL_SINGLE_NODE]
+   --benchmark.include-unresponsive   Force benchmark on unresponsive nodes (sinfo --responding --partition=<partition>). (default: false) [$BENCHMARK_UNRESPONSIVE]
+   --benchmark.ior.image value        Docker image used for IOR benchmark (default: "registry-1.deepsquare.run#library/ior-benchmarks:latest") [$BENCHMARK_IOR_IMAGE]
+   --benchmark.osu.image value        Docker image used for OSU benchmark (default: "registry-1.deepsquare.run#library/osu-benchmarks:latest") [$BENCHMARK_OSU_IMAGE]
+   --benchmark.run-as value           User used for benchmark (default: "root") [$BENCHMARK_RUN_AS]
+   --benchmark.speedtest.image value  Docker image used for SpeedTest benchmark (default: "registry-1.docker.io#gists/speedtest-cli:1.2.0") [$BENCHMARK_SPEEDTEST_IMAGE]
+   --benchmark.time-limit value       Time limit (syntax is golang duration style). (default: 24h0m0s) [$BENCHMARK_TIME_LIMIT]
+   --benchmark.trace                  Enables benchmark trace logging. Very verbose. (default: false) [$BENCHMARK_TRACE]
+   --benchmark.ucx                    Use UCX transport for MPI. Choose this for RDMA. Do not for TCP. (default: false) [$BENCHMARK_UCX]
+   --benchmark.ucx.affinity value     UCX Affinity for each node. Select the network devices with the format devices_for_node_1|devices_for_node_2|...
 
-It is necessary to run the server with TLS. Either use a reverse proxy or add the certificates using the flags:
+See 'ucx_info -bd' to see available devices.
 
-```shell
-   --tls                                      Enable TLS for GRPC. (default: false) [$TLS_ENABLE]
-   --tls.key-file value                       TLS Private Key file. [$TLS_KEY]
-   --tls.cert-file value                      TLS Certificate file. [$TLS_CERT]
-```
+Examples:
+  mlx5_0:1|mlx5_0:1 means that cn1 will use mlx5_0 port 1 and cn2 will use mlx5_0 port 1
+  mlx5_0:1,mlx5_0:1|mlx5_0:1 means that cn1 will use mlx5_0 port 1 or mlx5_0 port 1, and cn2 will use mlx5_0 port 1 [$BENCHMARK_UCX_AFFINITY]
+   --benchmark.ucx.transport value  UCX Tranport. Select the common transport.
 
-Configure the port with:
+See 'ucx_info -bd' to see available tranports.
 
-```shell
-   --grpc.listen-address value                Address to listen on. Is used for receiving job status via the job completion plugin. (default: ":3000") [$LISTEN_ADDRESS]
-```
+Value is often: sm,self,rc (shared memory, self, rdma reliable connected). Set to empty to set automatically.
 
-#### Customer API configuration
+Note that TCP is not supported at the moment. [$BENCHMARK_UCX_TRANSPORT]
 
-The Customer API should already be in TLS with common root CA. If that's not the case, add the CA certificate of the customer API using
+   MetaScheduler:
 
-```shell
-   --customer.tls.ca value                    Path to CA certificate for TLS verification. [$CUSTOMER_CA]
-   --customer.tls.server-host-override value  The server name used to verify the hostname returned by the TLS handshake. (default: "customer.deepsquare.io") [$CUSTOMER_SERVER_HOST_OVERRIDE]
-```
+   --metascheduler.endpoint.rpc value    Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_ENDPOINT_RPC]
+   --metascheduler.endpoint.ws value     Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_ENDPOINT_WS]
+   --metascheduler.private-key value     An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
+   --metascheduler.smart-contract value  Metascheduler smart-contract address. (default: "0x") [$METASCHEDULER_SMART_CONTRACT]
 
-Or enable insecure mode (no TLS verification):
+   Miscellaneous:
 
-```shell
-   --customer.tls.insecure                    Skip TLS verification. By enabling it, customer.tls.ca and customer.tls.server-host-override are ignored. (default: false) [$CUSTOMER_TLS_INSECURE]
+   --nvidia-smi value  Server-side nvidia-smi path. (default: "nvidia-smi") [$NVIDIA_SMI_PATH]
+   --trace             Trace logging (default: false) [$TRACE]
 
-```
+   Network:
 
-Configure the Customer API endpoint with:
+   --grpc.listen-address value  Address to listen on. Is used for receiving job status via the job completion plugin. (default: ":3000") [$LISTEN_ADDRESS]
+   --public-address value       Public address or address of the reverse proxy. Is used by the SLURM plugins to know where to report job statuses. Must be protected with TLS. (default: "supervisor.example.com:3000") [$PUBLIC_ADDRESS]
 
-```shell
-   --customer.endpoint value                  Oracle gRPC endpoint. (default: "127.0.0.1:443") [$CUSTOMER_ENDPOINT]
-```
+   SBatch API:
 
-#### Metascheduler configuration
+   --sbatch.endpoint value  SBatch API gRPC endpoint. (default: "127.0.0.1:443") [$SBATCH_ENDPOINT]
+   --sbatch.tls             Enable TLS for the SBatch API. (default: true) [$SBATCH_TLS_ENABLE]
+   --sbatch.tls.ca value    Path to CA certificate for TLS verification. [$SBATCH_CA]
+   --sbatch.tls.insecure    Skip TLS verification. By enabling it, sbatch.tls.ca is ignored. (default: false) [$SBATCH_TLS_INSECURE]
 
-Configure the network RPC URL with:
+   Secure Transport:
 
-```shell
-   --metascheduler.endpoint value             Metascheduler RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_ENDPOINT]
-```
+   --tls                  Enable TLS for HTTP. (default: false) [$TLS_ENABLE]
+   --tls.cert-file value  TLS Certificate file. [$TLS_CERT]
+   --tls.key-file value   TLS Private Key file. [$TLS_KEY]
 
-Set the smart contract address with:
+   Slurm:
 
-```shell
-   --metascheduler.smart-contract value       Metascheduler smart-contract address. (default: "0x") [$METASCHEDULER_SMART_CONTRACT]
-```
+   --slurm.batch value      Server-side SLURM sbatch path. (default: "/usr/bin/sbatch") [$SLURM_SBATCH_PATH]
+   --slurm.cancel value     Server-side SLURM scancel path. (default: "/usr/bin/scancel") [$SLURM_SCANCEL_PATH]
+   --slurm.control value    Server-side SLURM scontrol path. (default: "/usr/bin/scontrol") [$SLURM_SCONTROL_PATH]
+   --slurm.info value       Server-side SLURM info path. (default: "/usr/bin/sinfo") [$SLURM_SINFO_PATH]
+   --slurm.partition value  Slurm partition used for jobs and registering.
 
-Configure the nethereum private key, which will be used for RPC calls and rewards:
-
-```shell
-   --eth.private-key value                    An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
-```
-
-#### Slurm configuration
-
-##### SSH access
-
-The supervisor expect SSH access to a SLURM login node.
-
-```shell
-   --slurm.ssh.address value                  Address of the Slurm login node. [$SLURM_SSH_ADDRESS]
-   --slurm.ssh.admin-user scontrol            SLURM admin user used for calling scontrol commands. [$SLURM_SSH_ADMIN_USER]
-   --slurm.ssh.private-key value              Base64-encoded one line SSH private key used for impersonation. The public key must be inserted in the authorized_keys file of each user. [$SLURM_SSH_PRIVATE_KEY]
-```
-
-Use the [`provider-ssh-authorized-keys`](https://github.com/deepsquare-io/the-grid/tree/main/provider-ssh-authorized-keys) to configure the SSH server on the login nodes.
-
-##### Cluster configuration
-
-```shell
-   --res.nodes scontrol show partitions       Total number of Nodes reported by scontrol show partitions (default: 0) [$TOTAL_NODES]
-   --res.cpus scontrol show partitions        Total number of CPUs reported by scontrol show partitions (default: 0) [$TOTAL_CPUS]
-   --res.gpus scontrol show partitions        Total number of GPUs reported by scontrol show partitions (default: 0) [$TOTAL_GPUS]
-   --res.mem scontrol show partitions         Total number of Memory (MB) reported by scontrol show partitions (default: 0) [$TOTAL_MEMORY]
+All the specifications returned by 'scontrol show partition' will be registered to the blockchain. (default: "main") [$SLURM_PARTITION]
+   --slurm.squeue value             Server-side SLURM squeue path. (default: "/usr/bin/squeue") [$SLURM_SQUEUE_PATH]
+   --slurm.ssh.address value        Address of the Slurm login node. [$SLURM_SSH_ADDRESS]
+   --slurm.ssh.admin-user scontrol  SLURM admin user used for calling scontrol commands. [$SLURM_SSH_ADMIN_USER]
+   --slurm.ssh.private-key value    Base64-encoded one line SSH private key used for impersonation. The public key must be inserted in the authorized_keys file of each user. [$SLURM_SSH_PRIVATE_KEY]
 ```
 
 ## Docker
@@ -159,5 +108,5 @@ More details [here](https://github.com/deepsquare-io/the-grid/pkgs/container/sup
 The `main` function is stored in the `cmd` package. To build the supervisor, do:
 
 ```shell
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o app ./cmd
+make
 ```

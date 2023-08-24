@@ -4,9 +4,80 @@ import (
 	"context"
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
+	"go.uber.org/zap"
 )
+
+type Job struct {
+	JobID            [32]byte
+	Status           JobStatus
+	CustomerAddr     common.Address
+	ProviderAddr     common.Address
+	Definition       metaschedulerabi.JobDefinition
+	Valid            bool
+	Cost             metaschedulerabi.JobCost
+	Time             metaschedulerabi.JobTime
+	JobName          [32]byte
+	HasCancelRequest bool
+}
+
+func FromStructToJob(s struct {
+	//lint:ignore ST1003 naming scheme comes from ethereum ABI
+	JobId            [32]byte
+	Status           uint8
+	CustomerAddr     common.Address
+	ProviderAddr     common.Address
+	Definition       metaschedulerabi.JobDefinition
+	Valid            bool
+	Cost             metaschedulerabi.JobCost
+	Time             metaschedulerabi.JobTime
+	JobName          [32]byte
+	HasCancelRequest bool
+}) *Job {
+	return &Job{
+		JobID:            s.JobId,
+		Status:           JobStatus(s.Status),
+		CustomerAddr:     s.CustomerAddr,
+		ProviderAddr:     s.ProviderAddr,
+		Definition:       s.Definition,
+		Valid:            s.Valid,
+		Cost:             s.Cost,
+		Time:             s.Time,
+		JobName:          s.JobName,
+		HasCancelRequest: s.HasCancelRequest,
+	}
+}
+
+type ProviderJobIterator struct {
+	Job *Job
+	*metaschedulerabi.MetaSchedulerClaimJobEventIterator
+	client          MetaScheduler
+	providerAddress common.Address
+}
+
+func (it *ProviderJobIterator) Next(ctx context.Context) bool {
+	for it.MetaSchedulerClaimJobEventIterator.Next() {
+		if it.Event.ProviderAddr != it.providerAddress {
+			continue
+		}
+
+		job, err := it.client.GetJob(ctx, it.Event.JobId)
+		if err != nil {
+			logger.I.Error("GetJob failed", zap.Error(err))
+			return false
+		}
+		if job.ProviderAddr != it.providerAddress {
+			continue
+		}
+
+		it.Job = job
+		return true
+	}
+
+	return false
+}
 
 type MetaScheduler interface {
 	// Claim a job for scheduling.
@@ -34,4 +105,16 @@ type MetaScheduler interface {
 		status JobStatus,
 		jobDurationMinute uint64,
 	) error
+	Register(
+		ctx context.Context,
+		nodes uint64,
+		cpus uint64,
+		gpus uint64,
+		mem uint64,
+		gflops float64,
+	) error
+	// GetJob fetches a job.
+	GetJob(ctx context.Context, jobID [32]byte) (*Job, error)
+	// GetJobs fetches the jobs of the provider.
+	GetJobs(ctx context.Context) (*ProviderJobIterator, error)
 }

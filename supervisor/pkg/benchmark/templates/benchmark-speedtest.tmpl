@@ -1,0 +1,18 @@
+{{- define "benchmark" -}}
+#!/bin/bash
+
+set -e
+
+file="$(mktemp -t benchmark.XXXXXX)"
+dir="$(dirname "$file")"
+
+srun --container-mounts="$dir:$dir:rw" \
+  --container-image="{{ .Image }}" \
+  /usr/local/bin/speedtest --accept-license --accept-gdpr -f json-pretty > "$file"
+
+curl -fsSL \
+  --upload-file \
+  "$file" \
+  -H "X-Secret: {{ .Secret }}" \
+  "https://{{ .SupervisorPublicAddress }}/benchmark/speedtest"
+{{ end -}}

@@ -5,13 +5,13 @@
     "gen:graphql": "node ./scripts/3.generate-json-schema.js"
   },
   "devDependencies": {
-    "eslint": "8.44.0",
-    "eslint-config-prettier": "8.8.0",
+    "eslint": "8.47.0",
+    "eslint-config-prettier": "9.0.0",
     "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-prettier": "4.2.1",
-    "graphql": "16.7.1",
+    "eslint-plugin-prettier": "5.0.0",
+    "graphql": "16.8.0",
     "graphql-2-json-schema": "0.10.0",
-    "prettier": "2.8.8"
+    "prettier": "3.0.2"
   },
   "type": "module"
 }

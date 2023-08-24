@@ -67,9 +67,9 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
-  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
 set -e
 tries=1; while [ "$tries" -lt 10 ]; do
@@ -173,9 +173,9 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
-  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
 set -e
 tries=1; while [ "$tries" -lt 10 ]; do
@@ -235,9 +235,9 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
-  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
 set -e
 tries=1; while [ "$tries" -lt 10 ]; do
@@ -770,9 +770,9 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> /tmp/enroot.import.$SLURM_JOB_ID.log
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
-  cat /tmp/enroot.import.$SLURM_JOB_ID.log
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
 set -e
 tries=1; while [ "$tries" -lt 10 ]; do

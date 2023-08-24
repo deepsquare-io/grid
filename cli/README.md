@@ -4,26 +4,48 @@ Submit directly jobs to the DeepSquare Grid!
 
 ## Usage
 
-**`grid submit`**:
+```shell
+NAME:
+   deepsquaretui - Overwatch the job scheduling and register the compute to the Deepsquare Grid.
+
+USAGE:
+   deepsquaretui [global options] command [command options] [arguments...]
+
+COMMANDS:
+   submit   Quickly submit a job.
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --metascheduler.rpc value             Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
+   --metascheduler.ws value              Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_WS]
+   --metascheduler.smart-contract value  Metascheduler smart-contract address. (default: "0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0") [$METASCHEDULER_SMART_CONTRACT]
+   --sbatch.endpoint value               SBatch Service GraphQL endpoint. (default: "https://sbatch.deepsquare.run/graphql") [$SBATCH_ENDPOINT]
+   --logger.endpoint value               Grid Logger endpoint. (default: "https://grid-logger.deepsquare.run") [$LOGGER_ENDPOINT]
+   --private-key value                   An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
+   --debug                               Debug logging (default: false) [$DEBUG]
+   --help, -h                            show help
+   --version, -v                         print the version
+```
+
+**`submit`**:
 
 ```shell
-Usage:
-  grid submit <path to script> [flags]
+NAME:
+   deepsquaretui submit - Quickly submit a job.
 
-Flags:
-  -c, --cpus-per-task uint                    Allocated CPUs per task.
-  -t, --credits string                        Amount of credits locked for the job, which is equivalent to the time limit.
-      --eth.private-key string                An hexadecimal private key for ethereum transactions. (env: ETH_PRIVATE_KEY)
-      --gpus uint                             Allocated GPUs per node.
-  -h, --help                                  help for submit
-      --mem uint                              Allocated memory per node (MB).
-      --metascheduler.endpoint string         Metascheduler RPC endpoint. (env: METASCHEDULER_ENDPOINT) (default "https://testnet.deepsquare.run/rpc")
-      --metascheduler.smart-contract string   Metascheduler smart-contract address. Must have the prefix 0x. (env: METASCHEDULER_SMART_CONTRACT)
-  -N, --nodes uint                            Allocated nodes. (default 1)
-  -n, --tasks uint                            Run the same script in parallel if tasks > 1. (default 1)
+USAGE:
+   deepsquaretui submit [command options] <job.yaml>
 
-Global Flags:
-  -d, --debug   Show debug logging.
+OPTIONS:
+   --metascheduler.rpc value              Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
+   --metascheduler.smart-contract value   Metascheduler smart-contract address. (default: "0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0") [$METASCHEDULER_SMART_CONTRACT]
+   --sbatch.endpoint value                SBatch Service GraphQL endpoint. (default: "https://sbatch.deepsquare.run/graphql") [$SBATCH_ENDPOINT]
+   --private-key value                    An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
+   --job-name value                       The job name.
+   --uses key=value [ --uses key=value ]  Uses flag. Used to filter the clusters. Format: key=value
+   --credits-wei value                    Allocated a number of credits. Unit is wei. Is a big int.
+   --credits value                        Allocated a number of credits. Unit is 1e18. Is a float and is not precise. (default: 0)
+   --help, -h                             show help
 ```
 
 ## Download

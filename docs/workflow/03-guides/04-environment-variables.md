@@ -29,7 +29,7 @@ The environement variable `$STORAGE_PATH` stores the path of the shared storage 
 
 There are many caches that can be used during a job:
 
-- `$DEEPSQUARE_TMP` stores the path to a shared file system cache isolated by user. The cache is periodically cleared according to the infrastructure provider's policy.
+- `$DEEPSQUARE_TMP` or `DEEPSQUARE_SHARED_TMP` stores the path to a shared file system cache isolated by user. The cache is periodically cleared according to the infrastructure provider's policy.
 - `$DEEPSQUARE_SHARED_WORLD_TMP` stores the path to a shared file system cache **not** isolated. The cache is periodically cleared according to the infrastructure provider's policy.
 - `$DEPSQUARE_DISK_TMP` stores the path to a per-site, per-node, per-user cache. The cache is cleared when the node is restarted, or periodically according to the infrastructure provider's policy.
 - `$DEEPSQUARE_DISK_WORLD_TMP` stores the path to a cache per site, per node and for all users. The cache is cleared when the node is restarted, or periodically according to the infrastructure provider's policy.

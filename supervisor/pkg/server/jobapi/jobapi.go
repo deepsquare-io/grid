@@ -15,36 +15,27 @@ import (
 	"go.uber.org/zap"
 )
 
-type JobHandler interface {
-	SetJobStatus(
-		ctx context.Context,
-		jobID [32]byte,
-		jobStatus metascheduler.JobStatus,
-		jobDuration uint64,
-	) error
-}
-
 type Server struct {
 	supervisorv1alpha1.UnimplementedJobAPIServer
-	jobHandler JobHandler
-	Timeout    time.Duration
+	ms      metascheduler.MetaScheduler
+	Timeout time.Duration
 	// Delay between tries
 	Delay           time.Duration
 	resourceManager *lock.ResourceManager
 }
 
 func New(
-	jobHandler JobHandler,
+	ms metascheduler.MetaScheduler,
 	resourceManager *lock.ResourceManager,
 ) *Server {
-	if jobHandler == nil {
-		logger.I.Fatal("jobHandler is nil")
+	if ms == nil {
+		logger.I.Fatal("ms is nil")
 	}
 	if resourceManager == nil {
 		logger.I.Fatal("resourceManager is nil")
 	}
 	return &Server{
-		jobHandler:      jobHandler,
+		ms:              ms,
 		Timeout:         15 * time.Second,
 		Delay:           3 * time.Second,
 		resourceManager: resourceManager,
@@ -117,7 +108,7 @@ func (s *Server) setJobStatusTask(
 			ctx,
 			3, s.Delay, s.Timeout,
 			func(ctx context.Context, _ int) error {
-				err := s.jobHandler.SetJobStatus(
+				err := s.ms.SetJobStatus(
 					ctx,
 					jobNameFixedLength,
 					status,
@@ -142,7 +133,7 @@ func (s *Server) setJobStatusTask(
 							zap.String("name", req.Name),
 							zap.Uint64("duration", req.Duration/60),
 						)
-						if err := s.jobHandler.SetJobStatus(
+						if err := s.ms.SetJobStatus(
 							ctx,
 							jobNameFixedLength,
 							metascheduler.JobStatusRunning,

@@ -1,0 +1,90 @@
+{{- define "benchmark" -}}
+#!/bin/bash
+
+#SBATCH -N {{ .Benchmark.MinNodes }}-{{ .Benchmark.MaxNodes }}
+#SBATCH --ntasks={{ .Benchmark.NTasks }}
+#SBATCH --ntasks-per-node={{ .Benchmark.NTasksPerNode }}
+#SBATCH --mem=0
+#SBATCH --mincpus={{ .Benchmark.CPUsPerNode }}
+#SBATCH --gpus-per-node={{ .Benchmark.GPUsPerNode }}
+#SBATCH --cpus-per-task={{ div .Benchmark.CPUsPerNode .Benchmark.NTasksPerNode }}
+
+set -x
+
+{{- if .Trace }}
+export NCCL_DEBUG=TRACE
+export NCCL_DEBUG_SUBSYS=ALL
+{{- end }}
+
+{{- if le .Benchmark.MaxNodes 1 }}
+export NCCL_P2P_DISABLE=1
+{{- end }}
+
+{{- if .UCX }}
+# Select UCX as MPI P2P communications
+export PMIX_MCA_pml=ucx
+# Select UCX as Byte-Transport Layer
+export PMIX_MCA_btl=^vader,openib,tcp
+export OMPI_MCA_pml=ucx
+export OMPI_MCA_btl=^vader,openib,tcp
+{{- else }}
+# Select obi-wan as MPI P2P communications
+export PMIX_MCA_pml=ob1
+# Select shared-memory or TCP as Byte-Transport Layer
+export PMIX_MCA_btl=vader,self,tcp
+export OMPI_MCA_pml=ob1
+export OMPI_MCA_btl=vader,self,tcp
+export NCCL_IB_DISABLE=1
+{{- end }}
+
+GPU_AFFINITY=""
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  GPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .Benchmark.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $1}'"'"' | sed '"'"'s/GPU//'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
+done
+GPU_AFFINITY="${GPU_AFFINITY%|}"
+export GPU_AFFINITY
+
+CPU_AFFINITY=""
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  CPU_AFFINITY+="$(srun --ntasks=1 -N 1-1 --gpus-per-task={{ .Benchmark.GPUsPerNode }} --gpu-bind=none --cpu-bind=none -w "$node" sh -c 'nvidia-smi topo -m | grep -E '"'"'^GPU[0-9]+'"'"' | awk '"'"'{print $7}'"'"' | tr '"'"'\n'"'"' '"'"'|'"'"'')"
+done
+CPU_AFFINITY="${CPU_AFFINITY%|}"
+export CPU_AFFINITY
+
+srun \
+  --cpu-bind=none \
+  --gpu-bind=none \
+  --nodes={{ .Benchmark.MaxNodes }}-{{ .Benchmark.MaxNodes }} \
+  --ntasks={{ .Benchmark.NTasks }} \
+  --ntasks-per-node={{ .Benchmark.NTasksPerNode }} \
+  --gpus-per-task=1 \
+  --container-image="{{ .Image }}" \
+  bash -c 'sed -Ei "s/:1//g" ./hpl.sh
+sed -Ei "s/'"'"':'"'"'/'"'"'|'"'"'/g" ./hpl.sh
+{{- if .UCX }}
+{{- if .UCXAffinity }}
+readarray -t UCX_AFFINITY_MAP <<<"$(tr '"'"'|'"'"' '"'"'\n'"'"'<<<"{{ .UCXAffinity }}")"
+UCX_NET_DEVICES="${UCX_AFFINITY_MAP[${SLURM_NODEID}]}"
+export UCX_NET_DEVICES
+{{- end }}
+{{- if .UCXTransport }}
+export UCX_TLS='"'"'{{ .UCXTransport }}'"'"'
+{{- end }}
+{{- end }}
+cat << '"'"'EOF'"'"' > /tmp/test.dat \
+  && ./hpl.sh \
+  --xhpl-ai \
+  --cpu-affinity "$CPU_AFFINITY" \
+  --gpu-affinity "$GPU_AFFINITY" \
+  --dat "/tmp/test.dat"
+{{- template "datfile" .BenchmarkParams -}}
+EOF'
+
+LOG_FILE="$(scontrol show job $SLURM_JOB_ID | grep "StdOut=" | sed 's/.*StdOut=//g')"
+
+curl -fsSL \
+  --upload-file \
+  "$LOG_FILE" \
+  -H "X-Secret: {{ .Secret }}" \
+  "https://{{ .SupervisorPublicAddress }}/benchmark/hpl/{{ .Phase }}?nodes={{ .Benchmark.MaxNodes }}&cpusPerNode={{ .Benchmark.CPUsPerNode }}&gpusPerNode={{ .Benchmark.GPUsPerNode }}&memPerNode={{ .MemPerNode }}"
+{{ end -}}

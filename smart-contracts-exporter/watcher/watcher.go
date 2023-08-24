@@ -286,13 +286,11 @@ func (w *Watcher) handleJobTransition(
 
 	// Add statistics from cold states
 	switch to {
-	case JobStatusCancelled:
-		fallthrough
-	case JobStatusFinished:
-		fallthrough
-	case JobStatusFailed:
-		fallthrough
-	case JobStatusOutOfCredits:
+	case JobStatusCancelled, JobStatusFinished, JobStatusFailed, JobStatusOutOfCredits:
+		// If the final cost is zero, it means the job may be a zombie.
+		if job.Cost.FinalCost.Cmp(big.NewInt(0)) == 0 {
+			return nil
+		}
 		bf := new(big.Float).SetInt(job.Cost.FinalCost)
 		f, _ := bf.Float64()
 		metricsv1.TotalCreditSpent(job.CustomerAddr.Hex()).Add(f)

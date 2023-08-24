@@ -1,4 +1,4 @@
-// go:build unit
+//go:build unit
 
 package metascheduler_test
 
@@ -12,7 +12,8 @@ import (
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockbind"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockethereum"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -24,9 +25,9 @@ import (
 
 type ClientTestSuite struct {
 	suite.Suite
-	deployBackend   *mocks.DeployBackend
-	contractBackend *mocks.ContractBackend
-	impl            *metascheduler.Client
+	deployBackend   *mockbind.DeployBackend
+	contractBackend *mockbind.ContractBackend
+	impl            metascheduler.MetaScheduler
 }
 
 var (
@@ -142,12 +143,12 @@ func init() {
 }
 
 func (suite *ClientTestSuite) BeforeTest(suiteName, testName string) {
-	suite.contractBackend = mocks.NewContractBackend(suite.T())
+	suite.contractBackend = mockbind.NewContractBackend(suite.T())
 
 	// Assert calling providerJobQueues
 	suite.mockProviderJobQueue()
 
-	suite.deployBackend = mocks.NewDeployBackend(suite.T())
+	suite.deployBackend = mockbind.NewDeployBackend(suite.T())
 	suite.impl = metascheduler.NewClient(
 		chainID,
 		metaschedulerAddress,
@@ -258,7 +259,7 @@ func (suite *ClientTestSuite) TestWatchEvents() {
 		chan *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent,
 		100,
 	)
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	sub.EXPECT().Unsubscribe()
 	suite.contractBackend.EXPECT().SubscribeFilterLogs(
 		mock.Anything,

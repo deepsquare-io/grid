@@ -70,7 +70,7 @@ func NewClient(
 	rpc bind.ContractBackend,
 	ws bind.ContractBackend,
 	pk *ecdsa.PrivateKey,
-) *Client {
+) MetaScheduler {
 	fromAddress := crypto.PubkeyToAddress(pk.PublicKey)
 
 	msRPC, err := metaschedulerabi.NewMetaScheduler(metaschedulerAddress, rpc)
@@ -179,7 +179,16 @@ func (c *Client) Register(
 	cpus uint64,
 	gpus uint64,
 	mem uint64,
+	gflops float64,
 ) error {
+	logger.I.Info(
+		"called register",
+		zap.Uint64("nodes", nodes),
+		zap.Uint64("cpus", cpus),
+		zap.Uint64("mem", mem),
+		zap.Uint64("gpus", gpus),
+		zap.Float64("gflops", gflops),
+	)
 	// TODO: implements
 	// auth, err := c.auth(ctx)
 	// if err != nil {
@@ -424,4 +433,47 @@ func (c *Client) ClaimTopUp(ctx context.Context) error {
 	logger.I.Debug("called ClaimNextTopUpJob", zap.String("tx", tx.Hash().String()))
 
 	return nil
+}
+
+func (c *Client) GetJob(ctx context.Context, jobID [32]byte) (*Job, error) {
+	job, err := c.contractRPC.Jobs(&bind.CallOpts{Context: ctx}, jobID)
+	if err != nil {
+		return &Job{}, WrapError(err)
+	}
+	return FromStructToJob(job), nil
+}
+
+func (c *Client) GetJobs(ctx context.Context) (*ProviderJobIterator, error) {
+	it, err := c.contractRPC.FilterClaimJobEvent(&bind.FilterOpts{
+		Context: ctx,
+	})
+	if err != nil {
+		logger.I.Error("FilterClaimJobEvent failed", zap.Error(err))
+		return nil, WrapError(err)
+	}
+
+	// Find a job for the provider
+	for it.Next() {
+		// Filter case
+		if it.Event.ProviderAddr == c.fromAddress {
+			job, err := c.GetJob(ctx, it.Event.JobId)
+			if err != nil {
+				logger.I.Error("GetJob failed", zap.Error(err))
+				return nil, err
+			}
+
+			return &ProviderJobIterator{
+				client:                             c,
+				Job:                                job,
+				MetaSchedulerClaimJobEventIterator: it,
+				providerAddress:                    c.fromAddress,
+			}, nil
+		}
+	}
+
+	// Not found case
+	return &ProviderJobIterator{
+		MetaSchedulerClaimJobEventIterator: it,
+		providerAddress:                    c.fromAddress,
+	}, nil
 }

@@ -12,8 +12,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-const execTimeout = time.Duration(10 * time.Second)
-
 type Service struct {
 	address    string
 	authMethod ssh.AuthMethod
@@ -54,9 +52,6 @@ func (s *Service) establish(
 	if err != nil {
 		return nil, nil, err
 	}
-	if err := conn.SetDeadline(time.Now().Add(execTimeout)); err != nil {
-		return nil, nil, err
-	}
 	c, chans, reqs, err := ssh.NewClientConn(conn, s.address, config)
 	if err != nil {
 		return nil, nil, err
@@ -80,7 +75,7 @@ func (s *Service) establish(
 	}, nil
 }
 
-// ExecAs executes a command on the remote host with a timeout
+// ExecAs executes a command on the remote host
 func (s *Service) ExecAs(ctx context.Context, user string, cmd string) (string, error) {
 	sess, close, err := s.establish(ctx, user)
 	if err != nil {

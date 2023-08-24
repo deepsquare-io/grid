@@ -12,7 +12,12 @@ import (
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockethereum"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockgridlogger"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockloggerv1alpha1"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockmetascheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mocksbatch"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/watcher"
@@ -53,18 +58,18 @@ srun hostname
 
 type WatcherTestSuite struct {
 	suite.Suite
-	metaScheduler    *mocks.MetaScheduler
-	scheduler        *mocks.Scheduler
-	sbatch           *mocks.Client
-	gridLoggerDialer *mocks.Dialer
+	metaScheduler    *mockmetascheduler.MetaScheduler
+	scheduler        *mockscheduler.Scheduler
+	sbatch           *mocksbatch.Client
+	gridLoggerDialer *mockgridlogger.Dialer
 	impl             *watcher.Watcher
 }
 
 func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
-	suite.metaScheduler = mocks.NewMetaScheduler(suite.T())
-	suite.scheduler = mocks.NewScheduler(suite.T())
-	suite.sbatch = mocks.NewClient(suite.T())
-	suite.gridLoggerDialer = mocks.NewDialer(suite.T())
+	suite.metaScheduler = mockmetascheduler.NewMetaScheduler(suite.T())
+	suite.scheduler = mockscheduler.NewScheduler(suite.T())
+	suite.sbatch = mocksbatch.NewClient(suite.T())
+	suite.gridLoggerDialer = mockgridlogger.NewDialer(suite.T())
 	suite.impl = watcher.New(
 		suite.metaScheduler,
 		suite.scheduler,
@@ -75,8 +80,8 @@ func (suite *WatcherTestSuite) BeforeTest(suiteName, testName string) {
 	)
 }
 
-func (suite *WatcherTestSuite) expectLoggerSend() *mocks.LoggerAPI_WriteClient {
-	c := mocks.NewLoggerAPI_WriteClient(suite.T())
+func (suite *WatcherTestSuite) expectLoggerSend() *mockloggerv1alpha1.LoggerAPI_WriteClient {
+	c := mockloggerv1alpha1.NewLoggerAPI_WriteClient(suite.T())
 	suite.gridLoggerDialer.EXPECT().
 		DialContext(mock.Anything, mock.Anything).
 		Return(c, func() error { return nil }, nil)
@@ -87,7 +92,7 @@ func (suite *WatcherTestSuite) expectLoggerSend() *mocks.LoggerAPI_WriteClient {
 
 func (suite *WatcherTestSuite) arrangeNoEvent() {
 	// Arrange
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	suite.metaScheduler.EXPECT().WatchEvents(
 		mock.Anything,
 		mock.Anything,
@@ -104,7 +109,7 @@ func (suite *WatcherTestSuite) arrangeEmitClaimNextJobEvent(
 	e *metaschedulerabi.MetaSchedulerClaimJobEvent,
 ) {
 	// Arrange
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	suite.metaScheduler.EXPECT().WatchEvents(
 		mock.Anything,
 		mock.Anything,
@@ -129,7 +134,7 @@ func (suite *WatcherTestSuite) arrangeEmitClaimNextCancellingJobEvent(
 	e *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent,
 ) {
 	// Arrange
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	suite.metaScheduler.EXPECT().
 		WatchEvents(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		RunAndReturn(func(ctx context.Context, c1 chan<- *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent, c2 chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent, c3 chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent) (event.Subscription, error) {
@@ -151,7 +156,7 @@ func (suite *WatcherTestSuite) arrangeEmitClaimNextTopUpJobEvent(
 	e *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent,
 ) {
 	// Arrange
-	sub := mocks.NewSubscription(suite.T())
+	sub := mockethereum.NewSubscription(suite.T())
 	suite.metaScheduler.EXPECT().
 		WatchEvents(mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		RunAndReturn(func(ctx context.Context, c1 chan<- *metaschedulerabi.MetaSchedulerClaimNextTopUpJobEvent, c2 chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent, c3 chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent) (event.Subscription, error) {
@@ -257,6 +262,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 	suite.scheduler.EXPECT().Submit(mock.Anything, &scheduler.SubmitRequest{
 		Name:          hexutil.Encode(fixtureClaimNextJobEvent.JobId[:]),
 		User:          strings.ToLower(fixtureClaimNextJobEvent.CustomerAddr.Hex()),
+		Prefix:        "supervisor",
 		JobDefinition: &d,
 	}).Return(strconv.Itoa(fixtureSchedulerJobID), nil)
 
@@ -374,6 +380,7 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	suite.scheduler.EXPECT().Submit(mock.Anything, &scheduler.SubmitRequest{
 		Name:          hexutil.Encode(fixtureClaimNextJobEvent.JobId[:]),
 		User:          strings.ToLower(fixtureClaimNextJobEvent.CustomerAddr.Hex()),
+		Prefix:        "supervisor",
 		JobDefinition: &d,
 	}).Return("0", errors.New("expected error"))
 	// Must refuse job because we couldn't fetch the job batch script
@@ -403,8 +410,8 @@ func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEvent() {
 		Return(status, nil)
 	suite.metaScheduler.EXPECT().GetProviderAddress().Return(fixtureCancellingEvent.ProviderAddr)
 	suite.scheduler.EXPECT().
-		CancelJob(mock.Anything, mock.Anything).
-		RunAndReturn(func(ctx context.Context, cr *scheduler.CancelRequest) error {
+		CancelJob(mock.Anything, mock.Anything, mock.Anything).
+		RunAndReturn(func(ctx context.Context, s1, s2 string) error {
 			status = metascheduler.JobStatusCancelled
 			return nil
 		})
@@ -450,7 +457,7 @@ func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEventIgnoresEvent(
 func (suite *WatcherTestSuite) TestWatchClaimNextTopUpJobEvent() {
 	// Arrange
 	suite.arrangeEmitClaimNextTopUpJobEvent(fixtureClaimNextTopUpJobEvent)
-	suite.scheduler.EXPECT().TopUp(mock.Anything, mock.Anything).Return(nil)
+	suite.scheduler.EXPECT().TopUp(mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	suite.metaScheduler.EXPECT().
 		GetProviderAddress().
 		Return(fixtureClaimNextTopUpJobEvent.ProviderAddr)

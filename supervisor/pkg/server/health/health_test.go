@@ -8,7 +8,7 @@ import (
 	"time"
 
 	healthv1 "github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1"
-	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockhealthv1"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/health"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -37,7 +37,7 @@ func (suite *HealthTestSuite) TestCheck() {
 func (suite *HealthTestSuite) TestWatch() {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	mockStream := mocks.NewHealth_WatchServer(suite.T())
+	mockStream := mockhealthv1.NewHealth_WatchServer(suite.T())
 	mockStream.EXPECT().Send(mock.Anything).Return(nil)
 	mockStream.EXPECT().Context().Return(ctx)
 

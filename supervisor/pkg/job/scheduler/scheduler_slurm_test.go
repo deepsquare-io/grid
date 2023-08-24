@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/supervisor/mocks"
+	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
 	"github.com/stretchr/testify/mock"
@@ -25,42 +25,35 @@ var (
 
 type ServiceTestSuite struct {
 	suite.Suite
-	ssh  *mocks.Executor
-	impl *scheduler.Slurm
+	ssh  *mockscheduler.Executor
+	impl scheduler.Scheduler
 }
 
 func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
-	suite.ssh = mocks.NewExecutor(suite.T())
+	suite.ssh = mockscheduler.NewExecutor(suite.T())
 	suite.impl = scheduler.NewSlurm(
 		suite.ssh,
 		admin,
-		"scancel",
-		"sbatch",
-		"squeue",
-		"scontrol",
 		"localhost",
+		"main",
 	)
 }
 
 func (suite *ServiceTestSuite) TestCancel() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
-	req := &scheduler.CancelRequest{
-		Name: name,
-		User: user,
-	}
 	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		user,
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "scancel") &&
-				strings.Contains(cmd, req.Name)
+				strings.Contains(cmd, name)
 		}),
 	).Return("ok", nil)
 	ctx := context.Background()
 
 	// Act
-	err := suite.impl.CancelJob(ctx, req)
+	err := suite.impl.CancelJob(ctx, name, user)
 
 	// Assert
 	suite.NoError(err)
@@ -72,12 +65,13 @@ func (suite *ServiceTestSuite) TestSubmit() {
 	name := utils.GenerateRandomString(6)
 	expectedJobID := "123"
 	req := &scheduler.SubmitRequest{
-		Name: name,
-		User: user,
+		Name:   name,
+		User:   user,
+		Prefix: "supervisor",
 		JobDefinition: &scheduler.JobDefinition{
 			TimeLimit:    uint64(5),
 			NTasks:       1,
-			GPUsPerTask:  0,
+			GPUsPerTask:  utils.Ptr(uint64(0)),
 			CPUsPerTask:  1,
 			MemoryPerCPU: 512,
 			Body: `#!/bin/sh
@@ -92,11 +86,12 @@ srun sleep infinity
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "sbatch") &&
 				strings.Contains(cmd, strconv.FormatUint(req.CPUsPerTask, 10)) &&
-				strings.Contains(cmd, strconv.FormatUint(req.GPUsPerTask, 10)) &&
+				strings.Contains(cmd, strconv.FormatUint(*req.GPUsPerTask, 10)) &&
 				strings.Contains(cmd, strconv.FormatUint(req.MemoryPerCPU, 10)) &&
 				strings.Contains(cmd, strconv.FormatUint(req.NTasks, 10)) &&
 				strings.Contains(cmd, strconv.FormatUint(req.TimeLimit, 10)) &&
 				strings.Contains(cmd, req.Name) &&
+				strings.Contains(cmd, req.Prefix) &&
 				strings.Contains(cmd, req.Body)
 		}),
 	).Return(fmt.Sprintf("%s\n", expectedJobID), nil)
@@ -115,16 +110,13 @@ func (suite *ServiceTestSuite) TestTopUp() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	jobID := "123"
-	req := &scheduler.TopUpRequest{
-		Name:           name,
-		AdditionalTime: 30,
-	}
+	additionalTime := uint64(30)
 	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		admin,
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "squeue") &&
-				strings.Contains(cmd, req.Name)
+				strings.Contains(cmd, name)
 		}),
 	).Return(jobID, nil)
 	suite.ssh.EXPECT().ExecAs(
@@ -133,13 +125,13 @@ func (suite *ServiceTestSuite) TestTopUp() {
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "scontrol") &&
 				strings.Contains(cmd, jobID) &&
-				strings.Contains(cmd, strconv.FormatUint(req.AdditionalTime, 10))
+				strings.Contains(cmd, strconv.FormatUint(additionalTime, 10))
 		}),
 	).Return("ok", nil)
 	ctx := context.Background()
 
 	// Act
-	err := suite.impl.TopUp(ctx, req)
+	err := suite.impl.TopUp(ctx, name, additionalTime)
 
 	// Assert
 	suite.NoError(err)
@@ -151,7 +143,7 @@ func (suite *ServiceTestSuite) TestHealthCheck() {
 	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		admin,
-		"squeue",
+		"timeout 10 squeue",
 	).Return("ok", nil)
 	ctx := context.Background()
 
@@ -167,10 +159,6 @@ func (suite *ServiceTestSuite) TestFindRunningJobByName() {
 	// Arrange
 	name := utils.GenerateRandomString(6)
 	jobID := 123
-	req := &scheduler.FindRunningJobByNameRequest{
-		Name: name,
-		User: user,
-	}
 	suite.ssh.EXPECT().ExecAs(
 		mock.Anything,
 		user,
@@ -182,7 +170,7 @@ func (suite *ServiceTestSuite) TestFindRunningJobByName() {
 	ctx := context.Background()
 
 	// Act
-	out, err := suite.impl.FindRunningJobByName(ctx, req)
+	out, err := suite.impl.FindRunningJobByName(ctx, name, user)
 
 	// Assert
 	suite.NoError(err)
