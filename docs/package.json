@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@algolia/client-search": "4.19.1",
-    "@babel/eslint-parser": "7.22.10",
+    "@babel/eslint-parser": "7.22.11",
     "@babel/plugin-syntax-jsx": "7.22.5",
     "@babel/preset-react": "7.22.5",
     "@docusaurus/core": "2.4.1",
