@@ -312,7 +312,7 @@ func (s *Slurm) FindMemPerNode(ctx context.Context, opts ...FindSpecOption) ([]u
 		cmd = fmt.Sprintf(`%s | grep -v NOT_RESPONDING`, cmd)
 	}
 	cmd = fmt.Sprintf(
-		`%s | sed -E 's/.*CfgTRES=[^ ]*mem=([0-9]+)[^0-9].*/\1/'`,
+		`%s | sed -E 's/.*CfgTRES=[^ ]*mem=([0-9]+).*/\1/'`,
 		cmd,
 	)
 	out, err := s.ExecAs(ctx, s.adminUser, cmd)
@@ -355,7 +355,7 @@ func (s *Slurm) FindGPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]
 		cmd = fmt.Sprintf(`%s | grep -v NOT_RESPONDING`, cmd)
 	}
 	cmd = fmt.Sprintf(
-		`%s | sed -E 's|.*CfgTRES=[^ ]*gres/gpu=([0-9]+)[^0-9].*|\1|g'`,
+		`%s | sed -E 's|.*CfgTRES=[^ ]*gres/gpu=([0-9]+).*|\1|g'`,
 		cmd,
 	)
 	out, err := s.ExecAs(ctx, s.adminUser, cmd)
@@ -398,7 +398,7 @@ func (s *Slurm) FindCPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]
 		cmd = fmt.Sprintf(`%s | grep -v NOT_RESPONDING`, cmd)
 	}
 	cmd = fmt.Sprintf(
-		`%s | sed -E 's|.*CfgTRES=[^ ]*cpu=([0-9]+)[^0-9].*|\1|g'`,
+		`%s | sed -E 's|.*CfgTRES=[^ ]*cpu=([0-9]+).*|\1|g'`,
 		cmd,
 	)
 	out, err := s.ExecAs(ctx, s.adminUser, cmd)
@@ -432,7 +432,7 @@ func (s *Slurm) FindTotalCPUs(ctx context.Context) (uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cmd := fmt.Sprintf(
-		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*cpu=([0-9]+)[^0-9].*|\1|g'`,
+		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*cpu=([0-9]+).*|\1|g'`,
 		s.scontrol,
 		s.partition,
 	)
@@ -463,7 +463,7 @@ func (s *Slurm) FindTotalMem(ctx context.Context) (uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cmd := fmt.Sprintf(
-		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*mem=([0-9]+)[^0-9].*|\1|g'`,
+		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*mem=([0-9]+).*|\1|g'`,
 		s.scontrol,
 		s.partition,
 	)
@@ -494,7 +494,7 @@ func (s *Slurm) FindTotalGPUs(ctx context.Context) (uint64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cmd := fmt.Sprintf(
-		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*gpu=([0-9]+)[^0-9].*|\1|g'`,
+		`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*gpu=([0-9]+).*|\1|g'`,
 		s.scontrol,
 		s.partition,
 	)
@@ -534,7 +534,7 @@ func (s *Slurm) FindTotalNodes(ctx context.Context, opts ...FindSpecOption) (uin
 		)
 	} else {
 		cmd = fmt.Sprintf(
-			`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*node=([0-9]+)[^0-9].*|\1|g'`,
+			`%s show partition '%s' --oneliner | sed -E 's|.*TRES=[^ ]*node=([0-9]+).*|\1|g'`,
 			s.scontrol,
 			s.partition,
 		)
