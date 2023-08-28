@@ -97,8 +97,8 @@ contract ErrorContract {
         revert CustomerMetaSchedulerProviderOnly();
     }
 
-    function ThrowMetashedulerProviderOnly() public pure {
-        revert MetashedulerProviderOnly();
+    function ThrowMetaschedulerProviderOnly() public pure {
+        revert MetaschedulerProviderOnly();
     }
 
     // PROVIDER
