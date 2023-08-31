@@ -58,16 +58,20 @@ contract ErrorContract {
         revert RunningColdStatusOnly(current);
     }
 
-    function ThrowInvalidNNodes(uint256 current) public pure {
-        revert InvalidNNodes(current);
+    function ThrowInvalidNodesCount() public pure {
+        revert InvalidNodesCount();
     }
 
-    function ThrowInvalidNCpu(uint256 current) public pure {
-        revert InvalidNCpu(current);
+    function ThrowArrayLengthMismatch() public pure {
+        revert ArrayLengthMismatch();
     }
 
-    function ThrowInvalidNMem(uint256 current) public pure {
-        revert InvalidNMem(current);
+    function ThrowInvalidTotalMem() public pure {
+        revert InvalidTotalMem();
+    }
+
+    function ThrowInvalidTotalCpus() public pure {
+        revert InvalidTotalCpus();
     }
 
     function ThrowCustomerOnly(address current, address expected) public pure {
@@ -80,13 +84,6 @@ contract ErrorContract {
         address expected
     ) public pure {
         revert JobProviderOnly(current, expected);
-    }
-
-    function ThrowJobProviderThisOnly(
-        address current,
-        address expected
-    ) public pure {
-        revert JobProviderThisOnly(current, expected);
     }
 
     function ThrowOwnerOnly(address current, address expected) public pure {
@@ -102,10 +99,6 @@ contract ErrorContract {
     }
 
     // PROVIDER
-    function ThrowProviderAddrIsZero() public pure {
-        revert ProviderAddrIsZero();
-    }
-
     function ThrowProviderNotJoined() public pure {
         revert ProviderNotJoined();
     }
@@ -131,16 +124,8 @@ contract ErrorContract {
     }
 
     // OTHER
-    function ThrowCreditAddrIsZero() public pure {
-        revert CreditAddrIsZero();
-    }
-
     function ThrowNoSpendingAuthority() public pure {
         revert NoSpendingAuthority();
-    }
-
-    function ThrowDivisionByZeroError() public pure {
-        revert DivisionByZeroError();
     }
 
     // PROVIDERQUEUE
@@ -167,5 +152,9 @@ contract ErrorContract {
 
     function ThrowInvalidTransitionFromRunning() public pure {
         revert InvalidTransitionFromRunning();
+    }
+
+    function ThrowNewJobRequestDisabled() public pure {
+        revert NewJobRequestDisabled();
     }
 }
