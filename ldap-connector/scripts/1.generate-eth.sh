@@ -9,10 +9,16 @@ CONTRACTSPATH="${SCRIPTPATH}/../../smart-contracts"
 cd "${CONTRACTSPATH}"
 
 mkdir -p "${PROJECTPATH}/gen/go/contracts/metascheduler"
-solc --optimize --optimize-runs=200 ./contracts/Metascheduler.sol \
+solc --optimize --optimize-runs=200 "${CONTRACTSPATH}/contracts/Metascheduler.sol" \
   --base-path . \
-  --include-path "node_modules/" \
-  --combined-json abi | abigen --pkg metascheduler \
-  --combined-json - \
-  --exc "contracts/Tools.sol:Tools" \
+  --include-path "${CONTRACTSPATH}/node_modules/" \
+  --include-path "${CONTRACTSPATH}/contracts/" \
+  --combined-json abi >"${PROJECTPATH}/gen/go/contracts/metascheduler/metascheduler.json"
+sed -Ei 's/"type":"JobStatus"/"type": "uint8"/g' "${PROJECTPATH}/gen/go/contracts/metascheduler/metascheduler.json"
+sed -Ei 's/"type":"StorageType"/"type": "uint8"/g' "${PROJECTPATH}/gen/go/contracts/metascheduler/metascheduler.json"
+abigen --pkg metascheduler \
+  --combined-json "${PROJECTPATH}/gen/go/contracts/metascheduler/metascheduler.json" \
   --out "${PROJECTPATH}/gen/go/contracts/metascheduler/metascheduler.go"
+rm "${PROJECTPATH}/gen/go/contracts/metascheduler/metascheduler.json"
+echo "WARNING: enum JobStatus was mapped to uint8"
+echo "WARNING: enum StorageType was mapped to uint8"

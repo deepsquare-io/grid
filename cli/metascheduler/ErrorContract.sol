@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity >=0.8.4;
+pragma solidity ^0.8.0;
 
-import 'Errors.sol';
+import 'interfaces/IJobRepository.sol';
+import 'interfaces/IProviderJobQueues.sol';
+import 'interfaces/IProviderManager.sol';
+import 'Tools.sol';
+import 'Metascheduler.sol';
 import '@openzeppelin/contracts/utils/structs/DoubleEndedQueue.sol';
 
 contract ErrorContract {
@@ -15,44 +19,17 @@ contract ErrorContract {
     revert DoubleEndedQueue.OutOfBounds();
   }
 
-  // BALANCE
-  function ThrowInsufficientFunds(uint256 available, uint256 required) public pure {
-    revert InsufficientFunds(available, required);
-  }
-
-  // JOB
-  function ThrowNoJob() public pure {
-    revert NoJob();
-  }
-
+  // IJobRepository
   function ThrowInvalidJob() public pure {
     revert InvalidJob();
   }
 
-  function ThrowInvalidJobDefinition() public pure {
-    revert InvalidJobDefinition();
+  // IProviderJobQueues
+  function ThrowNoJob() public pure {
+    revert NoJob();
   }
 
-  function ThrowJobHotStatusOnly(JobStatus current) public pure {
-    revert JobHotStatusOnly(current);
-  }
-
-  function ThrowJobColdStatusOnly(JobStatus current) public pure {
-    revert JobColdStatusOnly(current);
-  }
-
-  function ThrowRunningScheduledStatusOnly(JobStatus current) public pure {
-    revert RunningScheduledStatusOnly(current);
-  }
-
-  function ThrowMetaScheduledScheduledStatusOnly(JobStatus current) public pure {
-    revert MetaScheduledScheduledStatusOnly(current);
-  }
-
-  function ThrowRunningColdStatusOnly(JobStatus current) public pure {
-    revert RunningColdStatusOnly(current);
-  }
-
+  // IProviderManager
   function ThrowInvalidNodesCount() public pure {
     revert InvalidNodesCount();
   }
@@ -69,32 +46,6 @@ contract ErrorContract {
     revert InvalidTotalCpus();
   }
 
-  function ThrowCustomerOnly(address current, address expected) public pure {
-    revert CustomerOnly(current, expected);
-  }
-
-  // PERMISSION
-  function ThrowJobProviderOnly(address current, address expected) public pure {
-    revert JobProviderOnly(current, expected);
-  }
-
-  function ThrowOwnerOnly(address current, address expected) public pure {
-    revert OwnerOnly(current, expected);
-  }
-
-  function ThrowCustomerMetaSchedulerProviderOnly() public pure {
-    revert CustomerMetaSchedulerProviderOnly();
-  }
-
-  function ThrowMetaschedulerProviderOnly() public pure {
-    revert MetaschedulerProviderOnly();
-  }
-
-  // PROVIDER
-  function ThrowProviderNotJoined() public pure {
-    revert ProviderNotJoined();
-  }
-
   function ThrowNoProvider() public pure {
     revert NoProvider();
   }
@@ -107,40 +58,62 @@ contract ErrorContract {
     revert Banned();
   }
 
-  // TIME
-  function ThrowRemainingTimeAboveLimit(uint256 remaining, uint256 limit) public pure {
-    revert RemainingTimeAboveLimit(remaining, limit);
+  // Tools
+  function ThrowJobHotStatusOnly(JobStatus current) public pure {
+    revert JobHotStatusOnly(current);
   }
 
-  // OTHER
-  function ThrowNoSpendingAuthority() public pure {
-    revert NoSpendingAuthority();
+  function ThrowInvalidTransition(JobStatus from, JobStatus to) public pure {
+    revert InvalidTransition(from, to);
   }
 
-  // PROVIDERQUEUE
-  function ThrowUninitialized() public pure {
-    revert Uninitialized();
-  }
-
-  // STATE MACHINE
   function ThrowSameStatusError() public pure {
     revert SameStatusError();
   }
 
-  function ThrowInvalidTransitionFromPending() public pure {
-    revert InvalidTransitionFromPending();
+  // Metascheduler
+  function ThrowInsufficientFunds(uint256 available, uint256 required) public pure {
+    revert InsufficientFunds(available, required);
   }
 
-  function ThrowInvalidTransitionFromMetascheduled() public pure {
-    revert InvalidTransitionFromMetascheduled();
+  function ThrowInvalidJobDefinition() public pure {
+    revert InvalidJobDefinition();
   }
 
-  function ThrowInvalidTransitionFromScheduled() public pure {
-    revert InvalidTransitionFromScheduled();
+  function ThrowRunningScheduledStatusOnly(JobStatus current) public pure {
+    revert RunningScheduledStatusOnly(current);
   }
 
-  function ThrowInvalidTransitionFromRunning() public pure {
-    revert InvalidTransitionFromRunning();
+  function ThrowMetaScheduledScheduledStatusOnly(JobStatus current) public pure {
+    revert MetaScheduledScheduledStatusOnly(current);
+  }
+
+  function ThrowRunningColdStatusOnly(JobStatus current) public pure {
+    revert RunningColdStatusOnly(current);
+  }
+
+  function ThrowCustomerOnly(address current, address expected) public pure {
+    revert CustomerOnly(current, expected);
+  }
+
+  function ThrowJobProviderOnly(address current, address expected) public pure {
+    revert JobProviderOnly(current, expected);
+  }
+
+  function ThrowCustomerMetaSchedulerProviderOnly() public pure {
+    revert CustomerMetaSchedulerProviderOnly();
+  }
+
+  function ThrowProviderNotJoined() public pure {
+    revert ProviderNotJoined();
+  }
+
+  function ThrowRemainingTimeAboveLimit(uint256 remaining, uint256 limit) public pure {
+    revert RemainingTimeAboveLimit(remaining, limit);
+  }
+
+  function ThrowNoSpendingAuthority() public pure {
+    revert NoSpendingAuthority();
   }
 
   function ThrowNewJobRequestDisabled() public pure {
