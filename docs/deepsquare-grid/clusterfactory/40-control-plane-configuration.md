@@ -304,7 +304,7 @@ If you are using an another distributed file system, you can check the available
    stringData:
      AVAX_ENDPOINT_WS: wss://testnet.deepsquare.run/ws
      # DeepSquare MetaScheduler smart contract, check [`the-grid` releases](https://github.com/deepsquare-io/the-grid/releases)
-     JOBMANAGER_SMART_CONTRACT: '0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0'
+     JOBMANAGER_SMART_CONTRACT: '0x3707aB457CF457275b7ec32e203c54df80C299d5'
 
      LDAP_URL: ldaps://dirsrv-389ds.ldap.svc.cluster.local:3636 # Kubernetes LDAP service domain name, change it if needed
      LDAP_CA_PATH: /tls/ca.crt
@@ -1471,7 +1471,7 @@ The supervisor is configured in the `slurm-cluster` AppProject.
            rpc: 'https://testnet.deepsquare.run/rpc'
            ws: 'wss://testnet.deepsquare.run/ws'
          # DeepSquare MetaScheduler smart contract, check [`the-grid` releases](https://github.com/deepsquare-io/the-grid/releases)
-         smartContract: '0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0'
+         smartContract: '0x3707aB457CF457275b7ec32e203c54df80C299d5'
 
        sbatchService:
          # DeepSquare SBatch service, use `sbatch.dev.deepsquare.run` (dev) or `sbatch.deepsquare.run` (prod).

@@ -53,7 +53,7 @@ Note that TCP is not supported at the moment. [$BENCHMARK_UCX_TRANSPORT]
    --metascheduler.endpoint.rpc value    Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_ENDPOINT_RPC]
    --metascheduler.endpoint.ws value     Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_ENDPOINT_WS]
    --metascheduler.private-key value     An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
-   --metascheduler.smart-contract value  Metascheduler smart-contract address. (default: "0x") [$METASCHEDULER_SMART_CONTRACT]
+   --metascheduler.smart-contract value  Metascheduler smart-contract address. (default: "0x3707aB457CF457275b7ec32e203c54df80C299d5") [$METASCHEDULER_SMART_CONTRACT]
 
    Miscellaneous:
 

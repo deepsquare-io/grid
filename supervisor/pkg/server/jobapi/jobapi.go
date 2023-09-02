@@ -125,7 +125,8 @@ func (s *Server) setJobStatusTask(
 						)
 						return nil
 					}
-					if errors.Is(err, &metascheduler.InvalidTransitionFromScheduled{}) {
+					var customErr *metascheduler.InvalidTransition
+					if ok := errors.As(err, &customErr); ok && customErr.From == metascheduler.JobStatusScheduled {
 						logger.I.Warn(
 							"Invalid state transition from SCHEDULED.",
 							zap.Error(err),

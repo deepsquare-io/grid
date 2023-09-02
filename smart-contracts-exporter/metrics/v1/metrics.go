@@ -10,7 +10,6 @@ import (
 	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/logger"
 	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/utils/metric"
 	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/utils/singleton"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"go.uber.org/zap"
@@ -20,45 +19,12 @@ import (
 const jobsBufferSize = 10
 
 var (
-	oldJobs = make([]*struct {
-		JobId            [32]byte
-		Status           uint8
-		CustomerAddr     common.Address
-		ProviderAddr     common.Address
-		Definition       metascheduler.JobDefinition
-		Valid            bool
-		Cost             metascheduler.JobCost
-		Time             metascheduler.JobTime
-		JobName          [32]byte
-		HasCancelRequest bool
-	}, 0, jobsBufferSize)
+	oldJobs       = make([]*metascheduler.Job, 0, jobsBufferSize)
 	oldJobsMutex  sync.RWMutex
-	latestJobChan = make(chan *struct {
-		JobId            [32]byte
-		Status           uint8
-		CustomerAddr     common.Address
-		ProviderAddr     common.Address
-		Definition       metascheduler.JobDefinition
-		Valid            bool
-		Cost             metascheduler.JobCost
-		Time             metascheduler.JobTime
-		JobName          [32]byte
-		HasCancelRequest bool
-	})
+	latestJobChan = make(chan *metascheduler.Job)
 )
 
-func AddJob(job *struct {
-	JobId            [32]byte
-	Status           uint8
-	CustomerAddr     common.Address
-	ProviderAddr     common.Address
-	Definition       metascheduler.JobDefinition
-	Valid            bool
-	Cost             metascheduler.JobCost
-	Time             metascheduler.JobTime
-	JobName          [32]byte
-	HasCancelRequest bool
-}) {
+func AddJob(job *metascheduler.Job) {
 	oldJobsMutex.Lock()
 	defer oldJobsMutex.Unlock()
 	if len(oldJobs) == jobsBufferSize {
@@ -73,30 +39,8 @@ func AddJob(job *struct {
 	}
 }
 
-func WatchLatest(ctx context.Context) <-chan *struct {
-	JobId            [32]byte
-	Status           uint8
-	CustomerAddr     common.Address
-	ProviderAddr     common.Address
-	Definition       metascheduler.JobDefinition
-	Valid            bool
-	Cost             metascheduler.JobCost
-	Time             metascheduler.JobTime
-	JobName          [32]byte
-	HasCancelRequest bool
-} {
-	out := make(chan *struct {
-		JobId            [32]byte
-		Status           uint8
-		CustomerAddr     common.Address
-		ProviderAddr     common.Address
-		Definition       metascheduler.JobDefinition
-		Valid            bool
-		Cost             metascheduler.JobCost
-		Time             metascheduler.JobTime
-		JobName          [32]byte
-		HasCancelRequest bool
-	}, 10)
+func WatchLatest(ctx context.Context) <-chan *metascheduler.Job {
+	out := make(chan *metascheduler.Job, 10)
 
 	// Pass old jobs
 	oldJobsMutex.RLock()

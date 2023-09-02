@@ -11,6 +11,7 @@ const (
 	JobStatusFinished      JobStatus = 5
 	JobStatusFailed        JobStatus = 6
 	JobStatusOutOfCredits  JobStatus = 7
+	JobStatusPanicked      JobStatus = 8
 	JobStatusUnknown       JobStatus = 255
 )
 
@@ -32,6 +33,8 @@ func (s JobStatus) String() string {
 		return "Failed"
 	case JobStatusOutOfCredits:
 		return "OutOfCredits"
+	case JobStatusPanicked:
+		return "Panicked"
 	case JobStatusUnknown:
 		return "Unknown"
 	}

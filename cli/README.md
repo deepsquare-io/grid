@@ -18,7 +18,7 @@ COMMANDS:
 GLOBAL OPTIONS:
    --metascheduler.rpc value             Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
    --metascheduler.ws value              Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_WS]
-   --metascheduler.smart-contract value  Metascheduler smart-contract address. (default: "0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0") [$METASCHEDULER_SMART_CONTRACT]
+   --metascheduler.smart-contract value  Metascheduler smart-contract address. (default: "0x3707aB457CF457275b7ec32e203c54df80C299d5") [$METASCHEDULER_SMART_CONTRACT]
    --sbatch.endpoint value               SBatch Service GraphQL endpoint. (default: "https://sbatch.deepsquare.run/graphql") [$SBATCH_ENDPOINT]
    --logger.endpoint value               Grid Logger endpoint. (default: "https://grid-logger.deepsquare.run") [$LOGGER_ENDPOINT]
    --private-key value                   An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
@@ -38,7 +38,7 @@ USAGE:
 
 OPTIONS:
    --metascheduler.rpc value              Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
-   --metascheduler.smart-contract value   Metascheduler smart-contract address. (default: "0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0") [$METASCHEDULER_SMART_CONTRACT]
+   --metascheduler.smart-contract value   Metascheduler smart-contract address. (default: "0x3707aB457CF457275b7ec32e203c54df80C299d5") [$METASCHEDULER_SMART_CONTRACT]
    --sbatch.endpoint value                SBatch Service GraphQL endpoint. (default: "https://sbatch.deepsquare.run/graphql") [$SBATCH_ENDPOINT]
    --private-key value                    An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
    --job-name value                       The job name.

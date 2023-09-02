@@ -7,42 +7,25 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func MetaToProtoJob(msJob *struct {
-	JobId            [32]byte
-	Status           uint8
-	CustomerAddr     common.Address
-	ProviderAddr     common.Address
-	Definition       metascheduler.JobDefinition
-	Valid            bool
-	Cost             metascheduler.JobCost
-	Time             metascheduler.JobTime
-	JobName          [32]byte
-	HasCancelRequest bool
-}) *Job {
+func MetaToProtoJob(msJob *metascheduler.Job) *Job {
 	pJob := &Job{
-		JobId:            msJob.JobId[:],
-		Status:           uint32(msJob.Status),
-		CustomerAddr:     msJob.CustomerAddr.Hex(),
-		ProviderAddr:     msJob.ProviderAddr.Hex(),
-		Valid:            msJob.Valid,
-		HasCancelRequest: msJob.HasCancelRequest,
+		JobId:        msJob.JobId[:],
+		Status:       uint32(msJob.Status),
+		CustomerAddr: msJob.CustomerAddr.Hex(),
+		ProviderAddr: msJob.ProviderAddr.Hex(),
 		Definition: &JobDefinition{
-			GpuPerTask: uint64(msJob.Definition.GpuPerTask),
-			MemPerCpu:  uint64(msJob.Definition.MemPerCpu),
-			CpuPerTask: uint64(msJob.Definition.CpuPerTask),
-			Ntasks:     uint64(msJob.Definition.Ntasks),
+			GpusPerTask: uint64(msJob.Definition.GpusPerTask),
+			MemPerCpu:   uint64(msJob.Definition.MemPerCpu),
+			CpusPerTask: uint64(msJob.Definition.CpusPerTask),
+			Ntasks:      uint64(msJob.Definition.Ntasks),
 		},
 		Cost: &JobCost{
-			MaxCost:                   &BigInt{Bytes: msJob.Cost.MaxCost.Bytes()},
-			FinalCost:                 &BigInt{Bytes: msJob.Cost.FinalCost.Bytes()},
-			PendingTopUp:              &BigInt{Bytes: msJob.Cost.PendingTopUp.Bytes()},
-			DelegateSpendingAuthority: msJob.Cost.DelegateSpendingAuthority,
+			MaxCost:   &BigInt{Bytes: msJob.Cost.MaxCost.Bytes()},
+			FinalCost: &BigInt{Bytes: msJob.Cost.FinalCost.Bytes()},
 		},
 		Time: &JobTime{
-			Start:                  &BigInt{Bytes: msJob.Time.Start.Bytes()},
-			End:                    &BigInt{Bytes: msJob.Time.End.Bytes()},
-			CancelRequestTimestamp: &BigInt{Bytes: msJob.Time.CancelRequestTimestamp.Bytes()},
-			BlockNumberStateChange: &BigInt{Bytes: msJob.Time.BlockNumberStateChange.Bytes()},
+			Start: &BigInt{Bytes: msJob.Time.Start.Bytes()},
+			End:   &BigInt{Bytes: msJob.Time.End.Bytes()},
 		},
 		JobName: msJob.JobName[:],
 	}
@@ -50,55 +33,32 @@ func MetaToProtoJob(msJob *struct {
 	return pJob
 }
 
-func ProtoToMetaJob(protoJob *Job) *struct {
-	JobId            [32]byte
-	Status           uint8
-	CustomerAddr     common.Address
-	ProviderAddr     common.Address
-	Definition       metascheduler.JobDefinition
-	Valid            bool
-	Cost             metascheduler.JobCost
-	Time             metascheduler.JobTime
-	JobName          [32]byte
-	HasCancelRequest bool
-} {
-	metaJob := &struct {
-		JobId            [32]byte
-		Status           uint8
-		CustomerAddr     common.Address
-		ProviderAddr     common.Address
-		Definition       metascheduler.JobDefinition
-		Valid            bool
-		Cost             metascheduler.JobCost
-		Time             metascheduler.JobTime
-		JobName          [32]byte
-		HasCancelRequest bool
-	}{
+func ProtoToMetaJob(protoJob *Job) *metascheduler.Job {
+	metaJob := &metascheduler.Job{
 		Status:       uint8(protoJob.Status),
 		CustomerAddr: common.HexToAddress(protoJob.CustomerAddr),
 		ProviderAddr: common.HexToAddress(protoJob.ProviderAddr),
 		Definition: metascheduler.JobDefinition{
-			GpuPerTask:        protoJob.Definition.GpuPerTask,
-			MemPerCpu:         protoJob.Definition.MemPerCpu,
-			CpuPerTask:        protoJob.Definition.CpuPerTask,
-			Ntasks:            protoJob.Definition.Ntasks,
-			BatchLocationHash: protoJob.Definition.BatchLocationHash,
-			StorageType:       uint8(protoJob.Definition.StorageType),
+			GpusPerTask: protoJob.Definition.GpusPerTask,
+			MemPerCpu:   protoJob.Definition.MemPerCpu,
+			CpusPerTask: protoJob.Definition.CpusPerTask,
+			Ntasks:      protoJob.Definition.Ntasks,
 		},
-		Valid: protoJob.Valid,
 		Cost: metascheduler.JobCost{
-			MaxCost:                   new(big.Int).SetBytes(protoJob.Cost.MaxCost.Bytes),
-			FinalCost:                 new(big.Int).SetBytes(protoJob.Cost.FinalCost.Bytes),
-			PendingTopUp:              new(big.Int).SetBytes(protoJob.Cost.PendingTopUp.Bytes),
-			DelegateSpendingAuthority: protoJob.Cost.DelegateSpendingAuthority,
+			MaxCost:      new(big.Int).SetBytes(protoJob.Cost.MaxCost.Bytes),
+			FinalCost:    new(big.Int).SetBytes(protoJob.Cost.FinalCost.Bytes),
+			PendingTopUp: new(big.Int),
 		},
 		Time: metascheduler.JobTime{
-			Start:                  new(big.Int).SetBytes(protoJob.Time.Start.Bytes),
-			End:                    new(big.Int).SetBytes(protoJob.Time.End.Bytes),
-			CancelRequestTimestamp: new(big.Int).SetBytes(protoJob.Time.CancelRequestTimestamp.Bytes),
-			BlockNumberStateChange: new(big.Int).SetBytes(protoJob.Time.BlockNumberStateChange.Bytes),
+			Start: new(big.Int).SetBytes(protoJob.Time.Start.Bytes),
+			End:   new(big.Int).SetBytes(protoJob.Time.End.Bytes),
+			CancelRequestTimestamp: new(
+				big.Int,
+			),
+			BlockNumberStateChange: new(
+				big.Int,
+			),
 		},
-		HasCancelRequest: protoJob.GetHasCancelRequest(),
 	}
 
 	copy(metaJob.JobId[:], protoJob.JobId)

@@ -6,11 +6,9 @@ import (
 	"math/big"
 
 	errorsabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/errors"
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rpc"
-	"go.uber.org/zap"
 )
 
 var (
@@ -97,6 +95,170 @@ func (e *DoubleEndedQueueOutOfBounds) Error() string {
 	return "OutOfBounds"
 }
 
+type InvalidJob struct{}
+
+func ParseInvalidJob(inputs []interface{}) *InvalidJob {
+	if len(inputs) != 0 {
+		return nil
+	}
+	return &InvalidJob{}
+}
+
+func (e *InvalidJob) Error() string {
+	return "InvalidJob"
+}
+
+type NoJob struct{}
+
+func (e *NoJob) Error() string {
+	return "NoJob"
+}
+
+func ParseNoJob(inputs []interface{}) error {
+	if len(inputs) != 0 {
+		return nil
+	}
+	return &NoJob{}
+}
+
+type InvalidNodesCount struct{}
+
+func (e *InvalidNodesCount) Error() string {
+	return "InvalidNodesCount"
+}
+
+func ParseInvalidNodesCount(inputs []interface{}) error {
+	if len(inputs) != 0 {
+		return nil
+	}
+	return &InvalidNodesCount{}
+}
+
+type ArrayLengthMismatch struct{}
+
+func (e *ArrayLengthMismatch) Error() string {
+	return "ArrayLengthMismatch"
+}
+
+func ParseArrayLengthMismatch(inputs []interface{}) error {
+	if len(inputs) != 0 {
+		return nil
+	}
+	return &ArrayLengthMismatch{}
+}
+
+type InvalidTotalMem struct{}
+
+func (e *InvalidTotalMem) Error() string {
+	return "InvalidTotalMem"
+}
+
+func ParseInvalidTotalMem(inputs []interface{}) error {
+	if len(inputs) != 0 {
+		return nil
+	}
+	return &InvalidTotalMem{}
+}
+
+type InvalidTotalCpus struct{}
+
+func (e *InvalidTotalCpus) Error() string {
+	return "InvalidTotalCpus"
+}
+
+func ParseInvalidTotalCpus(inputs []interface{}) error {
+	if len(inputs) != 0 {
+		return nil
+	}
+	return &InvalidTotalCpus{}
+}
+
+type NoProvider struct{}
+
+func ParseNoProvider(inputs []interface{}) *NoProvider {
+	return &NoProvider{}
+}
+
+func (e *NoProvider) Error() string {
+	return "NoProvider"
+}
+
+type WaitingApprovalOnly struct{}
+
+func ParseWaitingApprovalOnly(inputs []interface{}) *WaitingApprovalOnly {
+	return &WaitingApprovalOnly{}
+}
+
+func (e *WaitingApprovalOnly) Error() string {
+	return "WaitingApprovalOnly"
+}
+
+type Banned struct{}
+
+func ParseBanned(inputs []interface{}) *Banned {
+	return &Banned{}
+}
+
+func (e *Banned) Error() string {
+	return "Banned"
+}
+
+type JobHotStatusOnly struct {
+	Current JobStatus
+}
+
+func (e *JobHotStatusOnly) Error() string {
+	return fmt.Sprintf(
+		"JobHotStatusOnly{Current: %s}",
+		e.Current,
+	)
+}
+
+func ParseJobHotStatusOnly(inputs []interface{}) *JobHotStatusOnly {
+	if len(inputs) != 1 {
+		return nil
+	}
+	return &JobHotStatusOnly{
+		Current: JobStatus(inputs[0].(uint8)),
+	}
+}
+
+type InvalidTransition struct {
+	From JobStatus
+	To   JobStatus
+}
+
+func (e *InvalidTransition) Error() string {
+	return fmt.Sprintf(
+		"InvalidTransition{From: %s, To: %s}",
+		e.From,
+		e.To,
+	)
+}
+
+func ParseInvalidTransition(inputs []interface{}) *InvalidTransition {
+	if len(inputs) != 2 {
+		return nil
+	}
+	return &InvalidTransition{
+		From: JobStatus(inputs[0].(uint8)),
+		To:   JobStatus(inputs[1].(uint8)),
+	}
+}
+
+type SameStatusError struct{}
+
+func ParseSameStatusError(inputs []interface{}) *SameStatusError {
+	if len(inputs) != 0 {
+		return nil
+	}
+	return &SameStatusError{}
+}
+
+func (e *SameStatusError) Error() string {
+	return "SameStatusError"
+}
+
 type InsufficientFunds struct {
 	Available *big.Int
 	Required  *big.Int
@@ -120,32 +282,6 @@ func ParseInsufficientFunds(inputs []interface{}) *InsufficientFunds {
 	}
 }
 
-type NoJob struct{}
-
-func (e *NoJob) Error() string {
-	return "NoJob"
-}
-
-func ParseNoJob(inputs []interface{}) error {
-	if len(inputs) != 0 {
-		return nil
-	}
-	return &NoJob{}
-}
-
-type InvalidJob struct{}
-
-func ParseInvalidJob(inputs []interface{}) *InvalidJob {
-	if len(inputs) != 0 {
-		return nil
-	}
-	return &InvalidJob{}
-}
-
-func (e *InvalidJob) Error() string {
-	return "InvalidJob"
-}
-
 type InvalidJobDefinition struct{}
 
 func ParseInvalidJobDefinition(
@@ -159,26 +295,6 @@ func ParseInvalidJobDefinition(
 
 func (e *InvalidJobDefinition) Error() string {
 	return "InvalidJobDefinition"
-}
-
-type JobHotStatusOnly struct {
-	Current JobStatus
-}
-
-func (e *JobHotStatusOnly) Error() string {
-	return fmt.Sprintf(
-		"JobHotStatusOnly{Current: %s}",
-		e.Current,
-	)
-}
-
-func ParseJobHotStatusOnly(inputs []interface{}) *JobHotStatusOnly {
-	if len(inputs) != 1 {
-		return nil
-	}
-	return &JobHotStatusOnly{
-		Current: JobStatus(inputs[0].(uint8)),
-	}
 }
 
 type RunningScheduledStatusOnly struct {
@@ -247,72 +363,6 @@ func ParseRunningColdStatusOnly(
 	}
 }
 
-type InvalidNNodes struct {
-	Current *big.Int
-}
-
-func (e *InvalidNNodes) Error() string {
-	return fmt.Sprintf(
-		"InvalidNNodes{Current: %s}",
-		e.Current,
-	)
-}
-
-func ParseInvalidNNodes(
-	inputs []interface{},
-) *InvalidNNodes {
-	if len(inputs) != 1 {
-		return nil
-	}
-	return &InvalidNNodes{
-		Current: inputs[0].(*big.Int),
-	}
-}
-
-type InvalidNCpu struct {
-	Current *big.Int
-}
-
-func (e *InvalidNCpu) Error() string {
-	return fmt.Sprintf(
-		"InvalidNCpu{Current: %s}",
-		e.Current,
-	)
-}
-
-func ParseInvalidNCpu(
-	inputs []interface{},
-) *InvalidNCpu {
-	if len(inputs) != 1 {
-		return nil
-	}
-	return &InvalidNCpu{
-		Current: inputs[0].(*big.Int),
-	}
-}
-
-type InvalidNMem struct {
-	Current *big.Int
-}
-
-func (e *InvalidNMem) Error() string {
-	return fmt.Sprintf(
-		"InvalidNMem{Current: %s}",
-		e.Current,
-	)
-}
-
-func ParseInvalidNMem(
-	inputs []interface{},
-) *InvalidNMem {
-	if len(inputs) != 1 {
-		return nil
-	}
-	return &InvalidNMem{
-		Current: inputs[0].(*big.Int),
-	}
-}
-
 type CustomerOnly struct {
 	Current  common.Address
 	Expected common.Address
@@ -359,52 +409,6 @@ func ParseJobProviderOnly(inputs []interface{}) *JobProviderOnly {
 	}
 }
 
-type JobProviderThisOnly struct {
-	Current  common.Address
-	Expected common.Address
-}
-
-func (e *JobProviderThisOnly) Error() string {
-	return fmt.Sprintf(
-		"JobProviderThisOnly{Current: %s, Expected: %s}",
-		e.Current.Hex(),
-		e.Expected.Hex(),
-	)
-}
-
-func ParseJobProviderThisOnly(inputs []interface{}) *JobProviderThisOnly {
-	if len(inputs) != 2 {
-		return nil
-	}
-	return &JobProviderThisOnly{
-		Current:  inputs[0].(common.Address),
-		Expected: inputs[1].(common.Address),
-	}
-}
-
-type OwnerOnly struct {
-	Current  common.Address
-	Expected common.Address
-}
-
-func (e *OwnerOnly) Error() string {
-	return fmt.Sprintf(
-		"OwnerOnly{Current: %s, Expected: %s}",
-		e.Current.Hex(),
-		e.Expected.Hex(),
-	)
-}
-
-func ParseOwnerOnly(inputs []interface{}) *OwnerOnly {
-	if len(inputs) != 2 {
-		return nil
-	}
-	return &OwnerOnly{
-		Current:  inputs[0].(common.Address),
-		Expected: inputs[1].(common.Address),
-	}
-}
-
 type CustomerMetaSchedulerProviderOnly struct{}
 
 func (e *CustomerMetaSchedulerProviderOnly) Error() string {
@@ -414,69 +418,23 @@ func (e *CustomerMetaSchedulerProviderOnly) Error() string {
 func ParseCustomerMetaSchedulerProviderOnly(
 	inputs []interface{},
 ) *CustomerMetaSchedulerProviderOnly {
+	if len(inputs) != 0 {
+		return nil
+	}
 	return &CustomerMetaSchedulerProviderOnly{}
-}
-
-type MetashedulerProviderOnly struct{}
-
-func (e *MetashedulerProviderOnly) Error() string {
-	return "MetashedulerProviderOnly"
-}
-
-func ParseMetashedulerProviderOnly(
-	inputs []interface{},
-) *MetashedulerProviderOnly {
-	return &MetashedulerProviderOnly{}
-}
-
-type ProviderAddrIsZero struct{}
-
-func ParseProviderAddrIsZero(inputs []interface{}) *ProviderAddrIsZero {
-	return &ProviderAddrIsZero{}
-}
-
-func (e *ProviderAddrIsZero) Error() string {
-	return "ProviderAddrIsZero"
 }
 
 type ProviderNotJoined struct{}
 
 func ParseProviderNotJoined(inputs []interface{}) *ProviderNotJoined {
+	if len(inputs) != 0 {
+		return nil
+	}
 	return &ProviderNotJoined{}
 }
 
 func (e *ProviderNotJoined) Error() string {
 	return "ProviderNotJoined"
-}
-
-type NoProvider struct{}
-
-func ParseNoProvider(inputs []interface{}) *NoProvider {
-	return &NoProvider{}
-}
-
-func (e *NoProvider) Error() string {
-	return "NoProvider"
-}
-
-type WaitingApprovalOnly struct{}
-
-func ParseWaitingApprovalOnly(inputs []interface{}) *WaitingApprovalOnly {
-	return &WaitingApprovalOnly{}
-}
-
-func (e *WaitingApprovalOnly) Error() string {
-	return "WaitingApprovalOnly"
-}
-
-type Banned struct{}
-
-func ParseBanned(inputs []interface{}) *Banned {
-	return &Banned{}
-}
-
-func (e *Banned) Error() string {
-	return "Banned"
 }
 
 type RemainingTimeAboveLimit struct {
@@ -504,22 +462,12 @@ func ParseRemainingTimeAboveLimit(
 	}
 }
 
-type CreditAddrIsZero struct{}
-
-func ParseCreditAddrIsZero(inputs []interface{}) *CreditAddrIsZero {
-	if len(inputs) != 0 {
-		return nil
-	}
-	return &CreditAddrIsZero{}
-}
-
-func (e *CreditAddrIsZero) Error() string {
-	return "CreditAddrIsZero"
-}
-
 type NoSpendingAuthority struct{}
 
 func ParseNoSpendingAuthority(inputs []interface{}) *NoSpendingAuthority {
+	if len(inputs) != 0 {
+		return nil
+	}
 	return &NoSpendingAuthority{}
 }
 
@@ -527,114 +475,32 @@ func (e *NoSpendingAuthority) Error() string {
 	return "NoSpendingAuthority"
 }
 
-type DivisionByZeroError struct{}
+type NewJobRequestDisabled struct{}
 
-func ParseDivisionByZeroError(inputs []interface{}) *DivisionByZeroError {
+func ParseNewJobRequestDisabled(inputs []interface{}) *NewJobRequestDisabled {
 	if len(inputs) != 0 {
 		return nil
 	}
-	return &DivisionByZeroError{}
+	return &NewJobRequestDisabled{}
 }
 
-func (e *DivisionByZeroError) Error() string {
-	return "DivisionByZeroError"
-}
-
-type Uninitialized struct{}
-
-func (e *Uninitialized) Error() string {
-	return "Uninitialized"
-}
-
-func ParseUninitialized(inputs []interface{}) error {
-	if len(inputs) != 0 {
-		return nil
-	}
-	return &Uninitialized{}
-}
-
-type SameStatusError struct{}
-
-func ParseSameStatusError(inputs []interface{}) *SameStatusError {
-	if len(inputs) != 0 {
-		return nil
-	}
-	return &SameStatusError{}
-}
-
-func (e *SameStatusError) Error() string {
-	return "SameStatusError"
-}
-
-type InvalidTransitionFromPending struct{}
-
-func ParseInvalidTransitionFromPending(
-	inputs []interface{},
-) *InvalidTransitionFromPending {
-	if len(inputs) != 0 {
-		return nil
-	}
-	return &InvalidTransitionFromPending{}
-}
-
-func (e *InvalidTransitionFromPending) Error() string {
-	return "InvalidTransitionFromPending"
-}
-
-type InvalidTransitionFromMetascheduled struct{}
-
-func ParseInvalidTransitionFromMetascheduled(
-	inputs []interface{},
-) *InvalidTransitionFromMetascheduled {
-	if len(inputs) != 0 {
-		return nil
-	}
-	return &InvalidTransitionFromMetascheduled{}
-}
-
-func (e *InvalidTransitionFromMetascheduled) Error() string {
-	return "InvalidTransitionFromMetascheduled"
-}
-
-type InvalidTransitionFromScheduled struct{}
-
-func ParseInvalidTransitionFromScheduled(
-	inputs []interface{},
-) *InvalidTransitionFromScheduled {
-	if len(inputs) != 0 {
-		return nil
-	}
-	return &InvalidTransitionFromScheduled{}
-}
-
-func (e *InvalidTransitionFromScheduled) Error() string {
-	return "InvalidTransitionFromScheduled"
-}
-
-type InvalidTransitionFromRunning struct{}
-
-func ParseInvalidTransitionFromRunning(
-	inputs []interface{},
-) *InvalidTransitionFromRunning {
-	if len(inputs) != 0 {
-		return nil
-	}
-	return &InvalidTransitionFromRunning{}
-}
-
-func (e *InvalidTransitionFromRunning) Error() string {
-	return "InvalidTransitionFromRunning"
+func (e *NewJobRequestDisabled) Error() string {
+	return "NewJobRequestDisabled"
 }
 
 func init() {
 	var err error
 	errorsABI, err = errorsabi.ErrorContractMetaData.GetAbi()
 	if err != nil {
-		logger.I.Panic("failed to read abi", zap.Error(err))
+		panic(fmt.Errorf("failed to read abi: %w", err))
 	}
 }
 
-func WrapError(originalErr error) error {
+func WrapError(originalErr error) (newErr error) {
+	if originalErr == nil {
+		return nil
+	}
+
 	// Check if it's an RPC error
 	var target rpc.DataError
 	if ok := errors.As(originalErr, &target); !ok {
@@ -662,9 +528,7 @@ func WrapError(originalErr error) error {
 		return PanicError(data[len(data)-1])
 	}
 
-	err := fmt.Errorf("%w, data: %s", originalErr, data)
-	logger.I.Warn("Unhandled error", zap.Error(err))
-	return err
+	return fmt.Errorf("%w, data: %s", originalErr, data)
 }
 
 func parseABIError(
@@ -704,70 +568,54 @@ func ParseDoubleEndedQueueError(name string, inputs []interface{}) error {
 
 func ParseError(name string, inputs []interface{}) error {
 	switch name {
-	case "InsufficientFunds":
-		return ParseInsufficientFunds(inputs)
 	case "InvalidJob":
 		return ParseInvalidJob(inputs)
-	case "InvalidJobDefinition":
-		return ParseInvalidJobDefinition(inputs)
-	case "JobHotStatusOnly":
-		return ParseJobHotStatusOnly(inputs)
-	case "RunningScheduledStatusOnly":
-		return ParseRunningScheduledStatusOnly(inputs)
-	case "MetaScheduledScheduledStatusOnly":
-		return ParseMetaScheduledScheduledStatusOnly(inputs)
-	case "RunningColdStatusOnly":
-		return ParseRunningColdStatusOnly(inputs)
-	case "InvalidNNodes":
-		return ParseInvalidNNodes(inputs)
-	case "InvalidNCpu":
-		return ParseInvalidNCpu(inputs)
-	case "InvalidNMem":
-		return ParseInvalidNMem(inputs)
-	case "CustomerOnly":
-		return ParseCustomerOnly(inputs)
-	case "JobProviderOnly":
-		return ParseJobProviderOnly(inputs)
-	case "JobProviderThisOnly":
-		return ParseJobProviderThisOnly(inputs)
-	case "OwnerOnly":
-		return ParseOwnerOnly(inputs)
-	case "CustomerMetaSchedulerProviderOnly":
-		return ParseCustomerMetaSchedulerProviderOnly(inputs)
-	case "MetashedulerProviderOnly":
-		return ParseMetashedulerProviderOnly(inputs)
-	case "ProviderAddrIsZero":
-		return ParseProviderAddrIsZero(inputs)
-	case "ProviderNotJoined":
-		return ParseProviderNotJoined(inputs)
+	case "NoJob":
+		return ParseNoJob(inputs)
+	case "InvalidNodesCount":
+		return ParseInvalidNodesCount(inputs)
+	case "ArrayLengthMismatch":
+		return ParseArrayLengthMismatch(inputs)
+	case "InvalidTotalMem":
+		return ParseInvalidTotalMem(inputs)
+	case "InvalidTotalCpus":
+		return ParseInvalidTotalCpus(inputs)
 	case "NoProvider":
 		return ParseNoProvider(inputs)
 	case "WaitingApprovalOnly":
 		return ParseWaitingApprovalOnly(inputs)
 	case "Banned":
 		return ParseBanned(inputs)
-	case "RemainingTimeAboveLimit":
-		return ParseRemainingTimeAboveLimit(inputs)
-	case "CreditAddrIsZero":
-		return ParseCreditAddrIsZero(inputs)
-	case "NoSpendingAuthority":
-		return ParseNoSpendingAuthority(inputs)
-	case "DivisionByZeroError":
-		return ParseDivisionByZeroError(inputs)
+	case "JobHotStatusOnly":
+		return ParseJobHotStatusOnly(inputs)
+	case "InvalidTransition":
+		return ParseInvalidTransition(inputs)
 	case "SameStatusError":
 		return ParseSameStatusError(inputs)
-	case "NoJob":
-		return ParseNoJob(inputs)
-	case "Uninitialized":
-		return ParseUninitialized(inputs)
-	case "InvalidTransitionFromPending":
-		return ParseInvalidTransitionFromPending(inputs)
-	case "InvalidTransitionFromMetascheduled":
-		return ParseInvalidTransitionFromMetascheduled(inputs)
-	case "InvalidTransitionFromScheduled":
-		return ParseInvalidTransitionFromScheduled(inputs)
-	case "InvalidTransitionFromRunning":
-		return ParseInvalidTransitionFromRunning(inputs)
+	case "InsufficientFunds":
+		return ParseInsufficientFunds(inputs)
+	case "InvalidJobDefinition":
+		return ParseInvalidJobDefinition(inputs)
+	case "RunningScheduledStatusOnly":
+		return ParseRunningScheduledStatusOnly(inputs)
+	case "MetaScheduledScheduledStatusOnly":
+		return ParseMetaScheduledScheduledStatusOnly(inputs)
+	case "RunningColdStatusOnly":
+		return ParseRunningColdStatusOnly(inputs)
+	case "CustomerOnly":
+		return ParseCustomerOnly(inputs)
+	case "JobProviderOnly":
+		return ParseJobProviderOnly(inputs)
+	case "CustomerMetaSchedulerProviderOnly":
+		return ParseCustomerMetaSchedulerProviderOnly(inputs)
+	case "ProviderNotJoined":
+		return ParseProviderNotJoined(inputs)
+	case "RemainingTimeAboveLimit":
+		return ParseRemainingTimeAboveLimit(inputs)
+	case "NoSpendingAuthority":
+		return ParseNoSpendingAuthority(inputs)
+	case "NewJobRequestDisabled":
+		return ParseNewJobRequestDisabled(inputs)
 	}
 	return nil
 }

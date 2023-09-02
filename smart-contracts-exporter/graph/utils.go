@@ -7,22 +7,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func mapMetaschedulerJobToGraphJob(j *struct {
-	JobId            [32]byte
-	Status           uint8
-	CustomerAddr     common.Address
-	ProviderAddr     common.Address
-	Definition       metascheduler.JobDefinition
-	Valid            bool
-	Cost             metascheduler.JobCost
-	Time             metascheduler.JobTime
-	JobName          [32]byte
-	HasCancelRequest bool
-}) model.Job {
+func mapMetaschedulerJobToGraphJob(j *metascheduler.Job) model.Job {
 	jobDefinition := &model.JobDefinition{
-		GpuPerTask: int(j.Definition.GpuPerTask),
+		GpuPerTask: int(j.Definition.GpusPerTask),
 		MemPerCPU:  int(j.Definition.MemPerCpu),
-		CPUPerTask: int(j.Definition.CpuPerTask),
+		CPUPerTask: int(j.Definition.CpusPerTask),
 		Ntasks:     int(j.Definition.Ntasks),
 	}
 
@@ -46,7 +35,6 @@ func mapMetaschedulerJobToGraphJob(j *struct {
 		CustomerAddr:     j.CustomerAddr.Hex(),
 		ProviderAddr:     j.ProviderAddr.Hex(),
 		Definition:       jobDefinition,
-		Valid:            j.Valid,
 		Cost:             jobCost,
 		Time:             jobTime,
 		JobName:          string(j.JobName[:]),
@@ -54,18 +42,7 @@ func mapMetaschedulerJobToGraphJob(j *struct {
 	}
 }
 
-func ConvertJobs(input <-chan *struct {
-	JobId            [32]byte
-	Status           uint8
-	CustomerAddr     common.Address
-	ProviderAddr     common.Address
-	Definition       metascheduler.JobDefinition
-	Valid            bool
-	Cost             metascheduler.JobCost
-	Time             metascheduler.JobTime
-	JobName          [32]byte
-	HasCancelRequest bool
-}) <-chan *model.Job {
+func ConvertJobs(input <-chan *metascheduler.Job) <-chan *model.Job {
 	output := make(chan *model.Job)
 
 	go func() {

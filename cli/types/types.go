@@ -8,26 +8,11 @@ import (
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/internal/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
 // LogStream is a readable stream of logs.
 type LogStream loggerv1alpha1.LoggerAPI_ReadClient
-
-// Job represents a job object in the smart-contract.
-type Job struct {
-	JobID            [32]byte
-	Status           uint8
-	CustomerAddr     common.Address
-	ProviderAddr     common.Address
-	Definition       metaschedulerabi.JobDefinition
-	Valid            bool
-	Cost             metaschedulerabi.JobCost
-	Time             metaschedulerabi.JobTime
-	JobName          [32]byte
-	HasCancelRequest bool
-}
 
 // Logger fetches the logs of a job.
 type Logger interface {
@@ -60,13 +45,13 @@ type JobLazyIterator interface {
 	// Fetches the previous job.
 	Prev(ctx context.Context) (prev JobLazyIterator, ok bool, err error)
 	// Get the current job.
-	Current() *Job
+	Current() *metaschedulerabi.Job
 }
 
 // JobFetcher fetches jobs.
 type JobFetcher interface {
 	// Get a job.
-	GetJob(ctx context.Context, id [32]byte) (*Job, error)
+	GetJob(ctx context.Context, id [32]byte) (*metaschedulerabi.Job, error)
 	// Get a iterator of jobs. If there is no job, nil is returned.
 	GetJobs(ctx context.Context) (JobLazyIterator, error)
 }

@@ -16,33 +16,20 @@ type Job struct {
 	CustomerAddr     common.Address
 	ProviderAddr     common.Address
 	Definition       metaschedulerabi.JobDefinition
-	Valid            bool
 	Cost             metaschedulerabi.JobCost
 	Time             metaschedulerabi.JobTime
 	JobName          [32]byte
 	HasCancelRequest bool
+	LastError        string
 }
 
-func FromStructToJob(s struct {
-	//lint:ignore ST1003 naming scheme comes from ethereum ABI
-	JobId            [32]byte
-	Status           uint8
-	CustomerAddr     common.Address
-	ProviderAddr     common.Address
-	Definition       metaschedulerabi.JobDefinition
-	Valid            bool
-	Cost             metaschedulerabi.JobCost
-	Time             metaschedulerabi.JobTime
-	JobName          [32]byte
-	HasCancelRequest bool
-}) *Job {
+func FromStructToJob(s metaschedulerabi.Job) *Job {
 	return &Job{
 		JobID:            s.JobId,
 		Status:           JobStatus(s.Status),
 		CustomerAddr:     s.CustomerAddr,
 		ProviderAddr:     s.ProviderAddr,
 		Definition:       s.Definition,
-		Valid:            s.Valid,
 		Cost:             s.Cost,
 		Time:             s.Time,
 		JobName:          s.JobName,

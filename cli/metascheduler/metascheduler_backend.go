@@ -103,15 +103,26 @@ func (b Backend) applyDefault() Backend {
 	return b
 }
 
-func NewJobFetcher(b Backend) (fetcher types.JobFetcher, err error) {
+func NewJobFetcher(ctx context.Context, b Backend) (fetcher types.JobFetcher, err error) {
 	b = b.applyDefault()
 	m, err := metaschedulerabi.NewMetaScheduler(b.MetaschedulerAddress, b.EthereumBackend)
+	if err != nil {
+		return nil, err
+	}
+	jobsAddress, err := m.Jobs(&bind.CallOpts{
+		Context: ctx,
+	})
+	if err != nil {
+		return nil, err
+	}
+	jobs, err := metaschedulerabi.NewIJobRepository(jobsAddress, b)
 	if err != nil {
 		return nil, err
 	}
 	return &rpcClient{
 		MetaScheduler: m,
 		Backend:       b,
+		Jobs:          jobs,
 	}, err
 }
 

@@ -4,122 +4,153 @@
 #include "supervisor/v1alpha1/ssh.pb.h"
 
 #include <algorithm>
-
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/extension_set.h>
-#include <google/protobuf/wire_format_lite.h>
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/generated_message_reflection.h>
-#include <google/protobuf/reflection_ops.h>
-#include <google/protobuf/wire_format.h>
+#include "google/protobuf/io/coded_stream.h"
+#include "google/protobuf/extension_set.h"
+#include "google/protobuf/wire_format_lite.h"
+#include "google/protobuf/descriptor.h"
+#include "google/protobuf/generated_message_reflection.h"
+#include "google/protobuf/reflection_ops.h"
+#include "google/protobuf/wire_format.h"
 // @@protoc_insertion_point(includes)
-#include <google/protobuf/port_def.inc>
 
+// Must be included last.
+#include "google/protobuf/port_def.inc"
 PROTOBUF_PRAGMA_INIT_SEG
-
 namespace _pb = ::PROTOBUF_NAMESPACE_ID;
-namespace _pbi = _pb::internal;
-
+namespace _pbi = ::PROTOBUF_NAMESPACE_ID::internal;
 namespace supervisor {
 namespace v1alpha1 {
+template <typename>
 PROTOBUF_CONSTEXPR FetchAuthorizedKeysRequest::FetchAuthorizedKeysRequest(
     ::_pbi::ConstantInitialized) {}
 struct FetchAuthorizedKeysRequestDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR FetchAuthorizedKeysRequestDefaultTypeInternal()
-      : _instance(::_pbi::ConstantInitialized{}) {}
+  PROTOBUF_CONSTEXPR FetchAuthorizedKeysRequestDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
   ~FetchAuthorizedKeysRequestDefaultTypeInternal() {}
   union {
     FetchAuthorizedKeysRequest _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FetchAuthorizedKeysRequestDefaultTypeInternal _FetchAuthorizedKeysRequest_default_instance_;
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FetchAuthorizedKeysRequestDefaultTypeInternal _FetchAuthorizedKeysRequest_default_instance_;
+template <typename>
 PROTOBUF_CONSTEXPR FetchAuthorizedKeysResponse::FetchAuthorizedKeysResponse(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.authorized_keys_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
+    /*decltype(_impl_.authorized_keys_)*/ {
+    &::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized {}
+  }
+
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct FetchAuthorizedKeysResponseDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR FetchAuthorizedKeysResponseDefaultTypeInternal()
-      : _instance(::_pbi::ConstantInitialized{}) {}
+  PROTOBUF_CONSTEXPR FetchAuthorizedKeysResponseDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
   ~FetchAuthorizedKeysResponseDefaultTypeInternal() {}
   union {
     FetchAuthorizedKeysResponse _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FetchAuthorizedKeysResponseDefaultTypeInternal _FetchAuthorizedKeysResponse_default_instance_;
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 FetchAuthorizedKeysResponseDefaultTypeInternal _FetchAuthorizedKeysResponse_default_instance_;
 }  // namespace v1alpha1
 }  // namespace supervisor
 static ::_pb::Metadata file_level_metadata_supervisor_2fv1alpha1_2fssh_2eproto[2];
-static constexpr ::_pb::EnumDescriptor const** file_level_enum_descriptors_supervisor_2fv1alpha1_2fssh_2eproto = nullptr;
-static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_supervisor_2fv1alpha1_2fssh_2eproto = nullptr;
-
-const uint32_t TableStruct_supervisor_2fv1alpha1_2fssh_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::FetchAuthorizedKeysRequest, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  ~0u,  // no _inlined_string_donated_
-  ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::FetchAuthorizedKeysResponse, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::FetchAuthorizedKeysResponse, _impl_.authorized_keys_),
+static constexpr const ::_pb::EnumDescriptor**
+    file_level_enum_descriptors_supervisor_2fv1alpha1_2fssh_2eproto = nullptr;
+static constexpr const ::_pb::ServiceDescriptor**
+    file_level_service_descriptors_supervisor_2fv1alpha1_2fssh_2eproto = nullptr;
+const ::uint32_t TableStruct_supervisor_2fv1alpha1_2fssh_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
+    protodesc_cold) = {
+    ~0u,  // no _has_bits_
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::FetchAuthorizedKeysRequest, _internal_metadata_),
+    ~0u,  // no _extensions_
+    ~0u,  // no _oneof_case_
+    ~0u,  // no _weak_field_map_
+    ~0u,  // no _inlined_string_donated_
+    ~0u,  // no _split_
+    ~0u,  // no sizeof(Split)
+    ~0u,  // no _has_bits_
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::FetchAuthorizedKeysResponse, _internal_metadata_),
+    ~0u,  // no _extensions_
+    ~0u,  // no _oneof_case_
+    ~0u,  // no _weak_field_map_
+    ~0u,  // no _inlined_string_donated_
+    ~0u,  // no _split_
+    ~0u,  // no sizeof(Split)
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::FetchAuthorizedKeysResponse, _impl_.authorized_keys_),
 };
-static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, -1, sizeof(::supervisor::v1alpha1::FetchAuthorizedKeysRequest)},
-  { 6, -1, -1, sizeof(::supervisor::v1alpha1::FetchAuthorizedKeysResponse)},
+
+static const ::_pbi::MigrationSchema
+    schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+        { 0, -1, -1, sizeof(::supervisor::v1alpha1::FetchAuthorizedKeysRequest)},
+        { 8, -1, -1, sizeof(::supervisor::v1alpha1::FetchAuthorizedKeysResponse)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
-  &::supervisor::v1alpha1::_FetchAuthorizedKeysRequest_default_instance_._instance,
-  &::supervisor::v1alpha1::_FetchAuthorizedKeysResponse_default_instance_._instance,
+    &::supervisor::v1alpha1::_FetchAuthorizedKeysRequest_default_instance_._instance,
+    &::supervisor::v1alpha1::_FetchAuthorizedKeysResponse_default_instance_._instance,
 };
-
-const char descriptor_table_protodef_supervisor_2fv1alpha1_2fssh_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\035supervisor/v1alpha1/ssh.proto\022\023supervi"
-  "sor.v1alpha1\"\034\n\032FetchAuthorizedKeysReque"
-  "st\"F\n\033FetchAuthorizedKeysResponse\022\'\n\017aut"
-  "horized_keys\030\001 \001(\tR\016authorizedKeys2\204\001\n\006S"
-  "shAPI\022z\n\023FetchAuthorizedKeys\022/.superviso"
-  "r.v1alpha1.FetchAuthorizedKeysRequest\0320."
-  "supervisor.v1alpha1.FetchAuthorizedKeysR"
-  "esponse\"\000B\372\001\n\027com.supervisor.v1alpha1B\010S"
-  "shProtoP\001Zegithub.com/deepsquare-io/the-"
-  "grid/supervisorapis/protos/gen/go/superv"
-  "isor/v1alpha1;supervisorv1alpha1\370\001\000\242\002\003SX"
-  "X\252\002\023Supervisor.V1alpha1\312\002\023Supervisor\\V1a"
-  "lpha1\342\002\037Supervisor\\V1alpha1\\GPBMetadata\352"
-  "\002\024Supervisor::V1alpha1b\006proto3"
-  ;
-static ::_pbi::once_flag descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_once;
+const char descriptor_table_protodef_supervisor_2fv1alpha1_2fssh_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+    "\n\035supervisor/v1alpha1/ssh.proto\022\023supervi"
+    "sor.v1alpha1\"\034\n\032FetchAuthorizedKeysReque"
+    "st\"F\n\033FetchAuthorizedKeysResponse\022\'\n\017aut"
+    "horized_keys\030\001 \001(\tR\016authorizedKeys2\204\001\n\006S"
+    "shAPI\022z\n\023FetchAuthorizedKeys\022/.superviso"
+    "r.v1alpha1.FetchAuthorizedKeysRequest\0320."
+    "supervisor.v1alpha1.FetchAuthorizedKeysR"
+    "esponse\"\000B\372\001\n\027com.supervisor.v1alpha1B\010S"
+    "shProtoP\001Zegithub.com/deepsquare-io/the-"
+    "grid/supervisorapis/protos/gen/go/superv"
+    "isor/v1alpha1;supervisorv1alpha1\370\001\000\242\002\003SX"
+    "X\252\002\023Supervisor.V1alpha1\312\002\023Supervisor\\V1a"
+    "lpha1\342\002\037Supervisor\\V1alpha1\\GPBMetadata\352"
+    "\002\024Supervisor::V1alpha1b\006proto3"
+};
+static ::absl::once_flag descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto = {
-    false, false, 550, descriptor_table_protodef_supervisor_2fv1alpha1_2fssh_2eproto,
+    false,
+    false,
+    550,
+    descriptor_table_protodef_supervisor_2fv1alpha1_2fssh_2eproto,
     "supervisor/v1alpha1/ssh.proto",
-    &descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_once, nullptr, 0, 2,
-    schemas, file_default_instances, TableStruct_supervisor_2fv1alpha1_2fssh_2eproto::offsets,
-    file_level_metadata_supervisor_2fv1alpha1_2fssh_2eproto, file_level_enum_descriptors_supervisor_2fv1alpha1_2fssh_2eproto,
+    &descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_once,
+    nullptr,
+    0,
+    2,
+    schemas,
+    file_default_instances,
+    TableStruct_supervisor_2fv1alpha1_2fssh_2eproto::offsets,
+    file_level_metadata_supervisor_2fv1alpha1_2fssh_2eproto,
+    file_level_enum_descriptors_supervisor_2fv1alpha1_2fssh_2eproto,
     file_level_service_descriptors_supervisor_2fv1alpha1_2fssh_2eproto,
 };
+
+// This function exists to be marked as weak.
+// It can significantly speed up compilation by breaking up LLVM's SCC
+// in the .pb.cc translation units. Large translation units see a
+// reduction of more than 35% of walltime for optimized builds. Without
+// the weak attribute all the messages in the file, including all the
+// vtables and everything they use become part of the same SCC through
+// a cycle like:
+// GetMetadata -> descriptor table -> default instances ->
+//   vtables -> GetMetadata
+// By adding a weak function here we break the connection from the
+// individual vtables back into the descriptor table.
 PROTOBUF_ATTRIBUTE_WEAK const ::_pbi::DescriptorTable* descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_getter() {
   return &descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto;
 }
-
 // Force running AddDescriptors() at dynamic initialization time.
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY2 static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_supervisor_2fv1alpha1_2fssh_2eproto(&descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY2
+static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_supervisor_2fv1alpha1_2fssh_2eproto(&descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto);
 namespace supervisor {
 namespace v1alpha1 {
-
 // ===================================================================
 
 class FetchAuthorizedKeysRequest::_Internal {
  public:
 };
 
-FetchAuthorizedKeysRequest::FetchAuthorizedKeysRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena, is_message_owned) {
+FetchAuthorizedKeysRequest::FetchAuthorizedKeysRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena) {
   // @@protoc_insertion_point(arena_constructor:supervisor.v1alpha1.FetchAuthorizedKeysRequest)
 }
 FetchAuthorizedKeysRequest::FetchAuthorizedKeysRequest(const FetchAuthorizedKeysRequest& from)
@@ -150,50 +181,47 @@ const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*FetchAuthorizedKeysRequest::Ge
       &descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_getter, &descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_once,
       file_level_metadata_supervisor_2fv1alpha1_2fssh_2eproto[0]);
 }
-
 // ===================================================================
 
 class FetchAuthorizedKeysResponse::_Internal {
  public:
 };
 
-FetchAuthorizedKeysResponse::FetchAuthorizedKeysResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
-  SharedCtor(arena, is_message_owned);
+FetchAuthorizedKeysResponse::FetchAuthorizedKeysResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
+  SharedCtor(arena);
   // @@protoc_insertion_point(arena_constructor:supervisor.v1alpha1.FetchAuthorizedKeysResponse)
 }
 FetchAuthorizedKeysResponse::FetchAuthorizedKeysResponse(const FetchAuthorizedKeysResponse& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   FetchAuthorizedKeysResponse* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.authorized_keys_){}
+      decltype(_impl_.authorized_keys_) {}
+
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   _impl_.authorized_keys_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.authorized_keys_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.authorized_keys_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_authorized_keys().empty()) {
-    _this->_impl_.authorized_keys_.Set(from._internal_authorized_keys(), 
-      _this->GetArenaForAllocation());
+    _this->_impl_.authorized_keys_.Set(from._internal_authorized_keys(), _this->GetArenaForAllocation());
   }
   // @@protoc_insertion_point(copy_constructor:supervisor.v1alpha1.FetchAuthorizedKeysResponse)
 }
 
-inline void FetchAuthorizedKeysResponse::SharedCtor(
-    ::_pb::Arena* arena, bool is_message_owned) {
+inline void FetchAuthorizedKeysResponse::SharedCtor(::_pb::Arena* arena) {
   (void)arena;
-  (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.authorized_keys_){}
+      decltype(_impl_.authorized_keys_) {}
+
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.authorized_keys_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.authorized_keys_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.authorized_keys_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 FetchAuthorizedKeysResponse::~FetchAuthorizedKeysResponse() {
@@ -206,7 +234,7 @@ FetchAuthorizedKeysResponse::~FetchAuthorizedKeysResponse() {
 }
 
 inline void FetchAuthorizedKeysResponse::SharedDtor() {
-  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  ABSL_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.authorized_keys_.Destroy();
 }
 
@@ -216,7 +244,7 @@ void FetchAuthorizedKeysResponse::SetCachedSize(int size) const {
 
 void FetchAuthorizedKeysResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:supervisor.v1alpha1.FetchAuthorizedKeysResponse)
-  uint32_t cached_has_bits = 0;
+  ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -227,18 +255,19 @@ void FetchAuthorizedKeysResponse::Clear() {
 const char* FetchAuthorizedKeysResponse::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    uint32_t tag;
+    ::uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // string authorized_keys = 1 [json_name = "authorizedKeys"];
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_authorized_keys();
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, "supervisor.v1alpha1.FetchAuthorizedKeysResponse.authorized_keys"));
-        } else
+        } else {
           goto handle_unusual;
+        }
         continue;
       default:
         goto handle_unusual;
@@ -263,20 +292,18 @@ failure:
 #undef CHK_
 }
 
-uint8_t* FetchAuthorizedKeysResponse::_InternalSerialize(
-    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+::uint8_t* FetchAuthorizedKeysResponse::_InternalSerialize(
+    ::uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:supervisor.v1alpha1.FetchAuthorizedKeysResponse)
-  uint32_t cached_has_bits = 0;
+  ::uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string authorized_keys = 1 [json_name = "authorizedKeys"];
   if (!this->_internal_authorized_keys().empty()) {
+    const std::string& _s = this->_internal_authorized_keys();
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
-      this->_internal_authorized_keys().data(), static_cast<int>(this->_internal_authorized_keys().length()),
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
-      "supervisor.v1alpha1.FetchAuthorizedKeysResponse.authorized_keys");
-    target = stream->WriteStringMaybeAliased(
-        1, this->_internal_authorized_keys(), target);
+        _s.data(), static_cast<int>(_s.length()), ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE, "supervisor.v1alpha1.FetchAuthorizedKeysResponse.authorized_keys");
+    target = stream->WriteStringMaybeAliased(1, _s, target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -287,19 +314,18 @@ uint8_t* FetchAuthorizedKeysResponse::_InternalSerialize(
   return target;
 }
 
-size_t FetchAuthorizedKeysResponse::ByteSizeLong() const {
+::size_t FetchAuthorizedKeysResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:supervisor.v1alpha1.FetchAuthorizedKeysResponse)
-  size_t total_size = 0;
+  ::size_t total_size = 0;
 
-  uint32_t cached_has_bits = 0;
+  ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // string authorized_keys = 1 [json_name = "authorizedKeys"];
   if (!this->_internal_authorized_keys().empty()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
-        this->_internal_authorized_keys());
+    total_size += 1 + ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+                                    this->_internal_authorized_keys());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -316,8 +342,8 @@ void FetchAuthorizedKeysResponse::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to
   auto* const _this = static_cast<FetchAuthorizedKeysResponse*>(&to_msg);
   auto& from = static_cast<const FetchAuthorizedKeysResponse&>(from_msg);
   // @@protoc_insertion_point(class_specific_merge_from_start:supervisor.v1alpha1.FetchAuthorizedKeysResponse)
-  GOOGLE_DCHECK_NE(&from, _this);
-  uint32_t cached_has_bits = 0;
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (!from._internal_authorized_keys().empty()) {
@@ -342,10 +368,8 @@ void FetchAuthorizedKeysResponse::InternalSwap(FetchAuthorizedKeysResponse* othe
   auto* lhs_arena = GetArenaForAllocation();
   auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &_impl_.authorized_keys_, lhs_arena,
-      &other->_impl_.authorized_keys_, rhs_arena
-  );
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.authorized_keys_, lhs_arena,
+                                       &other->_impl_.authorized_keys_, rhs_arena);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata FetchAuthorizedKeysResponse::GetMetadata() const {
@@ -353,7 +377,6 @@ void FetchAuthorizedKeysResponse::InternalSwap(FetchAuthorizedKeysResponse* othe
       &descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_getter, &descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_once,
       file_level_metadata_supervisor_2fv1alpha1_2fssh_2eproto[1]);
 }
-
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace v1alpha1
 }  // namespace supervisor
@@ -367,6 +390,5 @@ Arena::CreateMaybeMessage< ::supervisor::v1alpha1::FetchAuthorizedKeysResponse >
   return Arena::CreateMessageInternal< ::supervisor::v1alpha1::FetchAuthorizedKeysResponse >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
-
 // @@protoc_insertion_point(global_scope)
-#include <google/protobuf/port_undef.inc>
+#include "google/protobuf/port_undef.inc"

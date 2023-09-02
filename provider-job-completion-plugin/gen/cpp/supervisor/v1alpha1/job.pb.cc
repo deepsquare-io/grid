@@ -4,124 +4,160 @@
 #include "supervisor/v1alpha1/job.pb.h"
 
 #include <algorithm>
-
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/extension_set.h>
-#include <google/protobuf/wire_format_lite.h>
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/generated_message_reflection.h>
-#include <google/protobuf/reflection_ops.h>
-#include <google/protobuf/wire_format.h>
+#include "google/protobuf/io/coded_stream.h"
+#include "google/protobuf/extension_set.h"
+#include "google/protobuf/wire_format_lite.h"
+#include "google/protobuf/descriptor.h"
+#include "google/protobuf/generated_message_reflection.h"
+#include "google/protobuf/reflection_ops.h"
+#include "google/protobuf/wire_format.h"
 // @@protoc_insertion_point(includes)
-#include <google/protobuf/port_def.inc>
 
+// Must be included last.
+#include "google/protobuf/port_def.inc"
 PROTOBUF_PRAGMA_INIT_SEG
-
 namespace _pb = ::PROTOBUF_NAMESPACE_ID;
-namespace _pbi = _pb::internal;
-
+namespace _pbi = ::PROTOBUF_NAMESPACE_ID::internal;
 namespace supervisor {
 namespace v1alpha1 {
+template <typename>
 PROTOBUF_CONSTEXPR SetJobStatusRequest::SetJobStatusRequest(
     ::_pbi::ConstantInitialized): _impl_{
-    /*decltype(_impl_.name_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
-  , /*decltype(_impl_.id_)*/uint64_t{0u}
-  , /*decltype(_impl_.duration_)*/uint64_t{0u}
-  , /*decltype(_impl_.status_)*/0
+    /*decltype(_impl_.name_)*/ {
+    &::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized {}
+  }
+
+  , /*decltype(_impl_.id_)*/ ::uint64_t{0u}
+
+  , /*decltype(_impl_.duration_)*/ ::uint64_t{0u}
+
+  , /*decltype(_impl_.status_)*/ 0
+
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct SetJobStatusRequestDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR SetJobStatusRequestDefaultTypeInternal()
-      : _instance(::_pbi::ConstantInitialized{}) {}
+  PROTOBUF_CONSTEXPR SetJobStatusRequestDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
   ~SetJobStatusRequestDefaultTypeInternal() {}
   union {
     SetJobStatusRequest _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SetJobStatusRequestDefaultTypeInternal _SetJobStatusRequest_default_instance_;
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SetJobStatusRequestDefaultTypeInternal _SetJobStatusRequest_default_instance_;
+template <typename>
 PROTOBUF_CONSTEXPR SetJobStatusResponse::SetJobStatusResponse(
     ::_pbi::ConstantInitialized) {}
 struct SetJobStatusResponseDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR SetJobStatusResponseDefaultTypeInternal()
-      : _instance(::_pbi::ConstantInitialized{}) {}
+  PROTOBUF_CONSTEXPR SetJobStatusResponseDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
   ~SetJobStatusResponseDefaultTypeInternal() {}
   union {
     SetJobStatusResponse _instance;
   };
 };
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SetJobStatusResponseDefaultTypeInternal _SetJobStatusResponse_default_instance_;
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SetJobStatusResponseDefaultTypeInternal _SetJobStatusResponse_default_instance_;
 }  // namespace v1alpha1
 }  // namespace supervisor
 static ::_pb::Metadata file_level_metadata_supervisor_2fv1alpha1_2fjob_2eproto[2];
 static const ::_pb::EnumDescriptor* file_level_enum_descriptors_supervisor_2fv1alpha1_2fjob_2eproto[1];
-static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_supervisor_2fv1alpha1_2fjob_2eproto = nullptr;
-
-const uint32_t TableStruct_supervisor_2fv1alpha1_2fjob_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  ~0u,  // no _inlined_string_donated_
-  PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.name_),
-  PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.id_),
-  PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.duration_),
-  PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.status_),
-  ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusResponse, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  ~0u,  // no _inlined_string_donated_
+static constexpr const ::_pb::ServiceDescriptor**
+    file_level_service_descriptors_supervisor_2fv1alpha1_2fjob_2eproto = nullptr;
+const ::uint32_t TableStruct_supervisor_2fv1alpha1_2fjob_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
+    protodesc_cold) = {
+    ~0u,  // no _has_bits_
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _internal_metadata_),
+    ~0u,  // no _extensions_
+    ~0u,  // no _oneof_case_
+    ~0u,  // no _weak_field_map_
+    ~0u,  // no _inlined_string_donated_
+    ~0u,  // no _split_
+    ~0u,  // no sizeof(Split)
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.name_),
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.id_),
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.duration_),
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.status_),
+    ~0u,  // no _has_bits_
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusResponse, _internal_metadata_),
+    ~0u,  // no _extensions_
+    ~0u,  // no _oneof_case_
+    ~0u,  // no _weak_field_map_
+    ~0u,  // no _inlined_string_donated_
+    ~0u,  // no _split_
+    ~0u,  // no sizeof(Split)
 };
-static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, -1, sizeof(::supervisor::v1alpha1::SetJobStatusRequest)},
-  { 10, -1, -1, sizeof(::supervisor::v1alpha1::SetJobStatusResponse)},
+
+static const ::_pbi::MigrationSchema
+    schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+        { 0, -1, -1, sizeof(::supervisor::v1alpha1::SetJobStatusRequest)},
+        { 12, -1, -1, sizeof(::supervisor::v1alpha1::SetJobStatusResponse)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
-  &::supervisor::v1alpha1::_SetJobStatusRequest_default_instance_._instance,
-  &::supervisor::v1alpha1::_SetJobStatusResponse_default_instance_._instance,
+    &::supervisor::v1alpha1::_SetJobStatusRequest_default_instance_._instance,
+    &::supervisor::v1alpha1::_SetJobStatusResponse_default_instance_._instance,
 };
-
-const char descriptor_table_protodef_supervisor_2fv1alpha1_2fjob_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\035supervisor/v1alpha1/job.proto\022\023supervi"
-  "sor.v1alpha1\"\215\001\n\023SetJobStatusRequest\022\022\n\004"
-  "name\030\001 \001(\tR\004name\022\016\n\002id\030\002 \001(\004R\002id\022\032\n\010dura"
-  "tion\030\003 \001(\004R\010duration\0226\n\006status\030\004 \001(\0162\036.s"
-  "upervisor.v1alpha1.JobStatusR\006status\"\026\n\024"
-  "SetJobStatusResponse*\224\002\n\tJobStatus\022\032\n\026JO"
-  "B_STATUS_UNSPECIFIED\020\000\022\026\n\022JOB_STATUS_PEN"
-  "DING\020\001\022\035\n\031JOB_STATUS_META_SCHEDULED\020\002\022\030\n"
-  "\024JOB_STATUS_SCHEDULED\020\003\022\026\n\022JOB_STATUS_RU"
-  "NNING\020\004\022\031\n\025JOB_STATUS_CANCELLING\020\005\022\030\n\024JO"
-  "B_STATUS_CANCELLED\020\006\022\027\n\023JOB_STATUS_FINIS"
-  "HED\020\007\022\025\n\021JOB_STATUS_FAILED\020\010\022\035\n\031JOB_STAT"
-  "US_OUT_OF_CREDITS\020\t2o\n\006JobAPI\022e\n\014SetJobS"
-  "tatus\022(.supervisor.v1alpha1.SetJobStatus"
-  "Request\032).supervisor.v1alpha1.SetJobStat"
-  "usResponse\"\000B\372\001\n\027com.supervisor.v1alpha1"
-  "B\010JobProtoP\001Zegithub.com/deepsquare-io/t"
-  "he-grid/supervisorapis/protos/gen/go/sup"
-  "ervisor/v1alpha1;supervisorv1alpha1\370\001\000\242\002"
-  "\003SXX\252\002\023Supervisor.V1alpha1\312\002\023Supervisor\\"
-  "V1alpha1\342\002\037Supervisor\\V1alpha1\\GPBMetada"
-  "ta\352\002\024Supervisor::V1alpha1b\006proto3"
-  ;
-static ::_pbi::once_flag descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_once;
+const char descriptor_table_protodef_supervisor_2fv1alpha1_2fjob_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
+    "\n\035supervisor/v1alpha1/job.proto\022\023supervi"
+    "sor.v1alpha1\"\215\001\n\023SetJobStatusRequest\022\022\n\004"
+    "name\030\001 \001(\tR\004name\022\016\n\002id\030\002 \001(\004R\002id\022\032\n\010dura"
+    "tion\030\003 \001(\004R\010duration\0226\n\006status\030\004 \001(\0162\036.s"
+    "upervisor.v1alpha1.JobStatusR\006status\"\026\n\024"
+    "SetJobStatusResponse*\255\002\n\tJobStatus\022\032\n\026JO"
+    "B_STATUS_UNSPECIFIED\020\000\022\026\n\022JOB_STATUS_PEN"
+    "DING\020\001\022\035\n\031JOB_STATUS_META_SCHEDULED\020\002\022\030\n"
+    "\024JOB_STATUS_SCHEDULED\020\003\022\026\n\022JOB_STATUS_RU"
+    "NNING\020\004\022\031\n\025JOB_STATUS_CANCELLING\020\005\022\030\n\024JO"
+    "B_STATUS_CANCELLED\020\006\022\027\n\023JOB_STATUS_FINIS"
+    "HED\020\007\022\025\n\021JOB_STATUS_FAILED\020\010\022\035\n\031JOB_STAT"
+    "US_OUT_OF_CREDITS\020\t\022\027\n\023JOB_STATUS_PANICK"
+    "ED\020\n2o\n\006JobAPI\022e\n\014SetJobStatus\022(.supervi"
+    "sor.v1alpha1.SetJobStatusRequest\032).super"
+    "visor.v1alpha1.SetJobStatusResponse\"\000B\372\001"
+    "\n\027com.supervisor.v1alpha1B\010JobProtoP\001Zeg"
+    "ithub.com/deepsquare-io/the-grid/supervi"
+    "sorapis/protos/gen/go/supervisor/v1alpha"
+    "1;supervisorv1alpha1\370\001\000\242\002\003SXX\252\002\023Supervis"
+    "or.V1alpha1\312\002\023Supervisor\\V1alpha1\342\002\037Supe"
+    "rvisor\\V1alpha1\\GPBMetadata\352\002\024Supervisor"
+    "::V1alpha1b\006proto3"
+};
+static ::absl::once_flag descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto = {
-    false, false, 873, descriptor_table_protodef_supervisor_2fv1alpha1_2fjob_2eproto,
+    false,
+    false,
+    898,
+    descriptor_table_protodef_supervisor_2fv1alpha1_2fjob_2eproto,
     "supervisor/v1alpha1/job.proto",
-    &descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_once, nullptr, 0, 2,
-    schemas, file_default_instances, TableStruct_supervisor_2fv1alpha1_2fjob_2eproto::offsets,
-    file_level_metadata_supervisor_2fv1alpha1_2fjob_2eproto, file_level_enum_descriptors_supervisor_2fv1alpha1_2fjob_2eproto,
+    &descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_once,
+    nullptr,
+    0,
+    2,
+    schemas,
+    file_default_instances,
+    TableStruct_supervisor_2fv1alpha1_2fjob_2eproto::offsets,
+    file_level_metadata_supervisor_2fv1alpha1_2fjob_2eproto,
+    file_level_enum_descriptors_supervisor_2fv1alpha1_2fjob_2eproto,
     file_level_service_descriptors_supervisor_2fv1alpha1_2fjob_2eproto,
 };
+
+// This function exists to be marked as weak.
+// It can significantly speed up compilation by breaking up LLVM's SCC
+// in the .pb.cc translation units. Large translation units see a
+// reduction of more than 35% of walltime for optimized builds. Without
+// the weak attribute all the messages in the file, including all the
+// vtables and everything they use become part of the same SCC through
+// a cycle like:
+// GetMetadata -> descriptor table -> default instances ->
+//   vtables -> GetMetadata
+// By adding a weak function here we break the connection from the
+// individual vtables back into the descriptor table.
 PROTOBUF_ATTRIBUTE_WEAK const ::_pbi::DescriptorTable* descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_getter() {
   return &descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto;
 }
-
 // Force running AddDescriptors() at dynamic initialization time.
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY2 static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_supervisor_2fv1alpha1_2fjob_2eproto(&descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto);
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY2
+static ::_pbi::AddDescriptorsRunner dynamic_init_dummy_supervisor_2fv1alpha1_2fjob_2eproto(&descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto);
 namespace supervisor {
 namespace v1alpha1 {
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* JobStatus_descriptor() {
@@ -140,65 +176,68 @@ bool JobStatus_IsValid(int value) {
     case 7:
     case 8:
     case 9:
+    case 10:
       return true;
     default:
       return false;
   }
 }
-
-
 // ===================================================================
 
 class SetJobStatusRequest::_Internal {
  public:
 };
 
-SetJobStatusRequest::SetJobStatusRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
-  SharedCtor(arena, is_message_owned);
+SetJobStatusRequest::SetJobStatusRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
+  SharedCtor(arena);
   // @@protoc_insertion_point(arena_constructor:supervisor.v1alpha1.SetJobStatusRequest)
 }
 SetJobStatusRequest::SetJobStatusRequest(const SetJobStatusRequest& from)
   : ::PROTOBUF_NAMESPACE_ID::Message() {
   SetJobStatusRequest* const _this = this; (void)_this;
   new (&_impl_) Impl_{
-      decltype(_impl_.name_){}
-    , decltype(_impl_.id_){}
-    , decltype(_impl_.duration_){}
-    , decltype(_impl_.status_){}
+      decltype(_impl_.name_) {}
+
+    , decltype(_impl_.id_) {}
+
+    , decltype(_impl_.duration_) {}
+
+    , decltype(_impl_.status_) {}
+
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   _impl_.name_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.name_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.name_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
   if (!from._internal_name().empty()) {
-    _this->_impl_.name_.Set(from._internal_name(), 
-      _this->GetArenaForAllocation());
+    _this->_impl_.name_.Set(from._internal_name(), _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.id_, &from._impl_.id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.status_) -
+    static_cast<::size_t>(reinterpret_cast<char*>(&_impl_.status_) -
     reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.status_));
   // @@protoc_insertion_point(copy_constructor:supervisor.v1alpha1.SetJobStatusRequest)
 }
 
-inline void SetJobStatusRequest::SharedCtor(
-    ::_pb::Arena* arena, bool is_message_owned) {
+inline void SetJobStatusRequest::SharedCtor(::_pb::Arena* arena) {
   (void)arena;
-  (void)is_message_owned;
   new (&_impl_) Impl_{
-      decltype(_impl_.name_){}
-    , decltype(_impl_.id_){uint64_t{0u}}
-    , decltype(_impl_.duration_){uint64_t{0u}}
-    , decltype(_impl_.status_){0}
+      decltype(_impl_.name_) {}
+
+    , decltype(_impl_.id_) { ::uint64_t{0u} }
+
+    , decltype(_impl_.duration_) { ::uint64_t{0u} }
+
+    , decltype(_impl_.status_) { 0 }
+
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.name_.InitDefault();
   #ifdef PROTOBUF_FORCE_COPY_DEFAULT_STRING
-    _impl_.name_.Set("", GetArenaForAllocation());
-  #endif // PROTOBUF_FORCE_COPY_DEFAULT_STRING
+        _impl_.name_.Set("", GetArenaForAllocation());
+  #endif  // PROTOBUF_FORCE_COPY_DEFAULT_STRING
 }
 
 SetJobStatusRequest::~SetJobStatusRequest() {
@@ -211,7 +250,7 @@ SetJobStatusRequest::~SetJobStatusRequest() {
 }
 
 inline void SetJobStatusRequest::SharedDtor() {
-  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  ABSL_DCHECK(GetArenaForAllocation() == nullptr);
   _impl_.name_.Destroy();
 }
 
@@ -221,12 +260,12 @@ void SetJobStatusRequest::SetCachedSize(int size) const {
 
 void SetJobStatusRequest::Clear() {
 // @@protoc_insertion_point(message_clear_start:supervisor.v1alpha1.SetJobStatusRequest)
-  uint32_t cached_has_bits = 0;
+  ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   _impl_.name_.ClearToEmpty();
-  ::memset(&_impl_.id_, 0, static_cast<size_t>(
+  ::memset(&_impl_.id_, 0, static_cast<::size_t>(
       reinterpret_cast<char*>(&_impl_.status_) -
       reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.status_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
@@ -235,43 +274,47 @@ void SetJobStatusRequest::Clear() {
 const char* SetJobStatusRequest::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   while (!ctx->Done(&ptr)) {
-    uint32_t tag;
+    ::uint32_t tag;
     ptr = ::_pbi::ReadTag(ptr, &tag);
     switch (tag >> 3) {
       // string name = 1 [json_name = "name"];
       case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 10)) {
           auto str = _internal_mutable_name();
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
           CHK_(::_pbi::VerifyUTF8(str, "supervisor.v1alpha1.SetJobStatusRequest.name"));
-        } else
+        } else {
           goto handle_unusual;
+        }
         continue;
       // uint64 id = 2 [json_name = "id"];
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 16)) {
           _impl_.id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else
+        } else {
           goto handle_unusual;
+        }
         continue;
       // uint64 duration = 3 [json_name = "duration"];
       case 3:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 24)) {
           _impl_.duration_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
-        } else
+        } else {
           goto handle_unusual;
+        }
         continue;
       // .supervisor.v1alpha1.JobStatus status = 4 [json_name = "status"];
       case 4:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 32)) {
-          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 32)) {
+          ::int32_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
           _internal_set_status(static_cast<::supervisor::v1alpha1::JobStatus>(val));
-        } else
+        } else {
           goto handle_unusual;
+        }
         continue;
       default:
         goto handle_unusual;
@@ -296,39 +339,39 @@ failure:
 #undef CHK_
 }
 
-uint8_t* SetJobStatusRequest::_InternalSerialize(
-    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+::uint8_t* SetJobStatusRequest::_InternalSerialize(
+    ::uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:supervisor.v1alpha1.SetJobStatusRequest)
-  uint32_t cached_has_bits = 0;
+  ::uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string name = 1 [json_name = "name"];
   if (!this->_internal_name().empty()) {
+    const std::string& _s = this->_internal_name();
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
-      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
-      "supervisor.v1alpha1.SetJobStatusRequest.name");
-    target = stream->WriteStringMaybeAliased(
-        1, this->_internal_name(), target);
+        _s.data(), static_cast<int>(_s.length()), ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE, "supervisor.v1alpha1.SetJobStatusRequest.name");
+    target = stream->WriteStringMaybeAliased(1, _s, target);
   }
 
   // uint64 id = 2 [json_name = "id"];
   if (this->_internal_id() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(2, this->_internal_id(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+        2, this->_internal_id(), target);
   }
 
   // uint64 duration = 3 [json_name = "duration"];
   if (this->_internal_duration() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(3, this->_internal_duration(), target);
+    target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+        3, this->_internal_duration(), target);
   }
 
   // .supervisor.v1alpha1.JobStatus status = 4 [json_name = "status"];
   if (this->_internal_status() != 0) {
     target = stream->EnsureSpace(target);
     target = ::_pbi::WireFormatLite::WriteEnumToArray(
-      4, this->_internal_status(), target);
+        4, this->_internal_status(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -339,35 +382,36 @@ uint8_t* SetJobStatusRequest::_InternalSerialize(
   return target;
 }
 
-size_t SetJobStatusRequest::ByteSizeLong() const {
+::size_t SetJobStatusRequest::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:supervisor.v1alpha1.SetJobStatusRequest)
-  size_t total_size = 0;
+  ::size_t total_size = 0;
 
-  uint32_t cached_has_bits = 0;
+  ::uint32_t cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   // string name = 1 [json_name = "name"];
   if (!this->_internal_name().empty()) {
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
-        this->_internal_name());
+    total_size += 1 + ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+                                    this->_internal_name());
   }
 
   // uint64 id = 2 [json_name = "id"];
   if (this->_internal_id() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_id());
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+        this->_internal_id());
   }
 
   // uint64 duration = 3 [json_name = "duration"];
   if (this->_internal_duration() != 0) {
-    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(this->_internal_duration());
+    total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+        this->_internal_duration());
   }
 
   // .supervisor.v1alpha1.JobStatus status = 4 [json_name = "status"];
   if (this->_internal_status() != 0) {
     total_size += 1 +
-      ::_pbi::WireFormatLite::EnumSize(this->_internal_status());
+                  ::_pbi::WireFormatLite::EnumSize(this->_internal_status());
   }
 
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
@@ -384,8 +428,8 @@ void SetJobStatusRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, co
   auto* const _this = static_cast<SetJobStatusRequest*>(&to_msg);
   auto& from = static_cast<const SetJobStatusRequest&>(from_msg);
   // @@protoc_insertion_point(class_specific_merge_from_start:supervisor.v1alpha1.SetJobStatusRequest)
-  GOOGLE_DCHECK_NE(&from, _this);
-  uint32_t cached_has_bits = 0;
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (!from._internal_name().empty()) {
@@ -419,10 +463,8 @@ void SetJobStatusRequest::InternalSwap(SetJobStatusRequest* other) {
   auto* lhs_arena = GetArenaForAllocation();
   auto* rhs_arena = other->GetArenaForAllocation();
   _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
-      &_impl_.name_, lhs_arena,
-      &other->_impl_.name_, rhs_arena
-  );
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.name_, lhs_arena,
+                                       &other->_impl_.name_, rhs_arena);
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
       PROTOBUF_FIELD_OFFSET(SetJobStatusRequest, _impl_.status_)
       + sizeof(SetJobStatusRequest::_impl_.status_)
@@ -436,16 +478,14 @@ void SetJobStatusRequest::InternalSwap(SetJobStatusRequest* other) {
       &descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_getter, &descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_once,
       file_level_metadata_supervisor_2fv1alpha1_2fjob_2eproto[0]);
 }
-
 // ===================================================================
 
 class SetJobStatusResponse::_Internal {
  public:
 };
 
-SetJobStatusResponse::SetJobStatusResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                         bool is_message_owned)
-  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena, is_message_owned) {
+SetJobStatusResponse::SetJobStatusResponse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+  : ::PROTOBUF_NAMESPACE_ID::internal::ZeroFieldsBase(arena) {
   // @@protoc_insertion_point(arena_constructor:supervisor.v1alpha1.SetJobStatusResponse)
 }
 SetJobStatusResponse::SetJobStatusResponse(const SetJobStatusResponse& from)
@@ -476,7 +516,6 @@ const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*SetJobStatusResponse::GetClass
       &descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_getter, &descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_once,
       file_level_metadata_supervisor_2fv1alpha1_2fjob_2eproto[1]);
 }
-
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace v1alpha1
 }  // namespace supervisor
@@ -490,6 +529,5 @@ Arena::CreateMaybeMessage< ::supervisor::v1alpha1::SetJobStatusResponse >(Arena*
   return Arena::CreateMessageInternal< ::supervisor::v1alpha1::SetJobStatusResponse >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
-
 // @@protoc_insertion_point(global_scope)
-#include <google/protobuf/port_undef.inc>
+#include "google/protobuf/port_undef.inc"

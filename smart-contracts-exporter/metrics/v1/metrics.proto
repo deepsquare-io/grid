@@ -35,17 +35,20 @@ message Metrics {
   repeated LabeledMetric total_billed_too_much = 17;
 }
 
+/**
+ * While it looks like it is missing some fields compared to the smart-contract,
+ * these fields where voluntary removed because there weren't metrics.
+ */
+
 message Job {
   bytes job_id = 1;
   uint32 status = 2;
   string customer_addr = 3;
   string provider_addr = 4;
   JobDefinition definition = 5;
-  bool valid = 6;
-  JobCost cost = 7;
-  JobTime time = 8;
-  bytes job_name = 9;
-  bool has_cancel_request = 10;
+  JobCost cost = 6;
+  JobTime time = 7;
+  bytes job_name = 8;
 }
 
 message BigInt { bytes bytes = 1; }
@@ -53,22 +56,16 @@ message BigInt { bytes bytes = 1; }
 message JobCost {
   BigInt max_cost = 1;
   BigInt final_cost = 2;
-  BigInt pending_top_up = 3;
-  bool delegate_spending_authority = 4;
 }
 
 message JobDefinition {
-  uint64 gpu_per_task = 1;
+  uint64 gpus_per_task = 1;
   uint64 mem_per_cpu = 2;
-  uint64 cpu_per_task = 3;
+  uint64 cpus_per_task = 3;
   uint64 ntasks = 4;
-  string batch_location_hash = 5;
-  uint32 storage_type = 6;
 }
 
 message JobTime {
   BigInt start = 1;
   BigInt end = 2;
-  BigInt cancel_request_timestamp = 3;
-  BigInt block_number_state_change = 4;
 }

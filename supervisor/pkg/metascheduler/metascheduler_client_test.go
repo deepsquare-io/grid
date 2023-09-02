@@ -40,6 +40,7 @@ var (
 	fromAddress              common.Address
 	metaschedulerAddress     = common.HexToAddress("0x1")
 	providerJobQueuesAddress = common.HexToAddress("0x2")
+	jobRepositoryAddress     = common.HexToAddress("0x3")
 )
 
 func (suite *ClientTestSuite) mockProviderJobQueue() {
@@ -48,6 +49,22 @@ func (suite *ClientTestSuite) mockProviderJobQueue() {
 	suite.Require().NoError(err)
 	output, err := metascheduler.MetaschedulerABI.Methods["providerJobQueues"].Outputs.Pack(
 		providerJobQueuesAddress,
+	)
+	suite.Require().NoError(err)
+
+	// Mock
+	suite.contractBackend.EXPECT().CallContract(mock.Anything, ethereum.CallMsg{
+		To:   &metaschedulerAddress,
+		Data: input,
+	}, mock.Anything).Return(output, nil)
+}
+
+func (suite *ClientTestSuite) mockIJobRepository() {
+	// Pack input
+	input, err := metascheduler.MetaschedulerABI.Pack("jobs")
+	suite.Require().NoError(err)
+	output, err := metascheduler.MetaschedulerABI.Methods["jobs"].Outputs.Pack(
+		jobRepositoryAddress,
 	)
 	suite.Require().NoError(err)
 
@@ -78,7 +95,7 @@ func (suite *ClientTestSuite) mockProviderJobQueuesContractCall(
 	}, mock.Anything).Return(output, nil)
 }
 
-func (suite *ClientTestSuite) mockContractCall(
+func (suite *ClientTestSuite) mockMetaschedulerContractCall(
 	name string,
 	inputs []interface{},
 	outputs []interface{},
@@ -92,6 +109,26 @@ func (suite *ClientTestSuite) mockContractCall(
 	// Mock
 	suite.contractBackend.EXPECT().CallContract(mock.Anything, ethereum.CallMsg{
 		To:   &metaschedulerAddress,
+		Data: input,
+	}, mock.Anything).Return(output, nil)
+}
+
+func (suite *ClientTestSuite) mockJobRepositoryContractCall(
+	name string,
+	inputs []interface{},
+	outputs []interface{},
+) {
+	// Pack input
+	abi, err := metaschedulerabi.IJobRepositoryMetaData.GetAbi()
+	suite.Require().NoError(err)
+	input, err := abi.Pack(name, inputs...)
+	suite.Require().NoError(err)
+	output, err := abi.Methods[name].Outputs.Pack(outputs...)
+	suite.Require().NoError(err)
+
+	// Mock
+	suite.contractBackend.EXPECT().CallContract(mock.Anything, ethereum.CallMsg{
+		To:   &jobRepositoryAddress,
 		Data: input,
 	}, mock.Anything).Return(output, nil)
 }
@@ -147,6 +184,8 @@ func (suite *ClientTestSuite) BeforeTest(suiteName, testName string) {
 
 	// Assert calling providerJobQueues
 	suite.mockProviderJobQueue()
+	// Assert calling jobs
+	suite.mockIJobRepository()
 
 	suite.deployBackend = mockbind.NewDeployBackend(suite.T())
 	suite.impl = metascheduler.NewClient(
@@ -217,6 +256,7 @@ func (suite *ClientTestSuite) TestSetJobStatus() {
 		jobID,
 		uint8(metascheduler.JobStatusFailed),
 		jobDuration,
+		"",
 	)
 	// Must wait
 	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
@@ -329,27 +369,34 @@ func (suite *ClientTestSuite) TestClaimTopUp() {
 func (suite *ClientTestSuite) TestGetJobStatus() {
 	// Arrange
 	fixtureStatus := metascheduler.JobStatusRunning
-	suite.mockContractCall("jobs", []interface{}{jobID}, []interface{}{
-		jobID,
-		uint8(fixtureStatus),
-		common.HexToAddress("0xdeadface"),
-		common.HexToAddress("0xdeadface"),
-		metaschedulerabi.JobDefinition{},
-		false,
-		metaschedulerabi.JobCost{
-			MaxCost:      new(big.Int),
-			FinalCost:    new(big.Int),
-			PendingTopUp: new(big.Int),
+	suite.mockJobRepositoryContractCall(
+		"get",
+		[]interface{}{jobID},
+		[]interface{}{
+			metaschedulerabi.Job{
+				JobId:        jobID,
+				Status:       uint8(fixtureStatus),
+				CustomerAddr: common.HexToAddress("0xdeadface"),
+				ProviderAddr: common.HexToAddress("0xdeadface"),
+				Definition:   metaschedulerabi.JobDefinition{},
+				Cost: metaschedulerabi.JobCost{
+					MaxCost:      new(big.Int),
+					FinalCost:    new(big.Int),
+					PendingTopUp: new(big.Int),
+				},
+				Time: metaschedulerabi.JobTime{
+					Start:                  new(big.Int),
+					End:                    new(big.Int),
+					CancelRequestTimestamp: new(big.Int),
+					BlockNumberStateChange: new(big.Int),
+					PanicTimestamp:         new(big.Int),
+				},
+				JobName:          [32]byte{1},
+				HasCancelRequest: false,
+				LastError:        "",
+			},
 		},
-		metaschedulerabi.JobTime{
-			Start:                  new(big.Int),
-			End:                    new(big.Int),
-			CancelRequestTimestamp: new(big.Int),
-			BlockNumberStateChange: new(big.Int),
-		},
-		[32]byte{1},
-		false,
-	})
+	)
 	// Act
 	status, err := suite.impl.GetJobStatus(context.Background(), jobID)
 	// Assert

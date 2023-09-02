@@ -29,7 +29,7 @@
 //		(default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_WS]
 //	--metascheduler.smart-contract value
 //		Metascheduler smart-contract address.
-//		(default: "0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0") [$METASCHEDULER_SMART_CONTRACT]
+//		(default: "0x3707aB457CF457275b7ec32e203c54df80C299d5") [$METASCHEDULER_SMART_CONTRACT]
 //	--sbatch.endpoint value
 //		SBatch Service GraphQL endpoint.
 //		(default: "https://sbatch.deepsquare.run/graphql") [$SBATCH_ENDPOINT]

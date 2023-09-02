@@ -221,7 +221,7 @@ func (s *Store) IsComplete() bool {
 }
 
 func (s *Store) WaitForCompletion(ctx context.Context) chan struct{} {
-	done := make(chan struct{})
+	done := make(chan struct{}, 1)
 
 	go func() {
 		for {

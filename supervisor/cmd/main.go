@@ -176,7 +176,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
-		Value:       "0x",
+		Value:       "0x3707aB457CF457275b7ec32e203c54df80C299d5",
 		Usage:       "Metascheduler smart-contract address.",
 		Destination: &metaschedulerSmartContract,
 		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},

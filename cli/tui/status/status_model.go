@@ -24,6 +24,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/tui/channel"
@@ -66,9 +67,9 @@ func emitSubmitJobMsg() tea.Msg {
 	return SubmitJobMsg{}
 }
 
-func jobToRow(job types.Job) table.Row {
+func jobToRow(job metaschedulerabi.Job) table.Row {
 	return table.Row{
-		new(big.Int).SetBytes(job.JobID[:]).String(),
+		new(big.Int).SetBytes(job.JobId[:]).String(),
 		string(job.JobName[:]),
 		metascheduler.JobStatus(job.Status).String(),
 		(time.UnixMilli(job.Time.Start.Int64() * 1000)).Format(time.UnixDate),
@@ -105,7 +106,7 @@ func initializeRows(
 	for i := 0; i < style.StandardHeight; i++ {
 		job := it.Current()
 		row := jobToRow(*job)
-		idToRow[job.JobID] = row
+		idToRow[job.JobId] = row
 		rows = append(rows, row)
 		it, ok, err = it.Next(ctx)
 		if err != nil {
@@ -133,7 +134,7 @@ func (m *model) addMoreRows(ctx context.Context) {
 	for i := 0; i < style.StandardHeight; i++ {
 		job := m.it.Current()
 		row := jobToRow(*job)
-		m.idToRow[job.JobID] = row
+		m.idToRow[job.JobId] = row
 		rows = append(rows, row)
 		m.it, ok, err = m.it.Next(ctx)
 		if err != nil {
@@ -174,12 +175,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case transitionMsg:
 		rows := m.table.Rows()
-		if row, ok := m.idToRow[msg.JobID]; ok {
+		if row, ok := m.idToRow[msg.JobId]; ok {
 			row[2] = metascheduler.JobStatus(msg.Status).String()
 		} else {
-			job := types.Job(msg)
+			job := metaschedulerabi.Job(msg)
 			row = jobToRow(job)
-			m.idToRow[msg.JobID] = row
+			m.idToRow[msg.JobId] = row
 			rows = append(rows, table.Row{})
 			copy(rows[1:], rows)
 			rows[0] = row

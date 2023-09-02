@@ -18,7 +18,8 @@ import (
 )
 
 var (
-	MetaschedulerABI            *abi.ABI
+	MetaschedulerABI *abi.ABI
+
 	claimNextTopUpJobEvent      abi.Event
 	claimNextCancellingJobEvent abi.Event
 	claimJobEvent               abi.Event
@@ -59,6 +60,7 @@ type Client struct {
 	ws                   bind.ContractBackend
 	contractWS           *metaschedulerabi.MetaScheduler
 	jobQueues            *metaschedulerabi.IProviderJobQueues
+	jobs                 *metaschedulerabi.IJobRepository
 	pk                   *ecdsa.PrivateKey
 	fromAddress          common.Address
 }
@@ -81,16 +83,28 @@ func NewClient(
 	if err != nil {
 		logger.I.Fatal("failed to create metascheduler with rpc", zap.Error(err))
 	}
-	address, err := msRPC.ProviderJobQueues(&bind.CallOpts{})
+	jobQueuesAddress, err := msRPC.ProviderJobQueues(&bind.CallOpts{})
 	if err != nil {
 		logger.I.Panic("failed to fetch provider job queues smart-contract address", zap.Error(err))
 	}
-	jobQueues, err := metaschedulerabi.NewIProviderJobQueues(address, rpc)
+	jobQueues, err := metaschedulerabi.NewIProviderJobQueues(jobQueuesAddress, rpc)
 	if err != nil {
 		logger.I.Panic(
 			"failed to instanciate provider job queues smart-contract address",
 			zap.Error(err),
-			zap.String("address", address.Hex()),
+			zap.String("address", jobQueuesAddress.Hex()),
+		)
+	}
+	jobsAddress, err := msRPC.Jobs(&bind.CallOpts{})
+	if err != nil {
+		logger.I.Panic("failed to fetch provider job queues smart-contract address", zap.Error(err))
+	}
+	jobs, err := metaschedulerabi.NewIJobRepository(jobsAddress, rpc)
+	if err != nil {
+		logger.I.Panic(
+			"failed to instanciate job repository smart-contract address",
+			zap.Error(err),
+			zap.String("address", jobsAddress.Hex()),
 		)
 	}
 	return &Client{
@@ -104,6 +118,7 @@ func NewClient(
 		jobQueues:            jobQueues,
 		pk:                   pk,
 		fromAddress:          fromAddress,
+		jobs:                 jobs,
 	}
 }
 
@@ -229,6 +244,7 @@ func (c *Client) SetJobStatus(
 		jobID,
 		uint8(status),
 		jobDurationMinute,
+		"",
 	)
 	if err != nil {
 		return WrapError(err)
@@ -362,13 +378,13 @@ func (c *Client) WatchEvents(
 
 // GetJobStatus fetches the job status.
 func (c *Client) GetJobStatus(ctx context.Context, jobID [32]byte) (JobStatus, error) {
-	status, err := c.contractRPC.Jobs(&bind.CallOpts{
+	job, err := c.jobs.Get(&bind.CallOpts{
 		Context: ctx,
 	}, jobID)
 	if err != nil {
 		return 0, WrapError(err)
 	}
-	return JobStatus(status.Status), nil
+	return JobStatus(job.Status), nil
 }
 
 // ClaimCancelling a cancelling call.
@@ -436,7 +452,7 @@ func (c *Client) ClaimTopUp(ctx context.Context) error {
 }
 
 func (c *Client) GetJob(ctx context.Context, jobID [32]byte) (*Job, error) {
-	job, err := c.contractRPC.Jobs(&bind.CallOpts{Context: ctx}, jobID)
+	job, err := c.jobs.Get(&bind.CallOpts{Context: ctx}, jobID)
 	if err != nil {
 		return &Job{}, WrapError(err)
 	}

@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"math/big"
 	"strings"
@@ -31,6 +32,7 @@ const (
 	JobStatusFinished      JobStatus = 5
 	JobStatusFailed        JobStatus = 6
 	JobStatusOutOfCredits  JobStatus = 7
+	JobStatusPanicked      JobStatus = 8
 	JobStatusUnknown       JobStatus = 255
 )
 
@@ -74,6 +76,7 @@ type Watcher struct {
 	clientRPC            *ethclient.Client
 	clientWS             *ethclient.Client
 	contractRPC          *metascheduler.MetaScheduler
+	jobs                 *metascheduler.IJobRepository
 	contractWS           *metascheduler.MetaScheduler
 	metaschedulerAddress common.Address
 }
@@ -85,11 +88,20 @@ func New(
 	contractWS *metascheduler.MetaScheduler,
 	metaschedulerAddress common.Address,
 ) *Watcher {
+	jobsAddress, err := contractRPC.Jobs(&bind.CallOpts{})
+	if err != nil {
+		panic(fmt.Errorf("couldn't fetch JobRepository address: %w", err))
+	}
+	jobs, err := metascheduler.NewIJobRepository(jobsAddress, clientRPC)
+	if err != nil {
+		panic(fmt.Errorf("couldn't initialize JobRepository: %w", err))
+	}
 	return &Watcher{
 		clientRPC:            clientRPC,
 		clientWS:             clientWS,
 		contractRPC:          contractRPC,
 		contractWS:           contractWS,
+		jobs:                 jobs,
 		metaschedulerAddress: metaschedulerAddress,
 	}
 }
@@ -237,7 +249,7 @@ func (w *Watcher) handleJobTransition(
 ) error {
 	from := JobStatus(event.From)
 	to := JobStatus(event.To)
-	job, err := w.contractRPC.Jobs(&bind.CallOpts{
+	job, err := w.jobs.Get(&bind.CallOpts{
 		Context: ctx,
 	}, event.JobId)
 	if err != nil {
@@ -309,12 +321,12 @@ func (w *Watcher) handleJobTransition(
 		f, _ = new(big.Float).SetInt(bduration).Float64()
 		metricsv1.TotalJobDuration(job.CustomerAddr.Hex()).Add(f)
 
-		cpus := new(big.Int).SetUint64(job.Definition.CpuPerTask * job.Definition.Ntasks)
+		cpus := new(big.Int).SetUint64(job.Definition.CpusPerTask * job.Definition.Ntasks)
 		cpuTime := new(big.Int).Mul(bduration, cpus)
 		f, _ = new(big.Float).SetInt(cpuTime).Float64()
 		metricsv1.TotalCPUTime(job.CustomerAddr.Hex()).Add(f)
 
-		gpus := new(big.Int).SetUint64(job.Definition.GpuPerTask * job.Definition.Ntasks)
+		gpus := new(big.Int).SetUint64(job.Definition.GpusPerTask * job.Definition.Ntasks)
 		gpuTime := new(big.Int).Mul(bduration, gpus)
 		f, _ = new(big.Float).SetInt(gpuTime).Float64()
 		metricsv1.TotalGPUTime(job.CustomerAddr.Hex()).Add(f)
@@ -329,7 +341,7 @@ func (w *Watcher) handleNewJobRequest(
 ) error {
 	metricsv1.TotalJobsPending(event.CustomerAddr.Hex()).Inc()
 	metricsv1.TotalNumberOfJobs(event.CustomerAddr.Hex()).Inc()
-	job, err := w.contractRPC.Jobs(&bind.CallOpts{
+	job, err := w.jobs.Get(&bind.CallOpts{
 		Context: ctx,
 	}, event.JobId)
 	if err != nil {

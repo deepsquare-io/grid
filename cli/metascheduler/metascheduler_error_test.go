@@ -84,23 +84,12 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			},
 		},
 		{
-			name: "ParseInsufficientFunds",
-			arrange: []interface{}{
-				big.NewInt(rand.Int63()),
-				big.NewInt(rand.Int63()),
-			},
+			name: "ParseInvalidJob",
 			act: func(r []interface{}) error {
-				return suite.contract.ThrowInsufficientFunds(
-					&bind.CallOpts{},
-					r[0].(*big.Int),
-					r[1].(*big.Int),
-				)
+				return suite.contract.ThrowInvalidJob(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &metascheduler.InsufficientFunds{
-					r[0].(*big.Int),
-					r[1].(*big.Int),
-				}
+				return &metascheduler.InvalidJob{}
 			},
 		},
 		{
@@ -113,21 +102,30 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			},
 		},
 		{
-			name: "ParseInvalidJob",
+			name: "ParseNoProvider",
 			act: func(r []interface{}) error {
-				return suite.contract.ThrowInvalidJob(&bind.CallOpts{})
+				return suite.contract.ThrowNoProvider(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &metascheduler.InvalidJob{}
+				return &metascheduler.NoProvider{}
 			},
 		},
 		{
-			name: "ParseInvalidJobDefinition",
+			name: "ParseWaitingApprovalOnly",
 			act: func(r []interface{}) error {
-				return suite.contract.ThrowInvalidJobDefinition(&bind.CallOpts{})
+				return suite.contract.ThrowWaitingApprovalOnly(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &metascheduler.InvalidJobDefinition{}
+				return &metascheduler.WaitingApprovalOnly{}
+			},
+		},
+		{
+			name: "ParseBanned",
+			act: func(r []interface{}) error {
+				return suite.contract.ThrowBanned(&bind.CallOpts{})
+			},
+			expected: func(r []interface{}) error {
+				return &metascheduler.Banned{}
 			},
 		},
 		{
@@ -148,6 +146,64 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			},
 		},
 		{
+			name: "ParseInvalidTransition",
+			arrange: []interface{}{
+				metascheduler.JobStatus(1),
+				metascheduler.JobStatus(2),
+			},
+			act: func(r []interface{}) error {
+				return suite.contract.ThrowInvalidTransition(
+					&bind.CallOpts{},
+					uint8(r[0].(metascheduler.JobStatus)),
+					uint8(r[1].(metascheduler.JobStatus)),
+				)
+			},
+			expected: func(r []interface{}) error {
+				return &metascheduler.InvalidTransition{
+					r[0].(metascheduler.JobStatus),
+					r[1].(metascheduler.JobStatus),
+				}
+			},
+		},
+		{
+			name: "ParseSameStatusError",
+			act: func(r []interface{}) error {
+				return suite.contract.ThrowSameStatusError(&bind.CallOpts{})
+			},
+			expected: func(r []interface{}) error {
+				return &metascheduler.SameStatusError{}
+			},
+		},
+		{
+			name: "ParseInsufficientFunds",
+			arrange: []interface{}{
+				big.NewInt(rand.Int63()),
+				big.NewInt(rand.Int63()),
+			},
+			act: func(r []interface{}) error {
+				return suite.contract.ThrowInsufficientFunds(
+					&bind.CallOpts{},
+					r[0].(*big.Int),
+					r[1].(*big.Int),
+				)
+			},
+			expected: func(r []interface{}) error {
+				return &metascheduler.InsufficientFunds{
+					r[0].(*big.Int),
+					r[1].(*big.Int),
+				}
+			},
+		},
+		{
+			name: "ParseInvalidJobDefinition",
+			act: func(r []interface{}) error {
+				return suite.contract.ThrowInvalidJobDefinition(&bind.CallOpts{})
+			},
+			expected: func(r []interface{}) error {
+				return &metascheduler.InvalidJobDefinition{}
+			},
+		},
+		{
 			name: "ParseRunningScheduledStatusOnly",
 			arrange: []interface{}{
 				metascheduler.JobStatus(1),
@@ -165,7 +221,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			},
 		},
 		{
-			name: "ParseRunningColdStatusOnly",
+			name: "ParseMetaScheduledScheduledStatusOnly",
 			arrange: []interface{}{
 				metascheduler.JobStatus(1),
 			},
@@ -195,57 +251,6 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			expected: func(r []interface{}) error {
 				return &metascheduler.RunningColdStatusOnly{
 					r[0].(metascheduler.JobStatus),
-				}
-			},
-		},
-		{
-			name: "ParseInvalidNNodes",
-			arrange: []interface{}{
-				big.NewInt(1),
-			},
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowInvalidNNodes(
-					&bind.CallOpts{},
-					r[0].(*big.Int),
-				)
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.InvalidNNodes{
-					r[0].(*big.Int),
-				}
-			},
-		},
-		{
-			name: "ParseInvalidNCpu",
-			arrange: []interface{}{
-				big.NewInt(1),
-			},
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowInvalidNCpu(
-					&bind.CallOpts{},
-					r[0].(*big.Int),
-				)
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.InvalidNCpu{
-					r[0].(*big.Int),
-				}
-			},
-		},
-		{
-			name: "ParseInvalidNMem",
-			arrange: []interface{}{
-				big.NewInt(1),
-			},
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowInvalidNMem(
-					&bind.CallOpts{},
-					r[0].(*big.Int),
-				)
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.InvalidNMem{
-					r[0].(*big.Int),
 				}
 			},
 		},
@@ -290,46 +295,6 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			},
 		},
 		{
-			name: "ParseJobProviderThisOnly",
-			arrange: []interface{}{
-				common.HexToAddress("0x1"),
-				common.HexToAddress("0x2"),
-			},
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowJobProviderThisOnly(
-					&bind.CallOpts{},
-					r[0].(common.Address),
-					r[1].(common.Address),
-				)
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.JobProviderThisOnly{
-					r[0].(common.Address),
-					r[1].(common.Address),
-				}
-			},
-		},
-		{
-			name: "ParseOwnerOnly",
-			arrange: []interface{}{
-				common.HexToAddress("0x1"),
-				common.HexToAddress("0x2"),
-			},
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowOwnerOnly(
-					&bind.CallOpts{},
-					r[0].(common.Address),
-					r[1].(common.Address),
-				)
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.OwnerOnly{
-					r[0].(common.Address),
-					r[1].(common.Address),
-				}
-			},
-		},
-		{
 			name:    "ParseCustomerMetaSchedulerProviderOnly",
 			arrange: []interface{}{},
 			act: func(r []interface{}) error {
@@ -342,60 +307,12 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			},
 		},
 		{
-			name:    "ParseMetashedulerProviderOnly",
-			arrange: []interface{}{},
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowMetashedulerProviderOnly(
-					&bind.CallOpts{},
-				)
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.MetashedulerProviderOnly{}
-			},
-		},
-		{
-			name: "ParseProviderAddrIsZero",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowProviderAddrIsZero(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.ProviderAddrIsZero{}
-			},
-		},
-		{
 			name: "ParseProviderNotJoined",
 			act: func(r []interface{}) error {
 				return suite.contract.ThrowProviderNotJoined(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
 				return &metascheduler.ProviderNotJoined{}
-			},
-		},
-		{
-			name: "ParseNoProvider",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowNoProvider(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.NoProvider{}
-			},
-		},
-		{
-			name: "ParseWaitingApprovalOnly",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowWaitingApprovalOnly(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.WaitingApprovalOnly{}
-			},
-		},
-		{
-			name: "ParseBanned",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowBanned(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.Banned{}
 			},
 		},
 		{
@@ -419,15 +336,6 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			},
 		},
 		{
-			name: "ParseCreditAddrIsZero",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowCreditAddrIsZero(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.CreditAddrIsZero{}
-			},
-		},
-		{
 			name: "ParseNoSpendingAuthority",
 			act: func(r []interface{}) error {
 				return suite.contract.ThrowNoSpendingAuthority(&bind.CallOpts{})
@@ -437,66 +345,12 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			},
 		},
 		{
-			name: "ParseDivisionByZeroError",
+			name: "ParseNewJobRequestDisabled",
 			act: func(r []interface{}) error {
-				return suite.contract.ThrowDivisionByZeroError(&bind.CallOpts{})
+				return suite.contract.ThrowNewJobRequestDisabled(&bind.CallOpts{})
 			},
 			expected: func(r []interface{}) error {
-				return &metascheduler.DivisionByZeroError{}
-			},
-		},
-		{
-			name: "ParseUninitialized",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowUninitialized(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.Uninitialized{}
-			},
-		},
-		{
-			name: "ParseSameStatusError",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowSameStatusError(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.SameStatusError{}
-			},
-		},
-		{
-			name: "ParseInvalidTransitionFromPending",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowInvalidTransitionFromPending(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.InvalidTransitionFromPending{}
-			},
-		},
-		{
-			name: "ParseInvalidTransitionFromMetascheduled",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowInvalidTransitionFromMetascheduled(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.InvalidTransitionFromMetascheduled{}
-			},
-		},
-		{
-			name: "ParseInvalidTransitionFromScheduled",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowInvalidTransitionFromScheduled(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.InvalidTransitionFromScheduled{}
-			},
-		},
-		{
-			name: "ParseInvalidTransitionFromRunning",
-			act: func(r []interface{}) error {
-				return suite.contract.ThrowInvalidTransitionFromRunning(&bind.CallOpts{})
-			},
-			expected: func(r []interface{}) error {
-				return &metascheduler.InvalidTransitionFromRunning{}
+				return &metascheduler.NewJobRequestDisabled{}
 			},
 		},
 	}

@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	DefaultMetaSchedulerAddress = common.HexToAddress("0xc9AcB97F1132f0FB5dC9c5733B7b04F9079540f0")
+	DefaultMetaSchedulerAddress = common.HexToAddress("0x3707aB457CF457275b7ec32e203c54df80C299d5")
 )
 
 // Client implements all the services required to make unary calls to DeepSquare APIs.
@@ -118,7 +118,7 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 		EthereumBackend:      ethClientRPC,
 		UserPrivateKey:       c.UserPrivateKey,
 	}
-	fetcher, err := metascheduler.NewJobFetcher(metaschedulerRPC)
+	fetcher, err := metascheduler.NewJobFetcher(ctx, metaschedulerRPC)
 	if err != nil {
 		return nil, err
 	}

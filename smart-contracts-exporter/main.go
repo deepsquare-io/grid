@@ -50,9 +50,10 @@ var app = &cli.App{
 			EnvVars:     []string{"LISTEN_ADDRESS"},
 		},
 		&cli.StringFlag{
-			Name:     "metascheduler.smart-contract",
-			Usage:    "Metascheduler smart-contract address.",
-			Required: true,
+			Name:       "metascheduler.smart-contract",
+			Usage:      "Metascheduler smart-contract address.",
+			Value:      "0x3707aB457CF457275b7ec32e203c54df80C299d5",
+			HasBeenSet: true,
 			Action: func(ctx *cli.Context, s string) error {
 				metaschedulerAddress = common.HexToAddress(s)
 				return nil

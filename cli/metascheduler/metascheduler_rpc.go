@@ -16,6 +16,7 @@ import (
 type rpcClient struct {
 	*metaschedulerabi.MetaScheduler
 	*metaschedulerabi.IERC20
+	Jobs *metaschedulerabi.IJobRepository
 	Backend
 	sbatch sbatch.Service
 }
@@ -78,25 +79,14 @@ func (c *rpcClient) GetAllowance(ctx context.Context) (*big.Int, error) {
 	}, c.from(), c.MetaschedulerAddress)
 }
 
-func (c *rpcClient) GetJob(ctx context.Context, id [32]byte) (*types.Job, error) {
-	job, err := c.Jobs(&bind.CallOpts{
+func (c *rpcClient) GetJob(ctx context.Context, id [32]byte) (*metaschedulerabi.Job, error) {
+	job, err := c.Jobs.Get(&bind.CallOpts{
 		Context: ctx,
 	}, id)
 	if err != nil {
 		return nil, WrapError(err)
 	}
-	return &types.Job{
-		JobID:            job.JobId,
-		Status:           job.Status,
-		CustomerAddr:     job.CustomerAddr,
-		ProviderAddr:     job.ProviderAddr,
-		Definition:       job.Definition,
-		Valid:            job.Valid,
-		Cost:             job.Cost,
-		Time:             job.Time,
-		JobName:          job.JobName,
-		HasCancelRequest: job.HasCancelRequest,
-	}, err
+	return &job, nil
 }
 
 type jobIterator struct {
@@ -104,7 +94,7 @@ type jobIterator struct {
 	array  [][32]byte
 	length int
 	index  int
-	job    *types.Job
+	job    *metaschedulerabi.Job
 }
 
 func (it *jobIterator) Next(
@@ -147,12 +137,12 @@ func (it *jobIterator) Prev(
 	}, true, nil
 }
 
-func (it *jobIterator) Current() *types.Job {
+func (it *jobIterator) Current() *metaschedulerabi.Job {
 	return it.job
 }
 
 func (c *rpcClient) GetJobs(ctx context.Context) (types.JobLazyIterator, error) {
-	jobIDs, err := c.MetaScheduler.GetJobs(&bind.CallOpts{
+	jobIDs, err := c.Jobs.GetByCustomer(&bind.CallOpts{
 		Context: ctx,
 	}, c.from())
 	if err != nil {
@@ -234,9 +224,9 @@ func (c *rpcClient) SubmitJob(
 
 	definition := metaschedulerabi.JobDefinition{
 		Ntasks:            uint64(job.Resources.Tasks),
-		GpuPerTask:        uint64(job.Resources.GpusPerTask),
+		GpusPerTask:       uint64(job.Resources.GpusPerTask),
 		MemPerCpu:         uint64(job.Resources.MemPerCPU),
-		CpuPerTask:        uint64(job.Resources.CpusPerTask),
+		CpusPerTask:       uint64(job.Resources.CpusPerTask),
 		StorageType:       0,
 		BatchLocationHash: hash,
 		Uses:              uses,

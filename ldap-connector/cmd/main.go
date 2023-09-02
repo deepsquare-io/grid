@@ -21,8 +21,9 @@ var (
 	ldapBindDN       string
 	ldapBindPassword string
 
-	avaxEndpointWS          string
-	jobManagerSmartContract string
+	avaxEndpointWS             string
+	jobManagerSmartContract    string
+	metaSchedulerSmartContract string
 
 	configPath string
 )
@@ -37,10 +38,17 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "jobmanager.smart-contract",
-		Value:       "0x",
-		Usage:       "JobManager smart-contract address.",
+		Required:    false,
+		Usage:       "JobManager smart-contract address. (deprecated, if specified, will take over METASCHEDULER_SMART_CONTRACT)",
 		Destination: &jobManagerSmartContract,
 		EnvVars:     []string{"JOBMANAGER_SMART_CONTRACT"},
+	},
+	&cli.StringFlag{
+		Name:        "metascheduler.smart-contract",
+		Value:       "0x3707aB457CF457275b7ec32e203c54df80C299d5",
+		Usage:       "Metascheduler smart-contract address.",
+		Destination: &metaSchedulerSmartContract,
+		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
 	},
 	&cli.StringFlag{
 		Name:        "ldap.url",
@@ -102,7 +110,17 @@ var app = &cli.App{
 		if err != nil {
 			logger.I.Fatal("ethClientWS dial failed", zap.Error(err))
 		}
-		contract, err := metascheduler.NewMetaScheduler(common.HexToAddress(jobManagerSmartContract), ethClientWS)
+
+		var contractAddress string
+		if jobManagerSmartContract != "" {
+			contractAddress = jobManagerSmartContract
+		} else {
+			contractAddress = metaSchedulerSmartContract
+		}
+		contract, err := metascheduler.NewMetaScheduler(
+			common.HexToAddress(contractAddress),
+			ethClientWS,
+		)
 		if err != nil {
 			logger.I.Fatal("metaschedulerWS dial failed", zap.Error(err))
 		}
