@@ -9,11 +9,11 @@ import (
 )
 
 type Config struct {
-	PeopleDN       string `yaml:"peopleDN" validate:"required"`
-	GroupDN        string `yaml:"groupDN" validate:"required"`
+	PeopleDN       string `yaml:"peopleDN"       validate:"required"`
+	GroupDN        string `yaml:"groupDN"        validate:"required"`
 	AddUserToGroup struct {
 		MemberAttributes []string `yaml:"memberAttributes" validate:"required"`
-	} `yaml:"addUserToGroup" validate:"dive"`
+	} `yaml:"addUserToGroup"`
 	CreateUser struct {
 		RDNAttribute       string              `yaml:"rdnAttribute" validate:"required"`
 		ObjectClasses      []string            `yaml:"objectClasses"`
