@@ -58,6 +58,10 @@ contract ErrorContract {
         revert Banned();
     }
 
+    function ThrowAlreadyDone() public pure {
+        revert AlreadyDone();
+    }
+
     // Tools
     function ThrowJobHotStatusOnly(JobStatus current) public pure {
         revert JobHotStatusOnly(current);
