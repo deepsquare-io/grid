@@ -50,10 +50,15 @@ Note that TCP is not supported at the moment. [$BENCHMARK_UCX_TRANSPORT]
 
    MetaScheduler:
 
-   --metascheduler.endpoint.rpc value    Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_ENDPOINT_RPC]
-   --metascheduler.endpoint.ws value     Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_ENDPOINT_WS]
-   --metascheduler.private-key value     An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
-   --metascheduler.smart-contract value  Metascheduler smart-contract address. (default: "0x3707aB457CF457275b7ec32e203c54df80C299d5") [$METASCHEDULER_SMART_CONTRACT]
+   --metascheduler.cpu-price-per-min value                                                                                                Price of the CPU per min. Reference for a zen2: 950000000000000000 (0.95 creds/(GPU.min)). (default: "950000000000000000") [$METASCHEDULER_CPU_PRICE_PER_MIN]
+   --metascheduler.endpoint.rpc value                                                                                                     Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_ENDPOINT_RPC]
+   --metascheduler.endpoint.ws value                                                                                                      Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_ENDPOINT_WS]
+   --metascheduler.gpu-price-per-min value                                                                                                Price of the GPU per min. Reference for a rtx3090: 8500000000000000000 (8.5 creds/(CPU.min)). (default: "8500000000000000000") [$METASCHEDULER_GPU_PRICE_PER_MIN]
+   --metascheduler.label key=value, -l key=value, --label key=value [ --metascheduler.label key=value, -l key=value, --label key=value ]  Additional key=value label for registration
+(recommended os=linux,arch=amd64,gpu=rtx3090,cpu=amd-epyc-7302,name=my-cluster,zone=fr-paris-1,region=fr-paris). [$METASCHEDULER_LABELS]
+   --metascheduler.mem-price-per-min value  Price of the Mem (MB) per min. Reference: 80000000000000 (0.00008 creds/(MB.min)). (default: "80000000000000") [$METASCHEDULER_MEM_PRICE_PER_MIN]
+   --metascheduler.private-key value        An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
+   --metascheduler.smart-contract value     Metascheduler smart-contract address. (default: "0x3707aB457CF457275b7ec32e203c54df80C299d5") [$METASCHEDULER_SMART_CONTRACT]
 
    Miscellaneous:
 

@@ -203,6 +203,16 @@ func (e *Banned) Error() string {
 	return "Banned"
 }
 
+type AlreadyDone struct{}
+
+func ParseAlreadyDone(inputs []interface{}) *AlreadyDone {
+	return &AlreadyDone{}
+}
+
+func (e *AlreadyDone) Error() string {
+	return "AlreadyDone"
+}
+
 type JobHotStatusOnly struct {
 	Current JobStatus
 }
@@ -586,6 +596,8 @@ func ParseError(name string, inputs []interface{}) error {
 		return ParseWaitingApprovalOnly(inputs)
 	case "Banned":
 		return ParseBanned(inputs)
+	case "AlreadyDone":
+		return ParseAlreadyDone(inputs)
 	case "JobHotStatusOnly":
 		return ParseJobHotStatusOnly(inputs)
 	case "InvalidTransition":

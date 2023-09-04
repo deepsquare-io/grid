@@ -36,6 +36,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -249,8 +250,8 @@ var flags = []cli.Flag{
 		Category: "MetaScheduler:",
 	},
 	&cli.StringSliceFlag{
-		Name:  "metascheduler.labels",
-		Usage: "Comma-separated list of additional labels for registration (recommended os=linux,arch=amd64,gpu=rtx3090,cpu=amd-epyc-7302,name=my-cluster,zone=fr-paris-1,region=fr-paris).",
+		Name:  "metascheduler.label",
+		Usage: "Additional `key=value` label for registration\n(recommended os=linux,arch=amd64,gpu=rtx3090,cpu=amd-epyc-7302,name=my-cluster,zone=fr-paris-1,region=fr-paris).",
 		Action: func(ctx *cli.Context, slabels []string) error {
 			labels = make([]metaschedulerabi.Label, 0, len(slabels))
 			for _, sl := range slabels {
@@ -265,6 +266,7 @@ var flags = []cli.Flag{
 			}
 			return nil
 		},
+		Aliases:  []string{"l", "label"},
 		EnvVars:  []string{"METASCHEDULER_LABELS"},
 		Category: "MetaScheduler:",
 	},
@@ -784,142 +786,163 @@ var app = &cli.App{
 					benchmark.WithImage(benchmarkSpeedTestImage),
 				)
 
-				launchBenchmarks(
-					ctx,
-					container.benchmarkLauncher,
-					hplOpts,
-					osuOpts,
-					speedtestOpts,
-					iorOpts,
-				)
+				logger.I.Info("checking if it is necessary to re-run the benchmark")
+				oldInfo, err := container.metascheduler.GetOldInfo(ctx)
+				if err != nil {
+					logger.I.Warn("failed to fetch old info, running benchmark...", zap.Error(err))
+				}
+				hardware := metaschedulerabi.ProviderHardware{
+					Nodes:       nodes,
+					GpusPerNode: gpusPerNode,
+					CpusPerNode: cpusPerNode,
+					MemPerNode:  memPerNode,
+				}
+				prices := metaschedulerabi.ProviderPrices{
+					GpuPricePerMin: gpuPricePerMin,
+					CpuPricePerMin: cpuPricePerMin,
+					MemPricePerMin: memPricePerMin,
+				}
+				if !(metascheduler.ProviderHardwareEqual(oldInfo.ProviderHardware, hardware) &&
+					oldInfo.ProviderPrices == prices &&
+					metascheduler.LabelsEqual(oldInfo.Labels, labels)) {
+					logger.I.Info(
+						"hardware, prices and labels are the same, no need to run a benchmark",
+						zap.Any("info", oldInfo),
+					)
+					// Add old benchmark labels
+					labels = oldInfo.Labels
+				} else {
+					launchBenchmarks(
+						ctx,
+						container.benchmarkLauncher,
+						hplOpts,
+						osuOpts,
+						speedtestOpts,
+						iorOpts,
+					)
 
-				result := benchmark.DefaultStore.Dump()
+					result := benchmark.DefaultStore.Dump()
 
-				labels = append(labels,
-					[]metaschedulerabi.Label{
-						{
-							Key:   "compute.gflops",
-							Value: fmt.Sprintf("%.2f", result.GFLOPS),
-						},
-						{
-							Key:   "network.upload.bw.mbps",
-							Value: fmt.Sprintf("%.2f", float64(result.UploadBandwidth)/1e6),
-						},
-						{
-							Key:   "network.download.bw.mbps",
-							Value: fmt.Sprintf("%.2f", float64(result.DownloadBandwidth)/1e6),
-						},
-						{
-							Key:   "network.p2p.bw.mbps",
-							Value: fmt.Sprintf("%.2f", result.P2PBidirectionalBandwidth),
-						},
-						{
-							Key:   "network.p2p.latency.us",
-							Value: fmt.Sprintf("%.2f", result.P2PLatency),
-						},
-						{
-							Key:   "network.all-to-all.latency.us",
-							Value: fmt.Sprintf("%.2f", result.AllToAllCollectiveLatency),
-						},
-						{
-							Key:   "storage.scratch.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.scratch.read.iops",
-							Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.scratch.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.scratch.write.iops",
-							Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.IOPS),
-						},
-						{
-							Key:   "storage.shared-world-tmp.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.shared-world-tmp.read.iops",
-							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.shared-world-tmp.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.shared-world-tmp.write.iops",
-							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.IOPS),
-						},
-						{
-							Key:   "storage.shared-tmp.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.shared-tmp.read.iops",
-							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.shared-tmp.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.shared-tmp.write.iops",
-							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.IOPS),
-						},
-						{
-							Key:   "storage.disk-world-tmp.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.disk-world-tmp.read.iops",
-							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.disk-world-tmp.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.disk-world-tmp.write.iops",
-							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.IOPS),
-						},
-						{
-							Key:   "storage.disk-tmp.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.disk-tmp.read.iops",
-							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.disk-tmp.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.disk-tmp.write.iops",
-							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.IOPS),
-						},
-					}...,
-				)
+					labels = append(labels,
+						[]metaschedulerabi.Label{
+							{
+								Key:   "compute.gflops",
+								Value: fmt.Sprintf("%.2f", result.GFLOPS),
+							},
+							{
+								Key:   "network.upload.bw.mbps",
+								Value: fmt.Sprintf("%.2f", float64(result.UploadBandwidth)/1e6),
+							},
+							{
+								Key:   "network.download.bw.mbps",
+								Value: fmt.Sprintf("%.2f", float64(result.DownloadBandwidth)/1e6),
+							},
+							{
+								Key:   "network.p2p.bw.mbps",
+								Value: fmt.Sprintf("%.2f", result.P2PBidirectionalBandwidth),
+							},
+							{
+								Key:   "network.p2p.latency.us",
+								Value: fmt.Sprintf("%.2f", result.P2PLatency),
+							},
+							{
+								Key:   "network.all-to-all.latency.us",
+								Value: fmt.Sprintf("%.2f", result.AllToAllCollectiveLatency),
+							},
+							{
+								Key:   "storage.scratch.read.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.Bandwidth),
+							},
+							{
+								Key:   "storage.scratch.read.iops",
+								Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.IOPS),
+							},
+							{
+								Key:   "storage.scratch.write.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.Bandwidth),
+							},
+							{
+								Key:   "storage.scratch.write.iops",
+								Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.IOPS),
+							},
+							{
+								Key:   "storage.shared-world-tmp.read.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.Bandwidth),
+							},
+							{
+								Key:   "storage.shared-world-tmp.read.iops",
+								Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.IOPS),
+							},
+							{
+								Key:   "storage.shared-world-tmp.write.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.Bandwidth),
+							},
+							{
+								Key:   "storage.shared-world-tmp.write.iops",
+								Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.IOPS),
+							},
+							{
+								Key:   "storage.shared-tmp.read.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.Bandwidth),
+							},
+							{
+								Key:   "storage.shared-tmp.read.iops",
+								Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.IOPS),
+							},
+							{
+								Key:   "storage.shared-tmp.write.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.Bandwidth),
+							},
+							{
+								Key:   "storage.shared-tmp.write.iops",
+								Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.IOPS),
+							},
+							{
+								Key:   "storage.disk-world-tmp.read.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.Bandwidth),
+							},
+							{
+								Key:   "storage.disk-world-tmp.read.iops",
+								Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.IOPS),
+							},
+							{
+								Key:   "storage.disk-world-tmp.write.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.Bandwidth),
+							},
+							{
+								Key:   "storage.disk-world-tmp.write.iops",
+								Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.IOPS),
+							},
+							{
+								Key:   "storage.disk-tmp.read.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.Bandwidth),
+							},
+							{
+								Key:   "storage.disk-tmp.read.iops",
+								Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.IOPS),
+							},
+							{
+								Key:   "storage.disk-tmp.write.bw.mibps",
+								Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.Bandwidth),
+							},
+							{
+								Key:   "storage.disk-tmp.write.iops",
+								Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.IOPS),
+							},
+						}...,
+					)
+				}
 
-				if err := container.metascheduler.Register(
-					ctx,
-					metaschedulerabi.ProviderHardware{
-						Nodes:       nodes,
-						GpusPerNode: gpusPerNode,
-						CpusPerNode: cpusPerNode,
-						MemPerNode:  memPerNode,
-					},
-					metaschedulerabi.ProviderPrices{
-						GpuPricePerMin: gpuPricePerMin,
-						CpuPricePerMin: cpuPricePerMin,
-						MemPricePerMin: memPricePerMin,
-					},
-					labels,
-				); err != nil {
-					logger.I.Fatal("supervisor failed to register", zap.Error(err))
+				if (oldInfo.Addr == common.Address{}) {
+					logger.I.Info("trying to register since we are not in the grid")
+					if err := container.metascheduler.Register(
+						ctx,
+						hardware,
+						prices,
+						labels,
+					); err != nil {
+						logger.I.Fatal("supervisor failed to register", zap.Error(err))
+					}
 				}
 			}()
 		} else {
@@ -937,7 +960,7 @@ var app = &cli.App{
 }
 
 func launchBenchmarks(
-	ctx context.Context,
+	parent context.Context,
 	benchmarkLauncher benchmark.Launcher,
 	hplOpts []benchmark.Option,
 	osuOpts []benchmark.Option,
@@ -945,16 +968,13 @@ func launchBenchmarks(
 	iorOpts []benchmark.Option,
 ) {
 	start := time.Now()
-	errc := make(chan error, 1)
-	go func() {
+	g, ctx := errgroup.WithContext(parent)
+
+	g.Go(func() error {
 		b, err := benchmark.GenerateOSUBenchmark(osuOpts...)
 		if err != nil {
 			logger.I.Error("failed to generate osu benchmark", zap.Error(err))
-			select {
-			case errc <- err:
-			default:
-			}
-			return
+			return err
 		}
 
 		if err := benchmarkLauncher.Launch(ctx, "osu", b); err != nil {
@@ -962,23 +982,16 @@ func launchBenchmarks(
 				"osu benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
-			select {
-			case errc <- err:
-			default:
-			}
-			return
+			return err
 		}
-	}()
+		return nil
+	})
 
-	go func() {
+	g.Go(func() error {
 		b, err := benchmark.GenerateSpeedTestBenchmark(speedtestOpts...)
 		if err != nil {
 			logger.I.Error("failed to generate speedtest benchmark", zap.Error(err))
-			select {
-			case errc <- err:
-			default:
-			}
-			return
+			return err
 		}
 
 		if err := benchmarkLauncher.Launch(ctx, "speedtest", b); err != nil {
@@ -986,23 +999,16 @@ func launchBenchmarks(
 				"speedtest benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
-			select {
-			case errc <- err:
-			default:
-			}
-			return
+			return err
 		}
-	}()
+		return nil
+	})
 
-	go func() {
+	g.Go(func() error {
 		b, err := benchmark.GeneratePhase1HPLBenchmark(hplOpts...)
 		if err != nil {
 			logger.I.Error("failed to generate hpl phase 1 benchmark", zap.Error(err))
-			select {
-			case errc <- err:
-			default:
-			}
-			return
+			return err
 		}
 
 		if err := benchmarkLauncher.Launch(ctx, "hpl-phase1", b); err != nil {
@@ -1010,23 +1016,16 @@ func launchBenchmarks(
 				"hpl-phase1 benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
-			select {
-			case errc <- err:
-			default:
-			}
-			return
+			return err
 		}
-	}()
+		return nil
+	})
 
-	go func() {
+	g.Go(func() error {
 		b, err := benchmark.GenerateIORBenchmark(iorOpts...)
 		if err != nil {
 			logger.I.Error("failed to generate ior benchmark", zap.Error(err))
-			select {
-			case errc <- err:
-			default:
-			}
-			return
+			return err
 		}
 
 		if err := benchmarkLauncher.Launch(ctx, "ior", b); err != nil {
@@ -1034,37 +1033,32 @@ func launchBenchmarks(
 				"ior benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
-			select {
-			case errc <- err:
-			default:
-			}
-			return
+			return err
 		}
-	}()
+		return nil
+	})
 
-	select {
-	case err := <-errc:
-		if err != nil {
-			logger.I.Warn("cancelling benchmarks due to failure")
-			if err := benchmarkLauncher.Cancel(ctx, "osu"); err != nil {
-				logger.I.Warn("failed to cancel osu benchmark", zap.Error(err))
-			}
-			if err := benchmarkLauncher.Cancel(ctx, "speedtest"); err != nil {
-				logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
-			}
-			if err := benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
-				logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
-			}
-			if err := benchmarkLauncher.Cancel(ctx, "hpl-phase2"); err != nil {
-				logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
-			}
-			if err := benchmarkLauncher.Cancel(ctx, "ior"); err != nil {
-				logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))
-			}
-			logger.I.Fatal("benchmarks failed", zap.Error(err))
+	if err := g.Wait(); err != nil {
+		logger.I.Warn("cancelling benchmarks due to failure")
+		if err := benchmarkLauncher.Cancel(parent, "osu"); err != nil {
+			logger.I.Warn("failed to cancel osu benchmark", zap.Error(err))
 		}
-	case <-benchmark.DefaultStore.WaitForCompletion(ctx):
+		if err := benchmarkLauncher.Cancel(parent, "speedtest"); err != nil {
+			logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
+		}
+		if err := benchmarkLauncher.Cancel(parent, "hpl-phase1"); err != nil {
+			logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
+		}
+		if err := benchmarkLauncher.Cancel(parent, "hpl-phase2"); err != nil {
+			logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
+		}
+		if err := benchmarkLauncher.Cancel(parent, "ior"); err != nil {
+			logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))
+		}
+		logger.I.Fatal("benchmarks failed", zap.Error(err))
 	}
+
+	<-benchmark.DefaultStore.WaitForCompletion(parent)
 
 	logger.I.Info("benchmark has finished",
 		zap.Any("results", benchmark.DefaultStore.Dump()),

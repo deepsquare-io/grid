@@ -86,13 +86,11 @@ type Label struct {
 
 // Provider is an auto generated low-level Go binding around an user-defined struct.
 type Provider struct {
-	WalletAddr       common.Address
+	Addr             common.Address
 	ProviderHardware ProviderHardware
 	ProviderPrices   ProviderPrices
-	Status           uint8
-	JobCount         uint64
 	Labels           []Label
-	LinkListed       bool
+	IsBanned         bool
 }
 
 // ProviderHardware is an auto generated low-level Go binding around an user-defined struct.
@@ -4545,7 +4543,7 @@ func (_IProviderJobQueues *IProviderJobQueuesTransactorSession) PushTopUpJob(_pr
 
 // IProviderManagerMetaData contains all meta data concerning the IProviderManager contract.
 var IProviderManagerMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"HardwareUpdatedEvent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"enumProviderStatus\",\"name\":\"status\",\"type\":\"uint8\"}],\"name\":\"ProviderStatusChanged\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"approve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"ban\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getJobCount\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getLabels\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProvider\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"walletAddr\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"nodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64[]\",\"name\":\"gpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"cpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"memPerNode\",\"type\":\"uint64[]\"}],\"internalType\":\"structProviderHardware\",\"name\":\"providerHardware\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"memPricePerMin\",\"type\":\"uint256\"}],\"internalType\":\"structProviderPrices\",\"name\":\"providerPrices\",\"type\":\"tuple\"},{\"internalType\":\"enumProviderStatus\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"uint64\",\"name\":\"jobCount\",\"type\":\"uint64\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"labels\",\"type\":\"tuple[]\"},{\"internalType\":\"bool\",\"name\":\"linkListed\",\"type\":\"bool\"}],\"internalType\":\"structProvider\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProviderHardware\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"nodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64[]\",\"name\":\"gpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"cpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"memPerNode\",\"type\":\"uint64[]\"}],\"internalType\":\"structProviderHardware\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProviderPrices\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"memPricePerMin\",\"type\":\"uint256\"}],\"internalType\":\"structProviderPrices\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProviderStatus\",\"outputs\":[{\"internalType\":\"enumProviderStatus\",\"name\":\"_status\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"hasJoined\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"incJobCount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"kick\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"nodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64[]\",\"name\":\"gpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"cpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"memPerNode\",\"type\":\"uint64[]\"}],\"internalType\":\"structProviderHardware\",\"name\":\"_hardware\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"memPricePerMin\",\"type\":\"uint256\"}],\"internalType\":\"structProviderPrices\",\"name\":\"_prices\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"_labels\",\"type\":\"tuple[]\"}],\"name\":\"register\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"nodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64[]\",\"name\":\"gpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"cpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"memPerNode\",\"type\":\"uint64[]\"}],\"internalType\":\"structProviderHardware\",\"name\":\"_hardware\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"memPricePerMin\",\"type\":\"uint256\"}],\"internalType\":\"structProviderPrices\",\"name\":\"_prices\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"_labels\",\"type\":\"tuple[]\"}],\"name\":\"registerProvider\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"reinstate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"removeProvider\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"ProviderApproved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"status\",\"type\":\"bool\"}],\"name\":\"ProviderBanChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"ProviderRemoved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"ProviderWaitingForApproval\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"approve\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"ban\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getJobCount\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getLabels\",\"outputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProvider\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"nodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64[]\",\"name\":\"gpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"cpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"memPerNode\",\"type\":\"uint64[]\"}],\"internalType\":\"structProviderHardware\",\"name\":\"providerHardware\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"memPricePerMin\",\"type\":\"uint256\"}],\"internalType\":\"structProviderPrices\",\"name\":\"providerPrices\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"labels\",\"type\":\"tuple[]\"},{\"internalType\":\"bool\",\"name\":\"isBanned\",\"type\":\"bool\"}],\"internalType\":\"structProvider\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProviderHardware\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"nodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64[]\",\"name\":\"gpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"cpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"memPerNode\",\"type\":\"uint64[]\"}],\"internalType\":\"structProviderHardware\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"getProviderPrices\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"memPricePerMin\",\"type\":\"uint256\"}],\"internalType\":\"structProviderPrices\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"incJobCount\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"isBanned\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"isValidForScheduling\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"isWaitingForApproval\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"nodes\",\"type\":\"uint64\"},{\"internalType\":\"uint64[]\",\"name\":\"gpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"cpusPerNode\",\"type\":\"uint64[]\"},{\"internalType\":\"uint64[]\",\"name\":\"memPerNode\",\"type\":\"uint64[]\"}],\"internalType\":\"structProviderHardware\",\"name\":\"_hardware\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"gpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cpuPricePerMin\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"memPricePerMin\",\"type\":\"uint256\"}],\"internalType\":\"structProviderPrices\",\"name\":\"_prices\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"key\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"value\",\"type\":\"string\"}],\"internalType\":\"structLabel[]\",\"name\":\"_labels\",\"type\":\"tuple[]\"}],\"name\":\"register\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"remove\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_providerAddr\",\"type\":\"address\"}],\"name\":\"unban\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // IProviderManagerABI is the input ABI used to generate the binding from.
@@ -4758,7 +4756,7 @@ func (_IProviderManager *IProviderManagerCallerSession) GetLabels(_providerAddr 
 
 // GetProvider is a free data retrieval call binding the contract method 0x55f21eb7.
 //
-// Solidity: function getProvider(address _providerAddr) view returns((address,(uint64,uint64[],uint64[],uint64[]),(uint256,uint256,uint256),uint8,uint64,(string,string)[],bool))
+// Solidity: function getProvider(address _providerAddr) view returns((address,(uint64,uint64[],uint64[],uint64[]),(uint256,uint256,uint256),(string,string)[],bool))
 func (_IProviderManager *IProviderManagerCaller) GetProvider(opts *bind.CallOpts, _providerAddr common.Address) (Provider, error) {
 	var out []interface{}
 	err := _IProviderManager.contract.Call(opts, &out, "getProvider", _providerAddr)
@@ -4775,14 +4773,14 @@ func (_IProviderManager *IProviderManagerCaller) GetProvider(opts *bind.CallOpts
 
 // GetProvider is a free data retrieval call binding the contract method 0x55f21eb7.
 //
-// Solidity: function getProvider(address _providerAddr) view returns((address,(uint64,uint64[],uint64[],uint64[]),(uint256,uint256,uint256),uint8,uint64,(string,string)[],bool))
+// Solidity: function getProvider(address _providerAddr) view returns((address,(uint64,uint64[],uint64[],uint64[]),(uint256,uint256,uint256),(string,string)[],bool))
 func (_IProviderManager *IProviderManagerSession) GetProvider(_providerAddr common.Address) (Provider, error) {
 	return _IProviderManager.Contract.GetProvider(&_IProviderManager.CallOpts, _providerAddr)
 }
 
 // GetProvider is a free data retrieval call binding the contract method 0x55f21eb7.
 //
-// Solidity: function getProvider(address _providerAddr) view returns((address,(uint64,uint64[],uint64[],uint64[]),(uint256,uint256,uint256),uint8,uint64,(string,string)[],bool))
+// Solidity: function getProvider(address _providerAddr) view returns((address,(uint64,uint64[],uint64[],uint64[]),(uint256,uint256,uint256),(string,string)[],bool))
 func (_IProviderManager *IProviderManagerCallerSession) GetProvider(_providerAddr common.Address) (Provider, error) {
 	return _IProviderManager.Contract.GetProvider(&_IProviderManager.CallOpts, _providerAddr)
 }
@@ -4849,43 +4847,12 @@ func (_IProviderManager *IProviderManagerCallerSession) GetProviderPrices(_provi
 	return _IProviderManager.Contract.GetProviderPrices(&_IProviderManager.CallOpts, _providerAddr)
 }
 
-// GetProviderStatus is a free data retrieval call binding the contract method 0xd646a1da.
+// IsBanned is a free data retrieval call binding the contract method 0x97f735d5.
 //
-// Solidity: function getProviderStatus(address _providerAddr) view returns(uint8 _status)
-func (_IProviderManager *IProviderManagerCaller) GetProviderStatus(opts *bind.CallOpts, _providerAddr common.Address) (uint8, error) {
+// Solidity: function isBanned(address _providerAddr) view returns(bool)
+func (_IProviderManager *IProviderManagerCaller) IsBanned(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
 	var out []interface{}
-	err := _IProviderManager.contract.Call(opts, &out, "getProviderStatus", _providerAddr)
-
-	if err != nil {
-		return *new(uint8), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(uint8)).(*uint8)
-
-	return out0, err
-
-}
-
-// GetProviderStatus is a free data retrieval call binding the contract method 0xd646a1da.
-//
-// Solidity: function getProviderStatus(address _providerAddr) view returns(uint8 _status)
-func (_IProviderManager *IProviderManagerSession) GetProviderStatus(_providerAddr common.Address) (uint8, error) {
-	return _IProviderManager.Contract.GetProviderStatus(&_IProviderManager.CallOpts, _providerAddr)
-}
-
-// GetProviderStatus is a free data retrieval call binding the contract method 0xd646a1da.
-//
-// Solidity: function getProviderStatus(address _providerAddr) view returns(uint8 _status)
-func (_IProviderManager *IProviderManagerCallerSession) GetProviderStatus(_providerAddr common.Address) (uint8, error) {
-	return _IProviderManager.Contract.GetProviderStatus(&_IProviderManager.CallOpts, _providerAddr)
-}
-
-// HasJoined is a free data retrieval call binding the contract method 0x877f4e12.
-//
-// Solidity: function hasJoined(address _providerAddr) view returns(bool)
-func (_IProviderManager *IProviderManagerCaller) HasJoined(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
-	var out []interface{}
-	err := _IProviderManager.contract.Call(opts, &out, "hasJoined", _providerAddr)
+	err := _IProviderManager.contract.Call(opts, &out, "isBanned", _providerAddr)
 
 	if err != nil {
 		return *new(bool), err
@@ -4897,18 +4864,80 @@ func (_IProviderManager *IProviderManagerCaller) HasJoined(opts *bind.CallOpts, 
 
 }
 
-// HasJoined is a free data retrieval call binding the contract method 0x877f4e12.
+// IsBanned is a free data retrieval call binding the contract method 0x97f735d5.
 //
-// Solidity: function hasJoined(address _providerAddr) view returns(bool)
-func (_IProviderManager *IProviderManagerSession) HasJoined(_providerAddr common.Address) (bool, error) {
-	return _IProviderManager.Contract.HasJoined(&_IProviderManager.CallOpts, _providerAddr)
+// Solidity: function isBanned(address _providerAddr) view returns(bool)
+func (_IProviderManager *IProviderManagerSession) IsBanned(_providerAddr common.Address) (bool, error) {
+	return _IProviderManager.Contract.IsBanned(&_IProviderManager.CallOpts, _providerAddr)
 }
 
-// HasJoined is a free data retrieval call binding the contract method 0x877f4e12.
+// IsBanned is a free data retrieval call binding the contract method 0x97f735d5.
 //
-// Solidity: function hasJoined(address _providerAddr) view returns(bool)
-func (_IProviderManager *IProviderManagerCallerSession) HasJoined(_providerAddr common.Address) (bool, error) {
-	return _IProviderManager.Contract.HasJoined(&_IProviderManager.CallOpts, _providerAddr)
+// Solidity: function isBanned(address _providerAddr) view returns(bool)
+func (_IProviderManager *IProviderManagerCallerSession) IsBanned(_providerAddr common.Address) (bool, error) {
+	return _IProviderManager.Contract.IsBanned(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// IsValidForScheduling is a free data retrieval call binding the contract method 0x21457c7e.
+//
+// Solidity: function isValidForScheduling(address _providerAddr) view returns(bool)
+func (_IProviderManager *IProviderManagerCaller) IsValidForScheduling(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
+	var out []interface{}
+	err := _IProviderManager.contract.Call(opts, &out, "isValidForScheduling", _providerAddr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// IsValidForScheduling is a free data retrieval call binding the contract method 0x21457c7e.
+//
+// Solidity: function isValidForScheduling(address _providerAddr) view returns(bool)
+func (_IProviderManager *IProviderManagerSession) IsValidForScheduling(_providerAddr common.Address) (bool, error) {
+	return _IProviderManager.Contract.IsValidForScheduling(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// IsValidForScheduling is a free data retrieval call binding the contract method 0x21457c7e.
+//
+// Solidity: function isValidForScheduling(address _providerAddr) view returns(bool)
+func (_IProviderManager *IProviderManagerCallerSession) IsValidForScheduling(_providerAddr common.Address) (bool, error) {
+	return _IProviderManager.Contract.IsValidForScheduling(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// IsWaitingForApproval is a free data retrieval call binding the contract method 0x220f0e4c.
+//
+// Solidity: function isWaitingForApproval(address _providerAddr) view returns(bool)
+func (_IProviderManager *IProviderManagerCaller) IsWaitingForApproval(opts *bind.CallOpts, _providerAddr common.Address) (bool, error) {
+	var out []interface{}
+	err := _IProviderManager.contract.Call(opts, &out, "isWaitingForApproval", _providerAddr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// IsWaitingForApproval is a free data retrieval call binding the contract method 0x220f0e4c.
+//
+// Solidity: function isWaitingForApproval(address _providerAddr) view returns(bool)
+func (_IProviderManager *IProviderManagerSession) IsWaitingForApproval(_providerAddr common.Address) (bool, error) {
+	return _IProviderManager.Contract.IsWaitingForApproval(&_IProviderManager.CallOpts, _providerAddr)
+}
+
+// IsWaitingForApproval is a free data retrieval call binding the contract method 0x220f0e4c.
+//
+// Solidity: function isWaitingForApproval(address _providerAddr) view returns(bool)
+func (_IProviderManager *IProviderManagerCallerSession) IsWaitingForApproval(_providerAddr common.Address) (bool, error) {
+	return _IProviderManager.Contract.IsWaitingForApproval(&_IProviderManager.CallOpts, _providerAddr)
 }
 
 // Approve is a paid mutator transaction binding the contract method 0xdaea85c5.
@@ -4974,27 +5003,6 @@ func (_IProviderManager *IProviderManagerTransactorSession) IncJobCount(_provide
 	return _IProviderManager.Contract.IncJobCount(&_IProviderManager.TransactOpts, _providerAddr)
 }
 
-// Kick is a paid mutator transaction binding the contract method 0x96c55175.
-//
-// Solidity: function kick(address _providerAddr) returns()
-func (_IProviderManager *IProviderManagerTransactor) Kick(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
-	return _IProviderManager.contract.Transact(opts, "kick", _providerAddr)
-}
-
-// Kick is a paid mutator transaction binding the contract method 0x96c55175.
-//
-// Solidity: function kick(address _providerAddr) returns()
-func (_IProviderManager *IProviderManagerSession) Kick(_providerAddr common.Address) (*types.Transaction, error) {
-	return _IProviderManager.Contract.Kick(&_IProviderManager.TransactOpts, _providerAddr)
-}
-
-// Kick is a paid mutator transaction binding the contract method 0x96c55175.
-//
-// Solidity: function kick(address _providerAddr) returns()
-func (_IProviderManager *IProviderManagerTransactorSession) Kick(_providerAddr common.Address) (*types.Transaction, error) {
-	return _IProviderManager.Contract.Kick(&_IProviderManager.TransactOpts, _providerAddr)
-}
-
 // Register is a paid mutator transaction binding the contract method 0x94f9b055.
 //
 // Solidity: function register((uint64,uint64[],uint64[],uint64[]) _hardware, (uint256,uint256,uint256) _prices, (string,string)[] _labels) returns()
@@ -5016,72 +5024,51 @@ func (_IProviderManager *IProviderManagerTransactorSession) Register(_hardware P
 	return _IProviderManager.Contract.Register(&_IProviderManager.TransactOpts, _hardware, _prices, _labels)
 }
 
-// RegisterProvider is a paid mutator transaction binding the contract method 0x4be49776.
+// Remove is a paid mutator transaction binding the contract method 0x29092d0e.
 //
-// Solidity: function registerProvider(address _providerAddr, (uint64,uint64[],uint64[],uint64[]) _hardware, (uint256,uint256,uint256) _prices, (string,string)[] _labels) returns()
-func (_IProviderManager *IProviderManagerTransactor) RegisterProvider(opts *bind.TransactOpts, _providerAddr common.Address, _hardware ProviderHardware, _prices ProviderPrices, _labels []Label) (*types.Transaction, error) {
-	return _IProviderManager.contract.Transact(opts, "registerProvider", _providerAddr, _hardware, _prices, _labels)
+// Solidity: function remove(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactor) Remove(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.contract.Transact(opts, "remove", _providerAddr)
 }
 
-// RegisterProvider is a paid mutator transaction binding the contract method 0x4be49776.
+// Remove is a paid mutator transaction binding the contract method 0x29092d0e.
 //
-// Solidity: function registerProvider(address _providerAddr, (uint64,uint64[],uint64[],uint64[]) _hardware, (uint256,uint256,uint256) _prices, (string,string)[] _labels) returns()
-func (_IProviderManager *IProviderManagerSession) RegisterProvider(_providerAddr common.Address, _hardware ProviderHardware, _prices ProviderPrices, _labels []Label) (*types.Transaction, error) {
-	return _IProviderManager.Contract.RegisterProvider(&_IProviderManager.TransactOpts, _providerAddr, _hardware, _prices, _labels)
+// Solidity: function remove(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerSession) Remove(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Remove(&_IProviderManager.TransactOpts, _providerAddr)
 }
 
-// RegisterProvider is a paid mutator transaction binding the contract method 0x4be49776.
+// Remove is a paid mutator transaction binding the contract method 0x29092d0e.
 //
-// Solidity: function registerProvider(address _providerAddr, (uint64,uint64[],uint64[],uint64[]) _hardware, (uint256,uint256,uint256) _prices, (string,string)[] _labels) returns()
-func (_IProviderManager *IProviderManagerTransactorSession) RegisterProvider(_providerAddr common.Address, _hardware ProviderHardware, _prices ProviderPrices, _labels []Label) (*types.Transaction, error) {
-	return _IProviderManager.Contract.RegisterProvider(&_IProviderManager.TransactOpts, _providerAddr, _hardware, _prices, _labels)
+// Solidity: function remove(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactorSession) Remove(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Remove(&_IProviderManager.TransactOpts, _providerAddr)
 }
 
-// Reinstate is a paid mutator transaction binding the contract method 0x830aebd9.
+// Unban is a paid mutator transaction binding the contract method 0xb9f14557.
 //
-// Solidity: function reinstate(address _providerAddr) returns()
-func (_IProviderManager *IProviderManagerTransactor) Reinstate(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
-	return _IProviderManager.contract.Transact(opts, "reinstate", _providerAddr)
+// Solidity: function unban(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactor) Unban(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.contract.Transact(opts, "unban", _providerAddr)
 }
 
-// Reinstate is a paid mutator transaction binding the contract method 0x830aebd9.
+// Unban is a paid mutator transaction binding the contract method 0xb9f14557.
 //
-// Solidity: function reinstate(address _providerAddr) returns()
-func (_IProviderManager *IProviderManagerSession) Reinstate(_providerAddr common.Address) (*types.Transaction, error) {
-	return _IProviderManager.Contract.Reinstate(&_IProviderManager.TransactOpts, _providerAddr)
+// Solidity: function unban(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerSession) Unban(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Unban(&_IProviderManager.TransactOpts, _providerAddr)
 }
 
-// Reinstate is a paid mutator transaction binding the contract method 0x830aebd9.
+// Unban is a paid mutator transaction binding the contract method 0xb9f14557.
 //
-// Solidity: function reinstate(address _providerAddr) returns()
-func (_IProviderManager *IProviderManagerTransactorSession) Reinstate(_providerAddr common.Address) (*types.Transaction, error) {
-	return _IProviderManager.Contract.Reinstate(&_IProviderManager.TransactOpts, _providerAddr)
+// Solidity: function unban(address _providerAddr) returns()
+func (_IProviderManager *IProviderManagerTransactorSession) Unban(_providerAddr common.Address) (*types.Transaction, error) {
+	return _IProviderManager.Contract.Unban(&_IProviderManager.TransactOpts, _providerAddr)
 }
 
-// RemoveProvider is a paid mutator transaction binding the contract method 0x8a355a57.
-//
-// Solidity: function removeProvider(address _providerAddr) returns()
-func (_IProviderManager *IProviderManagerTransactor) RemoveProvider(opts *bind.TransactOpts, _providerAddr common.Address) (*types.Transaction, error) {
-	return _IProviderManager.contract.Transact(opts, "removeProvider", _providerAddr)
-}
-
-// RemoveProvider is a paid mutator transaction binding the contract method 0x8a355a57.
-//
-// Solidity: function removeProvider(address _providerAddr) returns()
-func (_IProviderManager *IProviderManagerSession) RemoveProvider(_providerAddr common.Address) (*types.Transaction, error) {
-	return _IProviderManager.Contract.RemoveProvider(&_IProviderManager.TransactOpts, _providerAddr)
-}
-
-// RemoveProvider is a paid mutator transaction binding the contract method 0x8a355a57.
-//
-// Solidity: function removeProvider(address _providerAddr) returns()
-func (_IProviderManager *IProviderManagerTransactorSession) RemoveProvider(_providerAddr common.Address) (*types.Transaction, error) {
-	return _IProviderManager.Contract.RemoveProvider(&_IProviderManager.TransactOpts, _providerAddr)
-}
-
-// IProviderManagerHardwareUpdatedEventIterator is returned from FilterHardwareUpdatedEvent and is used to iterate over the raw logs and unpacked data for HardwareUpdatedEvent events raised by the IProviderManager contract.
-type IProviderManagerHardwareUpdatedEventIterator struct {
-	Event *IProviderManagerHardwareUpdatedEvent // Event containing the contract specifics and raw log
+// IProviderManagerProviderApprovedIterator is returned from FilterProviderApproved and is used to iterate over the raw logs and unpacked data for ProviderApproved events raised by the IProviderManager contract.
+type IProviderManagerProviderApprovedIterator struct {
+	Event *IProviderManagerProviderApproved // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -5095,7 +5082,7 @@ type IProviderManagerHardwareUpdatedEventIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *IProviderManagerHardwareUpdatedEventIterator) Next() bool {
+func (it *IProviderManagerProviderApprovedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -5104,7 +5091,7 @@ func (it *IProviderManagerHardwareUpdatedEventIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(IProviderManagerHardwareUpdatedEvent)
+			it.Event = new(IProviderManagerProviderApproved)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -5119,7 +5106,7 @@ func (it *IProviderManagerHardwareUpdatedEventIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(IProviderManagerHardwareUpdatedEvent)
+		it.Event = new(IProviderManagerProviderApproved)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -5135,41 +5122,41 @@ func (it *IProviderManagerHardwareUpdatedEventIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *IProviderManagerHardwareUpdatedEventIterator) Error() error {
+func (it *IProviderManagerProviderApprovedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *IProviderManagerHardwareUpdatedEventIterator) Close() error {
+func (it *IProviderManagerProviderApprovedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// IProviderManagerHardwareUpdatedEvent represents a HardwareUpdatedEvent event raised by the IProviderManager contract.
-type IProviderManagerHardwareUpdatedEvent struct {
-	ProviderAddr common.Address
-	Raw          types.Log // Blockchain specific contextual infos
+// IProviderManagerProviderApproved represents a ProviderApproved event raised by the IProviderManager contract.
+type IProviderManagerProviderApproved struct {
+	Addr common.Address
+	Raw  types.Log // Blockchain specific contextual infos
 }
 
-// FilterHardwareUpdatedEvent is a free log retrieval operation binding the contract event 0x3aeb53b0dee89ac04567fa6305e626e8d5246b478acd34d0a217507b9dfd076c.
+// FilterProviderApproved is a free log retrieval operation binding the contract event 0xee9f2f9f53f8a2451cc2e764d1e1f4690a053a9030f64411d67993d66b5231e7.
 //
-// Solidity: event HardwareUpdatedEvent(address _providerAddr)
-func (_IProviderManager *IProviderManagerFilterer) FilterHardwareUpdatedEvent(opts *bind.FilterOpts) (*IProviderManagerHardwareUpdatedEventIterator, error) {
+// Solidity: event ProviderApproved(address addr)
+func (_IProviderManager *IProviderManagerFilterer) FilterProviderApproved(opts *bind.FilterOpts) (*IProviderManagerProviderApprovedIterator, error) {
 
-	logs, sub, err := _IProviderManager.contract.FilterLogs(opts, "HardwareUpdatedEvent")
+	logs, sub, err := _IProviderManager.contract.FilterLogs(opts, "ProviderApproved")
 	if err != nil {
 		return nil, err
 	}
-	return &IProviderManagerHardwareUpdatedEventIterator{contract: _IProviderManager.contract, event: "HardwareUpdatedEvent", logs: logs, sub: sub}, nil
+	return &IProviderManagerProviderApprovedIterator{contract: _IProviderManager.contract, event: "ProviderApproved", logs: logs, sub: sub}, nil
 }
 
-// WatchHardwareUpdatedEvent is a free log subscription operation binding the contract event 0x3aeb53b0dee89ac04567fa6305e626e8d5246b478acd34d0a217507b9dfd076c.
+// WatchProviderApproved is a free log subscription operation binding the contract event 0xee9f2f9f53f8a2451cc2e764d1e1f4690a053a9030f64411d67993d66b5231e7.
 //
-// Solidity: event HardwareUpdatedEvent(address _providerAddr)
-func (_IProviderManager *IProviderManagerFilterer) WatchHardwareUpdatedEvent(opts *bind.WatchOpts, sink chan<- *IProviderManagerHardwareUpdatedEvent) (event.Subscription, error) {
+// Solidity: event ProviderApproved(address addr)
+func (_IProviderManager *IProviderManagerFilterer) WatchProviderApproved(opts *bind.WatchOpts, sink chan<- *IProviderManagerProviderApproved) (event.Subscription, error) {
 
-	logs, sub, err := _IProviderManager.contract.WatchLogs(opts, "HardwareUpdatedEvent")
+	logs, sub, err := _IProviderManager.contract.WatchLogs(opts, "ProviderApproved")
 	if err != nil {
 		return nil, err
 	}
@@ -5179,8 +5166,8 @@ func (_IProviderManager *IProviderManagerFilterer) WatchHardwareUpdatedEvent(opt
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(IProviderManagerHardwareUpdatedEvent)
-				if err := _IProviderManager.contract.UnpackLog(event, "HardwareUpdatedEvent", log); err != nil {
+				event := new(IProviderManagerProviderApproved)
+				if err := _IProviderManager.contract.UnpackLog(event, "ProviderApproved", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -5201,21 +5188,21 @@ func (_IProviderManager *IProviderManagerFilterer) WatchHardwareUpdatedEvent(opt
 	}), nil
 }
 
-// ParseHardwareUpdatedEvent is a log parse operation binding the contract event 0x3aeb53b0dee89ac04567fa6305e626e8d5246b478acd34d0a217507b9dfd076c.
+// ParseProviderApproved is a log parse operation binding the contract event 0xee9f2f9f53f8a2451cc2e764d1e1f4690a053a9030f64411d67993d66b5231e7.
 //
-// Solidity: event HardwareUpdatedEvent(address _providerAddr)
-func (_IProviderManager *IProviderManagerFilterer) ParseHardwareUpdatedEvent(log types.Log) (*IProviderManagerHardwareUpdatedEvent, error) {
-	event := new(IProviderManagerHardwareUpdatedEvent)
-	if err := _IProviderManager.contract.UnpackLog(event, "HardwareUpdatedEvent", log); err != nil {
+// Solidity: event ProviderApproved(address addr)
+func (_IProviderManager *IProviderManagerFilterer) ParseProviderApproved(log types.Log) (*IProviderManagerProviderApproved, error) {
+	event := new(IProviderManagerProviderApproved)
+	if err := _IProviderManager.contract.UnpackLog(event, "ProviderApproved", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log
 	return event, nil
 }
 
-// IProviderManagerProviderStatusChangedIterator is returned from FilterProviderStatusChanged and is used to iterate over the raw logs and unpacked data for ProviderStatusChanged events raised by the IProviderManager contract.
-type IProviderManagerProviderStatusChangedIterator struct {
-	Event *IProviderManagerProviderStatusChanged // Event containing the contract specifics and raw log
+// IProviderManagerProviderBanChangedIterator is returned from FilterProviderBanChanged and is used to iterate over the raw logs and unpacked data for ProviderBanChanged events raised by the IProviderManager contract.
+type IProviderManagerProviderBanChangedIterator struct {
+	Event *IProviderManagerProviderBanChanged // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -5229,7 +5216,7 @@ type IProviderManagerProviderStatusChangedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *IProviderManagerProviderStatusChangedIterator) Next() bool {
+func (it *IProviderManagerProviderBanChangedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -5238,7 +5225,7 @@ func (it *IProviderManagerProviderStatusChangedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(IProviderManagerProviderStatusChanged)
+			it.Event = new(IProviderManagerProviderBanChanged)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -5253,7 +5240,7 @@ func (it *IProviderManagerProviderStatusChangedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(IProviderManagerProviderStatusChanged)
+		it.Event = new(IProviderManagerProviderBanChanged)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -5269,42 +5256,42 @@ func (it *IProviderManagerProviderStatusChangedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *IProviderManagerProviderStatusChangedIterator) Error() error {
+func (it *IProviderManagerProviderBanChangedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *IProviderManagerProviderStatusChangedIterator) Close() error {
+func (it *IProviderManagerProviderBanChangedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// IProviderManagerProviderStatusChanged represents a ProviderStatusChanged event raised by the IProviderManager contract.
-type IProviderManagerProviderStatusChanged struct {
-	ProviderAddr common.Address
-	Status       uint8
-	Raw          types.Log // Blockchain specific contextual infos
+// IProviderManagerProviderBanChanged represents a ProviderBanChanged event raised by the IProviderManager contract.
+type IProviderManagerProviderBanChanged struct {
+	Addr   common.Address
+	Status bool
+	Raw    types.Log // Blockchain specific contextual infos
 }
 
-// FilterProviderStatusChanged is a free log retrieval operation binding the contract event 0x824cd9acaf7b71614920a4b2651c4aad10142580262655e42fa5a66833bf5401.
+// FilterProviderBanChanged is a free log retrieval operation binding the contract event 0xfb129c89f1efff73dd65abfbf405fb7406da44fe14952903f6a45f85a576fc7d.
 //
-// Solidity: event ProviderStatusChanged(address _providerAddr, uint8 status)
-func (_IProviderManager *IProviderManagerFilterer) FilterProviderStatusChanged(opts *bind.FilterOpts) (*IProviderManagerProviderStatusChangedIterator, error) {
+// Solidity: event ProviderBanChanged(address addr, bool status)
+func (_IProviderManager *IProviderManagerFilterer) FilterProviderBanChanged(opts *bind.FilterOpts) (*IProviderManagerProviderBanChangedIterator, error) {
 
-	logs, sub, err := _IProviderManager.contract.FilterLogs(opts, "ProviderStatusChanged")
+	logs, sub, err := _IProviderManager.contract.FilterLogs(opts, "ProviderBanChanged")
 	if err != nil {
 		return nil, err
 	}
-	return &IProviderManagerProviderStatusChangedIterator{contract: _IProviderManager.contract, event: "ProviderStatusChanged", logs: logs, sub: sub}, nil
+	return &IProviderManagerProviderBanChangedIterator{contract: _IProviderManager.contract, event: "ProviderBanChanged", logs: logs, sub: sub}, nil
 }
 
-// WatchProviderStatusChanged is a free log subscription operation binding the contract event 0x824cd9acaf7b71614920a4b2651c4aad10142580262655e42fa5a66833bf5401.
+// WatchProviderBanChanged is a free log subscription operation binding the contract event 0xfb129c89f1efff73dd65abfbf405fb7406da44fe14952903f6a45f85a576fc7d.
 //
-// Solidity: event ProviderStatusChanged(address _providerAddr, uint8 status)
-func (_IProviderManager *IProviderManagerFilterer) WatchProviderStatusChanged(opts *bind.WatchOpts, sink chan<- *IProviderManagerProviderStatusChanged) (event.Subscription, error) {
+// Solidity: event ProviderBanChanged(address addr, bool status)
+func (_IProviderManager *IProviderManagerFilterer) WatchProviderBanChanged(opts *bind.WatchOpts, sink chan<- *IProviderManagerProviderBanChanged) (event.Subscription, error) {
 
-	logs, sub, err := _IProviderManager.contract.WatchLogs(opts, "ProviderStatusChanged")
+	logs, sub, err := _IProviderManager.contract.WatchLogs(opts, "ProviderBanChanged")
 	if err != nil {
 		return nil, err
 	}
@@ -5314,8 +5301,8 @@ func (_IProviderManager *IProviderManagerFilterer) WatchProviderStatusChanged(op
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(IProviderManagerProviderStatusChanged)
-				if err := _IProviderManager.contract.UnpackLog(event, "ProviderStatusChanged", log); err != nil {
+				event := new(IProviderManagerProviderBanChanged)
+				if err := _IProviderManager.contract.UnpackLog(event, "ProviderBanChanged", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -5336,12 +5323,280 @@ func (_IProviderManager *IProviderManagerFilterer) WatchProviderStatusChanged(op
 	}), nil
 }
 
-// ParseProviderStatusChanged is a log parse operation binding the contract event 0x824cd9acaf7b71614920a4b2651c4aad10142580262655e42fa5a66833bf5401.
+// ParseProviderBanChanged is a log parse operation binding the contract event 0xfb129c89f1efff73dd65abfbf405fb7406da44fe14952903f6a45f85a576fc7d.
 //
-// Solidity: event ProviderStatusChanged(address _providerAddr, uint8 status)
-func (_IProviderManager *IProviderManagerFilterer) ParseProviderStatusChanged(log types.Log) (*IProviderManagerProviderStatusChanged, error) {
-	event := new(IProviderManagerProviderStatusChanged)
-	if err := _IProviderManager.contract.UnpackLog(event, "ProviderStatusChanged", log); err != nil {
+// Solidity: event ProviderBanChanged(address addr, bool status)
+func (_IProviderManager *IProviderManagerFilterer) ParseProviderBanChanged(log types.Log) (*IProviderManagerProviderBanChanged, error) {
+	event := new(IProviderManagerProviderBanChanged)
+	if err := _IProviderManager.contract.UnpackLog(event, "ProviderBanChanged", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// IProviderManagerProviderRemovedIterator is returned from FilterProviderRemoved and is used to iterate over the raw logs and unpacked data for ProviderRemoved events raised by the IProviderManager contract.
+type IProviderManagerProviderRemovedIterator struct {
+	Event *IProviderManagerProviderRemoved // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *IProviderManagerProviderRemovedIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(IProviderManagerProviderRemoved)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(IProviderManagerProviderRemoved)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *IProviderManagerProviderRemovedIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *IProviderManagerProviderRemovedIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// IProviderManagerProviderRemoved represents a ProviderRemoved event raised by the IProviderManager contract.
+type IProviderManagerProviderRemoved struct {
+	Addr common.Address
+	Raw  types.Log // Blockchain specific contextual infos
+}
+
+// FilterProviderRemoved is a free log retrieval operation binding the contract event 0x1589f8555933761a3cff8aa925061be3b46e2dd43f621322ab611d300f62b1d9.
+//
+// Solidity: event ProviderRemoved(address addr)
+func (_IProviderManager *IProviderManagerFilterer) FilterProviderRemoved(opts *bind.FilterOpts) (*IProviderManagerProviderRemovedIterator, error) {
+
+	logs, sub, err := _IProviderManager.contract.FilterLogs(opts, "ProviderRemoved")
+	if err != nil {
+		return nil, err
+	}
+	return &IProviderManagerProviderRemovedIterator{contract: _IProviderManager.contract, event: "ProviderRemoved", logs: logs, sub: sub}, nil
+}
+
+// WatchProviderRemoved is a free log subscription operation binding the contract event 0x1589f8555933761a3cff8aa925061be3b46e2dd43f621322ab611d300f62b1d9.
+//
+// Solidity: event ProviderRemoved(address addr)
+func (_IProviderManager *IProviderManagerFilterer) WatchProviderRemoved(opts *bind.WatchOpts, sink chan<- *IProviderManagerProviderRemoved) (event.Subscription, error) {
+
+	logs, sub, err := _IProviderManager.contract.WatchLogs(opts, "ProviderRemoved")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(IProviderManagerProviderRemoved)
+				if err := _IProviderManager.contract.UnpackLog(event, "ProviderRemoved", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseProviderRemoved is a log parse operation binding the contract event 0x1589f8555933761a3cff8aa925061be3b46e2dd43f621322ab611d300f62b1d9.
+//
+// Solidity: event ProviderRemoved(address addr)
+func (_IProviderManager *IProviderManagerFilterer) ParseProviderRemoved(log types.Log) (*IProviderManagerProviderRemoved, error) {
+	event := new(IProviderManagerProviderRemoved)
+	if err := _IProviderManager.contract.UnpackLog(event, "ProviderRemoved", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// IProviderManagerProviderWaitingForApprovalIterator is returned from FilterProviderWaitingForApproval and is used to iterate over the raw logs and unpacked data for ProviderWaitingForApproval events raised by the IProviderManager contract.
+type IProviderManagerProviderWaitingForApprovalIterator struct {
+	Event *IProviderManagerProviderWaitingForApproval // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *IProviderManagerProviderWaitingForApprovalIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(IProviderManagerProviderWaitingForApproval)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(IProviderManagerProviderWaitingForApproval)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *IProviderManagerProviderWaitingForApprovalIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *IProviderManagerProviderWaitingForApprovalIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// IProviderManagerProviderWaitingForApproval represents a ProviderWaitingForApproval event raised by the IProviderManager contract.
+type IProviderManagerProviderWaitingForApproval struct {
+	Addr common.Address
+	Raw  types.Log // Blockchain specific contextual infos
+}
+
+// FilterProviderWaitingForApproval is a free log retrieval operation binding the contract event 0x499ee8b60c37d33e7ef4118e0b351258ec86a6d6cb2e3b71755ee89af0d8e343.
+//
+// Solidity: event ProviderWaitingForApproval(address addr)
+func (_IProviderManager *IProviderManagerFilterer) FilterProviderWaitingForApproval(opts *bind.FilterOpts) (*IProviderManagerProviderWaitingForApprovalIterator, error) {
+
+	logs, sub, err := _IProviderManager.contract.FilterLogs(opts, "ProviderWaitingForApproval")
+	if err != nil {
+		return nil, err
+	}
+	return &IProviderManagerProviderWaitingForApprovalIterator{contract: _IProviderManager.contract, event: "ProviderWaitingForApproval", logs: logs, sub: sub}, nil
+}
+
+// WatchProviderWaitingForApproval is a free log subscription operation binding the contract event 0x499ee8b60c37d33e7ef4118e0b351258ec86a6d6cb2e3b71755ee89af0d8e343.
+//
+// Solidity: event ProviderWaitingForApproval(address addr)
+func (_IProviderManager *IProviderManagerFilterer) WatchProviderWaitingForApproval(opts *bind.WatchOpts, sink chan<- *IProviderManagerProviderWaitingForApproval) (event.Subscription, error) {
+
+	logs, sub, err := _IProviderManager.contract.WatchLogs(opts, "ProviderWaitingForApproval")
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(IProviderManagerProviderWaitingForApproval)
+				if err := _IProviderManager.contract.UnpackLog(event, "ProviderWaitingForApproval", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseProviderWaitingForApproval is a log parse operation binding the contract event 0x499ee8b60c37d33e7ef4118e0b351258ec86a6d6cb2e3b71755ee89af0d8e343.
+//
+// Solidity: event ProviderWaitingForApproval(address addr)
+func (_IProviderManager *IProviderManagerFilterer) ParseProviderWaitingForApproval(log types.Log) (*IProviderManagerProviderWaitingForApproval, error) {
+	event := new(IProviderManagerProviderWaitingForApproval)
+	if err := _IProviderManager.contract.UnpackLog(event, "ProviderWaitingForApproval", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

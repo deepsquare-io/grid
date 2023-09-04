@@ -199,6 +199,14 @@ func (c *Client) Claim(ctx context.Context) error {
 	return nil
 }
 
+func (c *Client) GetOldInfo(ctx context.Context) (*metaschedulerabi.Provider, error) {
+	p, err := c.providerManager.GetProvider(&bind.CallOpts{Context: ctx}, c.fromAddress)
+	if err != nil {
+		return nil, WrapError(err)
+	}
+	return &p, nil
+}
+
 // Register a cluster
 //
 // Will send a transaction to register the cluster.
@@ -208,7 +216,6 @@ func (c *Client) Register(
 	prices metaschedulerabi.ProviderPrices,
 	labels []metaschedulerabi.Label,
 ) error {
-	// TODO: check if
 	logger.I.Info(
 		"called register",
 		zap.Any("hardware", hardware),

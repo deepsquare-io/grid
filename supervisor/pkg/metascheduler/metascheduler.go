@@ -82,8 +82,10 @@ type MetaScheduler interface {
 		claimNextCancellingJobEvents chan<- *metaschedulerabi.MetaSchedulerClaimNextCancellingJobEvent,
 		claimJobEvents chan<- *metaschedulerabi.MetaSchedulerClaimJobEvent,
 	) (event.Subscription, error)
-	// GetProviderAddress fetches the provider public address
+	// GetProviderAddress fetches the provider public address.
 	GetProviderAddress() common.Address
+	// GetOldInfo fetches the last registration provider information.
+	GetOldInfo(ctx context.Context) (*metaschedulerabi.Provider, error)
 	// GetJobStatus fetches the job status.
 	GetJobStatus(ctx context.Context, jobID [32]byte) (JobStatus, error)
 	SetJobStatus(

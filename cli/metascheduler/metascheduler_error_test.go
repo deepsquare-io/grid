@@ -129,6 +129,15 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 			},
 		},
 		{
+			name: "ParseAlreadyDone",
+			act: func(r []interface{}) error {
+				return suite.contract.ThrowAlreadyDone(&bind.CallOpts{})
+			},
+			expected: func(r []interface{}) error {
+				return &metascheduler.AlreadyDone{}
+			},
+		},
+		{
 			name: "ParseJobHotStatusOnly",
 			arrange: []interface{}{
 				metascheduler.JobStatus(1),
