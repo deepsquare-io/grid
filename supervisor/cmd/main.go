@@ -904,7 +904,7 @@ var app = &cli.App{
 					}...,
 				)
 
-				container.metascheduler.Register(
+				if err := container.metascheduler.Register(
 					ctx,
 					metaschedulerabi.ProviderHardware{
 						Nodes:       nodes,
@@ -918,7 +918,9 @@ var app = &cli.App{
 						MemPricePerMin: memPricePerMin,
 					},
 					labels,
-				)
+				); err != nil {
+					logger.I.Fatal("supervisor failed to register", zap.Error(err))
+				}
 			}()
 		} else {
 			logger.I.Warn("benchmark disabled, will not register to the smart-contract")
