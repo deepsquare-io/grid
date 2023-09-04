@@ -79,10 +79,11 @@ var (
 	labels         []metaschedulerabi.Label
 
 	benchmarkHPLImage       string
+	benchmarkHPLSingleNode  bool
 	benchmarkSpeedTestImage string
 	benchmarkOSUImage       string
 	benchmarkIORImage       string
-	benchmarkHPLSingleNode  bool
+	benchmarkIORSingleNode  bool
 	benchmarkDisable        bool
 	benchmarkRunAs          string
 	benchmarkUnresponsive   bool
@@ -374,6 +375,14 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		Destination: &benchmarkIORImage,
 		Value:       benchmark.DefaultIORImage,
 		EnvVars:     []string{"BENCHMARK_IOR_IMAGE"},
+		Category:    "Benchmark:",
+	},
+	&cli.BoolFlag{
+		Name:        "benchmark.ior.single-node",
+		Usage:       "Force single node benchmark for IOR.",
+		Destination: &benchmarkIORSingleNode,
+		Value:       false,
+		EnvVars:     []string{"BENCHMARK_IOR_SINGLE_NODE"},
 		Category:    "Benchmark:",
 	},
 	&cli.StringFlag{
@@ -726,6 +735,12 @@ var app = &cli.App{
 				} else {
 					hplNodes = nodes
 				}
+				var iorNodes uint64
+				if benchmarkIORSingleNode {
+					iorNodes = 1
+				} else {
+					iorNodes = nodes
+				}
 				cpusPerNode, err := container.scheduler.FindCPUsPerNode(ctx, findOpts...)
 				if err != nil {
 					logger.I.Fatal("failed to check cpus per node", zap.Error(err))
@@ -767,7 +782,7 @@ var app = &cli.App{
 				iorOpts := append(
 					commonBenchmarkOpts,
 					benchmark.WithClusterSpecs(
-						nodes,
+						iorNodes,
 						minCPUsPerNode,
 						minGPUsPerNode,
 						minMemPerNode,
