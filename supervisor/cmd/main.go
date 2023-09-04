@@ -817,9 +817,9 @@ var app = &cli.App{
 					CpuPricePerMin: cpuPricePerMin,
 					MemPricePerMin: memPricePerMin,
 				}
-				if !(metascheduler.ProviderHardwareEqual(oldInfo.ProviderHardware, hardware) &&
+				if metascheduler.ProviderHardwareEqual(oldInfo.ProviderHardware, hardware) &&
 					oldInfo.ProviderPrices == prices &&
-					metascheduler.LabelsEqual(oldInfo.Labels, labels)) {
+					metascheduler.LabelsEqual(oldInfo.Labels, labels) {
 					logger.I.Info(
 						"hardware, prices and labels are the same, no need to run a benchmark",
 						zap.Any("info", oldInfo),
