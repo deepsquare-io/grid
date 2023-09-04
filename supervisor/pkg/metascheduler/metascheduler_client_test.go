@@ -41,14 +41,31 @@ var (
 	metaschedulerAddress     = common.HexToAddress("0x1")
 	providerJobQueuesAddress = common.HexToAddress("0x2")
 	jobRepositoryAddress     = common.HexToAddress("0x3")
+	providerManagerAddress   = common.HexToAddress("0x4")
 )
 
-func (suite *ClientTestSuite) mockProviderJobQueue() {
+func (suite *ClientTestSuite) mockProviderJobQueues() {
 	// Pack input
 	input, err := metascheduler.MetaschedulerABI.Pack("providerJobQueues")
 	suite.Require().NoError(err)
 	output, err := metascheduler.MetaschedulerABI.Methods["providerJobQueues"].Outputs.Pack(
 		providerJobQueuesAddress,
+	)
+	suite.Require().NoError(err)
+
+	// Mock
+	suite.contractBackend.EXPECT().CallContract(mock.Anything, ethereum.CallMsg{
+		To:   &metaschedulerAddress,
+		Data: input,
+	}, mock.Anything).Return(output, nil)
+}
+
+func (suite *ClientTestSuite) mockProviderManager() {
+	// Pack input
+	input, err := metascheduler.MetaschedulerABI.Pack("providerManager")
+	suite.Require().NoError(err)
+	output, err := metascheduler.MetaschedulerABI.Methods["providerManager"].Outputs.Pack(
+		providerManagerAddress,
 	)
 	suite.Require().NoError(err)
 
@@ -93,6 +110,61 @@ func (suite *ClientTestSuite) mockProviderJobQueuesContractCall(
 		To:   &providerJobQueuesAddress,
 		Data: input,
 	}, mock.Anything).Return(output, nil)
+}
+
+func (suite *ClientTestSuite) mockProviderManagerContractCall(
+	name string,
+	inputs []interface{},
+	outputs []interface{},
+) {
+	// Pack input
+	abi, err := metaschedulerabi.IProviderManagerMetaData.GetAbi()
+	suite.Require().NoError(err)
+	input, err := abi.Pack(name, inputs...)
+	suite.Require().NoError(err)
+	output, err := abi.Methods[name].Outputs.Pack(outputs...)
+	suite.Require().NoError(err)
+
+	// Mock
+	suite.contractBackend.EXPECT().CallContract(mock.Anything, ethereum.CallMsg{
+		To:   &providerManagerAddress,
+		Data: input,
+	}, mock.Anything).Return(output, nil)
+}
+
+func (suite *ClientTestSuite) mockProviderManagerContractTransaction(
+	name string,
+	args ...interface{},
+) {
+	// Mock code presence
+	suite.contractBackend.EXPECT().
+		PendingCodeAt(
+			mock.Anything,
+			providerManagerAddress,
+		).Return(
+		common.FromHex("0xdeadface"),
+		nil,
+	)
+
+	// Pack input
+	abi, err := metaschedulerabi.IProviderManagerMetaData.GetAbi()
+	suite.Require().NoError(err)
+	input, err := abi.Pack(name, args...)
+	suite.Require().NoError(err)
+
+	// Mock
+	suite.contractBackend.EXPECT().
+		EstimateGas(
+			mock.Anything,
+			mock.MatchedBy(func(call ethereum.CallMsg) bool {
+				return call.From == fromAddress && *call.To == providerManagerAddress &&
+					bytes.Equal(call.Data, input)
+			}),
+		).Return(
+		uint64(0),
+		nil,
+	)
+	suite.contractBackend.EXPECT().SendTransaction(mock.Anything, mock.Anything).Return(nil)
 }
 
 func (suite *ClientTestSuite) mockMetaschedulerContractCall(
@@ -183,9 +255,11 @@ func (suite *ClientTestSuite) BeforeTest(suiteName, testName string) {
 	suite.contractBackend = mockbind.NewContractBackend(suite.T())
 
 	// Assert calling providerJobQueues
-	suite.mockProviderJobQueue()
+	suite.mockProviderJobQueues()
 	// Assert calling jobs
 	suite.mockIJobRepository()
+	// Assert calling providermanager
+	suite.mockProviderManager()
 
 	suite.deployBackend = mockbind.NewDeployBackend(suite.T())
 	suite.impl = metascheduler.NewClient(
@@ -196,11 +270,6 @@ func (suite *ClientTestSuite) BeforeTest(suiteName, testName string) {
 		suite.contractBackend,
 		privateKey,
 	)
-}
-
-func (suite *ClientTestSuite) assertMocksExpectations() {
-	suite.contractBackend.AssertExpectations(suite.T())
-	suite.deployBackend.AssertExpectations(suite.T())
 }
 
 func (suite *ClientTestSuite) mustAuthenticate() {
@@ -227,7 +296,6 @@ func (suite *ClientTestSuite) TestClaim() {
 
 	// Assert
 	suite.NoError(err)
-	suite.assertMocksExpectations()
 }
 
 func (suite *ClientTestSuite) TestClaimNoJob() {
@@ -244,13 +312,47 @@ func (suite *ClientTestSuite) TestClaimNoJob() {
 
 	// Assert
 	suite.NoError(err)
-	suite.assertMocksExpectations()
+}
+
+func (suite *ClientTestSuite) TestRegister() {
+	// Arrange
+	hardware := metaschedulerabi.ProviderHardware{
+		Nodes:       1,
+		GpusPerNode: []uint64{2},
+		CpusPerNode: []uint64{3},
+		MemPerNode:  []uint64{4},
+	}
+	prices := metaschedulerabi.ProviderPrices{
+		GpuPricePerMin: big.NewInt(1),
+		CpuPricePerMin: big.NewInt(2),
+		MemPricePerMin: big.NewInt(3),
+	}
+	labels := []metaschedulerabi.Label{
+		{
+			Key:   "key",
+			Value: "value",
+		},
+	}
+	suite.mustAuthenticate()
+	suite.mockProviderManagerContractTransaction(
+		"register",
+		hardware,
+		prices,
+		labels,
+	)
+	// Must wait
+	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
+
+	// Act
+	err := suite.impl.Register(context.Background(), hardware, prices, labels)
+
+	// Assert
+	suite.NoError(err)
 }
 
 func (suite *ClientTestSuite) TestSetJobStatus() {
 	// Arrange
 	suite.mustAuthenticate()
-	// Must call StartJob
 	suite.mockContractTransaction(
 		"providerSetJobStatus",
 		jobID,
@@ -271,7 +373,6 @@ func (suite *ClientTestSuite) TestSetJobStatus() {
 
 	// Assert
 	suite.NoError(err)
-	suite.assertMocksExpectations()
 }
 
 func (suite *ClientTestSuite) TestRefuseJob() {
@@ -285,7 +386,6 @@ func (suite *ClientTestSuite) TestRefuseJob() {
 
 	// Assert
 	suite.NoError(err)
-	suite.assertMocksExpectations()
 }
 
 func (suite *ClientTestSuite) TestWatchEvents() {
@@ -323,7 +423,6 @@ func (suite *ClientTestSuite) TestWatchEvents() {
 	// Assert
 	suite.NoError(err)
 	suite.Equal(res, sub)
-	suite.assertMocksExpectations()
 }
 
 func (suite *ClientTestSuite) TestClaimCancelling() {
@@ -343,7 +442,6 @@ func (suite *ClientTestSuite) TestClaimCancelling() {
 
 	// Assert
 	suite.NoError(err)
-	suite.assertMocksExpectations()
 }
 
 func (suite *ClientTestSuite) TestClaimTopUp() {
@@ -363,7 +461,6 @@ func (suite *ClientTestSuite) TestClaimTopUp() {
 
 	// Assert
 	suite.NoError(err)
-	suite.assertMocksExpectations()
 }
 
 func (suite *ClientTestSuite) TestGetJobStatus() {
@@ -417,7 +514,6 @@ func (suite *ClientTestSuite) TestClaimCancellingNoCancelling() {
 
 	// Assert
 	suite.NoError(err)
-	suite.assertMocksExpectations()
 }
 
 func TestClientTestSuite(t *testing.T) {

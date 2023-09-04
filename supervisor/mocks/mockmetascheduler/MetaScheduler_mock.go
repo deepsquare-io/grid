@@ -403,13 +403,13 @@ func (_c *MetaScheduler_RefuseJob_Call) RunAndReturn(run func(context.Context, [
 	return _c
 }
 
-// Register provides a mock function with given fields: ctx, nodes, cpus, gpus, mem, gflops
-func (_m *MetaScheduler) Register(ctx context.Context, nodes uint64, cpus uint64, gpus uint64, mem uint64, gflops float64) error {
-	ret := _m.Called(ctx, nodes, cpus, gpus, mem, gflops)
+// Register provides a mock function with given fields: ctx, hardware, prices, labels
+func (_m *MetaScheduler) Register(ctx context.Context, hardware metaschedulerabi.ProviderHardware, prices metaschedulerabi.ProviderPrices, labels []metaschedulerabi.Label) error {
+	ret := _m.Called(ctx, hardware, prices, labels)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, uint64, uint64, float64) error); ok {
-		r0 = rf(ctx, nodes, cpus, gpus, mem, gflops)
+	if rf, ok := ret.Get(0).(func(context.Context, metaschedulerabi.ProviderHardware, metaschedulerabi.ProviderPrices, []metaschedulerabi.Label) error); ok {
+		r0 = rf(ctx, hardware, prices, labels)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -424,18 +424,16 @@ type MetaScheduler_Register_Call struct {
 
 // Register is a helper method to define mock.On call
 //   - ctx context.Context
-//   - nodes uint64
-//   - cpus uint64
-//   - gpus uint64
-//   - mem uint64
-//   - gflops float64
-func (_e *MetaScheduler_Expecter) Register(ctx interface{}, nodes interface{}, cpus interface{}, gpus interface{}, mem interface{}, gflops interface{}) *MetaScheduler_Register_Call {
-	return &MetaScheduler_Register_Call{Call: _e.mock.On("Register", ctx, nodes, cpus, gpus, mem, gflops)}
+//   - hardware metaschedulerabi.ProviderHardware
+//   - prices metaschedulerabi.ProviderPrices
+//   - labels []metaschedulerabi.Label
+func (_e *MetaScheduler_Expecter) Register(ctx interface{}, hardware interface{}, prices interface{}, labels interface{}) *MetaScheduler_Register_Call {
+	return &MetaScheduler_Register_Call{Call: _e.mock.On("Register", ctx, hardware, prices, labels)}
 }
 
-func (_c *MetaScheduler_Register_Call) Run(run func(ctx context.Context, nodes uint64, cpus uint64, gpus uint64, mem uint64, gflops float64)) *MetaScheduler_Register_Call {
+func (_c *MetaScheduler_Register_Call) Run(run func(ctx context.Context, hardware metaschedulerabi.ProviderHardware, prices metaschedulerabi.ProviderPrices, labels []metaschedulerabi.Label)) *MetaScheduler_Register_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64), args[3].(uint64), args[4].(uint64), args[5].(float64))
+		run(args[0].(context.Context), args[1].(metaschedulerabi.ProviderHardware), args[2].(metaschedulerabi.ProviderPrices), args[3].([]metaschedulerabi.Label))
 	})
 	return _c
 }
@@ -445,7 +443,7 @@ func (_c *MetaScheduler_Register_Call) Return(_a0 error) *MetaScheduler_Register
 	return _c
 }
 
-func (_c *MetaScheduler_Register_Call) RunAndReturn(run func(context.Context, uint64, uint64, uint64, uint64, float64) error) *MetaScheduler_Register_Call {
+func (_c *MetaScheduler_Register_Call) RunAndReturn(run func(context.Context, metaschedulerabi.ProviderHardware, metaschedulerabi.ProviderPrices, []metaschedulerabi.Label) error) *MetaScheduler_Register_Call {
 	_c.Call.Return(run)
 	return _c
 }

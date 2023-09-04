@@ -2,15 +2,20 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"math/big"
 	"net"
 	"net/http"
 	"os"
 	"slices"
+	"strings"
 	"time"
 
 	cryptotls "crypto/tls"
 	"crypto/x509"
 
+	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/gc"
@@ -66,6 +71,11 @@ var (
 	sinfo     string
 	nvidiaSMI string
 	partition string
+
+	cpuPricePerMin *big.Int
+	gpuPricePerMin *big.Int
+	memPricePerMin *big.Int
+	labels         []metaschedulerabi.Label
 
 	benchmarkHPLImage       string
 	benchmarkSpeedTestImage string
@@ -189,6 +199,74 @@ var flags = []cli.Flag{
 		Destination: &ethHexPK,
 		EnvVars:     []string{"ETH_PRIVATE_KEY"},
 		Category:    "MetaScheduler:",
+	},
+	&cli.StringFlag{
+		Name:       "metascheduler.gpu-price-per-min",
+		Usage:      "Price of the GPU per min. Reference for a rtx3090: 8500000000000000000 (8.5 creds/(CPU.min)).",
+		HasBeenSet: true,
+		Value:      "8500000000000000000",
+		Action: func(ctx *cli.Context, s string) error {
+			val, ok := new(big.Int).SetString(s, 10)
+			if !ok {
+				return errors.New("invalid gpu-price-per-min value")
+			}
+			gpuPricePerMin = val
+			return nil
+		},
+		EnvVars:  []string{"METASCHEDULER_GPU_PRICE_PER_MIN"},
+		Category: "MetaScheduler:",
+	},
+	&cli.StringFlag{
+		Name:       "metascheduler.cpu-price-per-min",
+		Usage:      "Price of the CPU per min. Reference for a zen2: 950000000000000000 (0.95 creds/(GPU.min)).",
+		HasBeenSet: true,
+		Value:      "950000000000000000",
+		Action: func(ctx *cli.Context, s string) error {
+			val, ok := new(big.Int).SetString(s, 10)
+			if !ok {
+				return errors.New("invalid cpu-price-per-min value")
+			}
+			cpuPricePerMin = val
+			return nil
+		},
+		EnvVars:  []string{"METASCHEDULER_CPU_PRICE_PER_MIN"},
+		Category: "MetaScheduler:",
+	},
+	&cli.StringFlag{
+		Name:       "metascheduler.mem-price-per-min",
+		Usage:      "Price of the Mem (MB) per min. Reference: 80000000000000 (0.00008 creds/(MB.min)).",
+		HasBeenSet: true,
+		Value:      "80000000000000",
+		Action: func(ctx *cli.Context, s string) error {
+			val, ok := new(big.Int).SetString(s, 10)
+			if !ok {
+				return errors.New("invalid mem-price-per-min value")
+			}
+			memPricePerMin = val
+			return nil
+		},
+		EnvVars:  []string{"METASCHEDULER_MEM_PRICE_PER_MIN"},
+		Category: "MetaScheduler:",
+	},
+	&cli.StringSliceFlag{
+		Name:  "metascheduler.labels",
+		Usage: "Comma-separated list of additional labels for registration (recommended os=linux,arch=amd64,gpu=rtx3090,cpu=amd-epyc-7302,name=my-cluster,zone=fr-paris-1,region=fr-paris).",
+		Action: func(ctx *cli.Context, slabels []string) error {
+			labels = make([]metaschedulerabi.Label, 0, len(slabels))
+			for _, sl := range slabels {
+				k, v, ok := strings.Cut(sl, "=")
+				if !ok {
+					return fmt.Errorf("label %q is missing a '=' key-value separator", sl)
+				}
+				labels = append(labels, metaschedulerabi.Label{
+					Key:   k,
+					Value: v,
+				})
+			}
+			return nil
+		},
+		EnvVars:  []string{"METASCHEDULER_LABELS"},
+		Category: "MetaScheduler:",
 	},
 	&cli.StringFlag{
 		Name:        "slurm.ssh.address",
@@ -713,6 +791,133 @@ var app = &cli.App{
 					osuOpts,
 					speedtestOpts,
 					iorOpts,
+				)
+
+				result := benchmark.DefaultStore.Dump()
+
+				labels = append(labels,
+					[]metaschedulerabi.Label{
+						{
+							Key:   "compute.gflops",
+							Value: fmt.Sprintf("%.2f", result.GFLOPS),
+						},
+						{
+							Key:   "network.upload.bw.mbps",
+							Value: fmt.Sprintf("%.2f", float64(result.UploadBandwidth)/1e6),
+						},
+						{
+							Key:   "network.download.bw.mbps",
+							Value: fmt.Sprintf("%.2f", float64(result.DownloadBandwidth)/1e6),
+						},
+						{
+							Key:   "network.p2p.bw.mbps",
+							Value: fmt.Sprintf("%.2f", result.P2PBidirectionalBandwidth),
+						},
+						{
+							Key:   "network.p2p.latency.us",
+							Value: fmt.Sprintf("%.2f", result.P2PLatency),
+						},
+						{
+							Key:   "network.all-to-all.latency.us",
+							Value: fmt.Sprintf("%.2f", result.AllToAllCollectiveLatency),
+						},
+						{
+							Key:   "storage.scratch.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.scratch.read.iops",
+							Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.scratch.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.scratch.write.iops",
+							Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.IOPS),
+						},
+						{
+							Key:   "storage.shared-world-tmp.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.shared-world-tmp.read.iops",
+							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.shared-world-tmp.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.shared-world-tmp.write.iops",
+							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.IOPS),
+						},
+						{
+							Key:   "storage.shared-tmp.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.shared-tmp.read.iops",
+							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.shared-tmp.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.shared-tmp.write.iops",
+							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.IOPS),
+						},
+						{
+							Key:   "storage.disk-world-tmp.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.disk-world-tmp.read.iops",
+							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.disk-world-tmp.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.disk-world-tmp.write.iops",
+							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.IOPS),
+						},
+						{
+							Key:   "storage.disk-tmp.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.disk-tmp.read.iops",
+							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.disk-tmp.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.disk-tmp.write.iops",
+							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.IOPS),
+						},
+					}...,
+				)
+
+				container.metascheduler.Register(
+					ctx,
+					metaschedulerabi.ProviderHardware{
+						Nodes:       nodes,
+						GpusPerNode: gpusPerNode,
+						CpusPerNode: cpusPerNode,
+						MemPerNode:  memPerNode,
+					},
+					metaschedulerabi.ProviderPrices{
+						GpuPricePerMin: gpuPricePerMin,
+						CpuPricePerMin: cpuPricePerMin,
+						MemPricePerMin: memPricePerMin,
+					},
+					labels,
 				)
 			}()
 		} else {

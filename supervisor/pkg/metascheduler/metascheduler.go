@@ -94,11 +94,9 @@ type MetaScheduler interface {
 	) error
 	Register(
 		ctx context.Context,
-		nodes uint64,
-		cpus uint64,
-		gpus uint64,
-		mem uint64,
-		gflops float64,
+		hardware metaschedulerabi.ProviderHardware,
+		prices metaschedulerabi.ProviderPrices,
+		labels []metaschedulerabi.Label,
 	) error
 	// GetJob fetches a job.
 	GetJob(ctx context.Context, jobID [32]byte) (*Job, error)

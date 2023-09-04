@@ -61,6 +61,7 @@ type Client struct {
 	contractWS           *metaschedulerabi.MetaScheduler
 	jobQueues            *metaschedulerabi.IProviderJobQueues
 	jobs                 *metaschedulerabi.IJobRepository
+	providerManager      *metaschedulerabi.IProviderManager
 	pk                   *ecdsa.PrivateKey
 	fromAddress          common.Address
 }
@@ -90,21 +91,33 @@ func NewClient(
 	jobQueues, err := metaschedulerabi.NewIProviderJobQueues(jobQueuesAddress, rpc)
 	if err != nil {
 		logger.I.Panic(
-			"failed to instanciate provider job queues smart-contract address",
+			"failed to instanciate provider job queues",
 			zap.Error(err),
 			zap.String("address", jobQueuesAddress.Hex()),
 		)
 	}
 	jobsAddress, err := msRPC.Jobs(&bind.CallOpts{})
 	if err != nil {
-		logger.I.Panic("failed to fetch provider job queues smart-contract address", zap.Error(err))
+		logger.I.Panic("failed to fetch jobs smart-contract address", zap.Error(err))
 	}
 	jobs, err := metaschedulerabi.NewIJobRepository(jobsAddress, rpc)
 	if err != nil {
 		logger.I.Panic(
-			"failed to instanciate job repository smart-contract address",
+			"failed to instanciate job repository",
 			zap.Error(err),
 			zap.String("address", jobsAddress.Hex()),
+		)
+	}
+	providerManagerAddress, err := msRPC.ProviderManager(&bind.CallOpts{})
+	if err != nil {
+		logger.I.Panic("failed to fetch provider manager smart-contract address", zap.Error(err))
+	}
+	providerManager, err := metaschedulerabi.NewIProviderManager(providerManagerAddress, rpc)
+	if err != nil {
+		logger.I.Panic(
+			"failed to instanciate provider manager",
+			zap.Error(err),
+			zap.String("address", providerManagerAddress.Hex()),
 		)
 	}
 	return &Client{
@@ -119,6 +132,7 @@ func NewClient(
 		pk:                   pk,
 		fromAddress:          fromAddress,
 		jobs:                 jobs,
+		providerManager:      providerManager,
 	}
 }
 
@@ -190,40 +204,37 @@ func (c *Client) Claim(ctx context.Context) error {
 // Will send a transaction to register the cluster.
 func (c *Client) Register(
 	ctx context.Context,
-	nodes uint64,
-	cpus uint64,
-	gpus uint64,
-	mem uint64,
-	gflops float64,
+	hardware metaschedulerabi.ProviderHardware,
+	prices metaschedulerabi.ProviderPrices,
+	labels []metaschedulerabi.Label,
 ) error {
+	// TODO: check if
 	logger.I.Info(
 		"called register",
-		zap.Uint64("nodes", nodes),
-		zap.Uint64("cpus", cpus),
-		zap.Uint64("mem", mem),
-		zap.Uint64("gpus", gpus),
-		zap.Float64("gflops", gflops),
+		zap.Any("hardware", hardware),
+		zap.Any("prices", prices),
+		zap.Any("labels", labels),
 	)
-	// TODO: implements
-	// auth, err := c.auth(ctx)
-	// if err != nil {
-	// 	return err
-	// }
+	auth, err := c.auth(ctx)
+	if err != nil {
+		return err
+	}
 
-	// tx, err := c.metaschedulerRPC.Register(
-	// 	auth,
-	// 	cpus,
-	// 	gpus,
-	// 	mem,
-	// 	nodes,
-	// )
-	// if err != nil {
-	// 	return err
-	// }
-	// logger.I.Info("called register", zap.String("tx", tx.Hash().String()))
-	// _, err = bind.WaitMined(ctx, c.client, tx)
-	// logger.I.Info("register mined", zap.String("tx", tx.Hash().String()))
-	// return err
+	tx, err := c.providerManager.Register(
+		auth,
+		hardware,
+		prices,
+		labels,
+	)
+	if err != nil {
+		return WrapError(err)
+	}
+	logger.I.Info("called register", zap.String("tx", tx.Hash().String()))
+	_, err = bind.WaitMined(ctx, c.DeployBackend, tx)
+	if err != nil {
+		return WrapError(err)
+	}
+	logger.I.Info("register mined", zap.String("tx", tx.Hash().String()))
 	return nil
 }
 
