@@ -15,6 +15,36 @@ import (
 	"go.uber.org/zap"
 )
 
+type MachineSpec struct {
+	MicroArch string `json:"microarch"`
+	OS        string `json:"os"`
+	CPU       string `json:"cpu"`
+	Arch      string `json:"arch"`
+}
+
+func NewMachineHandler(
+	next func(res *MachineSpec, err error) error,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var spec MachineSpec
+		err := json.NewDecoder(r.Body).Decode(&spec)
+		if err != nil {
+			logger.I.Error("failed to decode machine specifications", zap.Error(err))
+		}
+
+		if err := next(&spec, err); err != nil {
+			http.Error(
+				w,
+				fmt.Sprintf("internal server error: %s", err),
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		fmt.Fprint(w, "success")
+	}
+}
+
 func NewIORHandler(
 	next func(avgr *ior.Result, avgw *ior.Result, err error) error,
 ) http.HandlerFunc {

@@ -837,6 +837,22 @@ var app = &cli.App{
 
 					labels = metascheduler.MergeLabels(labels, []metaschedulerabi.Label{
 						{
+							Key:   "cpu",
+							Value: result.MachineSpec.CPU,
+						},
+						{
+							Key:   "cpu.microarch",
+							Value: result.MachineSpec.MicroArch,
+						},
+						{
+							Key:   "os",
+							Value: result.MachineSpec.OS,
+						},
+						{
+							Key:   "arch",
+							Value: result.MachineSpec.Arch,
+						},
+						{
 							Key:   "compute.gflops",
 							Value: fmt.Sprintf("%.2f", result.GFLOPS),
 						},

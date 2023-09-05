@@ -41,6 +41,17 @@ func New(
 	}))
 	r.Route("/benchmark", func(r chi.Router) {
 		r.Use(secret.Guard)
+		r.Post(
+			"/machine",
+			benchmark.NewMachineHandler(func(spec *benchmark.MachineSpec, err error) error {
+				if err != nil {
+					benchmark.DefaultStore.SetFailure(err)
+					return err
+				}
+				benchmark.DefaultStore.SetMachineSpec(spec)
+				return nil
+			}),
+		)
 		r.Put(
 			"/speedtest",
 			benchmark.NewSpeedTestHandler(func(res *speedtest.Result, err error) error {

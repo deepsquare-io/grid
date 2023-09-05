@@ -33,6 +33,8 @@ type Data struct {
 	DiskWorldTmpAvgWrite   *ior.Result
 	DiskTmpAvgRead         *ior.Result
 	DiskTmpAvgWrite        *ior.Result
+
+	MachineSpec *MachineSpec
 }
 
 // Store is a simple store with hard-coded keys to store benchmark results.
@@ -194,6 +196,20 @@ func (s *Store) SetDiskTmpResult(avgr, avgw *ior.Result) {
 	)
 }
 
+func (s *Store) SetMachineSpec(spec *MachineSpec) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.data.MachineSpec = spec
+	select {
+	case s.refresh <- struct{}{}:
+	default:
+	}
+	logger.I.Info(
+		"stored benchmark result",
+		zap.Any("spec", spec),
+	)
+}
+
 func (s *Store) SetFailure(err error) {
 	s.failure <- err
 }
@@ -223,7 +239,8 @@ func (s *Store) IsComplete() bool {
 		s.data.DiskTmpAvgRead != nil &&
 		s.data.DiskTmpAvgWrite != nil &&
 		s.data.DiskWorldTmpAvgRead != nil &&
-		s.data.DiskWorldTmpAvgWrite != nil)
+		s.data.DiskWorldTmpAvgWrite != nil &&
+		s.data.MachineSpec != nil)
 }
 
 func (s *Store) WaitForCompletion(ctx context.Context) (done chan struct{}, errc chan error) {

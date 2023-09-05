@@ -13,6 +13,7 @@ import (
 
 func TestWaitForCompletion(t *testing.T) {
 	var fakeIORResult ior.Result
+	var fakeMachineSpec benchmark.MachineSpec
 	go func() {
 		benchmark.DefaultStore.SetAllToAllCollectiveLatency(1)
 		benchmark.DefaultStore.SetDownloadBandwidth(2)
@@ -25,6 +26,7 @@ func TestWaitForCompletion(t *testing.T) {
 		benchmark.DefaultStore.SetSharedTmpResult(&fakeIORResult, &fakeIORResult)
 		benchmark.DefaultStore.SetDiskTmpResult(&fakeIORResult, &fakeIORResult)
 		benchmark.DefaultStore.SetDiskWorldTmpResult(&fakeIORResult, &fakeIORResult)
+		benchmark.DefaultStore.SetMachineSpec(&fakeMachineSpec)
 		fmt.Println("set")
 	}()
 
@@ -52,6 +54,7 @@ func TestWaitForCompletion(t *testing.T) {
 		DiskWorldTmpAvgWrite:      &fakeIORResult,
 		DiskTmpAvgRead:            &fakeIORResult,
 		DiskTmpAvgWrite:           &fakeIORResult,
+		MachineSpec:               &fakeMachineSpec,
 	}, benchmark.DefaultStore.Dump())
 }
 

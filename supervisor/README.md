@@ -27,6 +27,7 @@ GLOBAL OPTIONS:
    --benchmark.hpl.single-node        Force single node benchmark for HPL. (default: false) [$BENCHMARK_HPL_SINGLE_NODE]
    --benchmark.include-unresponsive   Force benchmark on unresponsive nodes (sinfo --responding --partition=<partition>). (default: false) [$BENCHMARK_UNRESPONSIVE]
    --benchmark.ior.image value        Docker image used for IOR benchmark (default: "registry-1.deepsquare.run#library/ior-benchmarks:latest") [$BENCHMARK_IOR_IMAGE]
+   --benchmark.ior.single-node        Force single node benchmark for IOR. (default: false) [$BENCHMARK_IOR_SINGLE_NODE]
    --benchmark.osu.image value        Docker image used for OSU benchmark (default: "registry-1.deepsquare.run#library/osu-benchmarks:latest") [$BENCHMARK_OSU_IMAGE]
    --benchmark.run-as value           User used for benchmark (default: "root") [$BENCHMARK_RUN_AS]
    --benchmark.speedtest.image value  Docker image used for SpeedTest benchmark (default: "registry-1.docker.io#gists/speedtest-cli:1.2.0") [$BENCHMARK_SPEEDTEST_IMAGE]
