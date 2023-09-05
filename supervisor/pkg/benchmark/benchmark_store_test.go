@@ -14,23 +14,24 @@ import (
 func TestWaitForCompletion(t *testing.T) {
 	var fakeIORResult ior.Result
 	var fakeMachineSpec benchmark.MachineSpec
+	store := benchmark.NewStore()
 	go func() {
-		benchmark.DefaultStore.SetAllToAllCollectiveLatency(1)
-		benchmark.DefaultStore.SetDownloadBandwidth(2)
-		benchmark.DefaultStore.SetGFLOPS(3)
-		benchmark.DefaultStore.SetP2PBidirectionalBandwidth(4)
-		benchmark.DefaultStore.SetP2PLatency(5)
-		benchmark.DefaultStore.SetUploadBandwidth(6)
-		benchmark.DefaultStore.SetScratchResult(&fakeIORResult, &fakeIORResult)
-		benchmark.DefaultStore.SetSharedWorldTmpResult(&fakeIORResult, &fakeIORResult)
-		benchmark.DefaultStore.SetSharedTmpResult(&fakeIORResult, &fakeIORResult)
-		benchmark.DefaultStore.SetDiskTmpResult(&fakeIORResult, &fakeIORResult)
-		benchmark.DefaultStore.SetDiskWorldTmpResult(&fakeIORResult, &fakeIORResult)
-		benchmark.DefaultStore.SetMachineSpec(&fakeMachineSpec)
+		store.SetAllToAllCollectiveLatency(1)
+		store.SetDownloadBandwidth(2)
+		store.SetGFLOPS(3)
+		store.SetP2PBidirectionalBandwidth(4)
+		store.SetP2PLatency(5)
+		store.SetUploadBandwidth(6)
+		store.SetScratchResult(&fakeIORResult, &fakeIORResult)
+		store.SetSharedWorldTmpResult(&fakeIORResult, &fakeIORResult)
+		store.SetSharedTmpResult(&fakeIORResult, &fakeIORResult)
+		store.SetDiskTmpResult(&fakeIORResult, &fakeIORResult)
+		store.SetDiskWorldTmpResult(&fakeIORResult, &fakeIORResult)
+		store.SetMachineSpec(&fakeMachineSpec)
 		fmt.Println("set")
 	}()
 
-	done, errc := benchmark.DefaultStore.WaitForCompletion(context.Background())
+	done, errc := store.WaitForCompletion(context.Background())
 	select {
 	case <-done:
 	case err := <-errc:
@@ -55,21 +56,22 @@ func TestWaitForCompletion(t *testing.T) {
 		DiskTmpAvgRead:            &fakeIORResult,
 		DiskTmpAvgWrite:           &fakeIORResult,
 		MachineSpec:               &fakeMachineSpec,
-	}, benchmark.DefaultStore.Dump())
+	}, store.Dump())
 }
 
 func TestWaitForCompletionFailure(t *testing.T) {
+	store := benchmark.NewStore()
 	expectErr := errors.New("fail")
 	go func() {
-		benchmark.DefaultStore.SetAllToAllCollectiveLatency(1)
-		benchmark.DefaultStore.SetDownloadBandwidth(2)
-		benchmark.DefaultStore.SetGFLOPS(3)
-		benchmark.DefaultStore.SetP2PBidirectionalBandwidth(4)
-		benchmark.DefaultStore.SetFailure(expectErr)
-		benchmark.DefaultStore.SetP2PLatency(5)
+		store.SetAllToAllCollectiveLatency(1)
+		store.SetDownloadBandwidth(2)
+		store.SetGFLOPS(3)
+		store.SetP2PBidirectionalBandwidth(4)
+		store.SetFailure(expectErr)
+		store.SetP2PLatency(5)
 	}()
 
-	done, errc := benchmark.DefaultStore.WaitForCompletion(context.Background())
+	done, errc := store.WaitForCompletion(context.Background())
 	select {
 	case <-done:
 		t.FailNow()
