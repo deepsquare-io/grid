@@ -14,7 +14,7 @@ func TestProcessLabels(t *testing.T) {
 		expected string
 	}{
 		{"my_invalid-label123!", "my_invalid-label123"},
-		{"validLabel123", "validLabel123"},
+		{"validLabel123", "validlabel123"},
 		{".a@b#c$d%e^f&g.f", ".a-b-c-d-e-f-g.f"},
 	}
 
