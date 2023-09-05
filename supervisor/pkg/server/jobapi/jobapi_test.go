@@ -41,7 +41,7 @@ func (suite *ServerTestSuite) TestSetJobStatus() {
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
-		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64, sjso ...metascheduler.SetJobStatusOption) error {
 		done <- struct{}{}
 		return nil
 	})
@@ -74,7 +74,7 @@ func (suite *ServerTestSuite) TestSetJobStatusFailure() {
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
-		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64, sjso ...metascheduler.SetJobStatusOption) error {
 		done <- struct{}{}
 		return errors.New("problem")
 	})
@@ -108,7 +108,7 @@ func (suite *ServerTestSuite) TestSetJobStatusBlocking() {
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
-		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64, sjso ...metascheduler.SetJobStatusOption) error {
 		<-ctx.Done()
 		done <- struct{}{}
 		return context.Canceled
@@ -143,7 +143,7 @@ func (suite *ServerTestSuite) TestSetJobStatusThrowSameStatusError() {
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
-		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64, sjso ...metascheduler.SetJobStatusOption) error {
 		done <- struct{}{}
 		return &metascheduler.SameStatusError{}
 	})
@@ -176,7 +176,7 @@ func (suite *ServerTestSuite) TestSetJobStatusThrowTransitionError() {
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
-		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64) error {
+		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64, sjso ...metascheduler.SetJobStatusOption) error {
 		done <- struct{}{}
 		return &metascheduler.InvalidTransition{
 			From: metascheduler.JobStatusScheduled,

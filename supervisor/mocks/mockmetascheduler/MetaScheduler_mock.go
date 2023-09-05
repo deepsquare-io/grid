@@ -502,13 +502,20 @@ func (_c *MetaScheduler_Register_Call) RunAndReturn(run func(context.Context, me
 	return _c
 }
 
-// SetJobStatus provides a mock function with given fields: ctx, jobID, status, jobDurationMinute
-func (_m *MetaScheduler) SetJobStatus(ctx context.Context, jobID [32]byte, status metascheduler.JobStatus, jobDurationMinute uint64) error {
-	ret := _m.Called(ctx, jobID, status, jobDurationMinute)
+// SetJobStatus provides a mock function with given fields: ctx, jobID, status, jobDurationMinute, opts
+func (_m *MetaScheduler) SetJobStatus(ctx context.Context, jobID [32]byte, status metascheduler.JobStatus, jobDurationMinute uint64, opts ...metascheduler.SetJobStatusOption) error {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, jobID, status, jobDurationMinute)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, [32]byte, metascheduler.JobStatus, uint64) error); ok {
-		r0 = rf(ctx, jobID, status, jobDurationMinute)
+	if rf, ok := ret.Get(0).(func(context.Context, [32]byte, metascheduler.JobStatus, uint64, ...metascheduler.SetJobStatusOption) error); ok {
+		r0 = rf(ctx, jobID, status, jobDurationMinute, opts...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -526,13 +533,21 @@ type MetaScheduler_SetJobStatus_Call struct {
 //   - jobID [32]byte
 //   - status metascheduler.JobStatus
 //   - jobDurationMinute uint64
-func (_e *MetaScheduler_Expecter) SetJobStatus(ctx interface{}, jobID interface{}, status interface{}, jobDurationMinute interface{}) *MetaScheduler_SetJobStatus_Call {
-	return &MetaScheduler_SetJobStatus_Call{Call: _e.mock.On("SetJobStatus", ctx, jobID, status, jobDurationMinute)}
+//   - opts ...metascheduler.SetJobStatusOption
+func (_e *MetaScheduler_Expecter) SetJobStatus(ctx interface{}, jobID interface{}, status interface{}, jobDurationMinute interface{}, opts ...interface{}) *MetaScheduler_SetJobStatus_Call {
+	return &MetaScheduler_SetJobStatus_Call{Call: _e.mock.On("SetJobStatus",
+		append([]interface{}{ctx, jobID, status, jobDurationMinute}, opts...)...)}
 }
 
-func (_c *MetaScheduler_SetJobStatus_Call) Run(run func(ctx context.Context, jobID [32]byte, status metascheduler.JobStatus, jobDurationMinute uint64)) *MetaScheduler_SetJobStatus_Call {
+func (_c *MetaScheduler_SetJobStatus_Call) Run(run func(ctx context.Context, jobID [32]byte, status metascheduler.JobStatus, jobDurationMinute uint64, opts ...metascheduler.SetJobStatusOption)) *MetaScheduler_SetJobStatus_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].([32]byte), args[2].(metascheduler.JobStatus), args[3].(uint64))
+		variadicArgs := make([]metascheduler.SetJobStatusOption, len(args)-4)
+		for i, a := range args[4:] {
+			if a != nil {
+				variadicArgs[i] = a.(metascheduler.SetJobStatusOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].([32]byte), args[2].(metascheduler.JobStatus), args[3].(uint64), variadicArgs...)
 	})
 	return _c
 }
@@ -542,7 +557,7 @@ func (_c *MetaScheduler_SetJobStatus_Call) Return(_a0 error) *MetaScheduler_SetJ
 	return _c
 }
 
-func (_c *MetaScheduler_SetJobStatus_Call) RunAndReturn(run func(context.Context, [32]byte, metascheduler.JobStatus, uint64) error) *MetaScheduler_SetJobStatus_Call {
+func (_c *MetaScheduler_SetJobStatus_Call) RunAndReturn(run func(context.Context, [32]byte, metascheduler.JobStatus, uint64, ...metascheduler.SetJobStatusOption) error) *MetaScheduler_SetJobStatus_Call {
 	_c.Call.Return(run)
 	return _c
 }

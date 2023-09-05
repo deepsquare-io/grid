@@ -251,18 +251,24 @@ func (c *Client) SetJobStatus(
 	jobID [32]byte,
 	status JobStatus,
 	jobDurationMinute uint64,
+	opts ...SetJobStatusOption,
 ) error {
+	o := applySetJobStatusOptions(opts)
 	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
 	auth, err := c.auth(ctx)
 	if err != nil {
 		return err
+	}
+	var errMsg string
+	if o.err != nil {
+		errMsg = o.err.Error()
 	}
 	tx, err := c.contractRPC.ProviderSetJobStatus(
 		auth,
 		jobID,
 		uint8(status),
 		jobDurationMinute,
-		"",
+		errMsg,
 	)
 	if err != nil {
 		return WrapError(err)

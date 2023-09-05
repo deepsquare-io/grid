@@ -66,6 +66,26 @@ func (it *ProviderJobIterator) Next(ctx context.Context) bool {
 	return false
 }
 
+type setJobStatusOptions struct {
+	err error
+}
+
+func applySetJobStatusOptions(opts []SetJobStatusOption) *setJobStatusOptions {
+	o := &setJobStatusOptions{}
+	for _, opt := range opts {
+		opt(o)
+	}
+	return o
+}
+
+type SetJobStatusOption func(*setJobStatusOptions)
+
+func SetJobStatusWithError(err error) SetJobStatusOption {
+	return func(sjso *setJobStatusOptions) {
+		sjso.err = err
+	}
+}
+
 type MetaScheduler interface {
 	// Claim a job for scheduling.
 	Claim(ctx context.Context) error
@@ -93,6 +113,7 @@ type MetaScheduler interface {
 		jobID [32]byte,
 		status JobStatus,
 		jobDurationMinute uint64,
+		opts ...SetJobStatusOption,
 	) error
 	Register(
 		ctx context.Context,

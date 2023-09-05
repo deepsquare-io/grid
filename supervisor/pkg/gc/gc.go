@@ -2,6 +2,7 @@ package gc
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -72,12 +73,18 @@ func (gc *GC) FindAndCancelUnhandledJobs(
 			}
 			if id == 0 {
 				logger.I.Warn(
-					"found zombie job, putting zombie job to FAILED",
+					"found zombie job, putting zombie job to PANIC",
 					zap.String("jobID", hexutil.Encode(it.Job.JobID[:])),
 				)
-				if err := gc.ms.SetJobStatus(ctx, it.Job.JobID, metascheduler.JobStatusFailed, 0); err != nil {
+				if err := gc.ms.SetJobStatus(
+					ctx,
+					it.Job.JobID,
+					metascheduler.JobStatusPanicked,
+					0,
+					metascheduler.SetJobStatusWithError(errors.New("provider lost the job")),
+				); err != nil {
 					logger.I.Error(
-						"failed to put zombie job in FAILED",
+						"failed to put zombie job in PANIC",
 						zap.Error(err),
 						zap.Any("job", it.Job),
 					)
