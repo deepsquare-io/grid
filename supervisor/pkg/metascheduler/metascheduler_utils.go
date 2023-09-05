@@ -64,8 +64,8 @@ func MergeLabels(
 
 func ProcessLabel(l metaschedulerabi.Label) metaschedulerabi.Label {
 	return metaschedulerabi.Label{
-		Key:   strings.Join(labelRegex.FindAllString(l.Key, -1), "-"),
-		Value: strings.Join(labelRegex.FindAllString(l.Value, -1), "-"),
+		Key:   strings.ToLower(strings.Join(labelRegex.FindAllString(l.Key, -1), "-")),
+		Value: strings.ToLower(strings.Join(labelRegex.FindAllString(l.Value, -1), "-")),
 	}
 }
 

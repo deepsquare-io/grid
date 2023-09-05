@@ -966,6 +966,7 @@ var app = &cli.App{
 				}
 
 				if (oldInfo.Addr == common.Address{}) {
+					labels = metascheduler.ProcessLabels(labels)
 					logger.I.Info("trying to register since we are not in the grid")
 					if err := container.metascheduler.Register(
 						ctx,
