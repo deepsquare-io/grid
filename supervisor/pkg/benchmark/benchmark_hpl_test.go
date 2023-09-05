@@ -59,7 +59,7 @@ curl -fsSL \
   -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
   -X POST \
   -H "X-Secret: %s" \
-  -H 'Content-Type: application/json' \
+  -H '"'"'Content-Type: application/json'"'"'\
   "https://localhost:3000/benchmark/machine"
 '
 export NCCL_P2P_DISABLE=1
@@ -188,7 +188,7 @@ curl -fsSL \
   -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
   -X POST \
   -H "X-Secret: %s" \
-  -H 'Content-Type: application/json' \
+  -H '"'"'Content-Type: application/json'"'"'\
   "https://localhost:3000/benchmark/machine"
 '
 export NCCL_P2P_DISABLE=1
@@ -317,7 +317,7 @@ curl -fsSL \
   -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
   -X POST \
   -H "X-Secret: %s" \
-  -H 'Content-Type: application/json' \
+  -H '"'"'Content-Type: application/json'"'"'\
   "https://localhost:3000/benchmark/machine"
 '
 # Select obi-wan as MPI P2P communications
@@ -446,7 +446,7 @@ curl -fsSL \
   -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
   -X POST \
   -H "X-Secret: %s" \
-  -H 'Content-Type: application/json' \
+  -H '"'"'Content-Type: application/json'"'"'\
   "https://localhost:3000/benchmark/machine"
 '
 # Select UCX as MPI P2P communications
