@@ -20,6 +20,7 @@ type MachineSpec struct {
 	OS        string `json:"os"`
 	CPU       string `json:"cpu"`
 	Arch      string `json:"arch"`
+	GPU       string `json:"gpu"`
 }
 
 func NewMachineHandler(

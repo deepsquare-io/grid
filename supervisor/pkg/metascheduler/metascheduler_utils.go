@@ -1,10 +1,14 @@
 package metascheduler
 
 import (
+	"regexp"
 	"slices"
+	"strings"
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
 )
+
+var labelRegex = regexp.MustCompile(`[a-zA-Z0-9\.\_]([-a-zA-Z0-9\.\_]*[a-zA-Z0-9\.\_])?`)
 
 func ProviderHardwareEqual(
 	a metaschedulerabi.ProviderHardware,
@@ -56,4 +60,21 @@ func MergeLabels(
 	}
 
 	return mergedArray
+}
+
+func ProcessLabel(l metaschedulerabi.Label) metaschedulerabi.Label {
+	return metaschedulerabi.Label{
+		Key:   strings.Join(labelRegex.FindAllString(l.Key, -1), "-"),
+		Value: strings.Join(labelRegex.FindAllString(l.Value, -1), "-"),
+	}
+}
+
+func ProcessLabels(l []metaschedulerabi.Label) []metaschedulerabi.Label {
+	o := make([]metaschedulerabi.Label, 0, len(l))
+
+	for _, l := range o {
+		o = append(o, ProcessLabel(l))
+	}
+
+	return o
 }

@@ -11,6 +11,24 @@
 
 set -x
 
+GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
+export GPU
+
+srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
+pip3 install --no-cache-dir archspec
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt update -y -qq && apt install -y -qq golang curl
+
+curl -fsSL \
+  -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
+  -X POST \
+  -H "X-Secret: {{ .Secret }}" \
+  -H 'Content-Type: application/json' \
+  "https://{{ .SupervisorPublicAddress }}/benchmark/machine"
+'
+
 {{- if .Trace }}
 export NCCL_DEBUG=TRACE
 export NCCL_DEBUG_SUBSYS=ALL

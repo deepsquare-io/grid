@@ -44,6 +44,24 @@ func TestGenerateHPLPhase1JobDefinition(t *testing.T) {
 #SBATCH --cpus-per-task=8
 
 set -x
+
+GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
+export GPU
+
+srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
+pip3 install --no-cache-dir archspec
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt update -y -qq && apt install -y -qq golang curl
+
+curl -fsSL \
+  -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
+  -X POST \
+  -H "X-Secret: %s" \
+  -H 'Content-Type: application/json' \
+  "https://localhost:3000/benchmark/machine"
+'
 export NCCL_P2P_DISABLE=1
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
@@ -123,7 +141,10 @@ curl -fsSL \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
   "https://localhost:3000/benchmark/hpl/phase1?nodes=1&cpusPerNode=16&gpusPerNode=2&memPerNode=128460"
-`, base64.StdEncoding.EncodeToString(secret.Get())),
+`,
+					base64.StdEncoding.EncodeToString(secret.Get()),
+					base64.StdEncoding.EncodeToString(secret.Get()),
+				),
 			},
 		},
 		{
@@ -152,6 +173,24 @@ curl -fsSL \
 #SBATCH --cpus-per-task=4
 
 set -x
+
+GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
+export GPU
+
+srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
+pip3 install --no-cache-dir archspec
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt update -y -qq && apt install -y -qq golang curl
+
+curl -fsSL \
+  -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
+  -X POST \
+  -H "X-Secret: %s" \
+  -H 'Content-Type: application/json' \
+  "https://localhost:3000/benchmark/machine"
+'
 export NCCL_P2P_DISABLE=1
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
@@ -231,7 +270,10 @@ curl -fsSL \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
   "https://localhost:3000/benchmark/hpl/phase1?nodes=1&cpusPerNode=16&gpusPerNode=4&memPerNode=128460"
-`, base64.StdEncoding.EncodeToString(secret.Get())),
+`,
+					base64.StdEncoding.EncodeToString(secret.Get()),
+					base64.StdEncoding.EncodeToString(secret.Get()),
+				),
 			},
 		},
 		{
@@ -260,6 +302,24 @@ curl -fsSL \
 #SBATCH --cpus-per-task=8
 
 set -x
+
+GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
+export GPU
+
+srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
+pip3 install --no-cache-dir archspec
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt update -y -qq && apt install -y -qq golang curl
+
+curl -fsSL \
+  -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
+  -X POST \
+  -H "X-Secret: %s" \
+  -H 'Content-Type: application/json' \
+  "https://localhost:3000/benchmark/machine"
+'
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
 # Select shared-memory or TCP as Byte-Transport Layer
@@ -338,7 +398,10 @@ curl -fsSL \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
   "https://localhost:3000/benchmark/hpl/phase1?nodes=2&cpusPerNode=16&gpusPerNode=2&memPerNode=128460"
-`, base64.StdEncoding.EncodeToString(secret.Get())),
+`,
+					base64.StdEncoding.EncodeToString(secret.Get()),
+					base64.StdEncoding.EncodeToString(secret.Get()),
+				),
 			},
 		},
 		{
@@ -368,6 +431,24 @@ curl -fsSL \
 #SBATCH --cpus-per-task=8
 
 set -x
+
+GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
+export GPU
+
+srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
+pip3 install --no-cache-dir archspec
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt update -y -qq && apt install -y -qq golang curl
+
+curl -fsSL \
+  -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
+  -X POST \
+  -H "X-Secret: %s" \
+  -H 'Content-Type: application/json' \
+  "https://localhost:3000/benchmark/machine"
+'
 # Select UCX as MPI P2P communications
 export PMIX_MCA_pml=ucx
 # Select UCX as Byte-Transport Layer
@@ -449,7 +530,10 @@ curl -fsSL \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
   "https://localhost:3000/benchmark/hpl/phase1?nodes=2&cpusPerNode=16&gpusPerNode=2&memPerNode=128460"
-`, base64.StdEncoding.EncodeToString(secret.Get())),
+`,
+					base64.StdEncoding.EncodeToString(secret.Get()),
+					base64.StdEncoding.EncodeToString(secret.Get()),
+				),
 			},
 		},
 	}

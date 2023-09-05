@@ -265,6 +265,8 @@ var flags = []cli.Flag{
 					Value: v,
 				})
 			}
+
+			labels = metascheduler.ProcessLabels(labels)
 			return nil
 		},
 		Aliases:  []string{"l", "label"},
@@ -851,6 +853,10 @@ var app = &cli.App{
 						{
 							Key:   "arch",
 							Value: result.MachineSpec.Arch,
+						},
+						{
+							Key:   "gpu",
+							Value: result.MachineSpec.GPU,
 						},
 						{
 							Key:   "compute.gflops",

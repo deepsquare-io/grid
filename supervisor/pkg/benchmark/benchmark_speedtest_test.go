@@ -35,19 +35,6 @@ set -e
 file="$(mktemp -t benchmark.XXXXXX)"
 dir="$(dirname "$file")"
 
-srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
-pip3 install --no-cache-dir archspec
-
-apt update -yq && apt install -yq golang curl
-
-curl -fsSL \
-  -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(lscpu | grep 'Model name' | awk -F': ' '{print $2}' | xargs)\"}" \
-  -X POST \
-  -H "X-Secret: %s" \
-  -H 'Content-Type: application/json' \
-  "https://localhost:3000/benchmark/machine"
-'
-
 srun --container-mounts="$dir:$dir:rw" \
   --container-image="registry-1.docker.io#gists/speedtest-cli:1.2.0" \
   /usr/local/bin/speedtest --accept-license --accept-gdpr -f json-pretty > "$file"
@@ -58,7 +45,6 @@ curl -fsSL \
   -H "X-Secret: %s" \
   "https://localhost:3000/benchmark/speedtest"
 `,
-					base64.StdEncoding.EncodeToString(secret.Get()),
 					base64.StdEncoding.EncodeToString(secret.Get()),
 				),
 			},
