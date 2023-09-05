@@ -1,14 +1,11 @@
 package server
 
 import (
-	"context"
 	"net/http"
 	"strings"
-	"time"
 
 	healthv1 "github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1"
 	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/hpl"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/ior"
@@ -21,7 +18,6 @@ import (
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/sshapi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
-	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -47,101 +43,115 @@ func New(
 		r.Use(secret.Guard)
 		r.Put(
 			"/speedtest",
-			benchmark.NewSpeedTestHandler(func(res *speedtest.Result) error {
+			benchmark.NewSpeedTestHandler(func(res *speedtest.Result, err error) error {
+				if err != nil {
+					benchmark.DefaultStore.SetFailure(err)
+					return err
+				}
 				benchmark.DefaultStore.SetUploadBandwidth(res.Upload.Bandwidth)
 				benchmark.DefaultStore.SetDownloadBandwidth(res.Download.Bandwidth)
 				return nil
 			}),
 		)
 		r.Route("/osu", func(r chi.Router) {
-			r.Put("/pt2pt-latency", benchmark.NewOSUHandler(func(res float64) error {
+			r.Put("/pt2pt-latency", benchmark.NewOSUHandler(func(res float64, err error) error {
+				if err != nil {
+					benchmark.DefaultStore.SetFailure(err)
+					return err
+				}
 				benchmark.DefaultStore.SetP2PLatency(res)
 				return nil
 			}))
-			r.Put("/pt2pt-bibw", benchmark.NewOSUHandler(func(res float64) error {
+			r.Put("/pt2pt-bibw", benchmark.NewOSUHandler(func(res float64, err error) error {
+				if err != nil {
+					benchmark.DefaultStore.SetFailure(err)
+					return err
+				}
 				benchmark.DefaultStore.SetP2PBidirectionalBandwidth(res)
 				return nil
 			}))
-			r.Put("/alltoall", benchmark.NewOSUHandler(func(res float64) error {
+			r.Put("/alltoall", benchmark.NewOSUHandler(func(res float64, err error) error {
+				if err != nil {
+					benchmark.DefaultStore.SetFailure(err)
+					return err
+				}
 				benchmark.DefaultStore.SetAllToAllCollectiveLatency(res)
 				return nil
 			}))
 		})
 		r.Route("/ior", func(r chi.Router) {
-			r.Put("/scratch", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
-				benchmark.DefaultStore.SetScratchResult(avgr, avgw)
-				return nil
-			}))
-			r.Put("/shared-world-tmp", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
-				benchmark.DefaultStore.SetSharedWorldTmpResult(avgr, avgw)
-				return nil
-			}))
-			r.Put("/shared-tmp", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
-				benchmark.DefaultStore.SetSharedTmpResult(avgr, avgw)
-				return nil
-			}))
-			r.Put("/disk-tmp", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
-				benchmark.DefaultStore.SetDiskTmpResult(avgr, avgw)
-				return nil
-			}))
-			r.Put("/disk-world-tmp", benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
-				benchmark.DefaultStore.SetDiskWorldTmpResult(avgr, avgw)
-				return nil
-			}))
+			r.Put(
+				"/scratch",
+				benchmark.NewIORHandler(func(avgr, avgw *ior.Result, err error) error {
+					if err != nil {
+						benchmark.DefaultStore.SetFailure(err)
+						return err
+					}
+					benchmark.DefaultStore.SetScratchResult(avgr, avgw)
+					return nil
+				}),
+			)
+			r.Put(
+				"/shared-world-tmp",
+				benchmark.NewIORHandler(func(avgr, avgw *ior.Result, err error) error {
+					if err != nil {
+						benchmark.DefaultStore.SetFailure(err)
+						return err
+					}
+					benchmark.DefaultStore.SetSharedWorldTmpResult(avgr, avgw)
+					return nil
+				}),
+			)
+			r.Put(
+				"/shared-tmp",
+				benchmark.NewIORHandler(func(avgr, avgw *ior.Result, err error) error {
+					if err != nil {
+						benchmark.DefaultStore.SetFailure(err)
+						return err
+					}
+					benchmark.DefaultStore.SetSharedTmpResult(avgr, avgw)
+					return nil
+				}),
+			)
+			r.Put(
+				"/disk-tmp",
+				benchmark.NewIORHandler(func(avgr, avgw *ior.Result, err error) error {
+					if err != nil {
+						benchmark.DefaultStore.SetFailure(err)
+						return err
+					}
+					benchmark.DefaultStore.SetDiskTmpResult(avgr, avgw)
+					return nil
+				}),
+			)
+			r.Put(
+				"/disk-world-tmp",
+				benchmark.NewIORHandler(func(avgr, avgw *ior.Result, err error) error {
+					if err != nil {
+						benchmark.DefaultStore.SetFailure(err)
+						return err
+					}
+					benchmark.DefaultStore.SetDiskWorldTmpResult(avgr, avgw)
+					return nil
+				}),
+			)
 		})
 		r.Route("/hpl", func(r chi.Router) {
 			r.Put(
 				"/phase1",
 				benchmark.NewHPLPhase1Handler(
-					func(optimal *hpl.Result, opts ...benchmark.Option) error {
-						opts = append(hplOpts, opts...)
-						b, err := benchmark.GeneratePhase2HPLBenchmark(
-							optimal.P,
-							optimal.Q,
-							optimal.ProblemSize,
-							optimal.NB,
-							opts...,
-						)
+					func(optimal *hpl.Result, err error) error {
 						if err != nil {
-							logger.I.Error(
-								"failed to generate hpl phase 2 benchmark",
-								zap.Error(err),
-							)
+							benchmark.DefaultStore.SetFailure(err)
 							return err
 						}
 
-						go func() {
-							ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-							defer cancel()
-
-							if err := launcher.Launch(ctx, "hpl-phase2", b); err != nil {
-								logger.I.Fatal(
-									"hpl-phase2 benchmark failed or failed to be tracked",
-									zap.Error(err),
-								)
-							}
-							logger.I.Info(
-								"benchmark hpl phase 2 succeeded",
-								zap.Uint64(
-									"p",
-									optimal.P,
-								),
-								zap.Uint64("q", optimal.Q),
-								zap.Uint64("n", optimal.ProblemSize),
-								zap.Uint64("nb", optimal.NB),
-							)
-						}()
+						benchmark.DefaultStore.SetGFLOPS(optimal.Gflops)
 
 						return nil
 					},
 				),
 			)
-			r.Put("/phase2", benchmark.NewHPLPhase2Handler(
-				func(gflops float64) error {
-					benchmark.DefaultStore.SetGFLOPS(gflops)
-					return nil
-				},
-			))
 		})
 	})
 	g := grpc.NewServer(opts...)

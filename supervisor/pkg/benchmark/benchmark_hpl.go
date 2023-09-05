@@ -74,27 +74,6 @@ func GeneratePhase1HPLBenchmark(
 	return prepareHPLJobDefinition(params, o)
 }
 
-func GeneratePhase2HPLBenchmark(
-	newP uint64,
-	newQ uint64,
-	newProblemSize uint64,
-	newBlockSize uint64,
-	opts ...Option,
-) (*Benchmark, error) {
-	o := applyHPLOptions(opts)
-	o.phase = "phase2"
-	params := &hplParams{
-		P:            newP,
-		Q:            newQ,
-		NProblemSize: 1,
-		ProblemSize:  strconv.FormatUint(newProblemSize, 10),
-		NBlockSize:   1,
-		BlockSize:    strconv.FormatUint(newBlockSize, 10),
-	}
-
-	return prepareHPLJobDefinition(params, o)
-}
-
 func prepareHPLJobDefinition(
 	params *hplParams,
 	o *options,

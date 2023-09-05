@@ -2,6 +2,7 @@ package benchmark_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -27,7 +28,12 @@ func TestWaitForCompletion(t *testing.T) {
 		fmt.Println("set")
 	}()
 
-	<-benchmark.DefaultStore.WaitForCompletion(context.Background())
+	done, errc := benchmark.DefaultStore.WaitForCompletion(context.Background())
+	select {
+	case <-done:
+	case err := <-errc:
+		require.NoError(t, err)
+	}
 
 	require.Equal(t, benchmark.Data{
 		AllToAllCollectiveLatency: 1,
@@ -47,4 +53,24 @@ func TestWaitForCompletion(t *testing.T) {
 		DiskTmpAvgRead:            &fakeIORResult,
 		DiskTmpAvgWrite:           &fakeIORResult,
 	}, benchmark.DefaultStore.Dump())
+}
+
+func TestWaitForCompletionFailure(t *testing.T) {
+	expectErr := errors.New("fail")
+	go func() {
+		benchmark.DefaultStore.SetAllToAllCollectiveLatency(1)
+		benchmark.DefaultStore.SetDownloadBandwidth(2)
+		benchmark.DefaultStore.SetGFLOPS(3)
+		benchmark.DefaultStore.SetP2PBidirectionalBandwidth(4)
+		benchmark.DefaultStore.SetFailure(expectErr)
+		benchmark.DefaultStore.SetP2PLatency(5)
+	}()
+
+	done, errc := benchmark.DefaultStore.WaitForCompletion(context.Background())
+	select {
+	case <-done:
+		t.FailNow()
+	case err := <-errc:
+		require.EqualError(t, err, expectErr.Error())
+	}
 }

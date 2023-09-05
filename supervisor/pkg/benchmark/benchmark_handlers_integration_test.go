@@ -95,63 +95,6 @@ func TestPhase1Handler(t *testing.T) {
 	}
 }
 
-func TestPhase2Handler(t *testing.T) {
-	// Arrange
-	// Prepare fixture
-	file, err := os.CreateTemp("", "test-tmp")
-	require.NoError(t, err)
-	file.Write(hplFixture)
-	err = file.Close()
-	require.NoError(t, err)
-	defer os.Remove(file.Name())
-	fmt.Printf("created tmp fixture: %s", file.Name())
-
-	// Mocks
-	impl := benchmark.NewHPLPhase2Handler(func(gflops float64) error {
-		require.NotEmpty(t, gflops)
-		return nil
-	})
-
-	// Arrangements to handle race conditions and asserts
-	done := make(chan struct{}, 1)
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	http.HandleFunc("/benchmark/hpl/phase2", func(w http.ResponseWriter, r *http.Request) {
-		impl(w, r)
-		out, err := httputil.DumpRequest(r, false)
-		require.NoError(t, err)
-		fmt.Printf("received request\n%s", string(out))
-		done <- struct{}{}
-	})
-
-	// Act
-	port := generateRandomPort()
-	go func() {
-		err := http.ListenAndServe(fmt.Sprintf("localhost:%d", port), nil)
-		require.NoError(t, err)
-	}()
-
-	cmd := exec.Command(
-		"curl",
-		"-fsSL",
-		"-H",
-		fmt.Sprintf("X-Secret: %s", base64.StdEncoding.EncodeToString(secret.Get())),
-		"--upload-file",
-		file.Name(),
-		fmt.Sprintf("http://localhost:%d/benchmark/hpl/phase2", port),
-	)
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
-	fmt.Println(string(out))
-
-	select {
-	case <-done:
-		// Pass
-	case <-ctx.Done():
-		require.NoError(t, ctx.Err())
-	}
-}
-
 func TestSpeedTestHandler(t *testing.T) {
 	// Arrange
 	// Prepare fixture

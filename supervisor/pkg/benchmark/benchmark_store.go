@@ -42,11 +42,13 @@ type Store struct {
 	data Data
 
 	refresh chan struct{}
+	failure chan error
 }
 
 func NewStore() *Store {
 	return &Store{
 		refresh: make(chan struct{}, 1),
+		failure: make(chan error, 10),
 	}
 }
 
@@ -192,6 +194,10 @@ func (s *Store) SetDiskTmpResult(avgr, avgw *ior.Result) {
 	)
 }
 
+func (s *Store) SetFailure(err error) {
+	s.failure <- err
+}
+
 func (s *Store) Dump() Data {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -220,10 +226,11 @@ func (s *Store) IsComplete() bool {
 		s.data.DiskWorldTmpAvgWrite != nil)
 }
 
-func (s *Store) WaitForCompletion(ctx context.Context) chan struct{} {
-	done := make(chan struct{}, 1)
+func (s *Store) WaitForCompletion(ctx context.Context) (done chan struct{}, errc chan error) {
+	done = make(chan struct{}, 1)
 
 	go func() {
+		defer close(done)
 		for {
 			select {
 			case <-s.refresh:
@@ -236,5 +243,5 @@ func (s *Store) WaitForCompletion(ctx context.Context) chan struct{} {
 		}
 	}()
 
-	return done
+	return done, s.failure
 }

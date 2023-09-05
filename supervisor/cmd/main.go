@@ -712,9 +712,6 @@ var app = &cli.App{
 				if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
 					logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
 				}
-				if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase2"); err != nil {
-					logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
-				}
 				if err := container.benchmarkLauncher.Cancel(ctx, "ior"); err != nil {
 					logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))
 				}
@@ -1064,16 +1061,21 @@ func launchBenchmarks(
 		if err := benchmarkLauncher.Cancel(parent, "hpl-phase1"); err != nil {
 			logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
 		}
-		if err := benchmarkLauncher.Cancel(parent, "hpl-phase2"); err != nil {
-			logger.I.Warn("failed to cancel hpl-phase2 benchmark", zap.Error(err))
-		}
 		if err := benchmarkLauncher.Cancel(parent, "ior"); err != nil {
 			logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))
 		}
 		logger.I.Fatal("benchmarks failed", zap.Error(err))
 	}
 
-	<-benchmark.DefaultStore.WaitForCompletion(parent)
+	done, errc := benchmark.DefaultStore.WaitForCompletion(parent)
+	select {
+	case <-done:
+	case err := <-errc:
+		logger.I.Fatal("benchmark has failed",
+			zap.Error(err),
+			zap.Any("results", benchmark.DefaultStore.Dump()),
+		)
+	}
 
 	logger.I.Info("benchmark has finished",
 		zap.Any("results", benchmark.DefaultStore.Dump()),

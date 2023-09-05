@@ -248,7 +248,6 @@ curl -fsSL \
 			b, err := benchmark.GenerateIORBenchmark(tt.opts...)
 
 			// Assert
-			fmt.Println(b.Body)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected.Body, b.Body)
 			assert.Equal(t, tt.expected, b)
