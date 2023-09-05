@@ -835,114 +835,112 @@ var app = &cli.App{
 
 					result := benchmark.DefaultStore.Dump()
 
-					labels = append(labels,
-						[]metaschedulerabi.Label{
-							{
-								Key:   "compute.gflops",
-								Value: fmt.Sprintf("%.2f", result.GFLOPS),
-							},
-							{
-								Key:   "network.upload.bw.mbps",
-								Value: fmt.Sprintf("%.2f", float64(result.UploadBandwidth)/1e6),
-							},
-							{
-								Key:   "network.download.bw.mbps",
-								Value: fmt.Sprintf("%.2f", float64(result.DownloadBandwidth)/1e6),
-							},
-							{
-								Key:   "network.p2p.bw.mbps",
-								Value: fmt.Sprintf("%.2f", result.P2PBidirectionalBandwidth),
-							},
-							{
-								Key:   "network.p2p.latency.us",
-								Value: fmt.Sprintf("%.2f", result.P2PLatency),
-							},
-							{
-								Key:   "network.all-to-all.latency.us",
-								Value: fmt.Sprintf("%.2f", result.AllToAllCollectiveLatency),
-							},
-							{
-								Key:   "storage.scratch.read.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.Bandwidth),
-							},
-							{
-								Key:   "storage.scratch.read.iops",
-								Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.IOPS),
-							},
-							{
-								Key:   "storage.scratch.write.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.Bandwidth),
-							},
-							{
-								Key:   "storage.scratch.write.iops",
-								Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.IOPS),
-							},
-							{
-								Key:   "storage.shared-world-tmp.read.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.Bandwidth),
-							},
-							{
-								Key:   "storage.shared-world-tmp.read.iops",
-								Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.IOPS),
-							},
-							{
-								Key:   "storage.shared-world-tmp.write.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.Bandwidth),
-							},
-							{
-								Key:   "storage.shared-world-tmp.write.iops",
-								Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.IOPS),
-							},
-							{
-								Key:   "storage.shared-tmp.read.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.Bandwidth),
-							},
-							{
-								Key:   "storage.shared-tmp.read.iops",
-								Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.IOPS),
-							},
-							{
-								Key:   "storage.shared-tmp.write.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.Bandwidth),
-							},
-							{
-								Key:   "storage.shared-tmp.write.iops",
-								Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.IOPS),
-							},
-							{
-								Key:   "storage.disk-world-tmp.read.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.Bandwidth),
-							},
-							{
-								Key:   "storage.disk-world-tmp.read.iops",
-								Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.IOPS),
-							},
-							{
-								Key:   "storage.disk-world-tmp.write.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.Bandwidth),
-							},
-							{
-								Key:   "storage.disk-world-tmp.write.iops",
-								Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.IOPS),
-							},
-							{
-								Key:   "storage.disk-tmp.read.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.Bandwidth),
-							},
-							{
-								Key:   "storage.disk-tmp.read.iops",
-								Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.IOPS),
-							},
-							{
-								Key:   "storage.disk-tmp.write.bw.mibps",
-								Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.Bandwidth),
-							},
-							{
-								Key:   "storage.disk-tmp.write.iops",
-								Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.IOPS),
-							},
-						}...,
-					)
+					labels = metascheduler.MergeLabels(labels, []metaschedulerabi.Label{
+						{
+							Key:   "compute.gflops",
+							Value: fmt.Sprintf("%.2f", result.GFLOPS),
+						},
+						{
+							Key:   "network.upload.bw.mbps",
+							Value: fmt.Sprintf("%.2f", float64(result.UploadBandwidth)/1e6),
+						},
+						{
+							Key:   "network.download.bw.mbps",
+							Value: fmt.Sprintf("%.2f", float64(result.DownloadBandwidth)/1e6),
+						},
+						{
+							Key:   "network.p2p.bw.mbps",
+							Value: fmt.Sprintf("%.2f", result.P2PBidirectionalBandwidth),
+						},
+						{
+							Key:   "network.p2p.latency.us",
+							Value: fmt.Sprintf("%.2f", result.P2PLatency),
+						},
+						{
+							Key:   "network.all-to-all.latency.us",
+							Value: fmt.Sprintf("%.2f", result.AllToAllCollectiveLatency),
+						},
+						{
+							Key:   "storage.scratch.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.scratch.read.iops",
+							Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.scratch.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.scratch.write.iops",
+							Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.IOPS),
+						},
+						{
+							Key:   "storage.shared-world-tmp.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.shared-world-tmp.read.iops",
+							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.shared-world-tmp.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.shared-world-tmp.write.iops",
+							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.IOPS),
+						},
+						{
+							Key:   "storage.shared-tmp.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.shared-tmp.read.iops",
+							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.shared-tmp.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.shared-tmp.write.iops",
+							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.IOPS),
+						},
+						{
+							Key:   "storage.disk-world-tmp.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.disk-world-tmp.read.iops",
+							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.disk-world-tmp.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.disk-world-tmp.write.iops",
+							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.IOPS),
+						},
+						{
+							Key:   "storage.disk-tmp.read.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.Bandwidth),
+						},
+						{
+							Key:   "storage.disk-tmp.read.iops",
+							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.IOPS),
+						},
+						{
+							Key:   "storage.disk-tmp.write.bw.mibps",
+							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.Bandwidth),
+						},
+						{
+							Key:   "storage.disk-tmp.write.iops",
+							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.IOPS),
+						},
+					})
 				}
 
 				if (oldInfo.Addr == common.Address{}) {
