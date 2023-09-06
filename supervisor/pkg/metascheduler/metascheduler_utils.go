@@ -35,22 +35,22 @@ func LabelsEqual(
 	return true
 }
 
+// MergeLabels b on a.
+//
+// b has priority over a.
 func MergeLabels(
 	a []metaschedulerabi.Label,
 	b []metaschedulerabi.Label,
 ) []metaschedulerabi.Label {
-	// Create a map to store the merged values while avoiding conflicts
 	mergedMap := make(map[string]string)
 
 	for _, kv := range a {
 		mergedMap[kv.Key] = kv.Value
 	}
 
-	// Merge values from the second array, avoiding conflicts
+	// Merge values from the second array, override conflicts
 	for _, kv := range b {
-		if _, exists := mergedMap[kv.Key]; !exists {
-			mergedMap[kv.Key] = kv.Value
-		}
+		mergedMap[kv.Key] = kv.Value
 	}
 
 	// Convert the map back to an array of KeyValue structs
