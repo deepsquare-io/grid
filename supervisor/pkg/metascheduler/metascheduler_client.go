@@ -177,7 +177,6 @@ func (c *Client) Claim(ctx context.Context) error {
 		return err
 	}
 	if !ok {
-		logger.I.Debug("No available job")
 		return nil
 	}
 
@@ -421,7 +420,6 @@ func (c *Client) ClaimCancelling(ctx context.Context) error {
 		return WrapError(err)
 	}
 	if !ok {
-		logger.I.Debug("No cancelling call")
 		return nil
 	}
 
@@ -453,7 +451,6 @@ func (c *Client) ClaimTopUp(ctx context.Context) error {
 		return WrapError(err)
 	}
 	if !ok {
-		logger.I.Debug("No top up call")
 		return nil
 	}
 

@@ -42,7 +42,7 @@ func TestGenerateIORBenchmark(t *testing.T) {
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=0
 
-set -x
+set -ex
 # Select obi-wan as MPI P2P communications
 export PMIX_MCA_pml=ob1
 # Select shared-memory or TCP as Byte-Transport Layer

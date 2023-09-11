@@ -30,7 +30,7 @@ func TestGenerateSpeedTestBenchmark(t *testing.T) {
 				Memory:      utils.Ptr(uint64(0)),
 				Body: fmt.Sprintf(`#!/bin/bash
 
-set -e
+set -ex
 
 file="$(mktemp -t benchmark.XXXXXX)"
 dir="$(dirname "$file")"

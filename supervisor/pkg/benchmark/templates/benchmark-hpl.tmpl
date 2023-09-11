@@ -25,7 +25,7 @@ curl -fsSL \
   -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
   -X POST \
   -H "X-Secret: {{ .Secret }}" \
-  -H '"'"'Content-Type: application/json'"'"'\
+  -H "Content-Type: application/json" \
   "https://{{ .SupervisorPublicAddress }}/benchmark/machine"
 '
 

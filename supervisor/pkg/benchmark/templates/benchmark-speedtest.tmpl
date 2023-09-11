@@ -1,7 +1,7 @@
 {{- define "benchmark" -}}
 #!/bin/bash
 
-set -e
+set -ex
 
 file="$(mktemp -t benchmark.XXXXXX)"
 dir="$(dirname "$file")"

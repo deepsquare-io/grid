@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task={{ .Benchmark.CPUsPerTask }}
 #SBATCH --mem=0
 
-set -x
+set -ex
 
 {{- if .Trace }}
 export NCCL_DEBUG=TRACE

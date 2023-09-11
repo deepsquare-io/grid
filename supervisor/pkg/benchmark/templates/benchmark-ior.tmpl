@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=0
 
-set -x
+set -ex
 
 {{- if .UCX }}
 # Select UCX as MPI P2P communications
