@@ -5,7 +5,7 @@ package graph
 import (
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
-	"github.com/redis/go-redis/v9"
+	"github.com/deepsquare-io/the-grid/sbatch-service/storage"
 )
 
 // This file will not be regenerated automatically.
@@ -14,19 +14,19 @@ import (
 
 type Resolver struct {
 	Debug       bool
-	RedisClient *redis.Client
+	Storage     storage.Storage
 	JobRenderer *renderer.JobRenderer
 }
 
-func NewResolver(redis *redis.Client, renderer *renderer.JobRenderer) *Resolver {
-	if redis == nil {
-		logger.I.Panic("redis is nil")
+func NewResolver(storage storage.Storage, renderer *renderer.JobRenderer) *Resolver {
+	if storage == nil {
+		logger.I.Panic("storage is nil")
 	}
 	if renderer == nil {
 		logger.I.Panic("renderer is nil")
 	}
 	return &Resolver{
-		RedisClient: redis,
+		Storage:     storage,
 		JobRenderer: renderer,
 	}
 }

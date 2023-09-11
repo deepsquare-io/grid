@@ -15,7 +15,6 @@ import (
 	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
 	validator "github.com/go-playground/validator/v10"
 	shortuuid "github.com/lithammer/shortuuid/v4"
-	redis "github.com/redis/go-redis/v9"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.uber.org/zap"
 )
@@ -52,8 +51,7 @@ func (r *mutationResolver) Submit(ctx context.Context, job model.Job) (string, e
 	}
 	u := shortuuid.New()
 	logger.I.Info("set", zap.String("uuid", u), zap.String("script", script))
-	_, err = r.RedisClient.Set(ctx, u, script, 1*time.Hour).Result()
-	if err != nil {
+	if err = r.Storage.Set(ctx, u, script, 1*time.Hour); err != nil {
 		graphql.AddError(ctx, &gqlerror.Error{
 			Path:    graphql.GetPath(ctx),
 			Message: err.Error(),
@@ -78,14 +76,7 @@ func (r *mutationResolver) Validate(ctx context.Context, module model.Module) (s
 func (r *queryResolver) Job(ctx context.Context, batchLocationHash string) (string, error) {
 	if r.Debug {
 		logger.I.Info("get", zap.String("batchLocationHash", batchLocationHash))
-		resp, err := r.RedisClient.Get(ctx, batchLocationHash).Result()
-		if err != nil {
-			if err == redis.Nil {
-				return "", errors.New("no entry exists under this name")
-			}
-			return "", err
-		}
-		return resp, nil
+		return r.Storage.Get(ctx, batchLocationHash)
 	} else {
 		return "", errors.New("debug mode is disabled and is not allowing query from graphql")
 	}

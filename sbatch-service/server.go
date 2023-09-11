@@ -16,6 +16,7 @@ import (
 	"github.com/deepsquare-io/the-grid/sbatch-service/grpc/sbatch"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
 	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/the-grid/sbatch-service/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
@@ -30,6 +31,7 @@ import (
 var (
 	listenAddress string
 
+	redisDisable      bool
 	redisAddress      string
 	redisTLS          bool
 	redisTLSInsecure  bool
@@ -52,6 +54,13 @@ var flags = []cli.Flag{
 		Usage:       "Address to listen on. Is used for receiving job status via the job completion plugin.",
 		Destination: &listenAddress,
 		EnvVars:     []string{"LISTEN_ADDRESS"},
+	},
+	&cli.BoolFlag{
+		Name:        "redis.disable",
+		Usage:       "Disable Redis and use internal map.",
+		Value:       false,
+		Destination: &redisDisable,
+		EnvVars:     []string{"REDIS_DISABLE"},
 	},
 	&cli.StringFlag{
 		Name:        "redis.url",
@@ -141,39 +150,45 @@ var app = &cli.App{
 	},
 	Action: func(cCtx *cli.Context) error {
 		logger.I.Info("running", zap.String("version", version))
+		var stor storage.Storage
 		// Redis connection
-		opt, err := redis.ParseURL(redisAddress)
-		if err != nil {
-			return err
-		}
-		if redisTLS {
-			var tlsConfig tls.Config
-			if redisTLSInsecure {
-				tlsConfig = tls.Config{
-					InsecureSkipVerify: true,
-				}
-			} else {
-				certs, err := x509.SystemCertPool()
-				if err != nil {
-					logger.I.Warn("failed to load system certs pool")
-					certs = x509.NewCertPool()
-				}
-				if redisCAFile != "" {
-					pem, err := os.ReadFile(redisCAFile)
-					if err != nil {
-						return err
-					}
-
-					certs.AppendCertsFromPEM(pem)
-				}
-				tlsConfig = tls.Config{
-					MinVersion: tls.VersionTLS12,
-					RootCAs:    certs,
-				}
+		if !redisDisable {
+			opt, err := redis.ParseURL(redisAddress)
+			if err != nil {
+				return err
 			}
-			opt.TLSConfig = &tlsConfig
+			if redisTLS {
+				var tlsConfig tls.Config
+				if redisTLSInsecure {
+					tlsConfig = tls.Config{
+						InsecureSkipVerify: true,
+					}
+				} else {
+					certs, err := x509.SystemCertPool()
+					if err != nil {
+						logger.I.Warn("failed to load system certs pool")
+						certs = x509.NewCertPool()
+					}
+					if redisCAFile != "" {
+						pem, err := os.ReadFile(redisCAFile)
+						if err != nil {
+							return err
+						}
+
+						certs.AppendCertsFromPEM(pem)
+					}
+					tlsConfig = tls.Config{
+						MinVersion: tls.VersionTLS12,
+						RootCAs:    certs,
+					}
+				}
+				opt.TLSConfig = &tlsConfig
+			}
+			rdb := redis.NewClient(opt)
+			stor = storage.NewRedisStorage(rdb)
+		} else {
+			stor = storage.NewInMemoryStorage()
 		}
-		rdb := redis.NewClient(opt)
 
 		jobRenderer := renderer.NewJobRenderer(
 			loggerEndpoint,
@@ -184,7 +199,7 @@ var app = &cli.App{
 
 		// GraphQL server
 		c := graph.Config{
-			Resolvers: graph.NewResolver(rdb, jobRenderer),
+			Resolvers: graph.NewResolver(stor, jobRenderer),
 		}
 		srv := handler.NewDefaultServer(graph.NewExecutableSchema(c))
 		r := chi.NewRouter()
@@ -204,7 +219,7 @@ var app = &cli.App{
 			r.HandleFunc("/job/{jobID}", func(w http.ResponseWriter, r *http.Request) {
 				jobID := chi.URLParam(r, "jobID")
 				logger.I.Info("get", zap.String("batchLocationHash", jobID))
-				resp, err := rdb.Get(r.Context(), jobID).Result()
+				resp, err := stor.Get(r.Context(), jobID)
 				if err != nil {
 					logger.I.Error("get failed", zap.Error(err))
 					http.Error(w, http.StatusText(404), 404)
@@ -220,7 +235,7 @@ var app = &cli.App{
 
 		// gRPC server
 		g := grpc.NewServer()
-		sbatchapiv1alpha1.RegisterSBatchAPIServer(g, sbatch.NewAPI(rdb, loggerEndpoint))
+		sbatchapiv1alpha1.RegisterSBatchAPIServer(g, sbatch.NewAPI(stor, loggerEndpoint))
 
 		rg := mixedHandler(r, g)
 

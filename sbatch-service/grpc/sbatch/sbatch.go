@@ -2,10 +2,11 @@ package sbatch
 
 import (
 	"context"
+	"errors"
 
 	sbatchapiv1alpha1 "github.com/deepsquare-io/the-grid/sbatch-service/gen/go/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
-	"github.com/redis/go-redis/v9"
+	"github.com/deepsquare-io/the-grid/sbatch-service/storage"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -13,16 +14,16 @@ import (
 
 type API struct {
 	sbatchapiv1alpha1.UnimplementedSBatchAPIServer
-	RedisClient    *redis.Client
+	storage        storage.Storage
 	loggerEndpoint string
 }
 
-func NewAPI(r *redis.Client, loggerEndpoint string) *API {
-	if r == nil {
-		logger.I.Panic("redis is nil")
+func NewAPI(storage storage.Storage, loggerEndpoint string) *API {
+	if storage == nil {
+		logger.I.Panic("storage is nil")
 	}
 	return &API{
-		RedisClient:    r,
+		storage:        storage,
 		loggerEndpoint: loggerEndpoint,
 	}
 }
@@ -36,10 +37,10 @@ func (a *API) GetSBatch(
 		zap.String("batchLocationHash", req.BatchLocationHash),
 		zap.String("gridLoggerURL", a.loggerEndpoint),
 	)
-	resp, err := a.RedisClient.Get(ctx, req.BatchLocationHash).Result()
+	resp, err := a.storage.Get(ctx, req.BatchLocationHash)
 	if err != nil {
-		if err == redis.Nil {
-			return nil, status.Error(codes.NotFound, "no entry exists under this name")
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, status.Error(codes.NotFound, err.Error())
 		}
 		return nil, err
 	}
