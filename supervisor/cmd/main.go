@@ -1072,7 +1072,7 @@ func launchBenchmarks(
 	})
 
 	if err := g.Wait(); err != nil {
-		logger.I.Warn("cancelling benchmarks due to failure")
+		logger.I.Warn("cancelling benchmarks due to failure", zap.Error(err))
 		if err := benchmarkLauncher.Cancel(parent, "osu"); err != nil {
 			logger.I.Warn("failed to cancel osu benchmark", zap.Error(err))
 		}
