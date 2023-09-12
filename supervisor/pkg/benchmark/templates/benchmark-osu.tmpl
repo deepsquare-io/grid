@@ -36,15 +36,23 @@ export OMPI_MCA_btl=vader,self,tcp
 export NCCL_IB_DISABLE=1
 {{- end }}
 
+export SHARED_WORLD_TMP_VOLUME=/opt/cache/world-tmp
+umask 077
+
+RESULT_DIR="${SHARED_WORLD_TMP_VOLUME}$(mktemp --directory -t benchmark.XXXXXX -u)"
+export RESULT_DIR
+
+srun -N {{ .Benchmark.MaxNodes }}-{{ .Benchmark.MaxNodes }} \
+  --ntasks={{ .Benchmark.MaxNodes }} \
+  --ntasks-per-node=1 \
+  mkdir -p "$RESULT_DIR"
+
 # P2P Bidirectional Latency
-OUTPUT="$(mktemp -t benchmark.XXXXXX)"
-export OUTPUT
-dir="$(dirname "$OUTPUT")"
 srun \
   --cpu-bind=none \
   --gpu-bind=none \
   --gpus-per-task=1 \
-  --container-mounts="$dir:$dir:rw" \
+  --container-mounts="$RESULT_DIR:$RESULT_DIR:rw" \
   --nodes=2-2 \
   --ntasks=2 \
   --container-image="{{ .Image }}" \
@@ -58,23 +66,20 @@ export UCX_NET_DEVICES
 export UCX_TLS='"'"'{{ .UCXTransport }}'"'"'
 {{- end }}
 {{- end }}
-/osu-micro-benchmarks/mpi/pt2pt/osu_latency | tee "$OUTPUT"'
+/osu-micro-benchmarks/mpi/pt2pt/osu_latency | tee "$RESULT_DIR/pt2pt-latency"'
 
 curl -fsSL \
   --upload-file \
-  "$OUTPUT" \
+  "$RESULT_DIR/pt2pt-latency" \
   -H "X-Secret: {{ .Secret }}" \
   "https://{{ .SupervisorPublicAddress }}/benchmark/osu/pt2pt-latency"
 
 # P2P Bidirectional Bandwidth
-OUTPUT="$(mktemp -t benchmark.XXXXXX)"
-export OUTPUT
-dir="$(dirname "$OUTPUT")"
 srun \
   --cpu-bind=none \
   --gpu-bind=none \
   --gpus-per-task=1 \
-  --container-mounts="$dir:$dir:rw" \
+  --container-mounts=""$RESULT_DIR:"$RESULT_DIR:rw" \
   --nodes=2-2 \
   --ntasks=2 \
   --container-image="{{ .Image }}" \
@@ -88,23 +93,20 @@ export UCX_NET_DEVICES
 export UCX_TLS='"'"'{{ .UCXTransport }}'"'"'
 {{- end }}
 {{- end }}
-/osu-micro-benchmarks/mpi/pt2pt/osu_bibw | tee "$OUTPUT"'
+/osu-micro-benchmarks/mpi/pt2pt/osu_bibw | tee "$RESULT_DIR/pt2pt-bibw"'
 
 curl -fsSL \
   --upload-file \
-  "$OUTPUT" \
+  "$RESULT_DIR/pt2pt-bibw" \
   -H "X-Secret: {{ .Secret }}" \
   "https://{{ .SupervisorPublicAddress }}/benchmark/osu/pt2pt-bibw"
 
 # All to all
-OUTPUT="$(mktemp -t benchmark.XXXXXX)"
-export OUTPUT
-dir="$(dirname "$OUTPUT")"
 srun \
   --cpu-bind=none \
   --gpu-bind=none \
   --gpus-per-task=1 \
-  --container-mounts="$dir:$dir:rw" \
+  --container-mounts="$RESULT_DIR:$RESULT_DIR:rw" \
   --nodes={{ .Benchmark.MaxNodes }}-{{ .Benchmark.MaxNodes }} \
   --ntasks={{ .Benchmark.NTasks }} \
   --container-image="{{ .Image }}" \
@@ -118,11 +120,11 @@ export UCX_NET_DEVICES
 export UCX_TLS='"'"'{{ .UCXTransport }}'"'"'
 {{- end }}
 {{- end }}
-/osu-micro-benchmarks/mpi/collective/osu_alltoall | tee "$OUTPUT"'
+/osu-micro-benchmarks/mpi/collective/osu_alltoall | tee "$RESULT_DIR/alltoall"'
 
 curl -fsSL \
   --upload-file \
-  "$OUTPUT" \
+  "$RESULT_DIR/alltoall" \
   -H "X-Secret: {{ .Secret }}" \
   "https://{{ .SupervisorPublicAddress }}/benchmark/osu/alltoall"
 {{ end -}}

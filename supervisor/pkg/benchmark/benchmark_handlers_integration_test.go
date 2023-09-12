@@ -47,8 +47,9 @@ func TestPhase1Handler(t *testing.T) {
 	fmt.Printf("created tmp fixture: %s", file.Name())
 
 	impl := benchmark.NewHPLPhase1Handler(
-		func(optimal *hpl.Result, opts ...benchmark.Option) error {
+		func(optimal *hpl.Result, err error) error {
 			require.NotEmpty(t, optimal)
+			require.NoError(t, err)
 			return nil
 		},
 	)
@@ -107,8 +108,9 @@ func TestSpeedTestHandler(t *testing.T) {
 	fmt.Printf("created tmp fixture: %s", file.Name())
 
 	// Mocks
-	impl := benchmark.NewSpeedTestHandler(func(res *speedtest.Result) error {
+	impl := benchmark.NewSpeedTestHandler(func(res *speedtest.Result, err error) error {
 		require.NotEmpty(t, res)
+		require.NoError(t, err)
 		return nil
 	})
 
@@ -164,8 +166,9 @@ func TestOSUHandler(t *testing.T) {
 	fmt.Printf("created tmp fixture: %s", file.Name())
 
 	// Mocks
-	impl := benchmark.NewOSUHandler(func(res float64) error {
+	impl := benchmark.NewOSUHandler(func(res float64, err error) error {
 		require.NotEmpty(t, res)
+		require.NoError(t, err)
 		return nil
 	})
 
@@ -221,9 +224,10 @@ func TestIORHandler(t *testing.T) {
 	fmt.Printf("created tmp fixture: %s", file.Name())
 
 	// Mocks
-	impl := benchmark.NewIORHandler(func(avgr, avgw *ior.Result) error {
+	impl := benchmark.NewIORHandler(func(avgr, avgw *ior.Result, err error) error {
 		require.NotEmpty(t, avgr)
 		require.NotEmpty(t, avgw)
+		require.NoError(t, err)
 		return nil
 	})
 

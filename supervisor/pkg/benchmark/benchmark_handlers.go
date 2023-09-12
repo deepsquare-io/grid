@@ -42,7 +42,7 @@ func NewMachineHandler(
 			return
 		}
 
-		fmt.Fprint(w, "success")
+		fmt.Fprintln(w, "success")
 	}
 }
 
@@ -52,7 +52,7 @@ func NewIORHandler(
 	return func(w http.ResponseWriter, r *http.Request) {
 		avgr, avgw, err := ior.ComputeAvgReadWrite(ior.NewReader(r.Body))
 		if err != nil {
-			logger.I.Error("failed to parse osu logs", zap.Error(err))
+			logger.I.Error("failed to parse ior logs", zap.Error(err))
 		}
 
 		if err := next(avgr, avgw, err); err != nil {
@@ -64,7 +64,7 @@ func NewIORHandler(
 			return
 		}
 
-		fmt.Fprint(w, "success")
+		fmt.Fprintln(w, "success")
 	}
 }
 
@@ -77,6 +77,10 @@ func NewOSUHandler(
 			logger.I.Error("failed to parse osu logs", zap.Error(err))
 		}
 
+		if res == 0 {
+			err = errors.New("OSU benchmark received a 0 value")
+		}
+
 		if err := next(res, err); err != nil {
 			http.Error(
 				w,
@@ -86,7 +90,7 @@ func NewOSUHandler(
 			return
 		}
 
-		fmt.Fprint(w, "success")
+		fmt.Fprintln(w, "success")
 	}
 }
 
@@ -109,7 +113,7 @@ func NewSpeedTestHandler(
 			return
 		}
 
-		fmt.Fprint(w, "success")
+		fmt.Fprintln(w, "success")
 	}
 }
 
@@ -138,6 +142,6 @@ func NewHPLPhase1Handler(
 			return
 		}
 
-		fmt.Fprint(w, "success")
+		fmt.Fprintln(w, "success")
 	}
 }
