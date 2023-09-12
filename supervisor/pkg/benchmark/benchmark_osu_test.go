@@ -51,66 +51,68 @@ export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=vader,self,tcp
 export NCCL_IB_DISABLE=1
 
+export SHARED_WORLD_TMP_VOLUME=/opt/cache/world-tmp
+umask 077
+
+RESULT_DIR="${SHARED_WORLD_TMP_VOLUME}$(mktemp --directory -t benchmark.XXXXXX -u)"
+export RESULT_DIR
+
+srun -N 3-3 \
+  --ntasks=3 \
+  --ntasks-per-node=1 \
+  mkdir -p "$RESULT_DIR"
+
 # P2P Bidirectional Latency
-OUTPUT="$(mktemp -t benchmark.XXXXXX)"
-export OUTPUT
-dir="$(dirname "$OUTPUT")"
 srun \
   --cpu-bind=none \
   --gpu-bind=none \
   --gpus-per-task=1 \
-  --container-mounts="$dir:$dir:rw" \
+  --container-mounts="$RESULT_DIR:$RESULT_DIR:rw" \
   --nodes=2-2 \
   --ntasks=2 \
   --container-image="registry-1.deepsquare.run#library/osu-benchmarks:latest" \
   bash -c '
-/osu-micro-benchmarks/mpi/pt2pt/osu_latency | tee "$OUTPUT"'
+/osu-micro-benchmarks/mpi/pt2pt/osu_latency | tee "$RESULT_DIR/pt2pt-latency"'
 
 curl -fsSL \
   --upload-file \
-  "$OUTPUT" \
+  "$RESULT_DIR/pt2pt-latency" \
   -H "X-Secret: %s" \
   "https://localhost:3000/benchmark/osu/pt2pt-latency"
 
 # P2P Bidirectional Bandwidth
-OUTPUT="$(mktemp -t benchmark.XXXXXX)"
-export OUTPUT
-dir="$(dirname "$OUTPUT")"
 srun \
   --cpu-bind=none \
   --gpu-bind=none \
   --gpus-per-task=1 \
-  --container-mounts="$dir:$dir:rw" \
+  --container-mounts="$RESULT_DIR:$RESULT_DIR:rw" \
   --nodes=2-2 \
   --ntasks=2 \
   --container-image="registry-1.deepsquare.run#library/osu-benchmarks:latest" \
   bash -c '
-/osu-micro-benchmarks/mpi/pt2pt/osu_bibw | tee "$OUTPUT"'
+/osu-micro-benchmarks/mpi/pt2pt/osu_bibw | tee "$RESULT_DIR/pt2pt-bibw"'
 
 curl -fsSL \
   --upload-file \
-  "$OUTPUT" \
+  "$RESULT_DIR/pt2pt-bibw" \
   -H "X-Secret: %s" \
   "https://localhost:3000/benchmark/osu/pt2pt-bibw"
 
 # All to all
-OUTPUT="$(mktemp -t benchmark.XXXXXX)"
-export OUTPUT
-dir="$(dirname "$OUTPUT")"
 srun \
   --cpu-bind=none \
   --gpu-bind=none \
   --gpus-per-task=1 \
-  --container-mounts="$dir:$dir:rw" \
+  --container-mounts="$RESULT_DIR:$RESULT_DIR:rw" \
   --nodes=3-3 \
   --ntasks=3 \
   --container-image="registry-1.deepsquare.run#library/osu-benchmarks:latest" \
   bash -c '
-/osu-micro-benchmarks/mpi/collective/osu_alltoall | tee "$OUTPUT"'
+/osu-micro-benchmarks/mpi/collective/osu_alltoall | tee "$RESULT_DIR/alltoall"'
 
 curl -fsSL \
   --upload-file \
-  "$OUTPUT" \
+  "$RESULT_DIR/alltoall" \
   -H "X-Secret: %s" \
   "https://localhost:3000/benchmark/osu/alltoall"
 `,

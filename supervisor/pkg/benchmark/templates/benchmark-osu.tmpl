@@ -79,7 +79,7 @@ srun \
   --cpu-bind=none \
   --gpu-bind=none \
   --gpus-per-task=1 \
-  --container-mounts=""$RESULT_DIR:"$RESULT_DIR:rw" \
+  --container-mounts="$RESULT_DIR:$RESULT_DIR:rw" \
   --nodes=2-2 \
   --ntasks=2 \
   --container-image="{{ .Image }}" \
