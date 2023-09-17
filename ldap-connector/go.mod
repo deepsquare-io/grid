@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/ethereum/go-ethereum v1.13.0
-	github.com/go-ldap/ldap/v3 v3.4.5
+	github.com/go-ldap/ldap/v3 v3.4.6
 	github.com/go-playground/validator/v10 v10.15.4
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.4
