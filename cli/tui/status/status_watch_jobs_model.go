@@ -21,8 +21,8 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/internal/log"
-	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/tui/channel"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
@@ -40,16 +40,18 @@ func makeWatchJobsModel(
 	return channel.Model[transitionMsg]{
 		Channel: make(chan transitionMsg, 100),
 		OnInit: func(c chan transitionMsg) func() error {
-			sub, err := watcher.SubscribeEvents(ctx, logs)
+			newJobs := make(chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent, 1)
+			transitions := make(chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, 1)
+			sub, err := watcher.SubscribeEvents(ctx,
+				types.FilterNewJobRequest(newJobs),
+				types.FilterJobTransition(transitions),
+			)
 			if err != nil {
 				log.I.Fatal(err.Error())
 			}
 
 			go func() {
 				defer sub.Unsubscribe()
-				transitions, rest := watcher.FilterJobTransition(logs)
-				newJobs, rest := watcher.FilterNewJobRequests(rest)
-				go utils.IgnoreElements(rest)
 
 				for {
 					select {

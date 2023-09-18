@@ -3,7 +3,6 @@ package metascheduler
 import (
 	"context"
 	"fmt"
-	"math/big"
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/types"
@@ -11,243 +10,162 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 )
 
-type wsClient struct {
-	*metaschedulerabi.MetaScheduler
-	Backend
+type eventSubscriber struct {
+	rpc Backend
+	ws  Backend
+
+	rpcMetascheduler *metaschedulerabi.MetaScheduler
 }
 
-func (c *wsClient) from() (addr common.Address) {
-	if c.UserPrivateKey == nil {
-		return addr
-	}
-	return crypto.PubkeyToAddress(c.UserPrivateKey.PublicKey)
-}
-
-func (c *wsClient) SubscribeEvents(
-	ctx context.Context,
-	ch chan<- ethtypes.Log,
-) (ethereum.Subscription, error) {
-	creditAddress, err := c.Credit(&bind.CallOpts{
-		Context: ctx,
-	})
+func NewEventSubscriber(
+	rpc Backend,
+	ws Backend,
+) types.EventSubscriber {
+	m, err := metaschedulerabi.NewMetaScheduler(rpc.MetaschedulerAddress, rpc.EthereumBackend)
 	if err != nil {
+		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
+	}
+	return &eventSubscriber{
+		rpc:              rpc,
+		ws:               ws,
+		rpcMetascheduler: m,
+	}
+}
+
+func (c *eventSubscriber) SubscribeEvents(
+	ctx context.Context,
+	opts ...types.SubscriptionOption,
+) (ethereum.Subscription, error) {
+	logs := make(chan ethtypes.Log, 100)
+	var o types.SubscriptionOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	addresses := []common.Address{
+		c.ws.MetaschedulerAddress,
+	}
+	var topics []common.Hash
+
+	// MetaScheduler events
+	if o.NewJobRequestChan != nil {
+		topics = append(topics, newJobRequestEvent.ID)
+	}
+
+	if o.JobTransitionChan != nil {
+		topics = append(topics, jobTransitionEvent.ID)
+	}
+
+	// CreditManager events
+	var creditAddress common.Address
+	if o.ApprovalChan != nil {
+		if (creditAddress == common.Address{}) {
+			creditAddress, err := c.rpcMetascheduler.Credit(&bind.CallOpts{
+				Context: ctx,
+			})
+			if err != nil {
+				panic(fmt.Errorf("failed to find Credit address: %w", err))
+			}
+			addresses = append(addresses, creditAddress)
+		}
+		topics = append(topics, approvalEvent.ID)
+	}
+	if o.TransferChan != nil {
+		if (creditAddress == common.Address{}) {
+			creditAddress, err := c.rpcMetascheduler.Credit(&bind.CallOpts{
+				Context: ctx,
+			})
+			if err != nil {
+				panic(fmt.Errorf("failed to find Credit address: %w", err))
+			}
+			addresses = append(addresses, creditAddress)
+		}
+		topics = append(topics, transferEvent.ID)
+	}
+
+	query := ethereum.FilterQuery{
+		Addresses: addresses,
+		Topics: [][]common.Hash{
+			topics,
+		},
+	}
+
+	sub, err := c.ws.SubscribeFilterLogs(ctx, query, logs)
+	if err != nil {
+		close(logs)
 		return nil, WrapError(err)
 	}
-	query := ethereum.FilterQuery{
-		Addresses: []common.Address{
-			c.MetaschedulerAddress,
-			creditAddress,
-		},
-		Topics: [][]common.Hash{
-			{
-				newJobRequestEvent.ID,
-				jobTransitionEvent.ID,
-				transferEvent.ID,
-				approvalEvent.ID,
-			},
-		},
+
+	// Pass close signal to channel
+	go func() {
+		<-sub.Err()
+		close(logs)
+	}()
+
+	go c.filter(logs, o)
+
+	return sub, nil
+}
+
+func (c *eventSubscriber) filter(
+	logs <-chan ethtypes.Log,
+	o types.SubscriptionOptions,
+) {
+	var creditFilterer metaschedulerabi.IERC20Filterer
+	if o.TransferChan != nil || o.ApprovalChan != nil {
+		creditAddress, err := c.rpcMetascheduler.Credit(&bind.CallOpts{})
+		if err != nil {
+			panic(fmt.Errorf("failed to fetch Credit: %w", err))
+		}
+		ierc20, err := metaschedulerabi.NewIERC20(creditAddress, c.rpc)
+		if err != nil {
+			panic(fmt.Errorf("failed to instanciate Credit: %w", err))
+		}
+		creditFilterer = ierc20.IERC20Filterer
 	}
-
-	sub, err := c.SubscribeFilterLogs(ctx, query, ch)
-	return sub, WrapError(err)
-}
-
-func (c *wsClient) FilterNewJobRequests(
-	ch <-chan ethtypes.Log,
-) (filtered <-chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent, rest <-chan ethtypes.Log) {
-	fChan := make(chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent)
-	rChan := make(chan ethtypes.Log)
-
-	go func() {
-		defer close(fChan)
-		defer close(rChan)
-		for log := range ch {
-			if len(log.Topics) == 0 {
-				return
+	for log := range logs {
+		if len(log.Topics) == 0 {
+			return
+		}
+		switch log.Topics[0].Hex() {
+		case newJobRequestEvent.ID.Hex():
+			event, err := c.rpcMetascheduler.ParseNewJobRequestEvent(log)
+			if err != nil {
+				panic(fmt.Errorf("failed to parse event: %w", err))
 			}
-			if log.Topics[0].Hex() == newJobRequestEvent.ID.Hex() {
-				event, err := c.ParseNewJobRequestEvent(log)
-				if err != nil {
-					panic(fmt.Errorf("failed to parse event: %w", err))
-				}
 
-				fChan <- event
-			} else {
-				rChan <- log
+			if o.NewJobRequestChan != nil {
+				o.NewJobRequestChan <- event
+			}
+		case jobTransitionEvent.ID.Hex():
+			event, err := c.rpcMetascheduler.ParseJobTransitionEvent(log)
+			if err != nil {
+				panic(fmt.Errorf("failed to parse event: %w", err))
+			}
+
+			if o.JobTransitionChan != nil {
+				o.JobTransitionChan <- event
+			}
+		case transferEvent.ID.Hex():
+			event, err := creditFilterer.ParseTransfer(log)
+			if err != nil {
+				panic(fmt.Errorf("failed to parse event: %w", err))
+			}
+
+			if o.TransferChan != nil {
+				o.TransferChan <- event
+			}
+		case approvalEvent.ID.Hex():
+			event, err := creditFilterer.ParseApproval(log)
+			if err != nil {
+				panic(fmt.Errorf("failed to parse event: %w", err))
+			}
+
+			if o.ApprovalChan != nil {
+				o.ApprovalChan <- event
 			}
 		}
-	}()
-
-	return fChan, rChan
-}
-
-func (c *wsClient) FilterJobTransition(
-	ch <-chan ethtypes.Log,
-) (filtered <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, rest <-chan ethtypes.Log) {
-	fChan := make(chan *metaschedulerabi.MetaSchedulerJobTransitionEvent)
-	rChan := make(chan ethtypes.Log)
-
-	go func() {
-		defer close(fChan)
-		defer close(rChan)
-		for log := range ch {
-			if len(log.Topics) == 0 {
-				return
-			}
-			if log.Topics[0].Hex() == jobTransitionEvent.ID.Hex() {
-				event, err := c.ParseJobTransitionEvent(log)
-				if err != nil {
-					panic(fmt.Errorf("failed to parse event: %w", err))
-				}
-
-				fChan <- event
-			} else {
-				rChan <- log
-			}
-		}
-	}()
-
-	return fChan, rChan
-}
-
-type creditFilterer struct {
-	types.CreditManager
-	wsClient
-	*metaschedulerabi.IERC20Filterer
-}
-
-func (c *creditFilterer) FilterTransfer(
-	ctx context.Context,
-	ch <-chan ethtypes.Log,
-) (filtered <-chan *metaschedulerabi.IERC20Transfer, rest <-chan ethtypes.Log) {
-	fChan := make(chan *metaschedulerabi.IERC20Transfer)
-	rChan := make(chan ethtypes.Log)
-
-	go func() {
-		defer close(fChan)
-		defer close(rChan)
-		for log := range ch {
-			if len(log.Topics) == 0 {
-				return
-			}
-			if log.Topics[0].Hex() == transferEvent.ID.Hex() {
-				event, err := c.ParseTransfer(log)
-				if err != nil {
-					panic(fmt.Errorf("failed to parse event: %w", err))
-				}
-
-				fChan <- event
-			} else {
-				rChan <- log
-			}
-		}
-	}()
-
-	return fChan, rChan
-}
-
-func (c *creditFilterer) ReduceToBalance(
-	ctx context.Context,
-	transfers <-chan *metaschedulerabi.IERC20Transfer,
-) (<-chan *big.Int, error) {
-	rChan := make(chan *big.Int, 2)
-	errChan := make(chan error, 1)
-
-	// Fetch initial value
-	value, err := c.CreditManager.Balance(ctx)
-	if err != nil {
-		return nil, err
 	}
-
-	go func() {
-		defer close(rChan)
-		defer close(errChan)
-
-		// Send initial value
-		rChan <- value
-
-		// Track value
-		for transfer := range transfers {
-			// User is sending data
-			if c.from() == transfer.From {
-				value = new(big.Int).Sub(value, transfer.Value)
-				rChan <- value
-			} else if c.from() == transfer.To {
-				value = new(big.Int).Add(value, transfer.Value)
-				rChan <- value
-			}
-		}
-	}()
-
-	return rChan, nil
-}
-
-type allowanceFilterer struct {
-	types.AllowanceManager
-	wsClient
-	*metaschedulerabi.IERC20Filterer
-}
-
-func (c *allowanceFilterer) FilterApproval(
-	ctx context.Context,
-	ch <-chan ethtypes.Log,
-) (filtered <-chan *metaschedulerabi.IERC20Approval, rest <-chan ethtypes.Log) {
-	fChan := make(chan *metaschedulerabi.IERC20Approval)
-	rChan := make(chan ethtypes.Log)
-
-	go func() {
-		defer close(fChan)
-		defer close(rChan)
-		for log := range ch {
-			if len(log.Topics) == 0 {
-				return
-			}
-			if log.Topics[0].Hex() == transferEvent.ID.Hex() {
-				event, err := c.ParseApproval(log)
-				if err != nil {
-					panic(fmt.Errorf("failed to parse event: %w", err))
-				}
-
-				fChan <- event
-			} else {
-				rChan <- log
-			}
-		}
-	}()
-
-	return fChan, rChan
-}
-
-func (c *allowanceFilterer) ReduceToAllowance(
-	ctx context.Context,
-	approvals <-chan *metaschedulerabi.IERC20Approval,
-) (<-chan *big.Int, error) {
-	rChan := make(chan *big.Int, 2)
-	errChan := make(chan error, 1)
-
-	// Fetch initial value
-	value, err := c.AllowanceManager.GetAllowance(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		defer close(rChan)
-		defer close(errChan)
-
-		// Send initial value
-		rChan <- value
-
-		// Track value
-		for approval := range approvals {
-			if approval.Owner == c.from() && approval.Spender == c.MetaschedulerAddress {
-				rChan <- approval.Value
-			}
-		}
-	}()
-
-	return rChan, nil
 }

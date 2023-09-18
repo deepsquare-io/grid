@@ -152,6 +152,7 @@ var app = &cli.App{
 			nav.Model(
 				ctx,
 				userAddress,
+				client,
 				watcher,
 				status.Model(
 					ctx,

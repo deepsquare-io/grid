@@ -137,15 +137,12 @@ var Command = cli.Command{
 			return err
 		}
 		s := sbatch.NewService(http.DefaultClient, sbatchEndpoint)
-		scheduler, err := metascheduler.NewJobScheduler(metascheduler.Backend{
+		clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
 			EthereumBackend:      ethClientRPC,
 			MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
 			ChainID:              chainID,
 			UserPrivateKey:       pk,
-		}, s)
-		if err != nil {
-			return err
-		}
+		})
 		dat, err := os.ReadFile(jobPath)
 		if err != nil {
 			return err
@@ -168,7 +165,7 @@ var Command = cli.Command{
 				})
 			}
 		}
-		jobID, err := scheduler.SubmitJob(ctx, &job, usesLabels, credits, jobNameB)
+		jobID, err := clientset.JobScheduler(s).SubmitJob(ctx, &job, usesLabels, credits, jobNameB)
 		if err != nil {
 			return err
 		}

@@ -25,15 +25,17 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/internal/ether"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
-	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/tui/editor"
 	"github.com/deepsquare-io/the-grid/cli/tui/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/status"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"go.uber.org/zap"
 )
 
 type model struct {
@@ -54,6 +56,7 @@ type model struct {
 	logModelBuilder    log.ModelBuilder
 	editorModelBuilder editor.ModelBuilder
 
+	client      deepsquare.Client
 	watcher     deepsquare.Watcher
 	userAddress common.Address
 }
@@ -65,23 +68,26 @@ func (m *model) watchEvents(
 	ctx context.Context,
 ) tea.Cmd {
 	return func() tea.Msg {
-		sub, err := m.watcher.SubscribeEvents(ctx, m.logs)
+		approvals := make(chan *metaschedulerabi.IERC20Approval, 1)
+		transfers := make(chan *metaschedulerabi.IERC20Transfer, 1)
+		sub, err := m.watcher.SubscribeEvents(
+			ctx,
+			types.FilterApproval(approvals),
+			types.FilterTransfer(transfers),
+		)
 		if err != nil {
 			internallog.I.Fatal(err.Error())
 		}
 		defer sub.Unsubscribe()
-		transfers, rest := m.watcher.FilterTransfer(ctx, m.logs)
-		approvals, rest := m.watcher.FilterApproval(ctx, rest)
 
-		balances, err := m.watcher.ReduceToBalance(ctx, transfers)
+		allowances, err := m.client.ReduceToAllowance(ctx, approvals)
 		if err != nil {
-			internallog.I.Fatal(err.Error())
+			internallog.I.Fatal("failed to watch allowances", zap.Error(err))
 		}
-		allowances, err := m.watcher.ReduceToAllowance(ctx, approvals)
+		balances, err := m.client.ReduceToBalance(ctx, transfers)
 		if err != nil {
-			internallog.I.Fatal(err.Error())
+			internallog.I.Fatal("failed to watch balances", zap.Error(err))
 		}
-		go utils.IgnoreElements(rest)
 
 		for {
 			select {
@@ -224,6 +230,7 @@ func (m model) View() string {
 func Model(
 	ctx context.Context,
 	userAddress common.Address,
+	client deepsquare.Client,
 	watcher deepsquare.Watcher,
 	statusModel tea.Model,
 	logModelBuilder log.ModelBuilder,
@@ -243,6 +250,7 @@ func Model(
 		editorModelBuilder: editorModelBuilder,
 
 		userAddress:          userAddress,
+		client:               client,
 		watcher:              watcher,
 		version:              version,
 		metaschedulerAddress: metaschedulerAddress,

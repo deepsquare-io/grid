@@ -43,6 +43,7 @@ type Client interface {
 	types.JobFetcher
 	types.CreditManager
 	types.AllowanceManager
+	types.ProviderManager
 	// Close all connections.
 	Close() error
 }
@@ -96,6 +97,7 @@ type client struct {
 	types.JobFetcher
 	types.CreditManager
 	types.AllowanceManager
+	types.ProviderManager
 	loggerConn *grpc.ClientConn
 	rpcClient  *rpc.Client
 }
@@ -112,29 +114,14 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	metaschedulerRPC := metascheduler.Backend{
+	rpcClientSet := metascheduler.NewRPCClientSet(metascheduler.Backend{
 		MetaschedulerAddress: c.MetaschedulerAddress,
 		ChainID:              chainID,
 		EthereumBackend:      ethClientRPC,
 		UserPrivateKey:       c.UserPrivateKey,
-	}
-	fetcher, err := metascheduler.NewJobFetcher(ctx, metaschedulerRPC)
-	if err != nil {
-		return nil, err
-	}
+	})
 	sbatch := sbatch.NewService(&c.Client, c.SBatchEndpoint)
-	jobScheduler, err := metascheduler.NewJobScheduler(metaschedulerRPC, sbatch)
-	if err != nil {
-		return nil, err
-	}
-	credits, err := metascheduler.NewCreditManager(ctx, metaschedulerRPC)
-	if err != nil {
-		return nil, err
-	}
-	allowance, err := metascheduler.NewAllowanceManager(ctx, metaschedulerRPC)
-	if err != nil {
-		return nil, err
-	}
+	jobScheduler := rpcClientSet.JobScheduler(sbatch)
 	dialOptions := []grpc.DialOption{
 		grpc.WithTransportCredentials(credentials.NewTLS(c.TLSConfig)),
 	}
@@ -163,10 +150,10 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 		return nil, err
 	}
 	return &client{
-		JobFetcher:       fetcher,
+		JobFetcher:       rpcClientSet.JobFetcher(),
 		JobScheduler:     jobScheduler,
-		CreditManager:    credits,
-		AllowanceManager: allowance,
+		CreditManager:    rpcClientSet.CreditManager(),
+		AllowanceManager: rpcClientSet.AllowanceManager(),
 		Logger:           logger,
 		loggerConn:       conn,
 		rpcClient:        rpcClient,
@@ -183,9 +170,6 @@ func (c *client) Close() error {
 // Users must call Close() at the end of the application to avoid pending connections.
 type Watcher interface {
 	types.EventSubscriber
-	types.JobFilterer
-	types.CreditFilterer
-	types.AllowanceFilterer
 	// Close all connections.
 	Close() error
 }
@@ -231,9 +215,6 @@ func (c *WatcherConfig) applyDefault() {
 
 type watcher struct {
 	types.EventSubscriber
-	types.JobFilterer
-	types.CreditFilterer
-	types.AllowanceFilterer
 	rpcClient *rpc.Client
 	wsClient  *rpc.Client
 }
@@ -267,37 +248,10 @@ func NewWatcher(ctx context.Context, c *WatcherConfig) (Watcher, error) {
 		EthereumBackend:      ethClientWS,
 		UserPrivateKey:       c.UserPrivateKey,
 	}
-	eventSubscriber, err := metascheduler.NewEventSubscriber(metaschedulerWS)
-	if err != nil {
-		return nil, err
-	}
-	jobFilterer, err := metascheduler.NewJobFilterer(metaschedulerWS)
-	if err != nil {
-		return nil, err
-	}
-	credits, err := metascheduler.NewCreditManager(ctx, metaschedulerRPC)
-	if err != nil {
-		return nil, err
-	}
-	allowance, err := metascheduler.NewAllowanceManager(ctx, metaschedulerRPC)
-	if err != nil {
-		return nil, err
-	}
-	creditFilterer, err := metascheduler.NewCreditFilterer(ctx, metaschedulerWS, credits)
-	if err != nil {
-		return nil, err
-	}
-	allowanceFilterer, err := metascheduler.NewAllowanceFilterer(ctx, metaschedulerWS, allowance)
-	if err != nil {
-		return nil, err
-	}
 	return &watcher{
-		EventSubscriber:   eventSubscriber,
-		JobFilterer:       jobFilterer,
-		CreditFilterer:    creditFilterer,
-		AllowanceFilterer: allowanceFilterer,
-		rpcClient:         rpcClient,
-		wsClient:          wsClient,
+		EventSubscriber: metascheduler.NewEventSubscriber(metaschedulerRPC, metaschedulerWS),
+		rpcClient:       rpcClient,
+		wsClient:        wsClient,
 	}, nil
 }
 

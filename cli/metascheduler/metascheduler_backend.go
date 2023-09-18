@@ -2,18 +2,16 @@
 package metascheduler
 
 import (
-	"context"
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
 	"math/big"
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
-	"github.com/deepsquare-io/the-grid/cli/sbatch"
-	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
@@ -27,7 +25,6 @@ var (
 	jobTransitionEvent abi.Event
 	transferEvent      abi.Event
 	approvalEvent      abi.Event
-	defaultChainID     = big.NewInt(179188)
 )
 
 func init() {
@@ -70,193 +67,20 @@ type EthereumBackend interface {
 
 // Backend is a wrapper around the EthereumBackend used to interact with the Meta-Scheduler smart-contract.
 type Backend struct {
+	MetaschedulerAddress common.Address
 	// EthereumBackend is the Ethereum Client.
 	//
 	// TODO: check if websocket or rpc.
 	EthereumBackend
-	// Address of the metascheduler smart-contract.
-	MetaschedulerAddress common.Address
 	// ChainID of the blockchain.
 	ChainID *big.Int
 	// PrivateKey of the user.
 	UserPrivateKey *ecdsa.PrivateKey
 }
 
-// NewJobScheduler creates a JobScheduler.
-func NewJobScheduler(b Backend, sbatch sbatch.Service) (client types.JobScheduler, err error) {
-	b = b.applyDefault()
-	m, err := metaschedulerabi.NewMetaScheduler(b.MetaschedulerAddress, b.EthereumBackend)
-	if err != nil {
-		return nil, err
+func (b *Backend) from() (addr common.Address) {
+	if b.UserPrivateKey == nil {
+		return addr
 	}
-	return &rpcClient{
-		MetaScheduler: m,
-		Backend:       b,
-		sbatch:        sbatch,
-	}, err
-}
-
-func (b Backend) applyDefault() Backend {
-	if b.ChainID == nil {
-		b.ChainID = defaultChainID
-	}
-	return b
-}
-
-func NewJobFetcher(ctx context.Context, b Backend) (fetcher types.JobFetcher, err error) {
-	b = b.applyDefault()
-	m, err := metaschedulerabi.NewMetaScheduler(b.MetaschedulerAddress, b.EthereumBackend)
-	if err != nil {
-		return nil, err
-	}
-	jobsAddress, err := m.Jobs(&bind.CallOpts{
-		Context: ctx,
-	})
-	if err != nil {
-		return nil, err
-	}
-	jobs, err := metaschedulerabi.NewIJobRepository(jobsAddress, b)
-	if err != nil {
-		return nil, err
-	}
-	return &rpcClient{
-		MetaScheduler: m,
-		Backend:       b,
-		Jobs:          jobs,
-	}, err
-}
-
-func NewEventSubscriber(b Backend) (types.EventSubscriber, error) {
-	b = b.applyDefault()
-	m, err := metaschedulerabi.NewMetaScheduler(b.MetaschedulerAddress, b.EthereumBackend)
-	if err != nil {
-		return nil, err
-	}
-	return &wsClient{
-		MetaScheduler: m,
-		Backend:       b,
-	}, err
-}
-
-func NewJobFilterer(b Backend) (watcher types.JobFilterer, err error) {
-	b = b.applyDefault()
-	m, err := metaschedulerabi.NewMetaScheduler(b.MetaschedulerAddress, b.EthereumBackend)
-	if err != nil {
-		return nil, err
-	}
-	return &wsClient{
-		MetaScheduler: m,
-		Backend:       b,
-	}, err
-}
-
-func NewCreditManager(ctx context.Context, b Backend) (credits types.CreditManager, err error) {
-	b = b.applyDefault()
-	m, err := metaschedulerabi.NewMetaScheduler(b.MetaschedulerAddress, b.EthereumBackend)
-	if err != nil {
-		return nil, err
-	}
-	creditAddress, err := m.Credit(&bind.CallOpts{
-		Context: ctx,
-	})
-	if err != nil {
-		return nil, err
-	}
-	ierc20, err := metaschedulerabi.NewIERC20(creditAddress, b)
-	if err != nil {
-		return nil, err
-	}
-	return &rpcClient{
-		MetaScheduler: m,
-		Backend:       b,
-		IERC20:        ierc20,
-	}, err
-}
-
-func NewCreditFilterer(
-	ctx context.Context,
-	ws Backend,
-	credit types.CreditManager,
-) (watcher types.CreditFilterer, err error) {
-	ws = ws.applyDefault()
-	mWs, err := metaschedulerabi.NewMetaScheduler(ws.MetaschedulerAddress, ws.EthereumBackend)
-	if err != nil {
-		return nil, err
-	}
-	wsClient := wsClient{
-		MetaScheduler: mWs,
-		Backend:       ws,
-	}
-	creditAddress, err := mWs.Credit(&bind.CallOpts{
-		Context: ctx,
-	})
-	if err != nil {
-		return nil, err
-	}
-	ierc20Filterer, err := metaschedulerabi.NewIERC20Filterer(creditAddress, ws)
-	if err != nil {
-		return nil, err
-	}
-	return &creditFilterer{
-		CreditManager:  credit,
-		wsClient:       wsClient,
-		IERC20Filterer: ierc20Filterer,
-	}, err
-}
-
-func NewAllowanceManager(
-	ctx context.Context,
-	b Backend,
-) (allowance types.AllowanceManager, err error) {
-	b = b.applyDefault()
-	m, err := metaschedulerabi.NewMetaScheduler(b.MetaschedulerAddress, b.EthereumBackend)
-	if err != nil {
-		return nil, err
-	}
-	creditAddress, err := m.Credit(&bind.CallOpts{
-		Context: ctx,
-	})
-	if err != nil {
-		return nil, err
-	}
-	ierc20, err := metaschedulerabi.NewIERC20(creditAddress, b)
-	if err != nil {
-		return nil, err
-	}
-	return &rpcClient{
-		MetaScheduler: m,
-		Backend:       b,
-		IERC20:        ierc20,
-	}, err
-}
-
-func NewAllowanceFilterer(
-	ctx context.Context,
-	ws Backend,
-	allowance types.AllowanceManager,
-) (watcher types.AllowanceFilterer, err error) {
-	ws = ws.applyDefault()
-	mWs, err := metaschedulerabi.NewMetaScheduler(ws.MetaschedulerAddress, ws.EthereumBackend)
-	if err != nil {
-		return nil, err
-	}
-	wsClient := wsClient{
-		MetaScheduler: mWs,
-		Backend:       ws,
-	}
-	creditAddress, err := mWs.Credit(&bind.CallOpts{
-		Context: ctx,
-	})
-	if err != nil {
-		return nil, err
-	}
-	ierc20Filterer, err := metaschedulerabi.NewIERC20Filterer(creditAddress, ws)
-	if err != nil {
-		return nil, err
-	}
-	return &allowanceFilterer{
-		AllowanceManager: allowance,
-		wsClient:         wsClient,
-		IERC20Filterer:   ierc20Filterer,
-	}, err
+	return crypto.PubkeyToAddress(b.UserPrivateKey.PublicKey)
 }
