@@ -136,7 +136,7 @@ func Model(
 			),
 			NextInput: key.NewBinding(
 				key.WithKeys("tab", "ctrl+n", "enter"),
-				key.WithHelp("tab/enter", "next input"),
+				key.WithHelp("tab/enter", "next input/finish"),
 			),
 			PrevInput: key.NewBinding(
 				key.WithKeys("shift+tab", "ctrl+p"),

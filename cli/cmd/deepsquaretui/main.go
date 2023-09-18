@@ -27,6 +27,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/tui/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/nav"
 	"github.com/deepsquare-io/the-grid/cli/tui/status"
+	"github.com/deepsquare-io/the-grid/cli/tui/transfer"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
@@ -167,6 +168,9 @@ var app = &cli.App{
 					UserAddress: userAddress,
 				},
 				editor.ModelBuilder{
+					Client: client,
+				},
+				transfer.ModelBuilder{
 					Client: client,
 				},
 				version,

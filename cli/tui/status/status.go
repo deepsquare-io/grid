@@ -40,8 +40,9 @@ func (m model) View() string {
 	help := m.help.FullHelpView([][]key.Binding{
 		{
 			m.keyMap.OpenLogs,
-			m.keyMap.CancelJob,
 			m.keyMap.SubmitJob,
+			m.keyMap.CancelJob,
+			m.keyMap.TransferCredits,
 			m.keyMap.Exit,
 		},
 		{
@@ -103,6 +104,10 @@ func Model(
 			SubmitJob: key.NewBinding(
 				key.WithKeys("s"),
 				key.WithHelp("s", "submit job"),
+			),
+			TransferCredits: key.NewBinding(
+				key.WithKeys("t"),
+				key.WithHelp("t", "tranfer credits"),
 			),
 			Exit: key.NewBinding(
 				key.WithKeys("esc", "q"),

@@ -34,11 +34,12 @@ import (
 )
 
 type KeyMap struct {
-	TableKeyMap table.KeyMap
-	OpenLogs    key.Binding
-	CancelJob   key.Binding
-	SubmitJob   key.Binding
-	Exit        key.Binding
+	TableKeyMap     table.KeyMap
+	OpenLogs        key.Binding
+	CancelJob       key.Binding
+	SubmitJob       key.Binding
+	TransferCredits key.Binding
+	Exit            key.Binding
 }
 
 type model struct {
@@ -65,6 +66,13 @@ type SubmitJobMsg struct{}
 
 func emitSubmitJobMsg() tea.Msg {
 	return SubmitJobMsg{}
+}
+
+// TransferCreditsMsg is a public msg used to indicate that the user want to transfer credits.
+type TransferCreditsMsg struct{}
+
+func emitTransferCreditsMsg() tea.Msg {
+	return TransferCreditsMsg{}
 }
 
 func jobToRow(job metaschedulerabi.Job) table.Row {
@@ -204,6 +212,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, m.keyMap.SubmitJob):
 			cmds = append(cmds, emitSubmitJobMsg)
+		case key.Matches(msg, m.keyMap.TransferCredits):
+			cmds = append(cmds, emitTransferCreditsMsg)
 		case key.Matches(msg, m.keyMap.Exit):
 			return m, tea.Batch(
 				m.watchJobs.Dispose,

@@ -232,16 +232,17 @@ switchmsg:
 			m.inputs[i].Blur()
 		}
 		m.inputs[m.focused].Focus()
-
-		m.inputs[creditsLockingInput], inputCmd = m.inputs[creditsLockingInput].Update(msg)
-		cmds = append(cmds, inputCmd)
-
-		m.inputs[usesInput], inputCmd = m.inputs[usesInput].Update(msg)
-		cmds = append(cmds, inputCmd)
-
-		m.inputs[jobNameInput], inputCmd = m.inputs[jobNameInput].Update(msg)
-		cmds = append(cmds, inputCmd)
+		cmds = append(cmds, textinput.Blink)
 	}
+
+	m.inputs[creditsLockingInput], inputCmd = m.inputs[creditsLockingInput].Update(msg)
+	cmds = append(cmds, inputCmd)
+
+	m.inputs[usesInput], inputCmd = m.inputs[usesInput].Update(msg)
+	cmds = append(cmds, inputCmd)
+
+	m.inputs[jobNameInput], inputCmd = m.inputs[jobNameInput].Update(msg)
+	cmds = append(cmds, inputCmd)
 
 	m.code, codeCmd = m.code.Update(msg)
 	if codeCmd != nil {
