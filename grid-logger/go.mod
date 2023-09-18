@@ -3,7 +3,7 @@ module github.com/deepsquare-io/the-grid/grid-logger
 go 1.21
 
 require (
-	github.com/ethereum/go-ethereum v1.13.0
+	github.com/ethereum/go-ethereum v1.13.1
 	github.com/joho/godotenv v1.5.1
 	github.com/nxadm/tail v1.4.8
 	github.com/urfave/cli/v2 v2.25.7
