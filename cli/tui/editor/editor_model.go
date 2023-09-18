@@ -69,6 +69,12 @@ type submitDoneMsg struct{}
 
 type errorMsg error
 
+type clearErrorsMsg struct{}
+
+func emitClearErrorsMsg() tea.Msg {
+	return clearErrorsMsg{}
+}
+
 type model struct {
 	// Form
 	inputs  []textinput.Model
@@ -222,7 +228,7 @@ switchmsg:
 		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, emitExitMsg)
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
-			cmds = append(cmds, m.submitJob(context.TODO(), m.jobPath), emitSubmitProgressMsg)
+			cmds = append(cmds, tea.Sequence(tea.Batch(emitSubmitProgressMsg, emitClearErrorsMsg), m.submitJob(context.TODO(), m.jobPath)))
 		case key.Matches(msg, m.keyMap.NextInput):
 			m.nextInput()
 		case key.Matches(msg, m.keyMap.PrevInput):

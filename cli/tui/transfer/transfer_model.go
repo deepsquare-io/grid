@@ -44,6 +44,12 @@ type KeyMap struct {
 
 type errorMsg error
 
+type clearErrorsMsg struct{}
+
+func emitClearErrorsMsg() tea.Msg {
+	return clearErrorsMsg{}
+}
+
 // ExitMsg msg closes to editor model
 type ExitMsg struct{}
 
@@ -58,7 +64,7 @@ func (m *model) transfer(ctx context.Context) tea.Cmd {
 		// Parse input
 		if !common.IsHexAddress(m.inputs[toInput].Value()) {
 			err := errors.New("field is not an hex address")
-			m.errors[amountInput] = err
+			m.errors[toInput] = err
 			return errorMsg(err)
 		}
 		to := common.HexToAddress(m.inputs[toInput].Value())
@@ -104,18 +110,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case errorMsg:
 		m.err = msg
 		return m, nil
+	case clearErrorsMsg:
+		m.errors[toInput] = nil
+		m.errors[amountInput] = nil
+		m.err = nil
 	case transferDoneMsg:
 		cmds = append(cmds, emitExitMsg)
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, emitExitMsg)
+		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
+			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.transfer(context.TODO())))
 		case key.Matches(msg, m.keyMap.NextInput):
 			m.nextInput()
 		case key.Matches(msg, m.keyMap.PrevInput):
 			m.prevInput()
-		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
-			cmds = append(cmds, m.transfer(context.TODO()))
 		}
 		for i := range m.inputs {
 			m.inputs[i].Blur()
@@ -162,7 +172,7 @@ func allowedNumber(input string) error {
 
 func allowedHex(input string) error {
 	for _, ch := range input {
-		if !unicode.Is(unicode.Hex_Digit, ch) {
+		if !unicode.Is(unicode.Hex_Digit, ch) && ch != 'x' {
 			return fmt.Errorf("character '%c' is not allowed", ch)
 		}
 	}
