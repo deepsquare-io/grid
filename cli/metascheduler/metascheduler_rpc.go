@@ -65,7 +65,6 @@ func (c *RPCClientSet) JobFetcher() types.JobFetcher {
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
 	}
-	fmt.Println(c.MetaschedulerAddress.Hex())
 	jobsAddress, err := m.Jobs(&bind.CallOpts{})
 	if err != nil {
 		panic(fmt.Errorf("failed to fetch JobRepository contract address: %w", err))
@@ -116,5 +115,24 @@ func (c *RPCClientSet) AllowanceManager() types.AllowanceManager {
 	return &allowanceManager{
 		RPCClientSet: c,
 		IERC20:       ierc20,
+	}
+}
+
+func (c *RPCClientSet) ProviderManager() types.ProviderManager {
+	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
+	if err != nil {
+		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
+	}
+	providerManagerAddress, err := m.ProviderManager(&bind.CallOpts{})
+	if err != nil {
+		panic(fmt.Errorf("failed to fetch CreditManager contract address: %w", err))
+	}
+	pm, err := metaschedulerabi.NewIProviderManager(providerManagerAddress, c)
+	if err != nil {
+		panic(fmt.Errorf("failed to instanciate CreditManager: %w", err))
+	}
+	return &providerManager{
+		RPCClientSet:     c,
+		IProviderManager: pm,
 	}
 }

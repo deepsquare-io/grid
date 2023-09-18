@@ -19,6 +19,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/deepsquare-io/the-grid/cli/cmd/provider"
 	"github.com/deepsquare-io/the-grid/cli/cmd/submit"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
@@ -111,6 +112,7 @@ var app = &cli.App{
 	Suggest: true,
 	Commands: []*cli.Command{
 		&submit.Command,
+		&provider.Command,
 	},
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context

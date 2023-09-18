@@ -103,6 +103,10 @@ type AllowanceManager interface {
 
 // ProviderManager manages admin operation of providers
 type ProviderManager interface {
+	Approve(ctx context.Context, provider common.Address) error
+	GetWaitingForApprovalProviders(
+		ctx context.Context,
+	) (waiting []metaschedulerabi.Provider, notWaiting []metaschedulerabi.Provider, err error)
 }
 
 type SubscriptionOptions struct {
