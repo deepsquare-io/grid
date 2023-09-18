@@ -9,7 +9,7 @@ CONTRACTSPATH="${SCRIPTPATH}/../../smart-contracts"
 cd "${CONTRACTSPATH}"
 
 mkdir -p "${PROJECTPATH}/generated/abi/metascheduler"
-solc --optimize --optimize-runs=200 "${CONTRACTSPATH}/contracts/Metascheduler.sol" \
+solc --evm-version paris --optimize --optimize-runs=200 "${CONTRACTSPATH}/contracts/Metascheduler.sol" \
   --base-path . \
   --include-path "${CONTRACTSPATH}/node_modules/" \
   --include-path "${CONTRACTSPATH}/contracts/" \
@@ -25,7 +25,7 @@ echo "WARNING: enum StorageType was mapped to uint8"
 
 cd "${PROJECTPATH}"
 
-solc --optimize --optimize-runs=200 ./pkg/metascheduler/ErrorContract.sol \
+solc --evm-version paris --optimize --optimize-runs=200 ./pkg/metascheduler/ErrorContract.sol \
   --base-path . \
   --include-path "${CONTRACTSPATH}/node_modules/" \
   --include-path "${CONTRACTSPATH}/contracts/" \

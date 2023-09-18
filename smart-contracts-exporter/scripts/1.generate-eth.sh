@@ -9,7 +9,7 @@ CONTRACTSPATH="${SCRIPTPATH}/../../smart-contracts"
 cd "${CONTRACTSPATH}"
 
 mkdir -p "${PROJECTPATH}/contracts/metascheduler"
-solc --optimize --optimize-runs=200 "${CONTRACTSPATH}/contracts/Metascheduler.sol" \
+solc --evm-version paris --optimize --optimize-runs=200 "${CONTRACTSPATH}/contracts/Metascheduler.sol" \
   --base-path . \
   --include-path "${CONTRACTSPATH}/node_modules/" \
   --include-path "${CONTRACTSPATH}/contracts/" \
