@@ -34,6 +34,7 @@ var (
 	metaschedulerSmartContract string
 	loggerEndpoint             string
 	watch                      bool
+	exitOnJobExit              bool
 
 	credits *big.Int
 	jobName string
@@ -79,7 +80,14 @@ var flags = []cli.Flag{
 	&cli.BoolFlag{
 		Name:        "watch",
 		Usage:       "Watch logs after submitting the job",
+		Aliases:     []string{"w"},
 		Destination: &watch,
+	},
+	&cli.BoolFlag{
+		Name:        "exit-on-job-exit",
+		Usage:       "Exit the job after the job has finished and throw on error.",
+		Aliases:     []string{"e"},
+		Destination: &exitOnJobExit,
 	},
 	&cli.StringFlag{
 		Name:        "private-key",
@@ -232,6 +240,26 @@ var Command = cli.Command{
 			return err
 		}
 
+		if exitOnJobExit {
+			go func() {
+				status, err := waitUntilJobFinished(sub, transitions, jobID)
+				if err != nil {
+					fmt.Printf("---Watching transitions has unexpectedly closed---\n%s", err)
+				}
+				switch status {
+				case metascheduler.JobStatusFinished:
+					os.Exit(0)
+				case metascheduler.JobStatusCancelled:
+					os.Exit(130)
+				case metascheduler.JobStatusFailed, metascheduler.JobStatusPanicked:
+					os.Exit(1)
+				case metascheduler.JobStatusOutOfCredits:
+					os.Exit(143)
+				}
+				os.Exit(0)
+			}()
+		}
+
 		stream, err := client.WatchLogs(ctx, jobID)
 		if err != nil {
 			fmt.Printf("---Watching logs has unexpectedly failed---\n%s", err)
@@ -272,6 +300,30 @@ func waitUntilJobRunningOrFinished(
 					metascheduler.JobStatusPanicked,
 					metascheduler.JobStatusOutOfCredits,
 					metascheduler.JobStatusRunning:
+					return metascheduler.JobStatus(tr.To), nil
+				}
+			}
+		case err := <-sub.Err():
+			return metascheduler.JobStatusUnknown, err
+		}
+	}
+}
+
+func waitUntilJobFinished(
+	sub ethereum.Subscription,
+	ch <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent,
+	jobID [32]byte,
+) (metascheduler.JobStatus, error) {
+	for {
+		select {
+		case tr := <-ch:
+			if bytes.EqualFold(jobID[:], tr.JobId[:]) {
+				switch metascheduler.JobStatus(tr.To) {
+				case metascheduler.JobStatusCancelled,
+					metascheduler.JobStatusFailed,
+					metascheduler.JobStatusFinished,
+					metascheduler.JobStatusPanicked,
+					metascheduler.JobStatusOutOfCredits:
 					return metascheduler.JobStatus(tr.To), nil
 				}
 			}
