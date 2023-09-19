@@ -55,7 +55,7 @@ type model struct {
 // SelectJobMsg is a public msg used to indicate that the user selected a job.
 type SelectJobMsg [32]byte
 
-func emitSelectJobMsg(msg [32]byte) tea.Cmd {
+func EmitSelectJobMsg(msg [32]byte) tea.Cmd {
 	return func() tea.Msg {
 		return SelectJobMsg(msg)
 	}
@@ -208,7 +208,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case key.Matches(msg, m.keyMap.OpenLogs):
 			if len(m.table.SelectedRow()) > 0 {
-				cmds = append(cmds, emitSelectJobMsg(rowToJobID(m.table.SelectedRow())))
+				cmds = append(cmds, EmitSelectJobMsg(rowToJobID(m.table.SelectedRow())))
 			}
 		case key.Matches(msg, m.keyMap.SubmitJob):
 			cmds = append(cmds, emitSubmitJobMsg)

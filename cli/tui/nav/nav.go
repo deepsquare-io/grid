@@ -174,6 +174,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case editor.ExitMsg:
 		_, _ = m.editorModel.Update(msg)
 		m.editorModel = nil
+		if msg.JobID != [32]byte{} {
+			cmds = append(cmds, status.EmitSelectJobMsg(msg.JobID))
+		}
 	case transfer.ExitMsg:
 		_, _ = m.transferModel.Update(msg)
 		m.transferModel = nil

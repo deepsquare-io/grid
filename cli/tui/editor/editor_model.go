@@ -53,10 +53,16 @@ type KeyMap struct {
 }
 
 // ExitMsg msg closes to editor model
-type ExitMsg struct{}
+type ExitMsg struct {
+	JobID [32]byte
+}
 
-func emitExitMsg() tea.Msg {
-	return ExitMsg{}
+func emitExitMsg(jobID [32]byte) tea.Cmd {
+	return func() tea.Msg {
+		return ExitMsg{
+			JobID: jobID,
+		}
+	}
 }
 
 type submitProgressMsg struct{}
@@ -65,7 +71,9 @@ func emitSubmitProgressMsg() tea.Msg {
 	return submitProgressMsg{}
 }
 
-type submitDoneMsg struct{}
+type submitDoneMsg struct {
+	JobID [32]byte
+}
 
 type errorMsg error
 
@@ -163,7 +171,7 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 
 		var jobName [32]byte
 		copy(jobName[:], m.inputs[jobNameInput].Value())
-		_, err = m.client.SubmitJob(
+		jobID, err := m.client.SubmitJob(
 			ctx,
 			&job,
 			labels,
@@ -173,7 +181,9 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 		if err != nil {
 			return errorMsg(err)
 		}
-		return submitDoneMsg{}
+		return submitDoneMsg{
+			JobID: jobID,
+		}
 	}
 }
 
@@ -213,7 +223,7 @@ switchmsg:
 		m.isRunning = true
 	case submitDoneMsg:
 		m.isRunning = false
-		cmds = append(cmds, emitExitMsg)
+		cmds = append(cmds, emitExitMsg(msg.JobID))
 	case errorMsg:
 		m.isRunning = false
 		m.err = msg
@@ -226,7 +236,7 @@ switchmsg:
 		case key.Matches(msg, m.keyMap.EditAgain):
 			cmds = append(cmds, m.openEditor(context.TODO(), m.jobSchemaPath, m.jobPath))
 		case key.Matches(msg, m.keyMap.Exit):
-			cmds = append(cmds, emitExitMsg)
+			cmds = append(cmds, emitExitMsg([32]byte{}))
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
 			cmds = append(cmds, tea.Sequence(tea.Batch(emitSubmitProgressMsg, emitClearErrorsMsg), m.submitJob(context.TODO(), m.jobPath)))
 		case key.Matches(msg, m.keyMap.NextInput):

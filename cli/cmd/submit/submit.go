@@ -1,31 +1,39 @@
 package submit
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
-	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
+	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
+	"github.com/deepsquare-io/the-grid/cli/types"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
 var (
 	sbatchEndpoint             string
 	ethEndpointRPC             string
+	ethEndpointWS              string
 	ethHexPK                   string
 	metaschedulerSmartContract string
+	loggerEndpoint             string
+	watch                      bool
 
 	credits *big.Int
 	jobName string
@@ -41,6 +49,13 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"METASCHEDULER_RPC"},
 	},
 	&cli.StringFlag{
+		Name:        "metascheduler.ws",
+		Value:       deepsquare.DefaultWSEndpoint,
+		Usage:       "Metascheduler Avalanche C-Chain WS endpoint.",
+		Destination: &ethEndpointWS,
+		EnvVars:     []string{"METASCHEDULER_WS"},
+	},
+	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
 		Value:       deepsquare.DefaultMetaSchedulerAddress.Hex(),
 		Usage:       "Metascheduler smart-contract address.",
@@ -53,6 +68,18 @@ var flags = []cli.Flag{
 		Usage:       "SBatch Service GraphQL endpoint.",
 		Destination: &sbatchEndpoint,
 		EnvVars:     []string{"SBATCH_ENDPOINT"},
+	},
+	&cli.StringFlag{
+		Name:        "logger.endpoint",
+		Value:       deepsquare.DefaultLoggerEndpoint,
+		Usage:       "Grid Logger endpoint.",
+		Destination: &loggerEndpoint,
+		EnvVars:     []string{"LOGGER_ENDPOINT"},
+	},
+	&cli.BoolFlag{
+		Name:        "watch",
+		Usage:       "Watch logs after submitting the job",
+		Destination: &watch,
 	},
 	&cli.StringFlag{
 		Name:        "private-key",
@@ -122,27 +149,35 @@ var Command = cli.Command{
 		if err != nil {
 			return err
 		}
-		rpcClient, err := rpc.DialOptions(
-			ctx,
-			ethEndpointRPC,
-			rpc.WithHTTPClient(http.DefaultClient),
-		)
-		if err != nil {
-			return err
-		}
-		defer rpcClient.Close()
-		ethClientRPC := ethclient.NewClient(rpcClient)
-		chainID, err := ethClientRPC.ChainID(ctx)
-		if err != nil {
-			return err
-		}
-		s := sbatch.NewService(http.DefaultClient, sbatchEndpoint)
-		clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
-			EthereumBackend:      ethClientRPC,
+		client, err := deepsquare.NewClient(ctx, &deepsquare.ClientConfig{
 			MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
-			ChainID:              chainID,
+			RPCEndpoint:          ethEndpointRPC,
+			SBatchEndpoint:       sbatchEndpoint,
+			LoggerEndpoint:       loggerEndpoint,
 			UserPrivateKey:       pk,
 		})
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := client.Close(); err != nil {
+				internallog.I.Error("failed to close client", zap.Error(err))
+			}
+		}()
+		watcher, err := deepsquare.NewWatcher(ctx, &deepsquare.WatcherConfig{
+			MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
+			RPCEndpoint:          ethEndpointRPC,
+			WSEndpoint:           ethEndpointWS,
+			UserPrivateKey:       pk,
+		})
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err := watcher.Close(); err != nil {
+				internallog.I.Error("failed to close watcher", zap.Error(err))
+			}
+		}()
 		dat, err := os.ReadFile(jobPath)
 		if err != nil {
 			return err
@@ -165,11 +200,97 @@ var Command = cli.Command{
 				})
 			}
 		}
-		jobID, err := clientset.JobScheduler(s).SubmitJob(ctx, &job, usesLabels, credits, jobNameB)
+
+		// Quick submit logic
+		if !watch {
+			jobID, err := client.SubmitJob(ctx, &job, usesLabels, credits, jobNameB)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("job %s submitted", hexutil.Encode(jobID[:]))
+			return nil
+		}
+
+		// Watch submit logic
+		transitions := make(chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, 1)
+		sub, err := watcher.SubscribeEvents(ctx, types.FilterJobTransition(transitions))
 		if err != nil {
 			return err
 		}
-		fmt.Printf("job %s submitted", hexutil.Encode(jobID[:]))
-		return nil
+		defer sub.Unsubscribe()
+
+		jobID, err := client.SubmitJob(ctx, &job, usesLabels, credits, jobNameB)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("---Waiting jobs to be running...---")
+		_, err = waitUntilJobRunningOrFinished(sub, transitions, jobID)
+		if err != nil {
+			fmt.Printf("---Watching transitions has unexpectedly closed---\n%s", err)
+			return err
+		}
+
+		stream, err := client.WatchLogs(ctx, jobID)
+		if err != nil {
+			fmt.Printf("---Watching logs has unexpectedly failed---\n%s", err)
+			return err
+		}
+		defer func() {
+			_ = stream.CloseSend()
+		}()
+		for {
+			req, err := stream.Recv()
+			if err == io.EOF || errors.Is(err, context.Canceled) {
+				fmt.Println("---Connection to logging server closed---")
+				return nil
+			}
+			if err != nil {
+				fmt.Printf("---Connection to logging server closed unexpectedly---\n%s", err)
+				return err
+			}
+			clean := forbiddenReplacer.Replace(string(req.GetData()))
+			fmt.Printf("%s: %s", time.Unix(0, req.GetTimestamp()), clean)
+		}
 	},
 }
+
+func waitUntilJobRunningOrFinished(
+	sub ethereum.Subscription,
+	ch <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent,
+	jobID [32]byte,
+) (metascheduler.JobStatus, error) {
+	for {
+		select {
+		case tr := <-ch:
+			if bytes.EqualFold(jobID[:], tr.JobId[:]) {
+				switch metascheduler.JobStatus(tr.To) {
+				case metascheduler.JobStatusCancelled,
+					metascheduler.JobStatusFailed,
+					metascheduler.JobStatusFinished,
+					metascheduler.JobStatusPanicked,
+					metascheduler.JobStatusOutOfCredits,
+					metascheduler.JobStatusRunning:
+					return metascheduler.JobStatus(tr.To), nil
+				}
+			}
+		case err := <-sub.Err():
+			return metascheduler.JobStatusUnknown, err
+		}
+	}
+}
+
+var forbiddenReplacer = strings.NewReplacer(
+	"\x1b[A", "", // Move Up
+	"\x1b[B", "", // Move Down
+	"\x1b[C", "", // Move Forward (Right)
+	"\x1b[D", "", // Move Backward (Left)
+	"\x1b[G", "", // Move to Beginning of Line
+	"\x1b[H", "", // Move to Specific Position
+	"\x1b[f", "", // Move to Specific Position (alternative)
+	"\x1b[s", "", // Save Cursor Position
+	"\x1b[u", "", // Restore Cursor Position
+	"\r\n", "\n",
+	"\r", "\n",
+)
