@@ -325,6 +325,10 @@ func (s *Slurm) FindMemPerNode(ctx context.Context, opts ...FindSpecOption) ([]u
 		return []uint64{}, err
 	}
 
+	if out == "" {
+		return []uint64{}, nil
+	}
+
 	lines := strings.Split(strings.TrimSpace(out), "\n")
 	memPerN := make([]uint64, len(lines))
 	for i, line := range lines {
@@ -366,6 +370,10 @@ func (s *Slurm) FindGPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]
 			zap.String("out", out),
 		)
 		return []uint64{}, err
+	}
+
+	if out == "" {
+		return []uint64{}, nil
 	}
 
 	lines := strings.Split(strings.TrimSpace(out), "\n")
@@ -411,6 +419,10 @@ func (s *Slurm) FindCPUsPerNode(ctx context.Context, opts ...FindSpecOption) ([]
 		return []uint64{}, err
 	}
 
+	if out == "" {
+		return []uint64{}, nil
+	}
+
 	lines := strings.Split(strings.TrimSpace(out), "\n")
 	cpusPerN := make([]uint64, len(lines))
 	for i, line := range lines {
@@ -444,6 +456,10 @@ func (s *Slurm) FindTotalCPUs(ctx context.Context) (uint64, error) {
 			zap.String("out", out),
 		)
 		return 0, err
+	}
+
+	if out == "" {
+		return 0, nil
 	}
 
 	cpus, err := strconv.ParseUint(strings.TrimSpace(out), 10, 64)
@@ -487,6 +503,10 @@ func (s *Slurm) FindTotalMem(ctx context.Context) (uint64, error) {
 		return 0, err
 	}
 
+	if out == "" {
+		return 0, nil
+	}
+
 	return mem, nil
 }
 
@@ -506,6 +526,10 @@ func (s *Slurm) FindTotalGPUs(ctx context.Context) (uint64, error) {
 			zap.String("out", out),
 		)
 		return 0, err
+	}
+
+	if out == "" {
+		return 0, nil
 	}
 
 	gpu, err := strconv.ParseUint(strings.TrimSpace(out), 10, 64)
@@ -547,6 +571,10 @@ func (s *Slurm) FindTotalNodes(ctx context.Context, opts ...FindSpecOption) (uin
 			zap.String("out", out),
 		)
 		return 0, err
+	}
+
+	if out == "" {
+		return 0, nil
 	}
 
 	ret, err := strconv.ParseUint(strings.TrimSpace(out), 10, 64)
