@@ -69,10 +69,10 @@ func ProcessLabel(l metaschedulerabi.Label) metaschedulerabi.Label {
 	}
 }
 
-func ProcessLabels(l []metaschedulerabi.Label) []metaschedulerabi.Label {
-	o := make([]metaschedulerabi.Label, 0, len(l))
+func ProcessLabels(ll []metaschedulerabi.Label) []metaschedulerabi.Label {
+	o := make([]metaschedulerabi.Label, 0, len(ll))
 
-	for _, l := range o {
+	for _, l := range ll {
 		o = append(o, ProcessLabel(l))
 	}
 
