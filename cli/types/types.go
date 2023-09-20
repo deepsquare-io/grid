@@ -101,12 +101,18 @@ type AllowanceManager interface {
 	) (<-chan *big.Int, error)
 }
 
+type ProviderDetail struct {
+	metaschedulerabi.Provider
+	IsWaitingForApproval bool
+	IsValidForScheduling bool
+	JobCount             uint64
+}
+
 // ProviderManager manages admin operation of providers
 type ProviderManager interface {
 	Approve(ctx context.Context, provider common.Address) error
-	GetWaitingForApprovalProviders(
-		ctx context.Context,
-	) (waiting []metaschedulerabi.Provider, notWaiting []metaschedulerabi.Provider, err error)
+	Remove(ctx context.Context, provider common.Address) error
+	GetProviders(ctx context.Context) (providers []ProviderDetail, err error)
 }
 
 type SubscriptionOptions struct {

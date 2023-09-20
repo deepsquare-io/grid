@@ -78,24 +78,15 @@ var Command = cli.Command{
 					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
 					ChainID:              chainID,
 				})
-				waiting, notWaiting, err := clientset.ProviderManager().
-					GetWaitingForApprovalProviders(ctx)
+				providers, err := clientset.ProviderManager().GetProviders(ctx)
 				if err != nil {
 					return err
 				}
-				waitingJSON, err := json.MarshalIndent(waiting, "", "  ")
+				providersJSON, err := json.MarshalIndent(providers, "", "  ")
 				if err != nil {
 					return err
 				}
-				notWaitingJSON, err := json.MarshalIndent(notWaiting, "", "  ")
-				if err != nil {
-					return err
-				}
-				fmt.Printf(
-					"Waiting:\n%v\nNot waiting:\n%v\n",
-					string(waitingJSON),
-					string(notWaitingJSON),
-				)
+				fmt.Println(string(providersJSON))
 				return nil
 			},
 		},
@@ -135,6 +126,44 @@ var Command = cli.Command{
 					UserPrivateKey:       pk,
 				})
 				return clientset.ProviderManager().Approve(ctx, providerAddress)
+			},
+		},
+		{
+			Name:      "remove",
+			Usage:     "Remove a provider.",
+			ArgsUsage: "<0x>",
+			Flags:     approveFlags,
+			Action: func(cCtx *cli.Context) error {
+				if cCtx.NArg() != 1 {
+					return errors.New("missing arguments")
+				}
+				ctx := cCtx.Context
+				pk, err := crypto.HexToECDSA(ethHexPK)
+				if err != nil {
+					return err
+				}
+				providerAddress := common.HexToAddress(cCtx.Args().First())
+				rpcClient, err := rpc.DialOptions(
+					ctx,
+					ethEndpointRPC,
+					rpc.WithHTTPClient(http.DefaultClient),
+				)
+				if err != nil {
+					return err
+				}
+				defer rpcClient.Close()
+				ethClientRPC := ethclient.NewClient(rpcClient)
+				chainID, err := ethClientRPC.ChainID(ctx)
+				if err != nil {
+					return err
+				}
+				clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
+					EthereumBackend:      ethClientRPC,
+					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
+					ChainID:              chainID,
+					UserPrivateKey:       pk,
+				})
+				return clientset.ProviderManager().Remove(ctx, providerAddress)
 			},
 		},
 	},

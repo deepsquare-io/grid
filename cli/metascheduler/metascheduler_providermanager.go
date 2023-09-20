@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -30,16 +31,34 @@ func (c *providerManager) Approve(ctx context.Context, provider common.Address) 
 	return nil
 }
 
-func (c *providerManager) GetWaitingForApprovalProviders(
+func (c *providerManager) Remove(ctx context.Context, provider common.Address) error {
+	opts, err := c.authOpts(ctx)
+	if err != nil {
+		return fmt.Errorf("failed get auth options: %w", err)
+	}
+	tx, err := c.IProviderManager.Remove(opts, provider)
+	if err != nil {
+		return fmt.Errorf("failed to remove provider: %w", err)
+	}
+	_, err = bind.WaitMined(ctx, c, tx)
+	if err != nil {
+		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
+	}
+	return nil
+}
+
+func (c *providerManager) GetProviders(
 	ctx context.Context,
-) (waiting []metaschedulerabi.Provider, notWaiting []metaschedulerabi.Provider, err error) {
+) (providers []types.ProviderDetail, err error) {
 	it, err := c.FilterProviderWaitingForApproval(&bind.FilterOpts{Context: ctx})
 	if err != nil {
-		return waiting, notWaiting, WrapError(err)
+		return providers, WrapError(err)
 	}
 	defer func() {
 		_ = it.Close()
 	}()
+
+	providerMap := make(map[common.Address]types.ProviderDetail)
 
 	for it.Next() {
 		provider, err := c.GetWaitingForApprovalProvider(
@@ -47,15 +66,47 @@ func (c *providerManager) GetWaitingForApprovalProviders(
 			it.Event.Addr,
 		)
 		if err != nil {
-			return waiting, notWaiting, WrapError(err)
+			return providers, WrapError(err)
 		}
 
-		if (provider.Addr != common.Address{}) {
-			waiting = append(waiting, provider)
-		} else {
-			notWaiting = append(notWaiting, provider)
+		isWaitingForApproval, err := c.IsWaitingForApproval(
+			&bind.CallOpts{Context: ctx},
+			it.Event.Addr,
+		)
+		if err != nil {
+			return providers, WrapError(err)
+		}
+
+		isValidForScheduling, err := c.IsValidForScheduling(
+			&bind.CallOpts{Context: ctx},
+			it.Event.Addr,
+		)
+		if err != nil {
+			return providers, WrapError(err)
+		}
+
+		jobCount, err := c.GetJobCount(
+			&bind.CallOpts{Context: ctx},
+			it.Event.Addr,
+		)
+		if err != nil {
+			return providers, WrapError(err)
+		}
+
+		provider.Addr = it.Event.Addr
+
+		providerMap[it.Event.Addr] = types.ProviderDetail{
+			Provider:             provider,
+			IsWaitingForApproval: isWaitingForApproval,
+			IsValidForScheduling: isValidForScheduling,
+			JobCount:             jobCount,
 		}
 	}
 
-	return waiting, notWaiting, nil
+	providers = make([]types.ProviderDetail, 0, len(providerMap))
+	for _, v := range providerMap {
+		providers = append(providers, v)
+	}
+
+	return providers, nil
 }
