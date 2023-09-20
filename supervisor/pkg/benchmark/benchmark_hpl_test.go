@@ -43,12 +43,13 @@ func TestGenerateHPLPhase1JobDefinition(t *testing.T) {
 #SBATCH --gpus-per-node=2
 #SBATCH --cpus-per-task=8
 
-set -x
+set -ex
 
 GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
 export GPU
 
-srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
+srun --ntasks=1 -N 1-1 --container-image="registry-1.docker.io#library/python:slim" sh -c '
+set -ex
 pip3 install --no-cache-dir archspec
 
 export DEBIAN_FRONTEND=noninteractive
@@ -84,6 +85,8 @@ for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
 done
 CPU_AFFINITY="${CPU_AFFINITY%%|}"
 export CPU_AFFINITY
+
+set +e
 
 srun \
   --cpu-bind=none \
@@ -172,12 +175,13 @@ curl -fsSL \
 #SBATCH --gpus-per-node=4
 #SBATCH --cpus-per-task=4
 
-set -x
+set -ex
 
 GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
 export GPU
 
-srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
+srun --ntasks=1 -N 1-1 --container-image="registry-1.docker.io#library/python:slim" sh -c '
+set -ex
 pip3 install --no-cache-dir archspec
 
 export DEBIAN_FRONTEND=noninteractive
@@ -213,6 +217,8 @@ for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
 done
 CPU_AFFINITY="${CPU_AFFINITY%%|}"
 export CPU_AFFINITY
+
+set +e
 
 srun \
   --cpu-bind=none \
@@ -301,12 +307,13 @@ curl -fsSL \
 #SBATCH --gpus-per-node=2
 #SBATCH --cpus-per-task=8
 
-set -x
+set -ex
 
 GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
 export GPU
 
-srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
+srun --ntasks=1 -N 1-1 --container-image="registry-1.docker.io#library/python:slim" sh -c '
+set -ex
 pip3 install --no-cache-dir archspec
 
 export DEBIAN_FRONTEND=noninteractive
@@ -341,6 +348,8 @@ for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
 done
 CPU_AFFINITY="${CPU_AFFINITY%%|}"
 export CPU_AFFINITY
+
+set +e
 
 srun \
   --cpu-bind=none \
@@ -430,12 +439,13 @@ curl -fsSL \
 #SBATCH --gpus-per-node=2
 #SBATCH --cpus-per-task=8
 
-set -x
+set -ex
 
 GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
 export GPU
 
-srun --container-image="registry-1.docker.io#library/python:slim" sh -c '
+srun --ntasks=1 -N 1-1 --container-image="registry-1.docker.io#library/python:slim" sh -c '
+set -ex
 pip3 install --no-cache-dir archspec
 
 export DEBIAN_FRONTEND=noninteractive
@@ -469,6 +479,8 @@ for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
 done
 CPU_AFFINITY="${CPU_AFFINITY%%|}"
 export CPU_AFFINITY
+
+set +e
 
 srun \
   --cpu-bind=none \
