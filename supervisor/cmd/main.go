@@ -728,6 +728,9 @@ var app = &cli.App{
 				if err != nil {
 					logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
 				}
+				if nodes == 0 {
+					logger.I.Fatal("no nodes available, check sinfo")
+				}
 				var hplNodes uint64
 				if benchmarkHPLSingleNode {
 					hplNodes = 1
@@ -744,17 +747,32 @@ var app = &cli.App{
 				if err != nil {
 					logger.I.Fatal("failed to check cpus per node", zap.Error(err))
 				}
-				minCPUsPerNode := slices.Min(cpusPerNode)
+				var minCPUsPerNode uint64
+				if len(cpusPerNode) == 0 {
+					minCPUsPerNode = 0
+				} else {
+					minCPUsPerNode = slices.Min(cpusPerNode)
+				}
 				gpusPerNode, err := container.scheduler.FindGPUsPerNode(ctx, findOpts...)
 				if err != nil {
 					logger.I.Fatal("failed to check gpus per node", zap.Error(err))
 				}
-				minGPUsPerNode := slices.Min(gpusPerNode)
+				var minGPUsPerNode uint64
+				if len(gpusPerNode) == 0 {
+					minGPUsPerNode = 0
+				} else {
+					minGPUsPerNode = slices.Min(gpusPerNode)
+				}
 				memPerNode, err := container.scheduler.FindMemPerNode(ctx, findOpts...)
 				if err != nil {
 					logger.I.Fatal("failed to check mem per node", zap.Error(err))
 				}
-				minMemPerNode := slices.Min(memPerNode)
+				var minMemPerNode uint64
+				if len(memPerNode) == 0 {
+					minMemPerNode = 0
+				} else {
+					minMemPerNode = slices.Min(memPerNode)
+				}
 
 				hplOpts := append(
 					commonBenchmarkOpts,
