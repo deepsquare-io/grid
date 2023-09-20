@@ -20,15 +20,37 @@ type Logger interface {
 	WatchLogs(ctx context.Context, jobID [32]byte) (LogStream, error)
 }
 
+type Job *metaschedulerabi.Job
+type Label metaschedulerabi.Label
+type Affinity metaschedulerabi.Affinity
+
+type SubmitJobOption func(*SubmitJobOptions)
+type SubmitJobOptions struct {
+	Uses       []Label
+	Affinities []Affinity
+}
+
+func WithUse(labels ...Label) SubmitJobOption {
+	return func(sjo *SubmitJobOptions) {
+		sjo.Uses = labels
+	}
+}
+
+func WithAffinity(affinities ...Affinity) SubmitJobOption {
+	return func(sjo *SubmitJobOptions) {
+		sjo.Affinities = affinities
+	}
+}
+
 // JobScheduler schedules and cancels jobs.
 type JobScheduler interface {
 	// Submit a batch script to the batch service and metascheduler.
 	SubmitJob(
 		ctx context.Context,
 		job *sbatch.Job,
-		uses []metaschedulerabi.Label,
 		lockedAmount *big.Int,
 		jobName [32]byte,
+		opts ...SubmitJobOption,
 	) ([32]byte, error)
 	// Cancel a job.
 	CancelJob(ctx context.Context, jobID [32]byte) error
@@ -45,28 +67,16 @@ type JobLazyIterator interface {
 	// Fetches the previous job.
 	Prev(ctx context.Context) (prev JobLazyIterator, ok bool, err error)
 	// Get the current job.
-	Current() *metaschedulerabi.Job
+	Current() Job
 }
 
 // JobFetcher fetches jobs.
 type JobFetcher interface {
 	// Get a job.
-	GetJob(ctx context.Context, id [32]byte) (*metaschedulerabi.Job, error)
+	GetJob(ctx context.Context, id [32]byte) (Job, error)
 	// Get a iterator of jobs. If there is no job, nil is returned.
 	GetJobs(ctx context.Context) (JobLazyIterator, error)
 }
-
-// // JobFilterer watches smart-contract events.
-// type JobFilterer interface {
-// 	// Filter new job requests events.
-// 	FilterNewJobRequests(
-// 		ch <-chan types.Log,
-// 	) (filtered <-chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent, rest <-chan types.Log)
-// 	// Filter job transition events.
-// 	FilterJobTransition(
-// 		ch <-chan types.Log,
-// 	) (filtered <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, rest <-chan types.Log)
-// }
 
 // CreditManager handles the credits of the user.
 type CreditManager interface {
@@ -79,7 +89,7 @@ type CreditManager interface {
 	// ReduceToBalance reduces a channel of transfers into balance.
 	ReduceToBalance(
 		ctx context.Context,
-		transfers <-chan *metaschedulerabi.IERC20Transfer,
+		transfers <-chan Transfer,
 	) (<-chan *big.Int, error)
 }
 
@@ -97,7 +107,7 @@ type AllowanceManager interface {
 	// ReduceToAllowance reduces a channel of approval into allowance.
 	ReduceToAllowance(
 		ctx context.Context,
-		approvals <-chan *metaschedulerabi.IERC20Approval,
+		approvals <-chan Approval,
 	) (<-chan *big.Int, error)
 }
 
@@ -115,29 +125,34 @@ type ProviderManager interface {
 	GetProviders(ctx context.Context) (providers []ProviderDetail, err error)
 }
 
+type NewJobRequest *metaschedulerabi.MetaSchedulerNewJobRequestEvent
+type JobTransition *metaschedulerabi.MetaSchedulerJobTransitionEvent
+type Transfer *metaschedulerabi.IERC20Transfer
+type Approval *metaschedulerabi.IERC20Approval
+
 type SubscriptionOptions struct {
-	NewJobRequestChan chan<- *metaschedulerabi.MetaSchedulerNewJobRequestEvent
-	JobTransitionChan chan<- *metaschedulerabi.MetaSchedulerJobTransitionEvent
-	TransferChan      chan<- *metaschedulerabi.IERC20Transfer
-	ApprovalChan      chan<- *metaschedulerabi.IERC20Approval
+	NewJobRequestChan chan<- NewJobRequest
+	JobTransitionChan chan<- JobTransition
+	TransferChan      chan<- Transfer
+	ApprovalChan      chan<- Approval
 }
 
 type SubscriptionOption func(*SubscriptionOptions)
 
-func FilterTransfer(filtered chan<- *metaschedulerabi.IERC20Transfer) SubscriptionOption {
+func FilterTransfer(filtered chan<- Transfer) SubscriptionOption {
 	return func(so *SubscriptionOptions) {
 		so.TransferChan = filtered
 	}
 }
 
-func FilterApproval(filtered chan<- *metaschedulerabi.IERC20Approval) SubscriptionOption {
+func FilterApproval(filtered chan<- Approval) SubscriptionOption {
 	return func(so *SubscriptionOptions) {
 		so.ApprovalChan = filtered
 	}
 }
 
 func FilterNewJobRequest(
-	filtered chan<- *metaschedulerabi.MetaSchedulerNewJobRequestEvent,
+	filtered chan<- NewJobRequest,
 ) SubscriptionOption {
 	return func(so *SubscriptionOptions) {
 		so.NewJobRequestChan = filtered
@@ -145,7 +160,7 @@ func FilterNewJobRequest(
 }
 
 func FilterJobTransition(
-	filtered chan<- *metaschedulerabi.MetaSchedulerJobTransitionEvent,
+	filtered chan<- JobTransition,
 ) SubscriptionOption {
 	return func(so *SubscriptionOptions) {
 		so.JobTransitionChan = filtered

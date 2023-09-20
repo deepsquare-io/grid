@@ -8,6 +8,7 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -36,9 +37,10 @@ var (
 	watch                      bool
 	exitOnJobExit              bool
 
-	credits *big.Int
-	jobName string
-	uses    cli.StringSlice
+	credits         *big.Int
+	jobName         string
+	uses            cli.StringSlice
+	affinitiesSlice cli.StringSlice
 )
 
 var flags = []cli.Flag{
@@ -105,8 +107,12 @@ var flags = []cli.Flag{
 	&cli.StringSliceFlag{
 		Name:        "uses",
 		Usage:       "Uses flag. Used to filter the clusters. Format: `key=value`",
-		Required:    true,
 		Destination: &uses,
+	},
+	&cli.StringSliceFlag{
+		Name:        "affinities",
+		Usage:       "Affinities flag. Used to filter the clusters. Format: `key<value`, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value`",
+		Destination: &affinitiesSlice,
 	},
 	&cli.StringFlag{
 		Name:  "credits-wei",
@@ -137,6 +143,27 @@ var flags = []cli.Flag{
 			return nil
 		},
 	},
+}
+
+var keyValueOperatorRegex = regexp.MustCompile(
+	`^([^<>=!]+)\s*(==|<=|>=|<|>|!=|=)\s*([^<>=!]+)$`,
+)
+
+// parseKeyValueOperator parses a string in the format "key operator value" and returns the key, value, and operator.
+func parseKeyValueOperator(input string) (key, value, op string, err error) {
+	// Find the submatches in the input string.
+	matches := keyValueOperatorRegex.FindStringSubmatch(input)
+
+	// Check if the regex pattern matched.
+	if len(matches) != 4 {
+		return "", "", "", fmt.Errorf("invalid input format")
+	}
+
+	key = matches[1]
+	op = matches[2]
+	value = matches[3]
+
+	return key, value, op, nil
 }
 
 var Command = cli.Command{
@@ -199,19 +226,49 @@ var Command = cli.Command{
 		copy(jobNameB[:], jobName)
 
 		// Map slices to label
-		usesLabels := make([]metaschedulerabi.Label, 0, len(uses.Value()))
+		usesLabels := make([]types.Label, 0, len(uses.Value()))
 		for _, use := range uses.Value() {
 			if key, value, ok := strings.Cut(use, "="); ok {
-				usesLabels = append(usesLabels, metaschedulerabi.Label{
+				usesLabels = append(usesLabels, types.Label{
 					Key:   key,
 					Value: value,
 				})
 			}
 		}
 
+		// Map slices to affinites
+		affinities := make([]types.Affinity, 0, len(affinitiesSlice.Value()))
+		for _, affinity := range affinitiesSlice.Value() {
+			if k, v, op, err := parseKeyValueOperator(affinity); err != nil {
+				internallog.I.Error(
+					"failed to parse",
+					zap.String("affinity", affinity),
+					zap.Error(err),
+				)
+				return err
+			} else {
+				var opB [2]byte
+				copy(opB[:], op)
+				affinities = append(affinities, types.Affinity{
+					Label: metaschedulerabi.Label{
+						Key:   k,
+						Value: v,
+					},
+					Op: opB,
+				})
+			}
+		}
+
 		// Quick submit logic
 		if !watch {
-			jobID, err := client.SubmitJob(ctx, &job, usesLabels, credits, jobNameB)
+			jobID, err := client.SubmitJob(
+				ctx,
+				&job,
+				credits,
+				jobNameB,
+				types.WithUse(usesLabels...),
+				types.WithAffinity(affinities...),
+			)
 			if err != nil {
 				return err
 			}
@@ -221,14 +278,14 @@ var Command = cli.Command{
 		}
 
 		// Watch submit logic
-		transitions := make(chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, 1)
+		transitions := make(chan types.JobTransition, 1)
 		sub, err := watcher.SubscribeEvents(ctx, types.FilterJobTransition(transitions))
 		if err != nil {
 			return err
 		}
 		defer sub.Unsubscribe()
 
-		jobID, err := client.SubmitJob(ctx, &job, usesLabels, credits, jobNameB)
+		jobID, err := client.SubmitJob(ctx, &job, credits, jobNameB, types.WithUse(usesLabels...))
 		if err != nil {
 			return err
 		}
@@ -286,7 +343,7 @@ var Command = cli.Command{
 
 func waitUntilJobRunningOrFinished(
 	sub ethereum.Subscription,
-	ch <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent,
+	ch <-chan types.JobTransition,
 	jobID [32]byte,
 ) (metascheduler.JobStatus, error) {
 	for {
@@ -311,7 +368,7 @@ func waitUntilJobRunningOrFinished(
 
 func waitUntilJobFinished(
 	sub ethereum.Subscription,
-	ch <-chan *metaschedulerabi.MetaSchedulerJobTransitionEvent,
+	ch <-chan types.JobTransition,
 	jobID [32]byte,
 ) (metascheduler.JobStatus, error) {
 	for {

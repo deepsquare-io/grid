@@ -40,8 +40,8 @@ func makeWatchJobsModel(
 	return channel.Model[transitionMsg]{
 		Channel: make(chan transitionMsg, 100),
 		OnInit: func(c chan transitionMsg) func() error {
-			newJobs := make(chan *metaschedulerabi.MetaSchedulerNewJobRequestEvent, 1)
-			transitions := make(chan *metaschedulerabi.MetaSchedulerJobTransitionEvent, 1)
+			newJobs := make(chan types.NewJobRequest, 1)
+			transitions := make(chan types.JobTransition, 1)
 			sub, err := watcher.SubscribeEvents(ctx,
 				types.FilterNewJobRequest(newJobs),
 				types.FilterJobTransition(transitions),

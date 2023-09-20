@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"strings"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/types"
 )
 
-func StringsToLabels(input string) ([]metaschedulerabi.Label, error) {
+func StringsToLabels(input string) ([]types.Label, error) {
 	if input == "" {
 		// Empty string is an empty map
-		return []metaschedulerabi.Label{}, nil
+		return []types.Label{}, nil
 	}
 
 	items := strings.Split(input, ",")
 
-	labels := make([]metaschedulerabi.Label, 0, len(items))
+	labels := make([]types.Label, 0, len(items))
 
 	// Iterate over each item
 	for _, item := range items {
@@ -28,13 +28,13 @@ func StringsToLabels(input string) ([]metaschedulerabi.Label, error) {
 			continue
 		}
 		if len(parts) != 2 {
-			return []metaschedulerabi.Label{}, fmt.Errorf(
+			return []types.Label{}, fmt.Errorf(
 				"invalid map: missing value for key %s",
 				parts[0],
 			)
 		}
 
-		labels = append(labels, metaschedulerabi.Label{
+		labels = append(labels, types.Label{
 			Key:   parts[0],
 			Value: parts[1],
 		})

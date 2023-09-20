@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
@@ -42,7 +43,7 @@ func (c *allowanceManager) GetAllowance(ctx context.Context) (*big.Int, error) {
 
 func (c *allowanceManager) ReduceToAllowance(
 	ctx context.Context,
-	approvals <-chan *metaschedulerabi.IERC20Approval,
+	approvals <-chan types.Approval,
 ) (<-chan *big.Int, error) {
 	rChan := make(chan *big.Int, 2)
 	errChan := make(chan error, 1)

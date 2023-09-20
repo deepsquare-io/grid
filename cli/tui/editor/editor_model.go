@@ -34,6 +34,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/internal/validator"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/mistakenelf/teacup/code"
 	"gopkg.in/yaml.v3"
 )
@@ -174,9 +175,9 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 		jobID, err := m.client.SubmitJob(
 			ctx,
 			&job,
-			labels,
 			allocatedCreditsBigI,
 			jobName,
+			types.WithUse(labels...),
 		)
 		if err != nil {
 			return errorMsg(err)

@@ -25,7 +25,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/internal/ether"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/editor"
@@ -72,8 +71,8 @@ func (m *model) watchEvents(
 	ctx context.Context,
 ) tea.Cmd {
 	return func() tea.Msg {
-		approvals := make(chan *metaschedulerabi.IERC20Approval, 1)
-		transfers := make(chan *metaschedulerabi.IERC20Transfer, 1)
+		approvals := make(chan types.Approval, 1)
+		transfers := make(chan types.Transfer, 1)
 		sub, err := m.watcher.SubscribeEvents(
 			ctx,
 			types.FilterApproval(approvals),

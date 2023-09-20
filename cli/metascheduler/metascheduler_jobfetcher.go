@@ -14,7 +14,7 @@ type jobFetcher struct {
 	*metaschedulerabi.IJobRepository
 }
 
-func (c *jobFetcher) GetJob(ctx context.Context, id [32]byte) (*metaschedulerabi.Job, error) {
+func (c *jobFetcher) GetJob(ctx context.Context, id [32]byte) (types.Job, error) {
 	job, err := c.Get(&bind.CallOpts{
 		Context: ctx,
 	}, id)
@@ -29,7 +29,7 @@ type jobIterator struct {
 	array  [][32]byte
 	length int
 	index  int
-	job    *metaschedulerabi.Job
+	job    types.Job
 }
 
 func (it *jobIterator) Next(
@@ -72,7 +72,7 @@ func (it *jobIterator) Prev(
 	}, true, nil
 }
 
-func (it *jobIterator) Current() *metaschedulerabi.Job {
+func (it *jobIterator) Current() types.Job {
 	return it.job
 }
 

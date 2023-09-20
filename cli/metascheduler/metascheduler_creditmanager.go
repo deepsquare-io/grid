@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
+	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -36,7 +37,7 @@ func (c *creditManager) Transfer(ctx context.Context, to common.Address, amount 
 }
 func (c *creditManager) ReduceToBalance(
 	ctx context.Context,
-	transfers <-chan *metaschedulerabi.IERC20Transfer,
+	transfers <-chan types.Transfer,
 ) (<-chan *big.Int, error) {
 	rChan := make(chan *big.Int, 2)
 	errChan := make(chan error, 1)
