@@ -11,7 +11,7 @@
 
 set -ex
 
-GPU=$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader)
+GPU="$(srun --ntasks=1 -N 1-1 --gpus-per-task=1 nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
 export GPU
 
 srun --ntasks=1 -N 1-1 --container-image="registry-1.docker.io#library/python:slim" sh -c '
