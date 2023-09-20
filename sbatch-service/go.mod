@@ -3,7 +3,7 @@ module github.com/deepsquare-io/the-grid/sbatch-service
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.37
+	github.com/99designs/gqlgen v0.17.38
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/go-chi/chi/v5 v5.0.10
@@ -17,7 +17,7 @@ require (
 	github.com/redis/go-redis/v9 v9.1.0
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.7
-	github.com/vektah/gqlparser/v2 v2.5.9
+	github.com/vektah/gqlparser/v2 v2.5.10
 	go.uber.org/zap v1.26.0
 	golang.org/x/net v0.15.0
 	google.golang.org/grpc v1.58.1
