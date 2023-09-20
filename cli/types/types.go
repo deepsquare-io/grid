@@ -4,9 +4,9 @@ import (
 	"context"
 	"math/big"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/internal/logger/v1alpha1"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 )

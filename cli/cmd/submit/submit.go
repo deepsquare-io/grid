@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
 	"github.com/deepsquare-io/the-grid/cli/types"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"

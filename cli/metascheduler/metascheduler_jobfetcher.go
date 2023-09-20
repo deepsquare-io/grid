@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/internal/abi/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/types"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
