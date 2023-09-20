@@ -107,7 +107,7 @@ srun \
 
 cat "$RESULT_DIR/disk_tmp.csv"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$RESULT_DIR/disk_tmp.csv" \
   -H "X-Secret: %s" \
@@ -137,7 +137,7 @@ srun \
 
 cat "$RESULT_DIR/disk_world_tmp.csv"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$RESULT_DIR/disk_world_tmp.csv" \
   -H "X-Secret: %s" \
@@ -167,7 +167,7 @@ srun \
 
 cat "$RESULT_DIR/scratch.csv"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$RESULT_DIR/scratch.csv" \
   -H "X-Secret: %s" \
@@ -197,7 +197,7 @@ srun \
 
 cat "$RESULT_DIR/shared_tmp.csv"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$RESULT_DIR/shared_tmp.csv" \
   -H "X-Secret: %s" \
@@ -227,7 +227,7 @@ srun \
 
 cat "$RESULT_DIR/shared_world_tmp.csv"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$RESULT_DIR/shared_world_tmp.csv" \
   -H "X-Secret: %s" \

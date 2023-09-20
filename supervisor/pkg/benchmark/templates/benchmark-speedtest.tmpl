@@ -10,7 +10,7 @@ srun --container-mounts="$dir:$dir:rw" \
   --container-image="{{ .Image }}" \
   /usr/local/bin/speedtest --accept-license --accept-gdpr -f json-pretty > "$file"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$file" \
   -H "X-Secret: {{ .Secret }}" \

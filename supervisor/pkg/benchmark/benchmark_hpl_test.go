@@ -56,7 +56,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt update -y -qq && apt install -y -qq golang curl
 
-curl -fsSL \
+curl -fsSL -k \
   -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
   -X POST \
   -H "X-Secret: %s" \
@@ -139,7 +139,7 @@ EOF'
 
 LOG_FILE="$(scontrol show job $SLURM_JOB_ID | grep "StdOut=" | sed 's/.*StdOut=//g')"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
@@ -188,7 +188,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt update -y -qq && apt install -y -qq golang curl
 
-curl -fsSL \
+curl -fsSL -k \
   -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
   -X POST \
   -H "X-Secret: %s" \
@@ -271,7 +271,7 @@ EOF'
 
 LOG_FILE="$(scontrol show job $SLURM_JOB_ID | grep "StdOut=" | sed 's/.*StdOut=//g')"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
@@ -320,7 +320,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt update -y -qq && apt install -y -qq golang curl
 
-curl -fsSL \
+curl -fsSL -k \
   -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
   -X POST \
   -H "X-Secret: %s" \
@@ -402,7 +402,7 @@ EOF'
 
 LOG_FILE="$(scontrol show job $SLURM_JOB_ID | grep "StdOut=" | sed 's/.*StdOut=//g')"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
@@ -452,7 +452,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt update -y -qq && apt install -y -qq golang curl
 
-curl -fsSL \
+curl -fsSL -k \
   -d "{\"microarch\":\"$(archspec cpu)\",\"os\":\"$(go env GOOS)\",\"arch\":\"$(go env GOARCH)\", \"cpu\":\"$(grep "model name" /proc/cpuinfo | awk -F: '"'"'{print $2}'"'"' | sed '"'"'s/^[ \t]*//'"'"' | head -1)\",\"gpu\":\"${GPU}\"}" \
   -X POST \
   -H "X-Secret: %s" \
@@ -537,7 +537,7 @@ EOF'
 
 LOG_FILE="$(scontrol show job $SLURM_JOB_ID | grep "StdOut=" | sed 's/.*StdOut=//g')"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: %s" \

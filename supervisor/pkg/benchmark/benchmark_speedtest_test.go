@@ -39,7 +39,7 @@ srun --container-mounts="$dir:$dir:rw" \
   --container-image="registry-1.docker.io#gists/speedtest-cli:1.2.0" \
   /usr/local/bin/speedtest --accept-license --accept-gdpr -f json-pretty > "$file"
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$file" \
   -H "X-Secret: %s" \

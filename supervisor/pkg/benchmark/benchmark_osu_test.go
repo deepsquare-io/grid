@@ -74,7 +74,7 @@ srun \
   bash -c '
 /osu-micro-benchmarks/mpi/pt2pt/osu_latency | tee "$RESULT_DIR/pt2pt-latency"'
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$RESULT_DIR/pt2pt-latency" \
   -H "X-Secret: %s" \
@@ -92,7 +92,7 @@ srun \
   bash -c '
 /osu-micro-benchmarks/mpi/pt2pt/osu_bibw | tee "$RESULT_DIR/pt2pt-bibw"'
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$RESULT_DIR/pt2pt-bibw" \
   -H "X-Secret: %s" \
@@ -110,7 +110,7 @@ srun \
   bash -c '
 /osu-micro-benchmarks/mpi/collective/osu_alltoall | tee "$RESULT_DIR/alltoall"'
 
-curl -fsSL \
+curl -fsSL -k \
   --upload-file \
   "$RESULT_DIR/alltoall" \
   -H "X-Secret: %s" \
