@@ -22,11 +22,21 @@ var (
 	primaryDarkestColor  = lipgloss.Color("#9202de")
 	primaryColor         = lipgloss.Color("#BD43FD")
 	primaryLightestColor = lipgloss.Color("#dea2fe")
-	errorColor           = lipgloss.Color("#4b1113")
+	errorColor           = lipgloss.Color("#ff3333")
+	green                = lipgloss.Color("#04B575")
+	white                = lipgloss.Color("#FAFAFA")
 	Base                 = Box.Copy()
 	Error                = lipgloss.NewStyle().Foreground(errorColor)
 	Foreground           = lipgloss.NewStyle().Foreground(primaryDarkestColor)
+	NoError              = lipgloss.NewStyle().Foreground(green)
 	AccentForeground     = lipgloss.NewStyle().Foreground(primaryColor)
+
+	Title1 = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(white).
+		Background(primaryDarkestColor).
+		Align(lipgloss.Center).
+		Width(22)
 
 	LogTitle = Box.Copy().
 			Padding(0, 1)
@@ -43,3 +53,17 @@ var (
 			BorderStyle(lipgloss.RoundedBorder()).
 			BorderForeground(primaryLightestColor)
 )
+
+func BoolToYN(b bool) string {
+	if b {
+		return NoError.Render("yes")
+	}
+	return Error.Render("no")
+}
+
+func BoolToYNColorReverted(b bool) string {
+	if b {
+		return Error.Render("yes")
+	}
+	return NoError.Render("no")
+}

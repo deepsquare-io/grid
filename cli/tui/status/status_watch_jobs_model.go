@@ -22,13 +22,12 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/channel"
 	"github.com/deepsquare-io/the-grid/cli/types"
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
-type transitionMsg metaschedulerabi.Job
+type transitionMsg types.Job
 
 func makeWatchJobsModel(
 	ctx context.Context,
@@ -69,7 +68,7 @@ func makeWatchJobsModel(
 								return
 							}
 							select {
-							case c <- transitionMsg(*job):
+							case c <- transitionMsg(job):
 							case <-ctx.Done():
 								// Context canceled. This is not an error.
 								return
@@ -90,7 +89,7 @@ func makeWatchJobsModel(
 								return
 							}
 							select {
-							case c <- transitionMsg(*job):
+							case c <- transitionMsg(job):
 							case <-ctx.Done():
 								// Context canceled. This is not an error.
 								return

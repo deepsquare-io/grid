@@ -25,11 +25,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/cmd/submit"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
-	"github.com/deepsquare-io/the-grid/cli/tui/editor"
-	"github.com/deepsquare-io/the-grid/cli/tui/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/nav"
-	"github.com/deepsquare-io/the-grid/cli/tui/status"
-	"github.com/deepsquare-io/the-grid/cli/tui/transfer"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
@@ -155,31 +151,17 @@ var app = &cli.App{
 			}
 		}()
 		userAddress := crypto.PubkeyToAddress(pk.PublicKey)
+
+		nav := nav.NewModelBuilder().
+			WithUserAddress(userAddress).
+			WithClient(client).
+			WithWatcher(watcher).
+			WithVersion(version).
+			WithMetaschedulerAddress(metaschedulerSmartContract).
+			Build(ctx)
+
 		_, err = tea.NewProgram(
-			nav.Model(
-				ctx,
-				userAddress,
-				client,
-				watcher,
-				status.Model(
-					ctx,
-					client,
-					watcher,
-					userAddress,
-				),
-				log.ModelBuilder{
-					Logger:      client,
-					UserAddress: userAddress,
-				},
-				editor.ModelBuilder{
-					Client: client,
-				},
-				transfer.ModelBuilder{
-					Client: client,
-				},
-				version,
-				metaschedulerSmartContract,
-			),
+			nav,
 			tea.WithContext(ctx),
 			tea.WithAltScreen(),
 		).Run()

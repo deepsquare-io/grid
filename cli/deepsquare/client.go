@@ -169,6 +169,7 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 		JobScheduler:     jobScheduler,
 		CreditManager:    rpcClientSet.CreditManager(),
 		AllowanceManager: rpcClientSet.AllowanceManager(),
+		ProviderManager:  rpcClientSet.ProviderManager(),
 		Logger:           logger,
 		loggerConn:       conn,
 		rpcClient:        rpcClient,

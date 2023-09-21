@@ -50,7 +50,7 @@ func emitClearErrorsMsg() tea.Msg {
 	return clearErrorsMsg{}
 }
 
-// ExitMsg msg closes to editor model
+// ExitMsg msg closes to transfer model
 type ExitMsg struct{}
 
 func emitExitMsg() tea.Msg {

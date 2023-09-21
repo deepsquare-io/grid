@@ -28,8 +28,9 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/internal/ether"
 	internallog "github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/editor"
-	"github.com/deepsquare-io/the-grid/cli/tui/log"
+	"github.com/deepsquare-io/the-grid/cli/tui/provider"
 	"github.com/deepsquare-io/the-grid/cli/tui/status"
+	"github.com/deepsquare-io/the-grid/cli/tui/status/log"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/deepsquare-io/the-grid/cli/tui/transfer"
 	"github.com/deepsquare-io/the-grid/cli/types"
@@ -53,11 +54,14 @@ type model struct {
 	editorModel tea.Model
 	// transferModel is nullable
 	transferModel tea.Model
+	// providerModel is nullable
+	providerModel tea.Model
 	statusModel   tea.Model
 
 	logModelBuilder      log.ModelBuilder
 	editorModelBuilder   editor.ModelBuilder
 	transferModelBuilder transfer.ModelBuilder
+	providerModelBuilder provider.ModelBuilder
 
 	client      deepsquare.Client
 	watcher     deepsquare.Watcher
@@ -147,6 +151,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.editorModel, pageCmd = m.editorModel.Update(msg)
 		case m.transferModel != nil:
 			m.transferModel, pageCmd = m.transferModel.Update(msg)
+		case m.providerModel != nil:
+			m.providerModel, pageCmd = m.providerModel.Update(msg)
 		default:
 			m.statusModel, pageCmd = m.statusModel.Update(msg)
 		}
@@ -167,6 +173,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds,
 			m.transferModel.Init(),
 		)
+	case status.ViewProvidersMsg:
+		m.providerModel = m.providerModelBuilder.Build()
+		cmds = append(
+			cmds,
+			m.providerModel.Init(),
+		)
 	case log.ExitMsg:
 		_, _ = m.logModel.Update(msg)
 		m.logModel = nil
@@ -179,6 +191,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case transfer.ExitMsg:
 		_, _ = m.transferModel.Update(msg)
 		m.transferModel = nil
+	case provider.ExitMsg:
+		_, _ = m.providerModel.Update(msg)
+		m.providerModel = nil
 	case balanceMsg:
 		m.balance = msg
 		cmds = append(cmds, m.tick)
@@ -193,6 +208,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.editorModel, pageCmd = m.editorModel.Update(msg)
 		case m.transferModel != nil:
 			m.transferModel, pageCmd = m.transferModel.Update(msg)
+		case m.providerModel != nil:
+			m.providerModel, pageCmd = m.providerModel.Update(msg)
 		default:
 			m.statusModel, pageCmd = m.statusModel.Update(msg)
 		}
@@ -220,6 +237,8 @@ func (m model) View() string {
 		navView = m.editorModel.View()
 	case m.transferModel != nil:
 		navView = m.transferModel.View()
+	case m.providerModel != nil:
+		navView = m.providerModel.View()
 	default:
 		navView = m.statusModel.View()
 	}
@@ -246,36 +265,4 @@ func (m model) View() string {
 	)
 
 	return style.Foreground.Render(titlePixelArt) + "\n" + info + "\n" + navView
-}
-
-func Model(
-	ctx context.Context,
-	userAddress common.Address,
-	client deepsquare.Client,
-	watcher deepsquare.Watcher,
-	statusModel tea.Model,
-	logModelBuilder log.ModelBuilder,
-	editorModelBuilder editor.ModelBuilder,
-	transferModelBuilder transfer.ModelBuilder,
-	version string,
-	metaschedulerAddress string,
-) *model {
-	return &model{
-		logs:          make(chan ethtypes.Log, 100),
-		balanceChan:   make(chan *big.Int, 10),
-		balance:       new(big.Int),
-		allowanceChan: make(chan *big.Int, 10),
-		allowance:     new(big.Int),
-
-		statusModel:          statusModel,
-		logModelBuilder:      logModelBuilder,
-		editorModelBuilder:   editorModelBuilder,
-		transferModelBuilder: transferModelBuilder,
-
-		userAddress:          userAddress,
-		client:               client,
-		watcher:              watcher,
-		version:              version,
-		metaschedulerAddress: metaschedulerAddress,
-	}
 }

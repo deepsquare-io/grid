@@ -27,53 +27,16 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/deepsquare-io/the-grid/cli/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
-func (m model) headerView() string {
-	return style.LogTitle.Render(m.title)
+type ModelBuilder struct {
+	Logger types.Logger
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
+func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
+	if b.Logger == nil {
+		panic("Logger is nil")
 	}
-	return b
-}
-
-func (m model) footerView() string {
-	info := style.LogInfo.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
-	line := style.Foreground.Render(
-		strings.Repeat(" ", max(0, m.viewport.Width-lipgloss.Width(info))),
-	)
-	return lipgloss.JoinHorizontal(lipgloss.Bottom, line, info)
-}
-
-func (m model) View() string {
-	var view string
-	if len(m.logs) == 0 {
-		view = fmt.Sprintf(
-			"%s\nWaiting for logs... %s%s\n%s",
-			m.headerView(),
-			m.spinner.View(),
-			strings.Repeat("\n", max(0, m.viewport.Height-1)),
-			m.footerView(),
-		)
-	} else {
-		view = fmt.Sprintf(
-			"%s\n%s\n%s",
-			m.headerView(), m.viewport.View(), m.footerView(),
-		)
-	}
-	return style.Box.Render(view)
-}
-
-func Model(
-	ctx context.Context,
-	logger types.Logger,
-	userAddress common.Address,
-	jobID [32]byte,
-) tea.Model {
 	vp := viewport.New(118, style.StandardHeight-4)
 	s := spinner.New()
 	s.Spinner = spinner.Dot
@@ -86,7 +49,7 @@ func Model(
 		watchLogs: makeWatchLogsModel(
 			ctx,
 			jobID,
-			logger,
+			b.Logger,
 		),
 		logs:     make([]logMsg, 0, 100),
 		messages: messages,

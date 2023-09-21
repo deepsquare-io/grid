@@ -16,8 +16,14 @@
 package editor
 
 import (
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
+	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/mistakenelf/teacup/code"
 )
 
 type ModelBuilder struct {
@@ -25,5 +31,57 @@ type ModelBuilder struct {
 }
 
 func (b *ModelBuilder) Build() tea.Model {
-	return Model(b.Client)
+	if b.Client == nil {
+		panic("Client is nil")
+	}
+
+	code := code.New(true, true, lipgloss.AdaptiveColor{Light: "#000000", Dark: "#ffffff"})
+	code.SetSize(80, style.StandardHeight)
+
+	help := help.New()
+	help.ShowAll = true
+
+	inputs := make([]textinput.Model, 3)
+	inputs[creditsLockingInput] = textinput.New()
+	inputs[creditsLockingInput].Placeholder = "100"
+	inputs[creditsLockingInput].Focus()
+	inputs[creditsLockingInput].Width = 32
+	inputs[creditsLockingInput].Prompt = ""
+	inputs[creditsLockingInput].Validate = allowedNumber
+
+	inputs[usesInput] = textinput.New()
+	inputs[usesInput].Placeholder = "os=linux,arch=amd64"
+	inputs[usesInput].Width = 32
+	inputs[usesInput].Prompt = ""
+
+	inputs[jobNameInput] = textinput.New()
+	inputs[jobNameInput].Width = 32
+	inputs[jobNameInput].Prompt = ""
+
+	return &model{
+		code:   code,
+		inputs: inputs,
+		errors: make([]error, 3),
+		keyMap: KeyMap{
+			EditAgain: key.NewBinding(
+				key.WithKeys("ctrl+e"),
+				key.WithHelp("ctrl+e", "edit job"),
+			),
+			Exit: key.NewBinding(
+				key.WithKeys("esc", "ctrl+q"),
+				key.WithHelp("esc/ctrl+q", "exit"),
+			),
+			NextInput: key.NewBinding(
+				key.WithKeys("tab", "ctrl+n", "enter"),
+				key.WithHelp("tab/enter", "next input/finish"),
+			),
+			PrevInput: key.NewBinding(
+				key.WithKeys("shift+tab", "ctrl+p"),
+				key.WithHelp("shift+tab", "prev input"),
+			),
+			ViewPortKeymap: code.Viewport.KeyMap,
+		},
+		help:   help,
+		client: b.Client,
+	}
 }

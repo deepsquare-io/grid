@@ -5,7 +5,16 @@ import (
 	"strings"
 
 	"github.com/deepsquare-io/the-grid/cli/types"
+	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/types/abi/metascheduler"
 )
+
+func FormatLabels(labels []metaschedulerabi.Label) []string {
+	out := make([]string, 0, len(labels))
+	for _, l := range labels {
+		out = append(out, fmt.Sprintf("%s: %s", l.Key, l.Value))
+	}
+	return out
+}
 
 func StringsToLabels(input string) ([]types.Label, error) {
 	if input == "" {

@@ -24,12 +24,15 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/deepsquare-io/the-grid/cli/deepsquare"
 	"github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
 	"github.com/deepsquare-io/the-grid/cli/tui/channel"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/deepsquare-io/the-grid/cli/types"
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/types/abi/metascheduler"
+	"github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
@@ -39,6 +42,7 @@ type KeyMap struct {
 	CancelJob       key.Binding
 	SubmitJob       key.Binding
 	TransferCredits key.Binding
+	ViewProviders   key.Binding
 	Exit            key.Binding
 }
 
@@ -75,7 +79,14 @@ func emitTransferCreditsMsg() tea.Msg {
 	return TransferCreditsMsg{}
 }
 
-func jobToRow(job metaschedulerabi.Job) table.Row {
+// ViewProvidersMsg is a public msg used to indicate that the user want to transfer credits.
+type ViewProvidersMsg struct{}
+
+func emitViewProvidersMsg() tea.Msg {
+	return ViewProvidersMsg{}
+}
+
+func jobToRow(job types.Job) table.Row {
 	return table.Row{
 		new(big.Int).SetBytes(job.JobId[:]).String(),
 		string(job.JobName[:]),
@@ -113,7 +124,7 @@ func initializeRows(
 	var ok bool
 	for i := 0; i < style.StandardHeight; i++ {
 		job := it.Current()
-		row := jobToRow(*job)
+		row := jobToRow(job)
 		idToRow[job.JobId] = row
 		rows = append(rows, row)
 		it, ok, err = it.Next(ctx)
@@ -141,7 +152,7 @@ func (m *model) addMoreRows(ctx context.Context) {
 	var err error
 	for i := 0; i < style.StandardHeight; i++ {
 		job := m.it.Current()
-		row := jobToRow(*job)
+		row := jobToRow(job)
 		m.idToRow[job.JobId] = row
 		rows = append(rows, row)
 		m.it, ok, err = m.it.Next(ctx)
@@ -186,8 +197,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if row, ok := m.idToRow[msg.JobId]; ok {
 			row[2] = metascheduler.JobStatus(msg.Status).String()
 		} else {
-			job := metaschedulerabi.Job(msg)
-			row = jobToRow(job)
+			row = jobToRow(types.Job(msg))
 			m.idToRow[msg.JobId] = row
 			rows = append(rows, table.Row{})
 			copy(rows[1:], rows)
@@ -214,6 +224,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, emitSubmitJobMsg)
 		case key.Matches(msg, m.keyMap.TransferCredits):
 			cmds = append(cmds, emitTransferCreditsMsg)
+		case key.Matches(msg, m.keyMap.ViewProviders):
+			cmds = append(cmds, emitViewProvidersMsg)
 		case key.Matches(msg, m.keyMap.Exit):
 			return m, tea.Batch(
 				m.watchJobs.Dispose,
@@ -224,4 +236,86 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.table, tbCmd = m.table.Update(msg)
 	cmds = append(cmds, tbCmd)
 	return m, tea.Batch(cmds...)
+}
+
+func Model(
+	ctx context.Context,
+	client deepsquare.Client,
+	watcher deepsquare.Watcher,
+	userAddress common.Address,
+) tea.Model {
+	if client == nil {
+		panic("client is nil")
+	}
+	if watcher == nil {
+		panic("watcher is nil")
+	}
+	// Initialize rows
+	rows, idToRow, it := initializeRows(ctx, client)
+
+	tableKeymap := table.DefaultKeyMap()
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(style.StandardHeight),
+		table.WithKeyMap(tableKeymap),
+	)
+
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(false)
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color("229")).
+		Background(lipgloss.Color("57")).
+		Bold(false)
+	t.SetStyles(s)
+
+	help := help.New()
+	help.ShowAll = true
+
+	return &model{
+		table:   t,
+		idToRow: idToRow,
+		it:      it,
+		help:    help,
+		keyMap: KeyMap{
+			TableKeyMap: tableKeymap,
+			OpenLogs: key.NewBinding(
+				key.WithKeys("enter"),
+				key.WithHelp("enter", "show job logs"),
+			),
+			CancelJob: key.NewBinding(
+				key.WithKeys("c"),
+				key.WithHelp("c", "cancel job"),
+			),
+			SubmitJob: key.NewBinding(
+				key.WithKeys("s"),
+				key.WithHelp("s", "submit job"),
+			),
+			TransferCredits: key.NewBinding(
+				key.WithKeys("t"),
+				key.WithHelp("t", "tranfer credits"),
+			),
+			ViewProviders: key.NewBinding(
+				key.WithKeys("p"),
+				key.WithHelp("p", "view providers"),
+			),
+			Exit: key.NewBinding(
+				key.WithKeys("esc", "q"),
+				key.WithHelp("esc/q", "exit"),
+			),
+		},
+		scheduler: client,
+		watchJobs: makeWatchJobsModel(
+			ctx,
+			userAddress,
+			make(chan ethtypes.Log, 100),
+			watcher,
+			client,
+		),
+	}
 }
