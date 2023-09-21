@@ -1,8 +1,11 @@
 package utils
 
-func ErrorOrEmpty(err error) string {
+import "fmt"
+
+func ErrorfOrEmpty(format string, err error, va ...any) string {
 	if err != nil {
-		return err.Error()
+		a := append([]any{err}, va...)
+		return fmt.Sprintf(format, a...)
 	}
 	return ""
 }

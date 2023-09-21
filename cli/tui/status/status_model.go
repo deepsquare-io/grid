@@ -54,6 +54,16 @@ type model struct {
 	watchJobs channel.Model[transitionMsg]
 	scheduler types.JobScheduler
 	keyMap    KeyMap
+
+	err error
+}
+
+type errorMsg error
+
+type clearErrorsMsg struct{}
+
+func emitClearErrorsMsg() tea.Msg {
+	return clearErrorsMsg{}
 }
 
 // SelectJobMsg is a public msg used to indicate that the user selected a job.
@@ -170,7 +180,7 @@ func (m *model) addMoreRows(ctx context.Context) {
 func (m model) CancelJob(ctx context.Context, jobID [32]byte) tea.Cmd {
 	return func() tea.Msg {
 		if err := m.scheduler.CancelJob(ctx, jobID); err != nil {
-			log.I.Error(err.Error())
+			return errorMsg(err)
 		}
 		return nil
 	}
@@ -192,6 +202,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	switch msg := msg.(type) {
+	case errorMsg:
+		m.err = msg
+		return m, nil
+	case clearErrorsMsg:
+		m.err = nil
 	case transitionMsg:
 		rows := m.table.Rows()
 		if row, ok := m.idToRow[msg.JobId]; ok {
@@ -214,7 +229,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keyMap.CancelJob):
 			if len(m.table.SelectedRow()) > 0 {
-				cmds = append(cmds, m.CancelJob(context.TODO(), rowToJobID(m.table.SelectedRow())))
+				cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.CancelJob(context.TODO(), rowToJobID(m.table.SelectedRow()))))
 			}
 		case key.Matches(msg, m.keyMap.OpenLogs):
 			if len(m.table.SelectedRow()) > 0 {

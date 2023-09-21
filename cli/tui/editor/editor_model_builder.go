@@ -36,7 +36,7 @@ func (b *ModelBuilder) Build() tea.Model {
 	}
 
 	code := code.New(true, true, lipgloss.AdaptiveColor{Light: "#000000", Dark: "#ffffff"})
-	code.SetSize(80, style.StandardHeight)
+	code.SetSize(80, style.StandardHeight+3)
 
 	help := help.New()
 	help.ShowAll = true

@@ -16,9 +16,12 @@
 package status
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 )
 
@@ -44,5 +47,10 @@ func (m model) View() string {
 			m.keyMap.TableKeyMap.LineDown,
 		},
 	})
-	return lipgloss.JoinHorizontal(lipgloss.Center, style.Base.Render(m.table.View()), help)
+	right := fmt.Sprintf(
+		"%s\n%s",
+		style.Error.Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
+		help,
+	)
+	return lipgloss.JoinHorizontal(lipgloss.Center, style.Base.Render(m.table.View()), right)
 }

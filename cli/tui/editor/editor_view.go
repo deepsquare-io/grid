@@ -41,7 +41,9 @@ func (m model) viewportFooterView() string {
 }
 
 func (m model) formView() string {
-	return fmt.Sprintf(`%s
+	return fmt.Sprintf(
+		`%s
+%s
 %s
 %s
 
@@ -54,17 +56,25 @@ func (m model) formView() string {
 %s
 %s
 `,
+		style.Title1.Width(20).Render("Submit a Job"),
 		style.Foreground.Render("Allocate Credits"),
 		m.inputs[creditsLockingInput].View(),
-		style.Error.Render(utils.ErrorOrEmpty(m.errors[creditsLockingInput])),
+		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[creditsLockingInput])),
 		style.Foreground.Render("Use flags"),
 		m.inputs[usesInput].View(),
-		style.Error.Render(utils.ErrorOrEmpty(m.errors[usesInput])),
+		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[usesInput])),
 		style.Foreground.Render("Job Name"),
 		m.inputs[jobNameInput].View(),
-		style.Error.Render(utils.ErrorOrEmpty(m.errors[jobNameInput])),
-		style.Error.Render(utils.ErrorOrEmpty(m.err)),
+		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[jobNameInput])),
+		style.Error.Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
 	)
+}
+
+func (m model) loading() string {
+	if m.isRunning {
+		return "Submitting..."
+	}
+	return ""
 }
 
 func (m model) View() string {
@@ -84,7 +94,7 @@ func (m model) View() string {
 		"%s\n%s",
 		m.code.View(), m.viewportFooterView(),
 	)
-	rightView := m.formView() + "\n" + help
+	rightView := m.formView() + "\n" + m.loading() + "\n" + help
 	mainView := lipgloss.JoinHorizontal(lipgloss.Center, style.Box.Render(leftView), rightView)
 
 	return mainView

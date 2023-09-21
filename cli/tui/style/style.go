@@ -67,3 +67,10 @@ func BoolToYNColorReverted(b bool) string {
 	}
 	return NoError.Render("no")
 }
+
+func StyleOnError(errorStyle lipgloss.Style, v string, err error) string {
+	if err != nil {
+		return errorStyle.Render(v)
+	}
+	return v
+}

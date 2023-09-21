@@ -57,6 +57,12 @@ func emitExitMsg() tea.Msg {
 	return ExitMsg{}
 }
 
+type transferProgressMsg struct{}
+
+func emitTransferProgressMsg() tea.Msg {
+	return transferProgressMsg{}
+}
+
 type transferDoneMsg struct{}
 
 func (m *model) transfer(ctx context.Context) tea.Cmd {
@@ -94,7 +100,8 @@ type model struct {
 
 	keyMap KeyMap
 
-	err error
+	err       error
+	isRunning bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -109,19 +116,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case errorMsg:
 		m.err = msg
+		m.isRunning = false
 		return m, nil
 	case clearErrorsMsg:
 		m.errors[toInput] = nil
 		m.errors[amountInput] = nil
 		m.err = nil
+		m.isRunning = false
 	case transferDoneMsg:
+		m.isRunning = false
 		cmds = append(cmds, emitExitMsg)
+	case transferProgressMsg:
+		m.isRunning = true
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, emitExitMsg)
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
-			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.transfer(context.TODO())))
+			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, emitTransferProgressMsg, m.transfer(context.TODO())))
 		case key.Matches(msg, m.keyMap.NextInput):
 			m.nextInput()
 		case key.Matches(msg, m.keyMap.PrevInput):

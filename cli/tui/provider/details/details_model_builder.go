@@ -9,11 +9,9 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/the-grid/cli/internal/ether"
-	"github.com/deepsquare-io/the-grid/cli/internal/log"
 	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/deepsquare-io/the-grid/cli/types"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
@@ -46,7 +44,7 @@ GPU per node: %v
 	)
 	labels, err := yaml.Marshal(utils.FormatLabels(p.Labels))
 	if err != nil {
-		log.I.Error("failed to marshal labels", zap.Error(err))
+		panic(fmt.Sprintf("failed to marshal labels: %s", err.Error()))
 	}
 	statuses := fmt.Sprintf(`Is valid for scheduling: %s
 Is waiting for approval: %s

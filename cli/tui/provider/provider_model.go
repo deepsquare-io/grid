@@ -52,8 +52,7 @@ type model struct {
 func (m *model) initializeRows(ctx context.Context) []table.Row {
 	pp, err := m.client.GetProviders(ctx)
 	if err != nil {
-		log.I.Error("failed to get providers", zap.Error(err))
-		return nil
+		log.I.Fatal("failed to get providers", zap.Error(err))
 	}
 
 	rows := make([]table.Row, 0, len(pp))
