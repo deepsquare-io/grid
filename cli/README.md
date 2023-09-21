@@ -16,8 +16,11 @@ USAGE:
    deepsquaretui [global options] command [command options] [arguments...]
 
 COMMANDS:
-   submit   Quickly submit a job.
-   help, h  Shows a list of commands or help for one command
+   submit    Quickly submit a job.
+   provider  Manage providers (need to use an admin smart-contract).
+   credit    Manage credits.
+   init      Bootstrap a job workflow file.
+   help, h   Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --metascheduler.rpc value             Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
@@ -41,15 +44,26 @@ USAGE:
    deepsquaretui submit [command options] <job.yaml>
 
 OPTIONS:
-   --metascheduler.rpc value              Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
-   --metascheduler.smart-contract value   Metascheduler smart-contract address. (default: "0x3707aB457CF457275b7ec32e203c54df80C299d5") [$METASCHEDULER_SMART_CONTRACT]
-   --sbatch.endpoint value                SBatch Service GraphQL endpoint. (default: "https://sbatch.deepsquare.run/graphql") [$SBATCH_ENDPOINT]
-   --private-key value                    An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
-   --job-name value                       The job name.
-   --uses key=value [ --uses key=value ]  Uses flag. Used to filter the clusters. Format: key=value
-   --credits-wei value                    Allocated a number of credits. Unit is wei. Is a big int.
-   --credits value                        Allocated a number of credits. Unit is 1e18. Is a float and is not precise. (default: 0)
-   --help, -h                             show help
+   DeepSquare Settings:
+
+   --logger.endpoint value               Grid Logger endpoint. (default: "https://grid-logger.deepsquare.run") [$LOGGER_ENDPOINT]
+   --metascheduler.rpc value             Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
+   --metascheduler.smart-contract value  Metascheduler smart-contract address. (default: "0x3707aB457CF457275b7ec32e203c54df80C299d5") [$METASCHEDULER_SMART_CONTRACT]
+   --metascheduler.ws value              Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_WS]
+   --private-key value                   An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
+   --sbatch.endpoint value               SBatch Service GraphQL endpoint. (default: "https://sbatch.deepsquare.run/graphql") [$SBATCH_ENDPOINT]
+
+   Submit Settings:
+
+   --affinities key<value [ --affinities key<value ]  Affinities flag. Used to filter the clusters. Format: key<value, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value`
+   --credits value                                    Allocated a number of credits. Unit is 1e18. Is a float and is not precise. (default: 0)
+   --credits-wei value                                Allocated a number of credits. Unit is wei. Is a big int.
+   --exit-on-job-exit, -e                             Exit the job after the job has finished and throw on error. (default: false)
+   --job-name value                                   The job name.
+   --no-timestamp, --no-ts                            Exit the job after the job has finished and throw on error. (default: false)
+   --uses key=value [ --uses key=value ]              Uses flag. Used to filter the clusters. Format: key=value
+   --watch, -w                                        Watch logs after submitting the job (default: false)
+
 ```
 
 ## Download

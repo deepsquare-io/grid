@@ -55,7 +55,7 @@ func prepareFiles() (jerr error) {
 
 var Command = cli.Command{
 	Name:  "init",
-	Usage: "Create a job template",
+	Usage: "Bootstrap a job workflow file.",
 	Flags: flags,
 	Action: func(cCtx *cli.Context) error {
 		return prepareFiles()

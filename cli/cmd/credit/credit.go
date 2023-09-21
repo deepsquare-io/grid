@@ -16,6 +16,7 @@
 package credit
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/big"
@@ -41,6 +42,11 @@ var (
 	credits    *big.Float
 	creditsWei *big.Int
 	force      bool
+)
+
+// "Get" flags
+var (
+	wei bool
 )
 
 var flags = []cli.Flag{
@@ -99,6 +105,12 @@ var flags = []cli.Flag{
 	},
 }
 
+var getFlags = append(flags, &cli.BoolFlag{
+	Name:        "wei",
+	Usage:       "Show in wei.",
+	Destination: &wei,
+})
+
 var Command = cli.Command{
 	Name:  "credit",
 	Usage: "Manage credits.",
@@ -117,30 +129,10 @@ var Command = cli.Command{
 				}
 				ctx := cCtx.Context
 				recipient := common.HexToAddress(cCtx.Args().First())
-				pk, err := crypto.HexToECDSA(ethHexPK)
+				clientset, err := initClient(ctx)
 				if err != nil {
 					return err
 				}
-				rpcClient, err := rpc.DialOptions(
-					ctx,
-					ethEndpointRPC,
-					rpc.WithHTTPClient(http.DefaultClient),
-				)
-				if err != nil {
-					return err
-				}
-				defer rpcClient.Close()
-				ethClientRPC := ethclient.NewClient(rpcClient)
-				chainID, err := ethClientRPC.ChainID(ctx)
-				if err != nil {
-					return err
-				}
-				clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
-					EthereumBackend:      ethClientRPC,
-					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
-					ChainID:              chainID,
-					UserPrivateKey:       pk,
-				})
 
 				if !force {
 					msg := fmt.Sprintf(
@@ -168,5 +160,58 @@ var Command = cli.Command{
 				return nil
 			},
 		},
+		{
+			Name:  "get",
+			Usage: "Get the amount of credits",
+			Flags: getFlags,
+			Action: func(cCtx *cli.Context) error {
+				ctx := cCtx.Context
+				clientset, err := initClient(ctx)
+				if err != nil {
+					return err
+				}
+
+				amount, err := clientset.CreditManager().Balance(ctx)
+				if err != nil {
+					return err
+				}
+
+				if wei {
+					fmt.Println(amount.String())
+				} else {
+					fmt.Println(ether.FromWei(amount).String())
+				}
+
+				return nil
+			},
+		},
 	},
+}
+
+func initClient(ctx context.Context) (*metascheduler.RPCClientSet, error) {
+	pk, err := crypto.HexToECDSA(ethHexPK)
+	if err != nil {
+		return nil, err
+	}
+	rpcClient, err := rpc.DialOptions(
+		ctx,
+		ethEndpointRPC,
+		rpc.WithHTTPClient(http.DefaultClient),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rpcClient.Close()
+	ethClientRPC := ethclient.NewClient(rpcClient)
+	chainID, err := ethClientRPC.ChainID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
+		EthereumBackend:      ethClientRPC,
+		MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
+		ChainID:              chainID,
+		UserPrivateKey:       pk,
+	})
+	return clientset, nil
 }

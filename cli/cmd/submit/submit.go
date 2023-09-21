@@ -50,6 +50,7 @@ var flags = []cli.Flag{
 		Value:       deepsquare.DefaultRPCEndpoint,
 		Usage:       "Metascheduler Avalanche C-Chain JSON-RPC endpoint.",
 		Destination: &ethEndpointRPC,
+		Category:    "DeepSquare Settings:",
 		EnvVars:     []string{"METASCHEDULER_RPC"},
 	},
 	&cli.StringFlag{
@@ -57,6 +58,7 @@ var flags = []cli.Flag{
 		Value:       deepsquare.DefaultWSEndpoint,
 		Usage:       "Metascheduler Avalanche C-Chain WS endpoint.",
 		Destination: &ethEndpointWS,
+		Category:    "DeepSquare Settings:",
 		EnvVars:     []string{"METASCHEDULER_WS"},
 	},
 	&cli.StringFlag{
@@ -64,6 +66,7 @@ var flags = []cli.Flag{
 		Value:       deepsquare.DefaultMetaSchedulerAddress.Hex(),
 		Usage:       "Metascheduler smart-contract address.",
 		Destination: &metaschedulerSmartContract,
+		Category:    "DeepSquare Settings:",
 		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
 	},
 	&cli.StringFlag{
@@ -71,6 +74,7 @@ var flags = []cli.Flag{
 		Value:       deepsquare.DefaultSBatchEndpoint,
 		Usage:       "SBatch Service GraphQL endpoint.",
 		Destination: &sbatchEndpoint,
+		Category:    "DeepSquare Settings:",
 		EnvVars:     []string{"SBATCH_ENDPOINT"},
 	},
 	&cli.StringFlag{
@@ -78,11 +82,13 @@ var flags = []cli.Flag{
 		Value:       deepsquare.DefaultLoggerEndpoint,
 		Usage:       "Grid Logger endpoint.",
 		Destination: &loggerEndpoint,
+		Category:    "DeepSquare Settings:",
 		EnvVars:     []string{"LOGGER_ENDPOINT"},
 	},
 	&cli.BoolFlag{
 		Name:        "watch",
 		Usage:       "Watch logs after submitting the job",
+		Category:    "Submit Settings:",
 		Aliases:     []string{"w"},
 		Destination: &watch,
 	},
@@ -90,12 +96,14 @@ var flags = []cli.Flag{
 		Name:        "exit-on-job-exit",
 		Usage:       "Exit the job after the job has finished and throw on error.",
 		Aliases:     []string{"e"},
+		Category:    "Submit Settings:",
 		Destination: &exitOnJobExit,
 	},
 	&cli.BoolFlag{
 		Name:        "no-timestamp",
 		Usage:       "Exit the job after the job has finished and throw on error.",
 		Aliases:     []string{"no-ts"},
+		Category:    "Submit Settings:",
 		Destination: &noTimestamp,
 	},
 	&cli.StringFlag{
@@ -103,6 +111,7 @@ var flags = []cli.Flag{
 		Usage:       "An hexadecimal private key for ethereum transactions.",
 		Required:    true,
 		Destination: &ethHexPK,
+		Category:    "DeepSquare Settings:",
 		EnvVars:     []string{"ETH_PRIVATE_KEY"},
 	},
 	&cli.StringFlag{
@@ -110,16 +119,19 @@ var flags = []cli.Flag{
 		Usage:       "The job name.",
 		Required:    true,
 		Destination: &jobName,
+		Category:    "Submit Settings:",
 	},
 	&cli.StringSliceFlag{
 		Name:        "uses",
 		Usage:       "Uses flag. Used to filter the clusters. Format: `key=value`",
 		Destination: &uses,
+		Category:    "Submit Settings:",
 	},
 	&cli.StringSliceFlag{
 		Name:        "affinities",
 		Usage:       "Affinities flag. Used to filter the clusters. Format: `key<value`, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value`",
 		Destination: &affinitiesSlice,
+		Category:    "Submit Settings:",
 	},
 	&cli.StringFlag{
 		Name:  "credits-wei",
@@ -132,6 +144,7 @@ var flags = []cli.Flag{
 			credits = c
 			return nil
 		},
+		Category: "Submit Settings:",
 	},
 	&cli.Float64Flag{
 		Name:  "credits",
@@ -149,6 +162,7 @@ var flags = []cli.Flag{
 			credits = result
 			return nil
 		},
+		Category: "Submit Settings:",
 	},
 }
 
