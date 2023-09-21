@@ -36,6 +36,7 @@ var (
 	loggerEndpoint             string
 	watch                      bool
 	exitOnJobExit              bool
+	noTimestamp                bool
 
 	credits         *big.Int
 	jobName         string
@@ -90,6 +91,12 @@ var flags = []cli.Flag{
 		Usage:       "Exit the job after the job has finished and throw on error.",
 		Aliases:     []string{"e"},
 		Destination: &exitOnJobExit,
+	},
+	&cli.BoolFlag{
+		Name:        "no-timestamp",
+		Usage:       "Exit the job after the job has finished and throw on error.",
+		Aliases:     []string{"no-ts"},
+		Destination: &noTimestamp,
 	},
 	&cli.StringFlag{
 		Name:        "private-key",
@@ -259,6 +266,15 @@ var Command = cli.Command{
 			}
 		}
 
+		// Set allowance
+		curr, err := client.GetAllowance(ctx)
+		if err != nil {
+			return err
+		}
+		if err = client.SetAllowance(ctx, curr.Add(curr, credits)); err != nil {
+			return err
+		}
+
 		// Quick submit logic
 		if !watch {
 			jobID, err := client.SubmitJob(
@@ -290,10 +306,10 @@ var Command = cli.Command{
 			return err
 		}
 
-		fmt.Println("---Waiting jobs to be running...---")
+		fmt.Println("---Waiting for job to be running...---")
 		_, err = waitUntilJobRunningOrFinished(sub, transitions, jobID)
 		if err != nil {
-			fmt.Printf("---Watching transitions has unexpectedly closed---\n%s", err)
+			fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
 			return err
 		}
 
@@ -301,7 +317,8 @@ var Command = cli.Command{
 			go func() {
 				status, err := waitUntilJobFinished(sub, transitions, jobID)
 				if err != nil {
-					fmt.Printf("---Watching transitions has unexpectedly closed---\n%s", err)
+					fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
+					os.Exit(1)
 				}
 				switch status {
 				case metascheduler.JobStatusFinished:
@@ -313,13 +330,12 @@ var Command = cli.Command{
 				case metascheduler.JobStatusOutOfCredits:
 					os.Exit(143)
 				}
-				os.Exit(0)
 			}()
 		}
 
 		stream, err := client.WatchLogs(ctx, jobID)
 		if err != nil {
-			fmt.Printf("---Watching logs has unexpectedly failed---\n%s", err)
+			fmt.Printf("---Watching logs has unexpectedly failed---\n%s\n", err)
 			return err
 		}
 		defer func() {
@@ -332,11 +348,15 @@ var Command = cli.Command{
 				return nil
 			}
 			if err != nil {
-				fmt.Printf("---Connection to logging server closed unexpectedly---\n%s", err)
+				fmt.Printf("---Connection to logging server closed unexpectedly---\n%s\n", err)
 				return err
 			}
 			clean := forbiddenReplacer.Replace(string(req.GetData()))
-			fmt.Printf("%s: %s", time.Unix(0, req.GetTimestamp()), clean)
+			if noTimestamp {
+				fmt.Printf("%s\n", clean)
+			} else {
+				fmt.Printf("%s:\t%s\n", time.Unix(0, req.GetTimestamp()), clean)
+			}
 		}
 	},
 }

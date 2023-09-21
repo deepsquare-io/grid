@@ -99,7 +99,7 @@ func Model(
 	client deepsquare.Client,
 ) tea.Model {
 	code := code.New(true, true, lipgloss.AdaptiveColor{Light: "#000000", Dark: "#ffffff"})
-	code.SetSize(118, style.StandardHeight)
+	code.SetSize(80, style.StandardHeight)
 
 	help := help.New()
 	help.ShowAll = true

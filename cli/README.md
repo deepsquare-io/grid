@@ -2,6 +2,10 @@
 
 Submit directly jobs to the DeepSquare Grid!
 
+![tui-demo](./assets/tui-demo.svg)
+
+![submit-demo](./assets/submit-demo.svg)
+
 ## Usage
 
 ```shell

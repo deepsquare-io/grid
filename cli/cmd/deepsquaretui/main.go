@@ -20,6 +20,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/the-grid/cli/cmd/credit"
+	"github.com/deepsquare-io/the-grid/cli/cmd/initc"
 	"github.com/deepsquare-io/the-grid/cli/cmd/provider"
 	"github.com/deepsquare-io/the-grid/cli/cmd/submit"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
@@ -116,6 +117,7 @@ var app = &cli.App{
 		&submit.Command,
 		&provider.Command,
 		&credit.Command,
+		&initc.Command,
 	},
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context
