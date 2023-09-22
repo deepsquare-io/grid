@@ -26,7 +26,7 @@ import (
 )
 
 var columns = []table.Column{
-	{Title: "Provider Address", Width: 6},
+	{Title: "Job ID", Width: 6},
 	{Title: "Job Name", Width: 30},
 	{Title: "Status", Width: 14},
 	{Title: "Start date", Width: 30},

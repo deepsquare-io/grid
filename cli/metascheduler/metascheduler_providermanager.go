@@ -83,7 +83,7 @@ func (c *providerManager) GetProvider(
 		return provider, WrapError(err)
 	}
 
-	provider.Addr = address
+	p.Addr = address
 
 	return types.ProviderDetail{
 		Provider:             p,
