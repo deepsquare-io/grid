@@ -1,6 +1,8 @@
-package transfer
+package topup
 
 import (
+	"context"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -9,35 +11,35 @@ import (
 )
 
 type ModelBuilder struct {
-	Client deepsquare.Client
+	Client  deepsquare.Client
+	Watcher deepsquare.Watcher
 }
 
-func (b *ModelBuilder) Build() tea.Model {
+func (b *ModelBuilder) Build(jobID [32]byte) tea.Model {
 	if b.Client == nil {
 		panic("Client is nil")
+	}
+	if b.Watcher == nil {
+		panic("Watcher is nil")
 	}
 	help := help.New()
 	help.ShowAll = true
 
-	inputs := make([]textinput.Model, 2)
-	inputs[toInput] = textinput.New()
-	inputs[toInput].Focus()
-	inputs[toInput].Placeholder = "example: 0x0000000000000000000000000000000000000000"
-	inputs[toInput].Width = 64
-	inputs[toInput].Prompt = ""
-	inputs[toInput].Validate = allowedHex
-
+	inputs := make([]textinput.Model, 1)
 	inputs[amountInput] = textinput.New()
+	inputs[amountInput].Focus()
 	inputs[amountInput].Placeholder = "example: 0.0"
 	inputs[amountInput].Width = 64
 	inputs[amountInput].Prompt = ""
 	inputs[amountInput].Validate = allowedNumber
 
 	return &model{
-		client: b.Client,
-		help:   help,
-		inputs: inputs,
-		errors: make([]error, 2),
+		client:   b.Client,
+		help:     help,
+		inputs:   inputs,
+		jobID:    jobID,
+		watchJob: makeWatchJobModel(context.TODO(), jobID, b.Watcher, b.Client),
+		errors:   make([]error, 1),
 		keyMap: KeyMap{
 			Exit: key.NewBinding(
 				key.WithKeys("esc", "ctrl+q"),

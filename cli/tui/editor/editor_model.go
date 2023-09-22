@@ -34,6 +34,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/internal/utils"
 	"github.com/deepsquare-io/the-grid/cli/internal/validator"
 	"github.com/deepsquare-io/the-grid/cli/sbatch"
+	"github.com/deepsquare-io/the-grid/cli/tui/channel"
 	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/mistakenelf/teacup/code"
 	"gopkg.in/yaml.v3"
@@ -91,9 +92,9 @@ type model struct {
 	focused int
 
 	// Code
-	code          code.Model
-	jobSchemaPath string
-	jobPath       string
+	watchFileChanges channel.Model[fileChangedMsg]
+	code             code.Model
+	jobPath          string
 
 	err error
 
@@ -106,17 +107,18 @@ type model struct {
 }
 
 type editorDone struct {
-	err           error
-	jobSchemaPath string
-	jobPath       string
+	err     error
+	jobPath string
 }
 
-func (m *model) openEditor(ctx context.Context, jobSchemaPath string, jobPath string) tea.Cmd {
+func (m *model) openEditor(
+	ctx context.Context,
+	jobPath string,
+) tea.Cmd {
 	return tea.ExecProcess(Command(ctx, jobPath), func(err error) tea.Msg {
 		return editorDone{
-			jobPath:       jobPath,
-			jobSchemaPath: jobSchemaPath,
-			err:           err,
+			jobPath: jobPath,
+			err:     err,
 		}
 	})
 }
@@ -188,38 +190,40 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 	}
 }
 
-func (m *model) initEditor(ctx context.Context) tea.Cmd {
-	jobSchemaPath, jobPath, err := PrepareFiles()
-	if err != nil {
-		panic(err.Error())
-	}
-	return m.openEditor(ctx, jobSchemaPath, jobPath)
-}
-
 func (m model) Init() tea.Cmd {
-	return tea.Batch(m.initEditor(context.TODO()), textinput.Blink)
+	return tea.Batch(
+		m.openEditor(context.TODO(), m.jobPath),
+		m.watchFileChanges.Init(),
+		textinput.Blink,
+	)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		codeCmd  tea.Cmd
 		inputCmd tea.Cmd
+		wCmd     tea.Cmd
 		cmds     = make([]tea.Cmd, len(m.inputs))
 	)
+
+	m.watchFileChanges, wCmd = m.watchFileChanges.Update(msg)
+	if wCmd != nil {
+		cmds = append(cmds, wCmd)
+	}
 
 switchmsg:
 	switch msg := msg.(type) {
 	case ExitMsg:
-		Clean(m.jobSchemaPath, m.jobPath)
+		return m, m.watchFileChanges.Dispose
 	case editorDone:
 		if msg.err != nil {
 			m.err = msg.err
 			break switchmsg
 		}
 		m.jobPath = msg.jobPath
-		m.jobSchemaPath = msg.jobSchemaPath
-		setFile := m.code.SetFileName(m.jobPath)
-		cmds = append(cmds, setFile)
+		cmds = append(cmds, m.code.SetFileName(m.jobPath))
+	case fileChangedMsg:
+		cmds = append(cmds, m.code.SetFileName(m.jobPath))
 	case submitProgressMsg:
 		m.isRunning = true
 	case submitDoneMsg:
@@ -235,7 +239,7 @@ switchmsg:
 		}
 		switch {
 		case key.Matches(msg, m.keyMap.EditAgain):
-			cmds = append(cmds, m.openEditor(context.TODO(), m.jobSchemaPath, m.jobPath))
+			cmds = append(cmds, m.openEditor(context.TODO(), m.jobPath))
 		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, emitExitMsg([32]byte{}))
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:

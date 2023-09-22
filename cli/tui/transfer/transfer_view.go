@@ -39,7 +39,7 @@ func (m model) View() string {
 		style.Foreground.Render("Send to"),
 		m.inputs[toInput].View(),
 		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[toInput])),
-		style.Foreground.Render("Amount"),
+		style.Foreground.Render("Amount in credits (not in wei)"),
 		m.inputs[amountInput].View(),
 		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[amountInput])),
 		style.Error.Render(utils.ErrorfOrEmpty("Error: %s", m.err)),

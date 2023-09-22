@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
+	"strings"
 
 	_ "embed"
 
+	"github.com/deepsquare-io/the-grid/cli/internal/wordlists"
 	"github.com/urfave/cli/v2"
 )
 
@@ -33,9 +34,10 @@ var flags = []cli.Flag{
 }
 
 func prepareFiles() (jerr error) {
-	date := time.Now().Unix()
-	jobSchemaPath := filepath.Join(output, ".job.schema.json")
-	jobPath := filepath.Join(output, fmt.Sprintf("job.%d.yaml", date))
+	tempDir := os.TempDir()
+	words := strings.Join(wordlists.GetRandomWords(3), "-")
+	jobSchemaPath := filepath.Join(tempDir, ".job.schema.json")
+	jobPath := filepath.Join(output, fmt.Sprintf("job.%s.yaml", words))
 
 	// Insert the yaml-language-server parameter
 	template = []byte(

@@ -21,9 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
-	"time"
 )
 
 //go:embed template.yaml
@@ -77,28 +75,6 @@ func getEditor() (editor string, args []string) {
 	return "vi", []string{}
 }
 
-func PrepareFiles() (jobSchemaPath string, jobPath string, err error) {
-	tempDir := os.TempDir()
-	date := time.Now().Unix()
-	jobSchemaPath = filepath.Join(tempDir, fmt.Sprintf("job.schema.%d.json", date))
-	jobPath = filepath.Join(tempDir, fmt.Sprintf("job.%d.yaml", date))
-
-	// Insert the yaml-language-server parameter
-	template = []byte(
-		fmt.Sprintf(templateFormat, jobSchemaPath, template),
-	)
-
-	if err := os.WriteFile(jobSchemaPath, schema, 0644); err != nil {
-		return "", "", fmt.Errorf("fail to write %s: %w", jobSchemaPath, err)
-	}
-
-	if err := os.WriteFile(jobPath, template, 0644); err != nil {
-		return "", "", fmt.Errorf("fail to write %s: %w", jobPath, err)
-	}
-
-	return jobSchemaPath, jobPath, nil
-}
-
 func Command(ctx context.Context, jobPath string) *exec.Cmd {
 	var editorCommand string
 	var editorArgs []string
@@ -122,9 +98,4 @@ func Command(ctx context.Context, jobPath string) *exec.Cmd {
 	c.Stderr = os.Stderr
 	c.Stdin = os.Stdin
 	return c
-}
-
-func Clean(jobSchemaPath, jobPath string) {
-	_ = os.Remove(jobSchemaPath)
-	_ = os.Remove(jobPath)
 }

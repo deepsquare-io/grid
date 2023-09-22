@@ -47,6 +47,52 @@ func (c *providerManager) Remove(ctx context.Context, provider common.Address) e
 	return nil
 }
 
+func (c *providerManager) GetProvider(
+	ctx context.Context,
+	address common.Address,
+) (provider types.ProviderDetail, err error) {
+	p, err := c.GetWaitingForApprovalProvider(
+		&bind.CallOpts{Context: ctx},
+		address,
+	)
+	if err != nil {
+		return provider, WrapError(err)
+	}
+
+	isWaitingForApproval, err := c.IsWaitingForApproval(
+		&bind.CallOpts{Context: ctx},
+		address,
+	)
+	if err != nil {
+		return provider, WrapError(err)
+	}
+
+	isValidForScheduling, err := c.IsValidForScheduling(
+		&bind.CallOpts{Context: ctx},
+		address,
+	)
+	if err != nil {
+		return provider, WrapError(err)
+	}
+
+	jobCount, err := c.GetJobCount(
+		&bind.CallOpts{Context: ctx},
+		address,
+	)
+	if err != nil {
+		return provider, WrapError(err)
+	}
+
+	provider.Addr = address
+
+	return types.ProviderDetail{
+		Provider:             p,
+		IsWaitingForApproval: isWaitingForApproval,
+		IsValidForScheduling: isValidForScheduling,
+		JobCount:             jobCount,
+	}, nil
+}
+
 func (c *providerManager) GetProviders(
 	ctx context.Context,
 ) (providers []types.ProviderDetail, err error) {

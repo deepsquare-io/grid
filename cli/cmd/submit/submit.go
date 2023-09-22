@@ -101,7 +101,7 @@ var flags = []cli.Flag{
 	},
 	&cli.BoolFlag{
 		Name:        "no-timestamp",
-		Usage:       "Exit the job after the job has finished and throw on error.",
+		Usage:       "Hide timestamp.",
 		Aliases:     []string{"no-ts"},
 		Category:    "Submit Settings:",
 		Destination: &noTimestamp,
@@ -303,7 +303,7 @@ var Command = cli.Command{
 				return err
 			}
 
-			fmt.Printf("job %s submitted", hexutil.Encode(jobID[:]))
+			fmt.Printf("job %s submitted\n", hexutil.Encode(jobID[:]))
 			return nil
 		}
 
@@ -384,6 +384,7 @@ func waitUntilJobRunningOrFinished(
 		select {
 		case tr := <-ch:
 			if bytes.EqualFold(jobID[:], tr.JobId[:]) {
+				fmt.Printf("(Job is %s)\n", metascheduler.JobStatus(tr.To))
 				switch metascheduler.JobStatus(tr.To) {
 				case metascheduler.JobStatusCancelled,
 					metascheduler.JobStatusFailed,

@@ -122,6 +122,7 @@ type ProviderDetail struct {
 type ProviderManager interface {
 	Approve(ctx context.Context, provider common.Address) error
 	Remove(ctx context.Context, provider common.Address) error
+	GetProvider(ctx context.Context, address common.Address) (provider ProviderDetail, err error)
 	GetProviders(ctx context.Context) (providers []ProviderDetail, err error)
 }
 

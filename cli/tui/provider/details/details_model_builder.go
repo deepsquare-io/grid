@@ -24,9 +24,9 @@ func indent(spaces int, v string) string {
 
 func Model(p types.ProviderDetail) tea.Model {
 	vp := viewport.New(118, style.StandardHeight)
-	prices := fmt.Sprintf(`CPU pricing: %s creds/(CPU.min)
-Memory pricing: %s creds/(MB.min)
-GPU pricing: %s creds/(GPU.min)
+	prices := fmt.Sprintf(`CPU pricing: %s credits/(CPU.min)
+Memory pricing: %s credits/(MB.min)
+GPU pricing: %s credits/(GPU.min)
 `,
 		ether.FromWei(p.ProviderPrices.CpuPricePerMin).String(),
 		ether.FromWei(p.ProviderPrices.MemPricePerMin).String(),

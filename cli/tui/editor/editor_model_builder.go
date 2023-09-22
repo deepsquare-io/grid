@@ -16,18 +16,46 @@
 package editor
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
+	"github.com/deepsquare-io/the-grid/cli/internal/wordlists"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/mistakenelf/teacup/code"
 )
 
 type ModelBuilder struct {
 	Client deepsquare.Client
+}
+
+func prepareFiles() (words string, jobSchemaPath string, jobPath string, err error) {
+	tempDir := os.TempDir()
+	words = strings.Join(wordlists.GetRandomWords(3), "-")
+	jobSchemaPath = filepath.Join(tempDir, ".job.schema.json")
+	jobPath = fmt.Sprintf("job.%s.yaml", words)
+
+	// Insert the yaml-language-server parameter
+	template := []byte(
+		fmt.Sprintf(templateFormat, jobSchemaPath, template),
+	)
+
+	if err := os.WriteFile(jobSchemaPath, schema, 0644); err != nil {
+		return "", "", "", fmt.Errorf("fail to write %s: %w", jobSchemaPath, err)
+	}
+
+	if err := os.WriteFile(jobPath, template, 0644); err != nil {
+		return "", "", "", fmt.Errorf("fail to write %s: %w", jobPath, err)
+	}
+
+	return words, jobSchemaPath, jobPath, nil
 }
 
 func (b *ModelBuilder) Build() tea.Model {
@@ -43,20 +71,26 @@ func (b *ModelBuilder) Build() tea.Model {
 
 	inputs := make([]textinput.Model, 3)
 	inputs[creditsLockingInput] = textinput.New()
-	inputs[creditsLockingInput].Placeholder = "100"
+	inputs[creditsLockingInput].Placeholder = "example: 100"
 	inputs[creditsLockingInput].Focus()
 	inputs[creditsLockingInput].Width = 32
 	inputs[creditsLockingInput].Prompt = ""
 	inputs[creditsLockingInput].Validate = allowedNumber
 
 	inputs[usesInput] = textinput.New()
-	inputs[usesInput].Placeholder = "os=linux,arch=amd64"
+	inputs[usesInput].Placeholder = "example: os=linux,arch=amd64"
 	inputs[usesInput].Width = 32
 	inputs[usesInput].Prompt = ""
 
 	inputs[jobNameInput] = textinput.New()
 	inputs[jobNameInput].Width = 32
 	inputs[jobNameInput].Prompt = ""
+
+	jobName, _, jobPath, err := prepareFiles()
+	if err != nil {
+		panic(err.Error())
+	}
+	inputs[jobNameInput].Prompt = jobName
 
 	return &model{
 		code:   code,
@@ -81,7 +115,9 @@ func (b *ModelBuilder) Build() tea.Model {
 			),
 			ViewPortKeymap: code.Viewport.KeyMap,
 		},
-		help:   help,
-		client: b.Client,
+		watchFileChanges: makeWatchFileChangeModel(jobPath),
+		jobPath:          jobPath,
+		help:             help,
+		client:           b.Client,
 	}
 }

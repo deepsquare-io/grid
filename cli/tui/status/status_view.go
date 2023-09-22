@@ -37,6 +37,7 @@ func (m model) View() string {
 		{
 			m.keyMap.OpenLogs,
 			m.keyMap.SubmitJob,
+			m.keyMap.TopupJob,
 			m.keyMap.CancelJob,
 			m.keyMap.TransferCredits,
 			m.keyMap.ViewProviders,

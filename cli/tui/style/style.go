@@ -38,6 +38,11 @@ var (
 		Align(lipgloss.Center).
 		Width(22)
 
+	Title2 = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(primaryDarkestColor).
+		Width(22)
+
 	LogTitle = Box.Copy().
 			Padding(0, 1)
 

@@ -136,7 +136,7 @@ var Command = cli.Command{
 
 				if !force {
 					msg := fmt.Sprintf(
-						"Confirm transfer of %s creds (%s wei) to %s?",
+						"Confirm transfer of %s credits (%s wei) to %s?",
 						credits.String(),
 						creditsWei.String(),
 						recipient.Hex(),

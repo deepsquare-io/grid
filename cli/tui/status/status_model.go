@@ -32,13 +32,13 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
 type KeyMap struct {
 	TableKeyMap     table.KeyMap
 	OpenLogs        key.Binding
+	TopupJob        key.Binding
 	CancelJob       key.Binding
 	SubmitJob       key.Binding
 	TransferCredits key.Binding
@@ -94,6 +94,15 @@ type ViewProvidersMsg struct{}
 
 func emitViewProvidersMsg() tea.Msg {
 	return ViewProvidersMsg{}
+}
+
+// TopupJobMsg is a public msg used to indicate that the user top up a job.
+type TopupJobMsg [32]byte
+
+func emitTopupJobMsg(msg [32]byte) tea.Cmd {
+	return func() tea.Msg {
+		return TopupJobMsg(msg)
+	}
 }
 
 func jobToRow(job types.Job) table.Row {
@@ -235,6 +244,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(m.table.SelectedRow()) > 0 {
 				cmds = append(cmds, EmitSelectJobMsg(rowToJobID(m.table.SelectedRow())))
 			}
+		case key.Matches(msg, m.keyMap.TopupJob):
+			if len(m.table.SelectedRow()) > 0 {
+				cmds = append(cmds, emitTopupJobMsg(rowToJobID(m.table.SelectedRow())))
+			}
 		case key.Matches(msg, m.keyMap.SubmitJob):
 			cmds = append(cmds, emitSubmitJobMsg)
 		case key.Matches(msg, m.keyMap.TransferCredits):
@@ -303,6 +316,10 @@ func Model(
 				key.WithKeys("enter"),
 				key.WithHelp("enter", "show job logs"),
 			),
+			TopupJob: key.NewBinding(
+				key.WithKeys("t"),
+				key.WithHelp("t", "topup job"),
+			),
 			CancelJob: key.NewBinding(
 				key.WithKeys("c"),
 				key.WithHelp("c", "cancel job"),
@@ -312,8 +329,8 @@ func Model(
 				key.WithHelp("s", "submit job"),
 			),
 			TransferCredits: key.NewBinding(
-				key.WithKeys("t"),
-				key.WithHelp("t", "tranfer credits"),
+				key.WithKeys("ctrl+t"),
+				key.WithHelp("ctrl+t", "transfer credits"),
 			),
 			ViewProviders: key.NewBinding(
 				key.WithKeys("p"),
@@ -328,7 +345,6 @@ func Model(
 		watchJobs: makeWatchJobsModel(
 			ctx,
 			userAddress,
-			make(chan ethtypes.Log, 100),
 			watcher,
 			client,
 		),

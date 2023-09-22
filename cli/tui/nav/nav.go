@@ -31,6 +31,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/tui/provider"
 	"github.com/deepsquare-io/the-grid/cli/tui/status"
 	"github.com/deepsquare-io/the-grid/cli/tui/status/log"
+	"github.com/deepsquare-io/the-grid/cli/tui/status/topup"
 	"github.com/deepsquare-io/the-grid/cli/tui/style"
 	"github.com/deepsquare-io/the-grid/cli/tui/transfer"
 	"github.com/deepsquare-io/the-grid/cli/types"
@@ -56,12 +57,15 @@ type model struct {
 	transferModel tea.Model
 	// providerModel is nullable
 	providerModel tea.Model
-	statusModel   tea.Model
+	// topupModel is nullable
+	topupModel  tea.Model
+	statusModel tea.Model
 
 	logModelBuilder      log.ModelBuilder
 	editorModelBuilder   editor.ModelBuilder
 	transferModelBuilder transfer.ModelBuilder
 	providerModelBuilder provider.ModelBuilder
+	topupModelBuilder    topup.ModelBuilder
 
 	client      deepsquare.Client
 	watcher     deepsquare.Watcher
@@ -153,6 +157,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.transferModel, pageCmd = m.transferModel.Update(msg)
 		case m.providerModel != nil:
 			m.providerModel, pageCmd = m.providerModel.Update(msg)
+		case m.topupModel != nil:
+			m.topupModel, pageCmd = m.topupModel.Update(msg)
 		default:
 			m.statusModel, pageCmd = m.statusModel.Update(msg)
 		}
@@ -179,6 +185,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds,
 			m.providerModel.Init(),
 		)
+	case status.TopupJobMsg:
+		m.topupModel = m.topupModelBuilder.Build(msg)
+		cmds = append(
+			cmds,
+			m.topupModel.Init(),
+		)
 	case log.ExitMsg:
 		_, _ = m.logModel.Update(msg)
 		m.logModel = nil
@@ -194,6 +206,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case provider.ExitMsg:
 		_, _ = m.providerModel.Update(msg)
 		m.providerModel = nil
+	case topup.ExitMsg:
+		_, _ = m.topupModel.Update(msg)
+		m.topupModel = nil
 	case balanceMsg:
 		m.balance = msg
 		cmds = append(cmds, m.tick)
@@ -210,6 +225,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.transferModel, pageCmd = m.transferModel.Update(msg)
 		case m.providerModel != nil:
 			m.providerModel, pageCmd = m.providerModel.Update(msg)
+		case m.topupModel != nil:
+			m.topupModel, pageCmd = m.topupModel.Update(msg)
 		default:
 			m.statusModel, pageCmd = m.statusModel.Update(msg)
 		}
@@ -239,6 +256,8 @@ func (m model) View() string {
 		navView = m.transferModel.View()
 	case m.providerModel != nil:
 		navView = m.providerModel.View()
+	case m.topupModel != nil:
+		navView = m.topupModel.View()
 	default:
 		navView = m.statusModel.View()
 	}
@@ -246,8 +265,8 @@ func (m model) View() string {
 	values := fmt.Sprintf(`%s
 %s
 %s
-%s creds (%s wei)
-%s creds (%s wei)`,
+%s credits (%s wei)
+%s credits (%s wei)`,
 		m.version,
 		m.userAddress,
 		m.metaschedulerAddress,

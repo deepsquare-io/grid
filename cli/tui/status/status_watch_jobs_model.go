@@ -23,7 +23,6 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/tui/channel"
 	"github.com/deepsquare-io/the-grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
@@ -32,7 +31,6 @@ type transitionMsg types.Job
 func makeWatchJobsModel(
 	ctx context.Context,
 	userAddress common.Address,
-	logs chan ethtypes.Log,
 	watcher deepsquare.Watcher,
 	client deepsquare.Client,
 ) channel.Model[transitionMsg] {

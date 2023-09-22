@@ -60,7 +60,7 @@ OPTIONS:
    --credits-wei value                                Allocated a number of credits. Unit is wei. Is a big int.
    --exit-on-job-exit, -e                             Exit the job after the job has finished and throw on error. (default: false)
    --job-name value                                   The job name.
-   --no-timestamp, --no-ts                            Exit the job after the job has finished and throw on error. (default: false)
+   --no-timestamp, --no-ts                            Hide timestamp. (default: false)
    --uses key=value [ --uses key=value ]              Uses flag. Used to filter the clusters. Format: key=value
    --watch, -w                                        Watch logs after submitting the job (default: false)
 

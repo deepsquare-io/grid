@@ -11,6 +11,7 @@ import (
 	"github.com/deepsquare-io/the-grid/cli/tui/provider"
 	"github.com/deepsquare-io/the-grid/cli/tui/status"
 	"github.com/deepsquare-io/the-grid/cli/tui/status/log"
+	"github.com/deepsquare-io/the-grid/cli/tui/status/topup"
 	"github.com/deepsquare-io/the-grid/cli/tui/transfer"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -79,6 +80,10 @@ func (b *ModelBuilder) Build(ctx context.Context) *model {
 		},
 		providerModelBuilder: provider.ModelBuilder{
 			Client: b.client,
+		},
+		topupModelBuilder: topup.ModelBuilder{
+			Client:  b.client,
+			Watcher: b.watcher,
 		},
 		userAddress:          b.userAddress,
 		client:               b.client,
