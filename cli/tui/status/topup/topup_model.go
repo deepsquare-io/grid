@@ -85,15 +85,15 @@ func (m *model) topup(ctx context.Context) tea.Cmd {
 	}
 }
 
-type updateProviderPricesMsg metaschedulerabi.ProviderPrices
+type updateProviderMsg metaschedulerabi.Provider
 
-func (m *model) loadProviderPrices(ctx context.Context, provider common.Address) tea.Cmd {
+func (m *model) loadProvider(ctx context.Context, provider common.Address) tea.Cmd {
 	return func() tea.Msg {
 		p, err := m.client.GetProvider(ctx, m.job.ProviderAddr)
 		if err != nil {
 			return errorMsg(err)
 		}
-		return updateProviderPricesMsg(p.ProviderPrices)
+		return updateProviderMsg(p.Provider)
 	}
 }
 
@@ -111,8 +111,8 @@ type model struct {
 
 	keyMap KeyMap
 
-	job    types.Job
-	prices *metaschedulerabi.ProviderPrices
+	job      types.Job
+	provider *metaschedulerabi.Provider
 
 	err       error
 	isRunning bool
@@ -137,15 +137,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case ExitMsg:
 		cmds = append(cmds, m.watchJob.Dispose)
-	case updateProviderPricesMsg:
-		p := metaschedulerabi.ProviderPrices(msg)
-		m.prices = &p
+	case updateProviderMsg:
+		p := metaschedulerabi.Provider(msg)
+		m.provider = &p
 	case transitionMsg:
 		m.job = types.Job(msg)
 
 		// Fetch provider prices
 		if (m.job.ProviderAddr != common.Address{}) {
-			cmds = append(cmds, m.loadProviderPrices(context.TODO(), m.job.ProviderAddr))
+			cmds = append(cmds, m.loadProvider(context.TODO(), m.job.ProviderAddr))
 		}
 	case errorMsg:
 		m.err = msg
