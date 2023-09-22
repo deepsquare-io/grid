@@ -3,7 +3,7 @@ module github.com/deepsquare-io/the-grid/provider-ssh-authorized-keys
 go 1.21
 
 require (
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/urfave/cli/v2 v2.25.7
 	go.uber.org/zap v1.26.0
 	google.golang.org/grpc v1.58.1
