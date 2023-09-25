@@ -3,12 +3,14 @@ package gc
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/deepsquare-io/the-grid/supervisor/logger"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
+	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
 )
@@ -56,7 +58,8 @@ func (gc *GC) FindAndCancelUnhandledJobs(
 	}
 
 	for it.Next(ctx) {
-		if it.Job.Status == metascheduler.JobStatusRunning {
+		switch it.Job.Status {
+		case metascheduler.JobStatusRunning:
 			id, err := gc.scheduler.FindRunningJobByName(
 				ctx,
 				hexutil.Encode(it.Job.JobID[:]),
@@ -76,6 +79,45 @@ func (gc *GC) FindAndCancelUnhandledJobs(
 					"found zombie job, putting zombie job to PANIC",
 					zap.String("jobID", hexutil.Encode(it.Job.JobID[:])),
 				)
+				if err := gc.ms.SetJobStatus(
+					ctx,
+					it.Job.JobID,
+					metascheduler.JobStatusPanicked,
+					0,
+					metascheduler.SetJobStatusWithError(errors.New("provider lost the job")),
+				); err != nil {
+					logger.I.Error(
+						"failed to put zombie job in PANIC",
+						zap.Error(err),
+						zap.Any("job", it.Job),
+					)
+				}
+			}
+		case metascheduler.JobStatusScheduled:
+			if err := try.Do(10, 5*time.Second, func(try int) error {
+				id, err := gc.scheduler.FindRunningJobByName(
+					ctx,
+					hexutil.Encode(it.Job.JobID[:]),
+					strings.ToLower(it.Job.CustomerAddr.Hex()),
+				)
+				if err != nil {
+					logger.I.Warn(
+						"FindRunningJobByName failed",
+						zap.Error(err),
+						zap.String("name", hexutil.Encode(it.Job.JobID[:])),
+						zap.String("user", strings.ToLower(it.Job.CustomerAddr.Hex())),
+					)
+					return err
+				}
+				if id == 0 {
+					logger.I.Warn(
+						"possible zombie job",
+						zap.String("jobID", hexutil.Encode(it.Job.JobID[:])),
+					)
+					return fmt.Errorf("zombie job: %s", hexutil.Encode(it.Job.JobID[:]))
+				}
+				return nil
+			}); err != nil {
 				if err := gc.ms.SetJobStatus(
 					ctx,
 					it.Job.JobID,
