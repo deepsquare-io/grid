@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package credit
+package allowance
 
 import (
 	"context"
@@ -72,30 +72,30 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"ETH_PRIVATE_KEY"},
 	},
 	&cli.BoolFlag{
-		Name:        "wei",
-		Usage:       "Show in wei.",
-		Destination: &wei,
-	},
-	&cli.BoolFlag{
 		Name:        "force",
 		Usage:       "Do not prompt",
 		Destination: &force,
 		Aliases:     []string{"f"},
 		EnvVars:     []string{"FORCE"},
 	},
+	&cli.BoolFlag{
+		Name:        "wei",
+		Usage:       "Show in wei.",
+		Destination: &wei,
+	},
 }
 
 var Command = cli.Command{
-	Name:  "credit",
-	Usage: "Manage credits.",
+	Name:  "allowance",
+	Usage: "Manage allowance.",
 	Subcommands: []*cli.Command{
 		{
-			Name:      "transfer",
-			Usage:     "Transfer credits to an another account",
-			ArgsUsage: "<amount> <0x recipient address>",
+			Name:      "set",
+			Usage:     "Set credits allowance.",
+			ArgsUsage: "<amount in credits (use --wei for wei)>",
 			Flags:     flags,
 			Action: func(cCtx *cli.Context) error {
-				if cCtx.NArg() != 2 {
+				if cCtx.NArg() != 1 {
 					return errors.New("missing arguments")
 				}
 				if wei {
@@ -114,7 +114,6 @@ var Command = cli.Command{
 					creditsWei = ether.ToWei(credits)
 				}
 				ctx := cCtx.Context
-				recipient := common.HexToAddress(cCtx.Args().Get(2))
 				clientset, err := initClient(ctx)
 				if err != nil {
 					return err
@@ -122,10 +121,10 @@ var Command = cli.Command{
 
 				if !force {
 					msg := fmt.Sprintf(
-						"Confirm transfer of %s credits (%s wei) to %s?",
+						"Set allowance of %s credits (%s wei) to %s?",
 						credits.String(),
 						creditsWei.String(),
-						recipient.Hex(),
+						metaschedulerSmartContract,
 					)
 					input := confirmation.New(msg, confirmation.No)
 					ok, err := input.RunPrompt()
@@ -138,7 +137,7 @@ var Command = cli.Command{
 					}
 				}
 
-				if err := clientset.CreditManager().Transfer(ctx, recipient, creditsWei); err != nil {
+				if err := clientset.AllowanceManager().SetAllowance(ctx, creditsWei); err != nil {
 					return err
 				}
 
@@ -147,10 +146,9 @@ var Command = cli.Command{
 			},
 		},
 		{
-			Name:      "get",
-			Usage:     "Get the amount of credits owned by you or an user (if first argument is specified).",
-			ArgsUsage: "(0x)",
-			Flags:     flags,
+			Name:  "get",
+			Usage: "Get the allowance.",
+			Flags: flags,
 			Action: func(cCtx *cli.Context) error {
 				ctx := cCtx.Context
 				clientset, err := initClient(ctx)
@@ -158,17 +156,9 @@ var Command = cli.Command{
 					return err
 				}
 
-				var amount *big.Int
-				if cCtx.NArg() != 1 {
-					amount, err = clientset.CreditManager().Balance(ctx)
-					if err != nil {
-						return err
-					}
-				} else {
-					amount, err = clientset.CreditManager().BalanceOf(ctx, common.HexToAddress(cCtx.Args().First()))
-					if err != nil {
-						return err
-					}
+				amount, err := clientset.AllowanceManager().GetAllowance(ctx)
+				if err != nil {
+					return err
 				}
 
 				if wei {

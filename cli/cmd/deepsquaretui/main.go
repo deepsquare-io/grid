@@ -19,6 +19,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/deepsquare-io/the-grid/cli/cmd/allowance"
 	"github.com/deepsquare-io/the-grid/cli/cmd/credit"
 	"github.com/deepsquare-io/the-grid/cli/cmd/initc"
 	"github.com/deepsquare-io/the-grid/cli/cmd/job"
@@ -111,11 +112,12 @@ var app = &cli.App{
 	Flags:   flags,
 	Suggest: true,
 	Commands: []*cli.Command{
-		&submit.Command,
-		&provider.Command,
+		&allowance.Command,
 		&credit.Command,
 		&initc.Command,
 		&job.Command,
+		&provider.Command,
+		&submit.Command,
 	},
 	Action: func(cCtx *cli.Context) error {
 		ctx := cCtx.Context

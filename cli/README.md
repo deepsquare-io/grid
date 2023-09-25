@@ -16,11 +16,13 @@ USAGE:
    deepsquaretui [global options] command [command options] [arguments...]
 
 COMMANDS:
-   submit    Quickly submit a job.
-   provider  Manage providers (need to use an admin smart-contract).
-   credit    Manage credits.
-   init      Bootstrap a job workflow file.
-   help, h   Shows a list of commands or help for one command
+   allowance  Manage allowance.
+   credit     Manage credits.
+   init       Bootstrap a job workflow file.
+   job        Manage jobs.
+   provider   Manage providers (need to use an admin smart-contract).
+   submit     Quickly submit a job.
+   help, h    Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --metascheduler.rpc value             Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
