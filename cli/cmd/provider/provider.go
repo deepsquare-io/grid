@@ -53,7 +53,7 @@ var flags = []cli.Flag{
 	},
 }
 
-var approveFlags = append(
+var authFlags = append(
 	flags,
 	&cli.StringFlag{
 		Name:        "private-key",
@@ -109,7 +109,7 @@ var Command = cli.Command{
 			Name:      "approve",
 			Usage:     "Approve a provider.",
 			ArgsUsage: "<0x>",
-			Flags:     approveFlags,
+			Flags:     authFlags,
 			Action: func(cCtx *cli.Context) error {
 				if cCtx.NArg() != 1 {
 					return errors.New("missing arguments")
@@ -147,7 +147,7 @@ var Command = cli.Command{
 			Name:      "remove",
 			Usage:     "Remove a provider.",
 			ArgsUsage: "<0x>",
-			Flags:     approveFlags,
+			Flags:     authFlags,
 			Action: func(cCtx *cli.Context) error {
 				if cCtx.NArg() != 1 {
 					return errors.New("missing arguments")
