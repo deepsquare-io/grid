@@ -17,7 +17,11 @@ type creditManager struct {
 }
 
 func (c *creditManager) Balance(ctx context.Context) (*big.Int, error) {
-	balance, err := c.BalanceOf(&bind.CallOpts{
+	return c.BalanceOf(ctx, c.from())
+}
+
+func (c *creditManager) BalanceOf(ctx context.Context, address common.Address) (*big.Int, error) {
+	balance, err := c.IERC20.BalanceOf(&bind.CallOpts{
 		Context: ctx,
 	}, c.from())
 	return balance, WrapError(err)

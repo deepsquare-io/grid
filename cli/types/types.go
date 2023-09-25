@@ -56,6 +56,8 @@ type JobScheduler interface {
 	CancelJob(ctx context.Context, jobID [32]byte) error
 	// TopUp a job.
 	TopUpJob(ctx context.Context, jobID [32]byte, amount *big.Int) error
+	// Panic a job.
+	PanicJob(ctx context.Context, jobID [32]byte, reason string) error
 }
 
 // JobLazyIterator iterates on a lazy list of jobs.
@@ -82,6 +84,9 @@ type JobFetcher interface {
 type CreditManager interface {
 	// Balance fetches the current balance of credits.
 	Balance(ctx context.Context) (*big.Int, error)
+
+	// Balance fetches the current balance of credits.
+	BalanceOf(ctx context.Context, address common.Address) (*big.Int, error)
 
 	// Transfer tranfers credits from one address to another.
 	Transfer(ctx context.Context, to common.Address, amount *big.Int) error

@@ -161,9 +161,10 @@ var Command = cli.Command{
 			},
 		},
 		{
-			Name:  "get",
-			Usage: "Get the amount of credits",
-			Flags: getFlags,
+			Name:      "get",
+			Usage:     "Get the amount of credits",
+			ArgsUsage: "(0x)",
+			Flags:     getFlags,
 			Action: func(cCtx *cli.Context) error {
 				ctx := cCtx.Context
 				clientset, err := initClient(ctx)
@@ -171,9 +172,17 @@ var Command = cli.Command{
 					return err
 				}
 
-				amount, err := clientset.CreditManager().Balance(ctx)
-				if err != nil {
-					return err
+				var amount *big.Int
+				if cCtx.NArg() != 1 {
+					amount, err = clientset.CreditManager().Balance(ctx)
+					if err != nil {
+						return err
+					}
+				} else {
+					amount, err = clientset.CreditManager().BalanceOf(ctx, common.HexToAddress(cCtx.Args().First()))
+					if err != nil {
+						return err
+					}
 				}
 
 				if wei {

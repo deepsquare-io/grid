@@ -122,6 +122,19 @@ func (c *jobScheduler) CancelJob(ctx context.Context, id [32]byte) error {
 	return WrapError(err)
 }
 
+func (c *jobScheduler) PanicJob(ctx context.Context, id [32]byte, reason string) error {
+	opts, err := c.authOpts(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to create auth options: %w", err)
+	}
+	_, err = c.MetaScheduler.PanicJob(
+		opts,
+		id,
+		reason,
+	)
+	return WrapError(err)
+}
+
 func (c *jobScheduler) TopUpJob(ctx context.Context, id [32]byte, amount *big.Int) error {
 	opts, err := c.authOpts(ctx)
 	if err != nil {
