@@ -1,6 +1,7 @@
 package metascheduler
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"math/big"
@@ -492,7 +493,7 @@ func (c *Client) GetJobs(ctx context.Context) (*ProviderJobIterator, error) {
 	// Find a job for the provider
 	for it.Next() {
 		// Filter case
-		if it.Event.ProviderAddr == c.fromAddress {
+		if bytes.EqualFold(it.Event.ProviderAddr[:], c.fromAddress[:]) {
 			job, err := c.GetJob(ctx, it.Event.JobId)
 			if err != nil {
 				logger.I.Error("GetJob failed", zap.Error(err))

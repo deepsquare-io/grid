@@ -118,6 +118,11 @@ func (gc *GC) FindAndCancelUnhandledJobs(
 				}
 				return nil
 			}); err != nil {
+				logger.I.Warn(
+					"putting zombie job in PANIC",
+					zap.Error(err),
+					zap.Any("job", it.Job),
+				)
 				if err := gc.ms.SetJobStatus(
 					ctx,
 					it.Job.JobID,
