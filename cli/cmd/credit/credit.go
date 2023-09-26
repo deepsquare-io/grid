@@ -73,7 +73,7 @@ var flags = []cli.Flag{
 	},
 	&cli.BoolFlag{
 		Name:        "wei",
-		Usage:       "Show in wei.",
+		Usage:       "Use wei.",
 		Destination: &wei,
 	},
 	&cli.BoolFlag{
@@ -92,21 +92,21 @@ var Command = cli.Command{
 		{
 			Name:      "transfer",
 			Usage:     "Transfer credits to an another account",
-			ArgsUsage: "<amount> <0x recipient address>",
+			ArgsUsage: "<0x recipient address> <amount>",
 			Flags:     flags,
 			Action: func(cCtx *cli.Context) error {
 				if cCtx.NArg() != 2 {
 					return errors.New("missing arguments")
 				}
 				if wei {
-					c, ok := new(big.Int).SetString(cCtx.Args().First(), 10)
+					c, ok := new(big.Int).SetString(cCtx.Args().Get(1), 10)
 					if !ok {
 						return errors.New("couldn't parse amount")
 					}
 					creditsWei = c
 					credits = ether.FromWei(creditsWei)
 				} else {
-					c, ok := new(big.Float).SetString(cCtx.Args().First())
+					c, ok := new(big.Float).SetString(cCtx.Args().Get(1))
 					if !ok {
 						return errors.New("couldn't parse amount")
 					}
@@ -114,7 +114,7 @@ var Command = cli.Command{
 					creditsWei = ether.ToWei(credits)
 				}
 				ctx := cCtx.Context
-				recipient := common.HexToAddress(cCtx.Args().Get(2))
+				recipient := common.HexToAddress(cCtx.Args().First())
 				clientset, err := initClient(ctx)
 				if err != nil {
 					return err

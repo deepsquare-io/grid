@@ -80,7 +80,7 @@ var flags = []cli.Flag{
 	},
 	&cli.BoolFlag{
 		Name:        "wei",
-		Usage:       "Show in wei.",
+		Usage:       "Use wei.",
 		Destination: &wei,
 	},
 }

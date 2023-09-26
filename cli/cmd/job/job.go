@@ -19,10 +19,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
 
 	"github.com/deepsquare-io/the-grid/cli/deepsquare"
+	"github.com/deepsquare-io/the-grid/cli/internal/ether"
 	"github.com/deepsquare-io/the-grid/cli/metascheduler"
+	"github.com/erikgeiser/promptkit/confirmation"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -36,6 +39,10 @@ var (
 	metaschedulerSmartContract string
 	ethHexPK                   string
 	panicReason                string
+
+	wei   bool
+	time  bool
+	force bool
 )
 
 var flags = []cli.Flag{
@@ -76,6 +83,25 @@ var panicFlags = append(
 	},
 )
 
+var topupFlags = append(
+	authFlags,
+	&cli.BoolFlag{
+		Name:        "wei",
+		Usage:       "Use wei.",
+		Destination: &wei,
+	},
+	&cli.BoolFlag{
+		Name:        "time",
+		Usage:       "Use duration instead of credits.",
+		Destination: &time,
+	},
+	&cli.BoolFlag{
+		Name:        "force",
+		Usage:       "Don't ask for confirmation.",
+		Destination: &force,
+	},
+)
+
 var Command = cli.Command{
 	Name:  "job",
 	Usage: "Manage jobs.",
@@ -84,17 +110,17 @@ var Command = cli.Command{
 			Name:      "get",
 			Usage:     "Get job.",
 			Flags:     flags,
-			ArgsUsage: "<0x job ID (32 bytes hex)>",
+			ArgsUsage: "<job ID>",
 			Action: func(cCtx *cli.Context) error {
 				if cCtx.NArg() != 1 {
 					return errors.New("missing arguments")
 				}
-				var jobID [32]byte
-				jobIDB, err := hexutil.Decode(cCtx.Args().First())
-				if err != nil {
-					return err
+				jobIDBig, ok := new(big.Int).SetString(cCtx.Args().First(), 10)
+				if !ok {
+					return errors.New("failed to parse job ID")
 				}
-				copy(jobID[:], jobIDB)
+				var jobID [32]byte
+				jobIDBig.FillBytes(jobID[:])
 				ctx := cCtx.Context
 				rpcClient, err := rpc.DialOptions(
 					ctx,
@@ -131,7 +157,7 @@ var Command = cli.Command{
 			Name:      "panic",
 			Usage:     "Panic a job (need a METASCHEDULER role).",
 			Flags:     panicFlags,
-			ArgsUsage: "<0x job ID (32 bytes hex)>",
+			ArgsUsage: "<job ID>",
 			Action: func(cCtx *cli.Context) error {
 				if cCtx.NArg() != 1 {
 					return errors.New("missing arguments")
@@ -140,12 +166,12 @@ var Command = cli.Command{
 				if err != nil {
 					return err
 				}
-				var jobID [32]byte
-				jobIDB, err := hexutil.Decode(cCtx.Args().First())
-				if err != nil {
-					return err
+				jobIDBig, ok := new(big.Int).SetString(cCtx.Args().First(), 10)
+				if !ok {
+					return errors.New("failed to parse job ID")
 				}
-				copy(jobID[:], jobIDB)
+				var jobID [32]byte
+				jobIDBig.FillBytes(jobID[:])
 				ctx := cCtx.Context
 				rpcClient, err := rpc.DialOptions(
 					ctx,
@@ -168,6 +194,108 @@ var Command = cli.Command{
 					UserPrivateKey:       pk,
 				})
 				if err := clientset.JobScheduler(nil).PanicJob(ctx, jobID, panicReason); err != nil {
+					return err
+				}
+				fmt.Println("done")
+				return nil
+			},
+		},
+		{
+			Name:      "topup",
+			Usage:     "Top up a job.",
+			Flags:     topupFlags,
+			ArgsUsage: "<job ID> <amount (use --time to topup with a duration)>",
+			Action: func(cCtx *cli.Context) error {
+				if cCtx.NArg() != 2 {
+					return errors.New("missing arguments")
+				}
+				pk, err := crypto.HexToECDSA(ethHexPK)
+				if err != nil {
+					return err
+				}
+				jobIDBig, ok := new(big.Int).SetString(cCtx.Args().First(), 10)
+				if !ok {
+					return fmt.Errorf("couldn't parse job ID: %s", cCtx.Args().First())
+				}
+				var jobID [32]byte
+				jobIDBig.FillBytes(jobID[:])
+
+				ctx := cCtx.Context
+				rpcClient, err := rpc.DialOptions(
+					ctx,
+					ethEndpointRPC,
+					rpc.WithHTTPClient(http.DefaultClient),
+				)
+				if err != nil {
+					return err
+				}
+				defer rpcClient.Close()
+				ethClientRPC := ethclient.NewClient(rpcClient)
+				chainID, err := ethClientRPC.ChainID(ctx)
+				if err != nil {
+					return err
+				}
+				clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
+					EthereumBackend:      ethClientRPC,
+					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
+					ChainID:              chainID,
+					UserPrivateKey:       pk,
+				})
+
+				var creditsWei *big.Int
+				var credits *big.Float
+				if !time {
+					if wei {
+						c, ok := new(big.Int).SetString(cCtx.Args().Get(1), 10)
+						if !ok {
+							return fmt.Errorf("couldn't parse amount: %s", cCtx.Args().Get(1))
+						}
+						creditsWei = c
+						credits = ether.FromWei(creditsWei)
+					} else {
+						c, ok := new(big.Float).SetString(cCtx.Args().Get(1))
+						if !ok {
+							return fmt.Errorf("couldn't parse amount: %s", cCtx.Args().Get(1))
+						}
+						credits = c
+						creditsWei = ether.ToWei(credits)
+					}
+				} else {
+					c, ok := new(big.Int).SetString(cCtx.Args().Get(1), 10)
+					if !ok {
+						return errors.New("couldn't parse duration")
+					}
+					job, err := clientset.JobFetcher().GetJob(ctx, jobID)
+					if err != nil {
+						return err
+					}
+					p, err := clientset.ProviderManager().GetProvider(ctx, job.ProviderAddr)
+					if err != nil {
+						return err
+					}
+					creditsWei = metascheduler.DurationToCredit(p.ProviderPrices, job.Definition, c)
+					credits = ether.FromWei(creditsWei)
+				}
+
+				if !force {
+					msg := fmt.Sprintf(
+						"Confirm topup of %s credits (%s wei) to job %s?",
+						credits.String(),
+						creditsWei.String(),
+						hexutil.Encode(jobID[:]),
+					)
+					input := confirmation.New(msg, confirmation.No)
+					ok, err := input.RunPrompt()
+					if err != nil {
+						return err
+					}
+					if !ok {
+						fmt.Println("Cancelled.")
+						return nil
+					}
+				}
+
+				if err := clientset.JobScheduler(nil).TopUpJob(ctx, jobID, creditsWei); err != nil {
 					return err
 				}
 				fmt.Println("done")

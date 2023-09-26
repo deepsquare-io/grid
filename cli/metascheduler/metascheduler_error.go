@@ -105,13 +105,13 @@ func ParseInvalidJob(inputs []interface{}) *InvalidJob {
 }
 
 func (e *InvalidJob) Error() string {
-	return "InvalidJob"
+	return "job not found or not valid"
 }
 
 type NoJob struct{}
 
 func (e *NoJob) Error() string {
-	return "NoJob"
+	return "no job"
 }
 
 func ParseNoJob(inputs []interface{}) error {
@@ -219,7 +219,7 @@ type JobHotStatusOnly struct {
 
 func (e *JobHotStatusOnly) Error() string {
 	return fmt.Sprintf(
-		"JobHotStatusOnly{Current: %s}",
+		"only applies to pending, meta-scheduled, scheduled and running job (current state: %s)",
 		e.Current,
 	)
 }
@@ -276,7 +276,7 @@ type InsufficientFunds struct {
 
 func (e *InsufficientFunds) Error() string {
 	return fmt.Sprintf(
-		"InsufficientFunds{Available: %s, Required: %s}",
+		"insufficient funds (available: %s, required: %s)",
 		e.Available,
 		e.Required,
 	)
@@ -304,7 +304,7 @@ func ParseInvalidJobDefinition(
 }
 
 func (e *InvalidJobDefinition) Error() string {
-	return "InvalidJobDefinition"
+	return "invalid job definition"
 }
 
 type RunningScheduledStatusOnly struct {
@@ -313,7 +313,7 @@ type RunningScheduledStatusOnly struct {
 
 func (e *RunningScheduledStatusOnly) Error() string {
 	return fmt.Sprintf(
-		"RunningScheduledStatusOnly{Current: %s}",
+		"only applies to running and scheduled job (current state: %s)",
 		e.Current,
 	)
 }
@@ -335,7 +335,7 @@ type MetaScheduledScheduledStatusOnly struct {
 
 func (e *MetaScheduledScheduledStatusOnly) Error() string {
 	return fmt.Sprintf(
-		"MetaScheduledScheduledStatusOnly{Current: %s}",
+		"only applies to meta-scheduled and scheduled job (current state: %s)",
 		e.Current,
 	)
 }
@@ -357,7 +357,7 @@ type RunningColdStatusOnly struct {
 
 func (e *RunningColdStatusOnly) Error() string {
 	return fmt.Sprintf(
-		"RunningColdStatusOnly{Current: %s}",
+		"only applies to running or terminated job (current state: %s)",
 		e.Current,
 	)
 }
