@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
-	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
-	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
+	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/logger"
+	"github.com/deepsquare-io/grid/sbatch-service/validate"
 	validator "github.com/go-playground/validator/v10"
 	shortuuid "github.com/lithammer/shortuuid/v4"
 	"github.com/vektah/gqlparser/v2/gqlerror"

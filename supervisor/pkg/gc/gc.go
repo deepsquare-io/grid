@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
+	"github.com/deepsquare-io/grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/pkg/job/scheduler"
+	"github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
+	"github.com/deepsquare-io/grid/supervisor/pkg/utils/try"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
 )

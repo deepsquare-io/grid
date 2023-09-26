@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/deepsquare-io/the-grid/cli/types"
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types"
+	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 

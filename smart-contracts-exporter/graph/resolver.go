@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/logger"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/logger"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"go.uber.org/zap"

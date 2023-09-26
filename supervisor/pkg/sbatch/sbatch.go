@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	sbatchv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/sbatchapi/v1alpha1"
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	sbatchv1alpha1 "github.com/deepsquare-io/grid/supervisor/generated/sbatchapi/v1alpha1"
+	"github.com/deepsquare-io/grid/supervisor/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )

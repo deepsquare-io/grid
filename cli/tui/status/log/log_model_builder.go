@@ -25,8 +25,8 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli/tui/style"
-	"github.com/deepsquare-io/the-grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/tui/style"
+	"github.com/deepsquare-io/grid/cli/types"
 )
 
 type ModelBuilder struct {

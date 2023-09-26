@@ -5,7 +5,7 @@ package mocksbatch
 import (
 	context "context"
 
-	sbatch "github.com/deepsquare-io/the-grid/supervisor/pkg/sbatch"
+	sbatch "github.com/deepsquare-io/grid/supervisor/pkg/sbatch"
 	mock "github.com/stretchr/testify/mock"
 )
 

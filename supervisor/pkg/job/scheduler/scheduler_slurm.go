@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
+	"github.com/deepsquare-io/grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/pkg/utils"
 	"go.uber.org/zap"
 )
 

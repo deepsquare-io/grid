@@ -22,7 +22,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/tui/channel"
+	"github.com/deepsquare-io/grid/cli/tui/channel"
 )
 
 // ExitMsg msg closes to log model

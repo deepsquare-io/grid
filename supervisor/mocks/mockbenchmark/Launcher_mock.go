@@ -5,7 +5,7 @@ package mockbenchmark
 import (
 	context "context"
 
-	benchmark "github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
+	benchmark "github.com/deepsquare-io/grid/supervisor/pkg/benchmark"
 
 	mock "github.com/stretchr/testify/mock"
 )

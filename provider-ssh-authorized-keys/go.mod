@@ -1,4 +1,4 @@
-module github.com/deepsquare-io/the-grid/provider-ssh-authorized-keys
+module github.com/deepsquare-io/grid/provider-ssh-authorized-keys
 
 go 1.21
 

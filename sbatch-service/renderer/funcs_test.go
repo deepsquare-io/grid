@@ -3,8 +3,8 @@ package renderer_test
 import (
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
-	"github.com/deepsquare-io/the-grid/sbatch-service/utils"
+	"github.com/deepsquare-io/grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/grid/sbatch-service/utils"
 	"github.com/stretchr/testify/require"
 )
 

@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 
-	"github.com/deepsquare-io/the-grid/ldap-connector/config"
-	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/metascheduler"
-	"github.com/deepsquare-io/the-grid/ldap-connector/ldap"
-	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
-	"github.com/deepsquare-io/the-grid/ldap-connector/watcher"
+	"github.com/deepsquare-io/grid/ldap-connector/config"
+	"github.com/deepsquare-io/grid/ldap-connector/gen/go/contracts/metascheduler"
+	"github.com/deepsquare-io/grid/ldap-connector/ldap"
+	"github.com/deepsquare-io/grid/ldap-connector/logger"
+	"github.com/deepsquare-io/grid/ldap-connector/watcher"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/urfave/cli/v2"

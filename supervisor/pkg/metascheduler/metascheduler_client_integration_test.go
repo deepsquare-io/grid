@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
+	"github.com/deepsquare-io/grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"

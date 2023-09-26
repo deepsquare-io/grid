@@ -70,7 +70,7 @@ OPTIONS:
 
 ## Download
 
-You can download static binaries in the [Releases tab](https://github.com/deepsquare-io/the-grid/releases?q=cli&expanded=true).
+You can download static binaries in the [Releases tab](https://github.com/deepsquare-io/grid/releases?q=cli&expanded=true).
 
 ## Build
 

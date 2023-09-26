@@ -1,4 +1,4 @@
-module github.com/deepsquare-io/the-grid/smart-contracts-exporter
+module github.com/deepsquare-io/grid/smart-contracts-exporter
 
 go 1.21
 

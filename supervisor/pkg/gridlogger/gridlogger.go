@@ -3,7 +3,7 @@ package gridlogger
 import (
 	"context"
 
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/logger/v1alpha1"
+	loggerv1alpha1 "github.com/deepsquare-io/grid/supervisor/generated/logger/v1alpha1"
 	"google.golang.org/grpc"
 )
 

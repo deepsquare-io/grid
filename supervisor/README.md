@@ -107,7 +107,7 @@ You can pull the image with:
 docker pull ghcr.io/deepsquare-io/supervisor:<version>
 ```
 
-More details [here](https://github.com/deepsquare-io/the-grid/pkgs/container/supervisor).
+More details [here](https://github.com/deepsquare-io/grid/pkgs/container/supervisor).
 
 ## Build
 

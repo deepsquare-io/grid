@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package metrics.v1;
 
-option go_package = "github.com/deepsquare-io/the-grid/smart-contracts-exporter/metrics/v1;metricsv1";
+option go_package = "github.com/deepsquare-io/grid/smart-contracts-exporter/metrics/v1;metricsv1";
 
 message DB {
   string version = 1;

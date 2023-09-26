@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
+	metaschedulerabi "github.com/deepsquare-io/grid/supervisor/generated/abi/metascheduler"
 )
 
 var labelRegex = regexp.MustCompile(`[a-zA-Z0-9\.\_]([-a-zA-Z0-9\.\_]*[a-zA-Z0-9\.\_])?`)

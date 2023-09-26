@@ -25,7 +25,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/deepsquare-io/the-grid/cli/internal/graphql"
+	"github.com/deepsquare-io/grid/cli/internal/graphql"
 )
 
 // The Service is used to interact with the sbatch hosting service.

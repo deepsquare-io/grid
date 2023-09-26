@@ -6,8 +6,8 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
-	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/renderer"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )

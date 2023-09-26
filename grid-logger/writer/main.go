@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
-	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	loggerv1alpha1 "github.com/deepsquare-io/grid/grid-logger/gen/go/logger/v1alpha1"
+	"github.com/deepsquare-io/grid/grid-logger/logger"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"

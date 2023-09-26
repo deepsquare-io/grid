@@ -1,4 +1,4 @@
-module github.com/deepsquare-io/the-grid/grid-logger
+module github.com/deepsquare-io/grid/grid-logger
 
 go 1.21
 

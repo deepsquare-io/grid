@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/ldap-connector/config"
-	"github.com/deepsquare-io/the-grid/ldap-connector/ldap"
-	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
+	"github.com/deepsquare-io/grid/ldap-connector/config"
+	"github.com/deepsquare-io/grid/ldap-connector/ldap"
+	"github.com/deepsquare-io/grid/ldap-connector/logger"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"

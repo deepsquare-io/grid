@@ -23,9 +23,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/cli/internal/log"
-	"github.com/deepsquare-io/the-grid/cli/tui/channel"
-	"github.com/deepsquare-io/the-grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/internal/log"
+	"github.com/deepsquare-io/grid/cli/tui/channel"
+	"github.com/deepsquare-io/grid/cli/types"
 	"go.uber.org/zap"
 )
 

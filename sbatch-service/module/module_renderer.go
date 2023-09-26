@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
 	"gopkg.in/yaml.v3"
 )
 

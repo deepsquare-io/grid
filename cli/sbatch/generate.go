@@ -24,7 +24,7 @@ import (
 	"github.com/99designs/gqlgen/api"
 	"github.com/99designs/gqlgen/codegen/config"
 	"github.com/99designs/gqlgen/plugin/modelgen"
-	"github.com/deepsquare-io/the-grid/cli/internal/log"
+	"github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 

@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
-	"github.com/deepsquare-io/the-grid/sbatch-service/utils"
+	"github.com/deepsquare-io/grid/sbatch-service/logger"
+	"github.com/deepsquare-io/grid/sbatch-service/utils"
 )
 
 func Shellcheck(script string) error {

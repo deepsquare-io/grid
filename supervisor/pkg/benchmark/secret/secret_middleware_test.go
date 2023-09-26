@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/secret"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/secret"
 	"github.com/stretchr/testify/assert"
 )
 

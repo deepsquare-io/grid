@@ -9,9 +9,9 @@ import (
 
 	event "github.com/ethereum/go-ethereum/event"
 
-	metascheduler "github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
+	metascheduler "github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
+	metaschedulerabi "github.com/deepsquare-io/grid/supervisor/generated/abi/metascheduler"
 
 	mock "github.com/stretchr/testify/mock"
 )

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/deepsquare-io/the-grid/ldap-connector/validate"
+	"github.com/deepsquare-io/grid/ldap-connector/validate"
 	"gopkg.in/yaml.v3"
 )
 

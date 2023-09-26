@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/hash"
+	"github.com/deepsquare-io/grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/pkg/job/scheduler"
+	"github.com/deepsquare-io/grid/supervisor/pkg/utils/hash"
 	"go.uber.org/zap"
 )
 

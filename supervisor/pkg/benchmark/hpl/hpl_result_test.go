@@ -7,7 +7,7 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/hpl"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/hpl"
 	"github.com/stretchr/testify/require"
 )
 

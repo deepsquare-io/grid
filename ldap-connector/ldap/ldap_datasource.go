@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/ldap-connector/config"
-	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
-	"github.com/deepsquare-io/the-grid/ldap-connector/validate"
+	"github.com/deepsquare-io/grid/ldap-connector/config"
+	"github.com/deepsquare-io/grid/ldap-connector/logger"
+	"github.com/deepsquare-io/grid/ldap-connector/validate"
 	"github.com/go-ldap/ldap/v3"
 	"go.uber.org/zap"
 )
@@ -45,7 +45,11 @@ func New(
 		if caFile != "" {
 			certs, err := os.ReadFile(caFile)
 			if err != nil {
-				logger.I.Error("failed to read caFile", zap.String("caFile", caFile), zap.Error(err))
+				logger.I.Error(
+					"failed to read caFile",
+					zap.String("caFile", caFile),
+					zap.Error(err),
+				)
 			}
 
 			if ok := rootCAs.AppendCertsFromPEM(certs); !ok {

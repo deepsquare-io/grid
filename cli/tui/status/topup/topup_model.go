@@ -26,11 +26,11 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	"github.com/deepsquare-io/the-grid/cli/internal/ether"
-	"github.com/deepsquare-io/the-grid/cli/tui/channel"
-	"github.com/deepsquare-io/the-grid/cli/types"
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/internal/ether"
+	"github.com/deepsquare-io/grid/cli/tui/channel"
+	"github.com/deepsquare-io/grid/cli/types"
+	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum/common"
 )
 

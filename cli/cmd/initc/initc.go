@@ -23,7 +23,7 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/cli/internal/wordlists"
+	"github.com/deepsquare-io/grid/cli/internal/wordlists"
 	"github.com/urfave/cli/v2"
 )
 

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/logger"
 )
 
 var secret = generateSecret()

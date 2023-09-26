@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils/try"
+	"github.com/deepsquare-io/grid/supervisor/pkg/utils/try"
 	"github.com/stretchr/testify/require"
 )
 

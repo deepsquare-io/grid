@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
-	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockmetascheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/lock"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/jobapi"
+	supervisorv1alpha1 "github.com/deepsquare-io/grid/supervisor/generated/supervisor/v1alpha1"
+	"github.com/deepsquare-io/grid/supervisor/mocks/mockmetascheduler"
+	"github.com/deepsquare-io/grid/supervisor/pkg/job/lock"
+	"github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
+	"github.com/deepsquare-io/grid/supervisor/pkg/server/jobapi"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )

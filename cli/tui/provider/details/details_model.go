@@ -20,7 +20,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types"
 )
 
 type KeyMap struct {

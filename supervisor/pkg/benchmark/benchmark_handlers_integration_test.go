@@ -16,11 +16,11 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/hpl"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/ior"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/secret"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/speedtest"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/hpl"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/ior"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/secret"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/speedtest"
 	"github.com/stretchr/testify/require"
 )
 

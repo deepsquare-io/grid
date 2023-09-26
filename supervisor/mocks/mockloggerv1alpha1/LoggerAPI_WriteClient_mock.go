@@ -5,7 +5,7 @@ package mockloggerv1alpha1
 import (
 	context "context"
 
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/logger/v1alpha1"
+	loggerv1alpha1 "github.com/deepsquare-io/grid/supervisor/generated/logger/v1alpha1"
 	metadata "google.golang.org/grpc/metadata"
 
 	mock "github.com/stretchr/testify/mock"

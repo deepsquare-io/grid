@@ -1,4 +1,4 @@
-module github.com/deepsquare-io/the-grid/sbatch-service
+module github.com/deepsquare-io/grid/sbatch-service
 
 go 1.21
 

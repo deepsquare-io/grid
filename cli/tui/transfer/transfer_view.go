@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/deepsquare-io/the-grid/cli/internal/utils"
-	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/grid/cli/internal/utils"
+	"github.com/deepsquare-io/grid/cli/tui/style"
 )
 
 func (m model) loading() string {

@@ -18,7 +18,7 @@ package metascheduler
 import (
 	"math/big"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/cli/types/abi/metascheduler"
+	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 )
 
 func DurationToCredit(

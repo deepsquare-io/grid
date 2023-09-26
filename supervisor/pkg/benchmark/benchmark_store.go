@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/ior"
+	"github.com/deepsquare-io/grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/ior"
 	"go.uber.org/zap"
 )
 

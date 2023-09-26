@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	sbatchapiv1alpha1 "github.com/deepsquare-io/the-grid/sbatch-service/gen/go/sbatchapi/v1alpha1"
-	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
-	"github.com/deepsquare-io/the-grid/sbatch-service/storage"
+	sbatchapiv1alpha1 "github.com/deepsquare-io/grid/sbatch-service/gen/go/sbatchapi/v1alpha1"
+	"github.com/deepsquare-io/grid/sbatch-service/logger"
+	"github.com/deepsquare-io/grid/sbatch-service/storage"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

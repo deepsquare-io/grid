@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/sbatch-service/storage"
+	"github.com/deepsquare-io/grid/sbatch-service/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )

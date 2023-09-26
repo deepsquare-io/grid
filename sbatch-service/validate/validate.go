@@ -1,7 +1,7 @@
 package validate
 
 import (
-	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
+	"github.com/deepsquare-io/grid/sbatch-service/logger"
 	"github.com/go-playground/validator/v10"
 )
 

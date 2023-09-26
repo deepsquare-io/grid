@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/logger"
 	"go.uber.org/zap"
 )
 

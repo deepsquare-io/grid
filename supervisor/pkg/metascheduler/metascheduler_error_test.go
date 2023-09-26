@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"testing"
 
-	errorsabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/errors"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
+	errorsabi "github.com/deepsquare-io/grid/supervisor/generated/abi/errors"
+	"github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"

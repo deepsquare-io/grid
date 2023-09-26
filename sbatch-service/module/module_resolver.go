@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"

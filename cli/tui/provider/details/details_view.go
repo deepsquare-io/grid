@@ -21,7 +21,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/grid/cli/tui/style"
 )
 
 func (m model) headerView() string {

@@ -5,7 +5,7 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/logger"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/logger"
 	"go.uber.org/zap"
 )
 

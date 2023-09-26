@@ -5,7 +5,7 @@ package mockgridlogger
 import (
 	context "context"
 
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/logger/v1alpha1"
+	loggerv1alpha1 "github.com/deepsquare-io/grid/supervisor/generated/logger/v1alpha1"
 
 	mock "github.com/stretchr/testify/mock"
 )

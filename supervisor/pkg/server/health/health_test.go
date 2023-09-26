@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	healthv1 "github.com/deepsquare-io/the-grid/supervisor/generated/grpc/health/v1"
-	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockhealthv1"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/server/health"
+	healthv1 "github.com/deepsquare-io/grid/supervisor/generated/grpc/health/v1"
+	"github.com/deepsquare-io/grid/supervisor/mocks/mockhealthv1"
+	"github.com/deepsquare-io/grid/supervisor/pkg/server/health"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )

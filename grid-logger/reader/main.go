@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/deepsquare-io/the-grid/grid-logger/logger"
-	"github.com/deepsquare-io/the-grid/grid-logger/reader/api"
+	"github.com/deepsquare-io/grid/grid-logger/logger"
+	"github.com/deepsquare-io/grid/grid-logger/reader/api"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"

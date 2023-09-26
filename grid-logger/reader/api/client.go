@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
-	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	loggerv1alpha1 "github.com/deepsquare-io/grid/grid-logger/gen/go/logger/v1alpha1"
+	"github.com/deepsquare-io/grid/grid-logger/logger"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 	"go.uber.org/zap"

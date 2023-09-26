@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/grid-logger/server/crypto"
+	"github.com/deepsquare-io/grid/grid-logger/server/crypto"
 )
 
 func TestEncryptDecrypt(t *testing.T) {

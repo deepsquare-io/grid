@@ -5,7 +5,7 @@ package mockscheduler
 import (
 	context "context"
 
-	scheduler "github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
+	scheduler "github.com/deepsquare-io/grid/supervisor/pkg/job/scheduler"
 	mock "github.com/stretchr/testify/mock"
 )
 

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
+	"github.com/deepsquare-io/grid/supervisor/mocks/mockscheduler"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark"
+	"github.com/deepsquare-io/grid/supervisor/pkg/job/scheduler"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )

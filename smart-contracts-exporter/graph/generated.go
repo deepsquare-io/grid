@@ -15,8 +15,8 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/graph/model"
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/graph/scalar"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/graph/model"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/graph/scalar"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )

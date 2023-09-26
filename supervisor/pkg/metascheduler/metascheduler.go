@@ -3,8 +3,8 @@ package metascheduler
 import (
 	"context"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	metaschedulerabi "github.com/deepsquare-io/grid/supervisor/generated/abi/metascheduler"
+	"github.com/deepsquare-io/grid/supervisor/logger"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/event"
 	"go.uber.org/zap"

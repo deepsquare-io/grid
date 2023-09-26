@@ -26,8 +26,8 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/cli/internal/graphql"
-	"github.com/deepsquare-io/the-grid/cli/sbatch"
+	"github.com/deepsquare-io/grid/cli/internal/graphql"
+	"github.com/deepsquare-io/grid/cli/sbatch"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v3"
 )

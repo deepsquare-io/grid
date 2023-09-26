@@ -5,10 +5,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/deepsquare-io/the-grid/ldap-connector/gen/go/contracts/metascheduler"
-	"github.com/deepsquare-io/the-grid/ldap-connector/ldap"
-	"github.com/deepsquare-io/the-grid/ldap-connector/logger"
-	"github.com/deepsquare-io/the-grid/ldap-connector/validate"
+	"github.com/deepsquare-io/grid/ldap-connector/gen/go/contracts/metascheduler"
+	"github.com/deepsquare-io/grid/ldap-connector/ldap"
+	"github.com/deepsquare-io/grid/ldap-connector/logger"
+	"github.com/deepsquare-io/grid/ldap-connector/validate"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"go.uber.org/zap"
 )
@@ -64,7 +64,10 @@ func (w *Watcher) Watch(parent context.Context) error {
 	}
 }
 
-func (w *Watcher) handleEvent(parent context.Context, event *metascheduler.MetaSchedulerNewJobRequestEvent) error {
+func (w *Watcher) handleEvent(
+	parent context.Context,
+	event *metascheduler.MetaSchedulerNewJobRequestEvent,
+) error {
 	user := strings.ToLower(event.CustomerAddr.Hex())
 	if errMsg := validate.LDAPUserIsValid(user); errMsg != "" {
 		logger.I.Error("user is invalid", zap.Error(errors.New(errMsg)))

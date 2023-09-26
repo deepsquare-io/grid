@@ -1,9 +1,9 @@
 package graph
 
 import (
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/contracts/metascheduler"
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/graph/model"
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/graph/scalar"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/contracts/metascheduler"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/graph/model"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/graph/scalar"
 	"github.com/ethereum/go-ethereum/common"
 )
 

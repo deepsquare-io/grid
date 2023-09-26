@@ -22,9 +22,9 @@ import (
 	"math/big"
 	"net/http"
 
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	"github.com/deepsquare-io/the-grid/cli/internal/ether"
-	"github.com/deepsquare-io/the-grid/cli/metascheduler"
+	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/internal/ether"
+	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"

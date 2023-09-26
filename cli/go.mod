@@ -1,4 +1,4 @@
-module github.com/deepsquare-io/the-grid/cli
+module github.com/deepsquare-io/grid/cli
 
 go 1.21
 

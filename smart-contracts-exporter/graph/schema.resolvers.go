@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/graph/model"
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/logger"
-	metricsv1 "github.com/deepsquare-io/the-grid/smart-contracts-exporter/metrics/v1"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/graph/model"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/logger"
+	metricsv1 "github.com/deepsquare-io/grid/smart-contracts-exporter/metrics/v1"
 	"github.com/prometheus/client_golang/api/prometheus/v1"
 	pmodel "github.com/prometheus/common/model"
 	"go.uber.org/zap"

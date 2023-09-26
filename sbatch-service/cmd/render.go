@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
-	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
-	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/logger"
+	"github.com/deepsquare-io/grid/sbatch-service/renderer"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"

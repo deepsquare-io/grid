@@ -18,7 +18,7 @@ package validator_test
 import (
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/cli/internal/validator"
+	"github.com/deepsquare-io/grid/cli/internal/validator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

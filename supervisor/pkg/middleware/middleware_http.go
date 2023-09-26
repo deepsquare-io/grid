@@ -5,7 +5,7 @@ import (
 	"net/http/httputil"
 	"strings"
 
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/logger"
 )
 
 type LoggingTransport struct {

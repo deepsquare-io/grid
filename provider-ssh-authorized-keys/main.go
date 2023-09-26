@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/provider-ssh-authorized-keys/gen/go/supervisor/v1alpha1"
-	"github.com/deepsquare-io/the-grid/provider-ssh-authorized-keys/logger"
+	supervisorv1alpha1 "github.com/deepsquare-io/grid/provider-ssh-authorized-keys/gen/go/supervisor/v1alpha1"
+	"github.com/deepsquare-io/grid/provider-ssh-authorized-keys/logger"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"

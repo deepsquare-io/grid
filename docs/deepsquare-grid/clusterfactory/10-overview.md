@@ -46,12 +46,12 @@ ClusterFactory will be primarily used to deploy the following stacks:
    - [NFS CSI driver](https://github.com/kubernetes-csi/csi-driver-nfs) and [local-path provisioner](https://github.com/rancher/local-path-provisioner): These components enable storage provisioning for Kubernetes.
    - [MariaDB](https://mariadb.org): The database used by SLURM, a batch job scheduler for High-Performance Computing (HPC).
    - [389ds](https://directory.fedoraproject.org): The LDAP server utilized by SLURM and the compute nodes.
-   - [Provider LDAP connector:](https://github.com/deepsquare-io/the-grid/tree/main/ldap-connector) This DeepSquare solution automatically registers DeepSquare users with the LDAP server.
+   - [Provider LDAP connector:](https://github.com/deepsquare-io/grid/tree/main/ldap-connector) This DeepSquare solution automatically registers DeepSquare users with the LDAP server.
    - [SLURM](https://slurm.schedmd.com/documentation.html): The batch job scheduler responsible for managing HPC workloads.
      - A login container: It serves as the main entry point for submitting SLURM batch scripts.
      - The controller container: It manages the SLURM system.
      - The database container: This connects MariaDB with the SLURM controller.
-   - [The provider Supervisor](https://github.com/deepsquare-io/the-grid/tree/main/supervisor): This DeepSquare solution bridges DeepSquare with SLURM.
+   - [The provider Supervisor](https://github.com/deepsquare-io/grid/tree/main/supervisor): This DeepSquare solution bridges DeepSquare with SLURM.
    - [CVMFS Stratum 1](https://cvmfs.readthedocs.io/en/stable/cpt-replica.html): A CVMFS server that replicates software exported on the compute nodes for the DeepSquare Grid.
 
 **Take time to learn about these softwares as they will be used during the deployment process.**

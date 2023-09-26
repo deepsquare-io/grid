@@ -23,8 +23,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/cli/metascheduler"
-	errorsabi "github.com/deepsquare-io/the-grid/cli/types/abi/errors"
+	"github.com/deepsquare-io/grid/cli/metascheduler"
+	errorsabi "github.com/deepsquare-io/grid/cli/types/abi/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"

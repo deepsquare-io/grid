@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 
-	supervisorv1alpha1 "github.com/deepsquare-io/the-grid/supervisor/generated/supervisor/v1alpha1"
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	supervisorv1alpha1 "github.com/deepsquare-io/grid/supervisor/generated/supervisor/v1alpha1"
+	"github.com/deepsquare-io/grid/supervisor/logger"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 )

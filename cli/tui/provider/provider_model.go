@@ -23,11 +23,11 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/deepsquare-io/the-grid/cli/internal/ether"
-	"github.com/deepsquare-io/the-grid/cli/internal/log"
-	"github.com/deepsquare-io/the-grid/cli/internal/utils"
-	"github.com/deepsquare-io/the-grid/cli/tui/provider/details"
-	"github.com/deepsquare-io/the-grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/internal/ether"
+	"github.com/deepsquare-io/grid/cli/internal/log"
+	"github.com/deepsquare-io/grid/cli/internal/utils"
+	"github.com/deepsquare-io/grid/cli/tui/provider/details"
+	"github.com/deepsquare-io/grid/cli/types"
 	"go.uber.org/zap"
 )
 

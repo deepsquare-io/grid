@@ -7,7 +7,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/graph/scalar"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/graph/scalar"
 )
 
 type CPUTimeMetrics struct {

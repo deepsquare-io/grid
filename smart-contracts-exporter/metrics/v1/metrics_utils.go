@@ -3,7 +3,7 @@ package metricsv1
 import (
 	"math/big"
 
-	"github.com/deepsquare-io/the-grid/smart-contracts-exporter/contracts/metascheduler"
+	"github.com/deepsquare-io/grid/smart-contracts-exporter/contracts/metascheduler"
 	"github.com/ethereum/go-ethereum/common"
 )
 

@@ -9,9 +9,9 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/secret"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
+	"github.com/deepsquare-io/grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/secret"
+	"github.com/deepsquare-io/grid/supervisor/pkg/utils"
 	"go.uber.org/zap"
 )
 

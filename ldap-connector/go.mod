@@ -1,4 +1,4 @@
-module github.com/deepsquare-io/the-grid/ldap-connector
+module github.com/deepsquare-io/grid/ldap-connector
 
 go 1.21
 

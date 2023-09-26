@@ -8,9 +8,9 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
-	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
-	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
+	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/logger"
+	"github.com/deepsquare-io/grid/sbatch-service/validate"
 	"go.uber.org/zap"
 )
 

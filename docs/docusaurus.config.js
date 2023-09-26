@@ -31,12 +31,12 @@ const config = {
           path: 'workflow',
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
-          editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/docs/',
+          editUrl: 'https://github.com/deepsquare-io/grid/tree/main/docs/',
         },
         blog: {
           showReadingTime: true,
           // Please change this to your repo.
-          editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/blog/',
+          editUrl: 'https://github.com/deepsquare-io/grid/tree/main/blog/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -52,7 +52,7 @@ const config = {
         path: 'deepsquare-grid',
         routeBasePath: 'deepsquare-grid',
         sidebarPath: require.resolve('./sidebars.js'),
-        editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/docs/',
+        editUrl: 'https://github.com/deepsquare-io/grid/tree/main/docs/',
       },
     ],
     [
@@ -62,7 +62,7 @@ const config = {
         path: 'blockchain',
         routeBasePath: 'blockchain',
         sidebarPath: require.resolve('./sidebars.js'),
-        editUrl: 'https://github.com/deepsquare-io/the-grid/tree/main/docs/',
+        editUrl: 'https://github.com/deepsquare-io/grid/tree/main/docs/',
       },
     ],
   ],
@@ -125,7 +125,7 @@ const config = {
             position: 'right',
           },
           {
-            href: 'https://github.com/deepsquare-io/the-grid',
+            href: 'https://github.com/deepsquare-io/grid',
             label: 'GitHub',
             position: 'right',
           },

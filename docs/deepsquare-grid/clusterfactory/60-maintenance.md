@@ -26,7 +26,7 @@ You can update the Helm subchart by bumping the version inside the `Chart.yaml`.
 
 Update the LDAP connector secrets and supervisor values.
 
-If you are using `dev` containers, the smart-contract address is always the [latest `smart-contract` release](https://github.com/deepsquare-io/the-grid/releases).
+If you are using `dev` containers, the smart-contract address is always the [latest `smart-contract` release](https://github.com/deepsquare-io/grid/releases).
 
 If you are using a stable version, the smart-contract address will be the one used on [app.deepsquare.run](https://app.deepsquare.run).
 

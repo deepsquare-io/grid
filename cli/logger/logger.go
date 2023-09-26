@@ -22,8 +22,8 @@ import (
 	"strings"
 	"time"
 
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/cli/internal/logger/v1alpha1"
-	"github.com/deepsquare-io/the-grid/cli/types"
+	loggerv1alpha1 "github.com/deepsquare-io/grid/cli/internal/logger/v1alpha1"
+	"github.com/deepsquare-io/grid/cli/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"

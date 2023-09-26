@@ -303,7 +303,7 @@ If you are using an another distributed file system, you can check the available
    type: Opaque
    stringData:
      AVAX_ENDPOINT_WS: wss://testnet.deepsquare.run/ws
-     # DeepSquare MetaScheduler smart contract, check [`the-grid` releases](https://github.com/deepsquare-io/the-grid/releases)
+     # DeepSquare MetaScheduler smart contract, check [`grid` releases](https://github.com/deepsquare-io/grid/releases)
      JOBMANAGER_SMART_CONTRACT: '0x3707aB457CF457275b7ec32e203c54df80C299d5'
 
      LDAP_URL: ldaps://dirsrv-389ds.ldap.svc.cluster.local:3636 # Kubernetes LDAP service domain name, change it if needed
@@ -1470,7 +1470,7 @@ The supervisor is configured in the `slurm-cluster` AppProject.
          endpoint:
            rpc: 'https://testnet.deepsquare.run/rpc'
            ws: 'wss://testnet.deepsquare.run/ws'
-         # DeepSquare MetaScheduler smart contract, check [`the-grid` releases](https://github.com/deepsquare-io/the-grid/releases)
+         # DeepSquare MetaScheduler smart contract, check [`grid` releases](https://github.com/deepsquare-io/grid/releases)
          smartContract: '0x3707aB457CF457275b7ec32e203c54df80C299d5'
 
        sbatchService:

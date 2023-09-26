@@ -3,8 +3,8 @@ package metascheduler_test
 import (
 	"testing"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/metascheduler"
+	metaschedulerabi "github.com/deepsquare-io/grid/supervisor/generated/abi/metascheduler"
+	"github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
 	"github.com/stretchr/testify/require"
 )
 

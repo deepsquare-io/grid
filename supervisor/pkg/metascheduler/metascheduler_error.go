@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
-	errorsabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/errors"
+	errorsabi "github.com/deepsquare-io/grid/supervisor/generated/abi/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/rpc"

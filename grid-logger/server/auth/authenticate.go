@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/deepsquare-io/the-grid/grid-logger/logger"
+	"github.com/deepsquare-io/grid/grid-logger/logger"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"

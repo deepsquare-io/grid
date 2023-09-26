@@ -1,4 +1,4 @@
-module github.com/deepsquare-io/the-grid/supervisor
+module github.com/deepsquare-io/grid/supervisor
 
 go 1.21
 

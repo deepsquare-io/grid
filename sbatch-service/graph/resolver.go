@@ -3,9 +3,9 @@
 package graph
 
 import (
-	"github.com/deepsquare-io/the-grid/sbatch-service/logger"
-	"github.com/deepsquare-io/the-grid/sbatch-service/renderer"
-	"github.com/deepsquare-io/the-grid/sbatch-service/storage"
+	"github.com/deepsquare-io/grid/sbatch-service/logger"
+	"github.com/deepsquare-io/grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/grid/sbatch-service/storage"
 )
 
 // This file will not be regenerated automatically.

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/supervisor/mocks/mockscheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/job/scheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/utils"
+	"github.com/deepsquare-io/grid/supervisor/mocks/mockscheduler"
+	"github.com/deepsquare-io/grid/supervisor/pkg/job/scheduler"
+	"github.com/deepsquare-io/grid/supervisor/pkg/utils"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 )

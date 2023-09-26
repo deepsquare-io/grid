@@ -31,7 +31,7 @@ graphql: graph/model/models_gen.go
 
 .PHONY: protos
 protos:
-	protoc --go_out=. --go_opt=module=github.com/deepsquare-io/the-grid/smart-contracts-exporter metrics/v1/metrics.proto
+	protoc --go_out=. --go_opt=module=github.com/deepsquare-io/grid/smart-contracts-exporter metrics/v1/metrics.proto
 
 graph/model/models_gen.go: ../schemas/statapi/schema.graphqls gqlgen.yml
 	go run github.com/99designs/gqlgen generate

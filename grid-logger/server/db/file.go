@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	loggerv1alpha1 "github.com/deepsquare-io/the-grid/grid-logger/gen/go/logger/v1alpha1"
-	"github.com/deepsquare-io/the-grid/grid-logger/logger"
-	"github.com/deepsquare-io/the-grid/grid-logger/server/crypto"
+	loggerv1alpha1 "github.com/deepsquare-io/grid/grid-logger/gen/go/logger/v1alpha1"
+	"github.com/deepsquare-io/grid/grid-logger/logger"
+	"github.com/deepsquare-io/grid/grid-logger/server/crypto"
 	"github.com/nxadm/tail"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"

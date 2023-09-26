@@ -3,9 +3,9 @@ package model_test
 import (
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/sbatch-service/graph/model"
-	"github.com/deepsquare-io/the-grid/sbatch-service/utils"
-	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
+	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/utils"
+	"github.com/deepsquare-io/grid/sbatch-service/validate"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

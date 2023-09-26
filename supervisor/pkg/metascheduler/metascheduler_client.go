@@ -6,8 +6,8 @@ import (
 	"crypto/ecdsa"
 	"math/big"
 
-	metaschedulerabi "github.com/deepsquare-io/the-grid/supervisor/generated/abi/metascheduler"
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
+	metaschedulerabi "github.com/deepsquare-io/grid/supervisor/generated/abi/metascheduler"
+	"github.com/deepsquare-io/grid/supervisor/logger"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"

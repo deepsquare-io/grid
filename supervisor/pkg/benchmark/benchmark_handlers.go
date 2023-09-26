@@ -7,11 +7,11 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/deepsquare-io/the-grid/supervisor/logger"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/hpl"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/ior"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/osu"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/speedtest"
+	"github.com/deepsquare-io/grid/supervisor/logger"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/hpl"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/ior"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/osu"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/speedtest"
 	"go.uber.org/zap"
 )
 

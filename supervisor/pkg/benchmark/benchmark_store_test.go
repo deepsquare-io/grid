@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark"
-	"github.com/deepsquare-io/the-grid/supervisor/pkg/benchmark/ior"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark"
+	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/ior"
 	"github.com/stretchr/testify/require"
 )
 

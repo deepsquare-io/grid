@@ -21,13 +21,13 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/the-grid/cli/deepsquare"
-	"github.com/deepsquare-io/the-grid/cli/tui/editor"
-	"github.com/deepsquare-io/the-grid/cli/tui/provider"
-	"github.com/deepsquare-io/the-grid/cli/tui/status"
-	"github.com/deepsquare-io/the-grid/cli/tui/status/log"
-	"github.com/deepsquare-io/the-grid/cli/tui/status/topup"
-	"github.com/deepsquare-io/the-grid/cli/tui/transfer"
+	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/tui/editor"
+	"github.com/deepsquare-io/grid/cli/tui/provider"
+	"github.com/deepsquare-io/grid/cli/tui/status"
+	"github.com/deepsquare-io/grid/cli/tui/status/log"
+	"github.com/deepsquare-io/grid/cli/tui/status/topup"
+	"github.com/deepsquare-io/grid/cli/tui/transfer"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )

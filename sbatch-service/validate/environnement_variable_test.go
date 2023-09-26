@@ -3,7 +3,7 @@ package validate_test
 import (
 	"testing"
 
-	"github.com/deepsquare-io/the-grid/sbatch-service/validate"
+	"github.com/deepsquare-io/grid/sbatch-service/validate"
 	"github.com/stretchr/testify/require"
 )
 

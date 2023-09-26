@@ -23,10 +23,10 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/deepsquare-io/the-grid/cli/internal/ether"
-	"github.com/deepsquare-io/the-grid/cli/internal/utils"
-	"github.com/deepsquare-io/the-grid/cli/metascheduler"
-	"github.com/deepsquare-io/the-grid/cli/tui/style"
+	"github.com/deepsquare-io/grid/cli/internal/ether"
+	"github.com/deepsquare-io/grid/cli/internal/utils"
+	"github.com/deepsquare-io/grid/cli/metascheduler"
+	"github.com/deepsquare-io/grid/cli/tui/style"
 )
 
 func indent(spaces int, v string) string {
