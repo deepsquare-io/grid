@@ -112,7 +112,7 @@ var Command = cli.Command{
 			Flags:     flags,
 			ArgsUsage: "<job ID>",
 			Action: func(cCtx *cli.Context) error {
-				if cCtx.NArg() != 1 {
+				if cCtx.NArg() < 1 {
 					return errors.New("missing arguments")
 				}
 				jobIDBig, ok := new(big.Int).SetString(cCtx.Args().First(), 10)
@@ -159,7 +159,7 @@ var Command = cli.Command{
 			Flags:     panicFlags,
 			ArgsUsage: "<job ID>",
 			Action: func(cCtx *cli.Context) error {
-				if cCtx.NArg() != 1 {
+				if cCtx.NArg() < 1 {
 					return errors.New("missing arguments")
 				}
 				pk, err := crypto.HexToECDSA(ethHexPK)
@@ -196,7 +196,7 @@ var Command = cli.Command{
 				if err := clientset.JobScheduler(nil).PanicJob(ctx, jobID, panicReason); err != nil {
 					return err
 				}
-				fmt.Println("done")
+				fmt.Println("Done.")
 				return nil
 			},
 		},
@@ -206,7 +206,7 @@ var Command = cli.Command{
 			Flags:     topupFlags,
 			ArgsUsage: "<job ID> <amount (use --time to topup with a duration)>",
 			Action: func(cCtx *cli.Context) error {
-				if cCtx.NArg() != 2 {
+				if cCtx.NArg() < 2 {
 					return errors.New("missing arguments")
 				}
 				pk, err := crypto.HexToECDSA(ethHexPK)

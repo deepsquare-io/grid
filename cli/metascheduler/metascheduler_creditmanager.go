@@ -23,7 +23,7 @@ func (c *creditManager) Balance(ctx context.Context) (*big.Int, error) {
 func (c *creditManager) BalanceOf(ctx context.Context, address common.Address) (*big.Int, error) {
 	balance, err := c.IERC20.BalanceOf(&bind.CallOpts{
 		Context: ctx,
-	}, c.from())
+	}, address)
 	return balance, WrapError(err)
 }
 
@@ -32,7 +32,7 @@ func (c *creditManager) Transfer(ctx context.Context, to common.Address, amount 
 	if err != nil {
 		return fmt.Errorf("failed to create auth options: %w", err)
 	}
-	tx, err := c.IERC20.Transfer(opts, c.from(), amount)
+	tx, err := c.IERC20.Transfer(opts, to, amount)
 	if err != nil {
 		return WrapError(err)
 	}

@@ -95,7 +95,7 @@ var Command = cli.Command{
 			ArgsUsage: "<0x recipient address> <amount>",
 			Flags:     flags,
 			Action: func(cCtx *cli.Context) error {
-				if cCtx.NArg() != 2 {
+				if cCtx.NArg() < 2 {
 					return errors.New("missing arguments")
 				}
 				if wei {
@@ -159,13 +159,14 @@ var Command = cli.Command{
 				}
 
 				var amount *big.Int
-				if cCtx.NArg() != 1 {
-					amount, err = clientset.CreditManager().Balance(ctx)
+				if cCtx.NArg() >= 1 {
+					amount, err = clientset.CreditManager().
+						BalanceOf(ctx, common.HexToAddress(cCtx.Args().First()))
 					if err != nil {
 						return err
 					}
 				} else {
-					amount, err = clientset.CreditManager().BalanceOf(ctx, common.HexToAddress(cCtx.Args().First()))
+					amount, err = clientset.CreditManager().Balance(ctx)
 					if err != nil {
 						return err
 					}

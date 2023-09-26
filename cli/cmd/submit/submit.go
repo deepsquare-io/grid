@@ -193,7 +193,7 @@ var Command = cli.Command{
 	ArgsUsage: "<job.yaml>",
 	Flags:     flags,
 	Action: func(cCtx *cli.Context) error {
-		if cCtx.NArg() != 1 {
+		if cCtx.NArg() < 1 {
 			return errors.New("missing arguments")
 		}
 		if credits == nil {
