@@ -79,6 +79,11 @@ generate:
 $(golint):
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
+.PHONY: license
+license:
+	go run ./licensing.go
+
+
 .PHONY: lint
 lint: $(golint)
 	$(golint) run ./...

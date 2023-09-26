@@ -1,4 +1,4 @@
-// Copyright (C) 2023 DeepSquare
+// Copyright (C) 2023 DeepSquare Association
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -111,6 +111,10 @@ var app = &cli.App{
 	Usage:   "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
 	Flags:   flags,
 	Suggest: true,
+	Copyright: `deepsquaretui  Copyright (C) 2023 DeepSquare Association
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under certain conditions.`,
 	Commands: []*cli.Command{
 		&allowance.Command,
 		&credit.Command,
