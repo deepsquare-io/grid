@@ -48,7 +48,7 @@ const licenseGPLFormat = `// Copyright (C) %d %s
 `
 
 func licenseGPL() string {
-	return fmt.Sprintf(licenseGPLFormat, time.Now().Year(), "DeepSquare Asociation")
+	return fmt.Sprintf(licenseGPLFormat, time.Now().Year(), "DeepSquare Association")
 }
 
 func processDirectory(dirPath string, filePaths chan<- string) error {
@@ -76,6 +76,11 @@ func processDirectory(dirPath string, filePaths chan<- string) error {
 }
 
 func main() {
+	opt := imports.Options{
+		Comments:   true,
+		FormatOnly: false,
+	}
+	license := licenseGPL()
 	filePaths := make(chan string, 1)
 	go func() {
 		defer close(filePaths)
@@ -93,23 +98,32 @@ func main() {
 		if strings.Contains(string(data), "DO NOT EDIT") {
 			continue
 		}
-		line, _, _ := strings.Cut(string(data), "\n")
-		if strings.Contains(line, "Copyright") {
-			data = CopyrightYearRegex.ReplaceAll(
-				data,
-				[]byte(fmt.Sprintf("Copyright${1}%d${2}\n", time.Now().Year())),
+		lines := strings.Split(string(data), "\n")
+		if strings.Contains(lines[0], "Copyright") {
+			// Delete the first block of lines that starts with "//"
+			for i, line := range lines {
+				if !strings.HasPrefix(line, "//") {
+					data = []byte(strings.Join(lines[i:], "\n"))
+					break
+				}
+			}
+
+			// Replace license
+			formatted, err := imports.Process(
+				path,
+				[]byte(license+"\n"+string(data)),
+				&opt,
 			)
-			if err := os.WriteFile(path, data, os.ModePerm); err != nil {
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			if err := os.WriteFile(path, formatted, os.ModePerm); err != nil {
 				log.Fatal(err.Error())
 			}
 			continue
 		}
-		license := licenseGPL()
 		if !strings.HasPrefix(string(data), license) {
-			opt := imports.Options{
-				Comments:   true,
-				FormatOnly: false,
-			}
 			formatted, err := imports.Process(
 				path,
 				[]byte(license+"\n"+string(data)),

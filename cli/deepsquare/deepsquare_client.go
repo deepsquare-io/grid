@@ -1,19 +1,18 @@
 // Copyright (C) 2023 DeepSquare Association
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
+// it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
+// You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package deepsquare provides a all-in-one Client that implements all of the DeepSquare services.
 package deepsquare
 
 import (
@@ -43,10 +42,6 @@ const (
 	DefaultWSEndpoint     = "wss://testnet.deepsquare.run/ws"
 	DefaultSBatchEndpoint = "https://sbatch.deepsquare.run/graphql"
 	DefaultLoggerEndpoint = "https://grid-logger.deepsquare.run"
-)
-
-var (
-	DefaultMetaSchedulerAddress = common.HexToAddress("0x3707aB457CF457275b7ec32e203c54df80C299d5")
 )
 
 // Client implements all the services required to make unary calls to DeepSquare APIs.
@@ -80,9 +75,6 @@ func (c *ClientConfig) applyDefault() {
 	}
 	if c.RPCEndpoint == "" {
 		c.RPCEndpoint = DefaultRPCEndpoint
-	}
-	if (c.MetaschedulerAddress == common.Address{}) {
-		c.MetaschedulerAddress = DefaultMetaSchedulerAddress
 	}
 	if c.SBatchEndpoint == "" {
 		c.SBatchEndpoint = DefaultSBatchEndpoint
@@ -209,9 +201,6 @@ func (c *WatcherConfig) applyDefault() {
 	}
 	if c.WSEndpoint == "" {
 		c.WSEndpoint = DefaultWSEndpoint
-	}
-	if (c.MetaschedulerAddress == common.Address{}) {
-		c.MetaschedulerAddress = DefaultMetaSchedulerAddress
 	}
 	if c.TLSConfig == nil {
 		caCertPool, err := x509.SystemCertPool()

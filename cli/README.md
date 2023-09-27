@@ -68,19 +68,69 @@ OPTIONS:
 
 ```
 
-## Download
+## Install binraries
 
 You can download static binaries in the [Releases tab](https://github.com/deepsquare-io/grid/releases?q=cli&expanded=true).
 
-## Build
+## Install from source
 
-The `main` is stored in the `cmd` package. You can build the CLI using the following:
+Install Go and run:
 
-```sh
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o grid ./cmd
+```shell
+go install github.com/deepsquare-io/grid/cli/cmd/deepsquaretui@latest
 ```
 
-More examples are stored in the [`scripts/999.build-all.sh` script](scripts/999.build-all.sh).
+## Build
+
+The `main` is stored in the `cmd/deepsquaretui` package. You can build the CLI using the following:
+
+```sh
+make
+# Defaults to: make bin/deepsquaretui
+```
+
+Available `make`` commands:
+
+```shell
+# Build
+bin/deepsquaretui
+bin/deepsquaretui-darwin-amd64
+bin/deepsquaretui-darwin-arm64
+bin/deepsquaretui-freebsd-amd64
+bin/deepsquaretui-freebsd-arm64
+bin/deepsquaretui-linux-amd64
+bin/deepsquaretui-linux-arm64
+bin/deepsquaretui-linux-mips64
+bin/deepsquaretui-linux-mips64le
+bin/deepsquaretui-linux-ppc64
+bin/deepsquaretui-linux-ppc64le
+bin/deepsquaretui-linux-riscv64
+bin/deepsquaretui-linux-s390x
+bin/deepsquaretui-windows-amd64.exe
+build-all
+
+# Checksums
+bin/checksums.md
+bin/checksums.txt
+
+# Clean builds
+clean
+
+# Generate code
+generate
+
+# Generate license
+license
+
+# Lint code
+lint
+
+# Run unit tests
+unit
+
+# Print version that will be used for the next build.
+version
+```
 
 ## Licence
 

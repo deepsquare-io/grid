@@ -97,3 +97,7 @@ version:
 	@echo VERSION_CORE=${VERSION_CORE}
 	@echo VERSION_CORE_DEV=${VERSION_CORE_DEV}
 	@echo VERSION=${VERSION}
+
+.PHONY: list
+list:
+	@LC_ALL=C $(MAKE) -pRrq -f $(firstword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/(^|\n)# Files(\n|$$)/,/(^|\n)# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | grep -E -v -e '^[^[:alnum:]]' -e '^$@$$'

@@ -22,14 +22,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
 	"golang.org/x/tools/imports"
 )
-
-var CopyrightYearRegex = regexp.MustCompile(`Copyright(.*)\d{4}(.*)\n`)
 
 const licenseGPLFormat = `// Copyright (C) %d %s
 //
@@ -64,11 +61,11 @@ const licenseLGPLFormat = `// Copyright (C) %d %s
 `
 
 func licenseGPL() string {
-	return fmt.Sprintf(licenseGPLFormat, time.Now().Year(), "DeepSquare Asociation")
+	return fmt.Sprintf(licenseGPLFormat, time.Now().Year(), "DeepSquare Association")
 }
 
 func licenseLGPL() string {
-	return fmt.Sprintf(licenseGPLFormat, time.Now().Year(), "DeepSquare Asociation")
+	return fmt.Sprintf(licenseLGPLFormat, time.Now().Year(), "DeepSquare Association")
 }
 
 func processDirectory(dirPath string, filePaths chan<- string) error {
@@ -96,6 +93,11 @@ func processDirectory(dirPath string, filePaths chan<- string) error {
 }
 
 func main() {
+	opt := imports.Options{
+		Comments:   true,
+		FormatOnly: false,
+	}
+
 	filePaths := make(chan string, 1)
 	go func() {
 		defer close(filePaths)
@@ -113,17 +115,7 @@ func main() {
 		if strings.Contains(string(data), "DO NOT EDIT") {
 			continue
 		}
-		line, _, _ := strings.Cut(string(data), "\n")
-		if strings.Contains(line, "Copyright") {
-			data = CopyrightYearRegex.ReplaceAll(
-				data,
-				[]byte(fmt.Sprintf("Copyright${1}%d${2}\n", time.Now().Year())),
-			)
-			if err := os.WriteFile(path, data, os.ModePerm); err != nil {
-				log.Fatal(err.Error())
-			}
-			continue
-		}
+
 		var license string
 		switch {
 		case strings.HasPrefix(path, "cmd") || strings.HasPrefix(path, "tui"):
@@ -131,11 +123,33 @@ func main() {
 		default:
 			license = licenseLGPL()
 		}
-		if !strings.HasPrefix(string(data), license) {
-			opt := imports.Options{
-				Comments:   true,
-				FormatOnly: false,
+
+		lines := strings.Split(string(data), "\n")
+		if strings.Contains(lines[0], "Copyright") {
+			// Delete the first block of lines that starts with "//"
+			for i, line := range lines {
+				if !strings.HasPrefix(line, "//") {
+					data = []byte(strings.Join(lines[i:], "\n"))
+					break
+				}
 			}
+
+			// Replace license
+			formatted, err := imports.Process(
+				path,
+				[]byte(license+"\n"+string(data)),
+				&opt,
+			)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			if err := os.WriteFile(path, formatted, os.ModePerm); err != nil {
+				log.Fatal(err.Error())
+			}
+			continue
+		}
+		if !strings.HasPrefix(string(data), license) {
 			formatted, err := imports.Process(
 				path,
 				[]byte(license+"\n"+string(data)),

@@ -71,7 +71,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
-		Value:       deepsquare.DefaultMetaSchedulerAddress.Hex(),
+		Required:    true,
 		Usage:       "Metascheduler smart-contract address.",
 		Destination: &metaschedulerSmartContract,
 		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},

@@ -1,4 +1,4 @@
-// Copyright (C) 2023 DeepSquare Asociation
+// Copyright (C) 2023 DeepSquare Association
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -108,7 +108,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
-		Value:       deepsquare.DefaultMetaSchedulerAddress.Hex(),
+		Required:    true,
 		Usage:       "Metascheduler smart-contract address.",
 		Destination: &metaschedulerSmartContract,
 		Category:    "DeepSquare Settings:",
