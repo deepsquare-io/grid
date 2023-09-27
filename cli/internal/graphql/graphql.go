@@ -18,11 +18,13 @@ package graphql
 
 import "github.com/vektah/gqlparser/v2/gqlerror"
 
+// Request is used to build a GraphQL query.
 type Request struct {
 	Query     string                 `json:"query"`
 	Variables map[string]interface{} `json:"variables,omitempty"`
 }
 
+// Response is the standard object returned by a GraphQL API.
 type Response[T any] struct {
 	Data   T                `json:"data,omitempty"`
 	Errors []gqlerror.Error `json:"errors,omitempty"`

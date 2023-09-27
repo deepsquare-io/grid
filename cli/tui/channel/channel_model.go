@@ -22,8 +22,10 @@ type initMsg struct {
 	Cancel func() error
 }
 
+// DisposeMsg is a signal used to close the channel of the Model.
 type DisposeMsg[T any] struct{}
 
+// Model is the object used to implement a bubbletea model with a channel.
 type Model[T any] struct {
 	Channel chan T
 	// OnInit is used to insert data into the channel and initialize the dispose method.
@@ -44,12 +46,14 @@ func (m *Model[T]) tick() tea.Msg {
 	return <-m.Channel
 }
 
+// Init emit a signal used to start listening the channel.
 func (m Model[T]) Init() tea.Cmd {
 	return tea.Batch(
 		m.init, m.tick,
 	)
 }
 
+// Update prepare the dispose method and emit a tick for listening the channel.
 func (m Model[T]) Update(msg tea.Msg) (Model[T], tea.Cmd) {
 	switch msg := msg.(type) {
 	case initMsg:
@@ -66,6 +70,7 @@ func (m Model[T]) Update(msg tea.Msg) (Model[T], tea.Cmd) {
 	return m, nil
 }
 
+// Dispose is the signal that closes the model and executes the dispose function.
 func (m *Model[T]) Dispose() tea.Msg {
 	return DisposeMsg[T]{}
 }

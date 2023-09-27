@@ -22,6 +22,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 )
 
+// FromWei converts a wei value to a readable value by multiplying it by 1e18.
 func FromWei(amount *big.Int) *big.Float {
 	if amount == nil {
 		return new(big.Float)
@@ -30,6 +31,7 @@ func FromWei(amount *big.Int) *big.Float {
 	return new(big.Float).Quo(wei, big.NewFloat(params.Ether))
 }
 
+// ToWei converts a value to wei by dividing it by 1e18.
 func ToWei(value *big.Float) *big.Int {
 	if value == nil {
 		return new(big.Int)

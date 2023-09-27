@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
-Allowance provides commands to manage the allowance of an user.
+Package allowance provides subcommands to manage the allowance of an user.
 
 USAGE:
 
@@ -97,6 +97,7 @@ var flags = []cli.Flag{
 	},
 }
 
+// Command is the allowance subcommand used to manage allowance.
 var Command = cli.Command{
 	Name:  "allowance",
 	Usage: "Manage allowance.",

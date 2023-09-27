@@ -26,10 +26,12 @@ import (
 	"github.com/deepsquare-io/grid/cli/types"
 )
 
+// ModelBuilder contains the dependencies used to build the bubbletea Model for the provider page.
 type ModelBuilder struct {
 	Client deepsquare.Client
 }
 
+// Build the bubbletea Model for the provider page.
 func (b *ModelBuilder) Build() tea.Model {
 	if b.Client == nil {
 		panic("Client is nil")
@@ -72,7 +74,7 @@ func (b *ModelBuilder) Build() tea.Model {
 	return &model{
 		table: t,
 		help:  help,
-		keyMap: KeyMap{
+		keyMap: keyMap{
 			TableKeyMap: tableKeymap,
 			ShowProviderDetails: key.NewBinding(
 				key.WithKeys("enter"),

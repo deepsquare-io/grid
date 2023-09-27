@@ -15,19 +15,31 @@
 
 package metascheduler
 
+// JobStatus is the job status stored in the smart-contract.
 type JobStatus uint8
 
 const (
-	JobStatusPending       JobStatus = 0
+	// JobStatusPending means the job has been submitted, but the meta-scheduler
+	// hasn't considered to schedule it yet.
+	JobStatusPending JobStatus = 0
+	// JobStatusMetaScheduled means that the job has been scheduled to a cluster, but that cluster has not yet handled it.
 	JobStatusMetaScheduled JobStatus = 1
-	JobStatusScheduled     JobStatus = 2
-	JobStatusRunning       JobStatus = 3
-	JobStatusCancelled     JobStatus = 4
-	JobStatusFinished      JobStatus = 5
-	JobStatusFailed        JobStatus = 6
-	JobStatusOutOfCredits  JobStatus = 7
-	JobStatusPanicked      JobStatus = 8
-	JobStatusUnknown       JobStatus = 255
+	// JobStatusScheduled means that the job has been scheduled to a worker node.
+	JobStatusScheduled JobStatus = 2
+	// JobStatusRunning means that the job is running on a worker node.
+	JobStatusRunning JobStatus = 3
+	// JobStatusCancelled means that the job has been cancelled by the user or admin.
+	JobStatusCancelled JobStatus = 4
+	// JobStatusFinished means that the job has finished with success.
+	JobStatusFinished JobStatus = 5
+	// JobStatusFailed means that the job has failed.
+	JobStatusFailed JobStatus = 6
+	// JobStatusOutOfCredits means that the job has timed out.
+	JobStatusOutOfCredits JobStatus = 7
+	// JobStatusPanicked means that the job has failed from an unexpected error.
+	JobStatusPanicked JobStatus = 8
+	// JobStatusUnknown is a unknown state.
+	JobStatusUnknown JobStatus = 255
 )
 
 func (s JobStatus) String() string {

@@ -13,12 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package styles provides object for styling the TUI.
+// Package style provides object for styling the TUI.
 package style
 
 import "github.com/charmbracelet/lipgloss"
 
 var (
+	// StandardHeight is the height of the main window.
 	StandardHeight       = 13
 	primaryDarkestColor  = lipgloss.Color("#9202de")
 	primaryColor         = lipgloss.Color("#BD43FD")
@@ -26,12 +27,18 @@ var (
 	errorColor           = lipgloss.Color("#ff3333")
 	green                = lipgloss.Color("#04B575")
 	white                = lipgloss.Color("#FAFAFA")
-	Base                 = Box.Copy()
-	Error                = lipgloss.NewStyle().Foreground(errorColor)
-	Foreground           = lipgloss.NewStyle().Foreground(primaryDarkestColor)
-	NoError              = lipgloss.NewStyle().Foreground(green)
-	AccentForeground     = lipgloss.NewStyle().Foreground(primaryColor)
+	// Base is the box of the main window.
+	Base = Box.Copy()
+	// Error is the style for errors.
+	Error = lipgloss.NewStyle().Foreground(errorColor)
+	// Foreground is the main style.
+	Foreground = lipgloss.NewStyle().Foreground(primaryDarkestColor)
+	// NoError is the style for positive results.
+	NoError = lipgloss.NewStyle().Foreground(green)
+	// AccentForeground is the secondary style.
+	AccentForeground = lipgloss.NewStyle().Foreground(primaryColor)
 
+	// Title1 is the most accentuated style for titles.
 	Title1 = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(white).
@@ -39,27 +46,34 @@ var (
 		Align(lipgloss.Center).
 		Width(22)
 
+	// Title2 is the second accent style for titles.
 	Title2 = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(primaryDarkestColor).
 		Width(22)
 
+	// LogTitle is the style for the log page title.
 	LogTitle = Box.Copy().
 			Padding(0, 1)
 
-	LogInfo               = LogTitle.Copy()
+	// LogInfo is the style for the log page info.
+	LogInfo = LogTitle.Copy()
+	// LeftVerticalSeparator is the style to make a vertical separator on the left.
 	LeftVerticalSeparator = lipgloss.NewStyle().
 				BorderStyle(lipgloss.NormalBorder()).
 				BorderLeft(true).
 				BorderForeground(primaryDarkestColor)
+	// Box is the style for surrounding an area.
 	Box = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(primaryDarkestColor)
+	// FocusBox is the style for surrounding an area with accent.
 	FocusBox = lipgloss.NewStyle().
 			BorderStyle(lipgloss.RoundedBorder()).
 			BorderForeground(primaryLightestColor)
 )
 
+// BoolToYN convert a boolean to a stylized yes/no. "yes" being positive.
 func BoolToYN(b bool) string {
 	if b {
 		return NoError.Render("yes")
@@ -67,6 +81,7 @@ func BoolToYN(b bool) string {
 	return Error.Render("no")
 }
 
+// BoolToYNColorReverted convert a boolean to a stylized yes/no. "no" being positive.
 func BoolToYNColorReverted(b bool) string {
 	if b {
 		return Error.Render("yes")
@@ -74,7 +89,8 @@ func BoolToYNColorReverted(b bool) string {
 	return NoError.Render("no")
 }
 
-func StyleOnError(errorStyle lipgloss.Style, v string, err error) string {
+// OnError prints with the error style if the error is not nil.
+func OnError(errorStyle lipgloss.Style, v string, err error) string {
 	if err != nil {
 		return errorStyle.Render(v)
 	}

@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
-Submit permits the submission of a job to the DeepSquare Grid.
+Package submit permits the submission of a job to the DeepSquare Grid.
 
 USAGE:
 
@@ -232,6 +232,7 @@ func parseKeyValueOperator(input string) (key, value, op string, err error) {
 	return key, value, op, nil
 }
 
+// Command is the submit subcommand used to submit jobs.
 var Command = cli.Command{
 	Name:      "submit",
 	Usage:     "Quickly submit a job.",
@@ -305,24 +306,25 @@ var Command = cli.Command{
 		// Map slices to affinites
 		affinities := make([]types.Affinity, 0, len(affinitiesSlice.Value()))
 		for _, affinity := range affinitiesSlice.Value() {
-			if k, v, op, err := parseKeyValueOperator(affinity); err != nil {
+			k, v, op, err := parseKeyValueOperator(affinity)
+			if err != nil {
 				internallog.I.Error(
 					"failed to parse",
 					zap.String("affinity", affinity),
 					zap.Error(err),
 				)
 				return err
-			} else {
-				var opB [2]byte
-				copy(opB[:], op)
-				affinities = append(affinities, types.Affinity{
-					Label: metaschedulerabi.Label{
-						Key:   k,
-						Value: v,
-					},
-					Op: opB,
-				})
 			}
+
+			var opB [2]byte
+			copy(opB[:], op)
+			affinities = append(affinities, types.Affinity{
+				Label: metaschedulerabi.Label{
+					Key:   k,
+					Value: v,
+				},
+				Op: opB,
+			})
 		}
 
 		// Set allowance

@@ -23,10 +23,12 @@ import (
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 )
 
+// ModelBuilder contains the dependencies to build the model for the transfer page.
 type ModelBuilder struct {
 	Client deepsquare.Client
 }
 
+// Build the bubbletea model for the transfer page.
 func (b *ModelBuilder) Build() tea.Model {
 	if b.Client == nil {
 		panic("Client is nil")
@@ -53,7 +55,7 @@ func (b *ModelBuilder) Build() tea.Model {
 		help:   help,
 		inputs: inputs,
 		errors: make([]error, 2),
-		keyMap: KeyMap{
+		keyMap: keyMap{
 			Exit: key.NewBinding(
 				key.WithKeys("esc", "ctrl+q"),
 				key.WithHelp("esc/ctrl+q", "exit"),

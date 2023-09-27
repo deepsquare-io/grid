@@ -35,7 +35,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type KeyMap struct {
+type keyMap struct {
 	TableKeyMap     table.KeyMap
 	OpenLogs        key.Binding
 	TopupJob        key.Binding
@@ -53,7 +53,7 @@ type model struct {
 	help      help.Model
 	watchJobs channel.Model[transitionMsg]
 	scheduler types.JobScheduler
-	keyMap    KeyMap
+	keyMap    keyMap
 
 	err error
 }
@@ -69,6 +69,7 @@ func emitClearErrorsMsg() tea.Msg {
 // SelectJobMsg is a public msg used to indicate that the user selected a job.
 type SelectJobMsg [32]byte
 
+// EmitSelectJobMsg emits a [SelectJobMsg].
 func EmitSelectJobMsg(msg [32]byte) tea.Cmd {
 	return func() tea.Msg {
 		return SelectJobMsg(msg)
@@ -260,6 +261,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+// Model builds the bubbletea model for the status page.
 func Model(
 	ctx context.Context,
 	client deepsquare.Client,
@@ -304,7 +306,7 @@ func Model(
 		idToRow: idToRow,
 		it:      it,
 		help:    help,
-		keyMap: KeyMap{
+		keyMap: keyMap{
 			TableKeyMap: tableKeymap,
 			OpenLogs: key.NewBinding(
 				key.WithKeys("enter"),

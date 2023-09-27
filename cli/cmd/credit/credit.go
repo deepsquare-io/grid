@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
-Credit provides commands to manage the credits of an user.
+Package credit provides subcommands to manage the credits of an user.
 
 USAGE:
 
@@ -97,6 +97,7 @@ var flags = []cli.Flag{
 	},
 }
 
+// Command is the credit subcommand used to manage credits.
 var Command = cli.Command{
 	Name:  "credit",
 	Usage: "Manage credits.",

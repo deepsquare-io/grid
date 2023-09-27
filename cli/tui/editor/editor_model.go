@@ -46,7 +46,7 @@ const (
 	jobNameInput
 )
 
-type KeyMap struct {
+type keyMap struct {
 	EditAgain      key.Binding
 	Exit           key.Binding
 	NextInput      key.Binding
@@ -99,7 +99,7 @@ type model struct {
 	err error
 
 	help   help.Model
-	keyMap KeyMap
+	keyMap keyMap
 
 	client deepsquare.Client
 

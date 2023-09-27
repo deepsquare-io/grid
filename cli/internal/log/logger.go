@@ -23,6 +23,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// I is the instance of the default logger.
 var I *zap.Logger
 
 var atom = zap.NewAtomicLevel()
@@ -41,6 +42,7 @@ func init() {
 	atom.SetLevel(zap.InfoLevel)
 }
 
+// EnableDebug changes the log level to Debug.
 func EnableDebug() {
 	atom.SetLevel(zap.DebugLevel)
 	I.Debug("Enabled debug logging.")

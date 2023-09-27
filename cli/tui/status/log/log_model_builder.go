@@ -29,10 +29,12 @@ import (
 	"github.com/deepsquare-io/grid/cli/types"
 )
 
+// ModelBuilder contains the dependencies to build the model for the log page.
 type ModelBuilder struct {
 	Logger types.Logger
 }
 
+// Build the bubbletea model for the log page.
 func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
 	if b.Logger == nil {
 		panic("Logger is nil")

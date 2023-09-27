@@ -37,6 +37,7 @@ func indent(spaces int, v string) string {
 	return pad + strings.Replace(v, "\n", "\n"+pad, -1)
 }
 
+// Model is used to build the bubbletea Model for showing the provider details.
 func Model(p types.ProviderDetail) tea.Model {
 	vp := viewport.New(118, style.StandardHeight)
 	prices := fmt.Sprintf(`CPU pricing: %s credits/(CPU.min)
@@ -94,7 +95,7 @@ Is banned: %s
 		ProviderDetail: p,
 		help:           help,
 		viewport:       vp,
-		keyMap: KeyMap{
+		keyMap: keyMap{
 			ViewPortKeyMap: vp.KeyMap,
 			Exit: key.NewBinding(
 				key.WithKeys("esc", "q"),

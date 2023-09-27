@@ -23,7 +23,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/types"
 )
 
-type KeyMap struct {
+type keyMap struct {
 	ViewPortKeyMap viewport.KeyMap
 	Exit           key.Binding
 }
@@ -38,7 +38,7 @@ func emitExitMsg() tea.Msg {
 type model struct {
 	help     help.Model
 	viewport viewport.Model
-	keyMap   KeyMap
+	keyMap   keyMap
 
 	types.ProviderDetail
 }

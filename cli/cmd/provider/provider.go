@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
-Provider provides commands to manage the providers of the Grid.
+Package provider provides subcommands to manage the providers of the Grid.
 
 USAGE:
 
@@ -78,6 +78,7 @@ var authFlags = append(
 	},
 )
 
+// Command is the provider command used to manage providers.
 var Command = cli.Command{
 	Name:  "provider",
 	Usage: "Manage providers (need to use an admin smart-contract).",

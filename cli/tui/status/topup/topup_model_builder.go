@@ -25,11 +25,13 @@ import (
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 )
 
+// ModelBuilder contains the dependencies used to build the bubbletea Model for the topup page.
 type ModelBuilder struct {
 	Client  deepsquare.Client
 	Watcher deepsquare.Watcher
 }
 
+// Build the bubbletea Model for the topup page.
 func (b *ModelBuilder) Build(jobID [32]byte) tea.Model {
 	if b.Client == nil {
 		panic("Client is nil")
@@ -55,7 +57,7 @@ func (b *ModelBuilder) Build(jobID [32]byte) tea.Model {
 		jobID:    jobID,
 		watchJob: makeWatchJobModel(context.TODO(), jobID, b.Watcher, b.Client),
 		errors:   make([]error, 1),
-		keyMap: KeyMap{
+		keyMap: keyMap{
 			Exit: key.NewBinding(
 				key.WithKeys("esc", "ctrl+q"),
 				key.WithHelp("esc/ctrl+q", "exit"),

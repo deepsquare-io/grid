@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
-Initc provides commands to initialize templates to get started with DeepSquare.
+Package initc provides subcommands to initialize templates to get started with DeepSquare.
 It will initialize a job.<generated name>.yaml with a JSON schema in the /tmp directory.
 
 USAGE:
@@ -82,6 +82,7 @@ func prepareFiles() (jerr error) {
 	return nil
 }
 
+// Command is the init command used to bootstrap a job workflow file.
 var Command = cli.Command{
 	Name:  "init",
 	Usage: "Bootstrap a job workflow file.",

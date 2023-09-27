@@ -75,6 +75,7 @@ func getEditor() (editor string, args []string) {
 	return "vi", []string{}
 }
 
+// Command create a bubbletea command that opens the text editor.
 func Command(ctx context.Context, jobPath string) *exec.Cmd {
 	var editorCommand string
 	var editorArgs []string

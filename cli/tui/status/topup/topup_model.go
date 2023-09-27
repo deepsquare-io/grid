@@ -38,7 +38,7 @@ const (
 	amountInput = iota
 )
 
-type KeyMap struct {
+type keyMap struct {
 	NextInput key.Binding
 	PrevInput key.Binding
 	Exit      key.Binding
@@ -89,7 +89,7 @@ type updateProviderMsg metaschedulerabi.Provider
 
 func (m *model) loadProvider(ctx context.Context, provider common.Address) tea.Cmd {
 	return func() tea.Msg {
-		p, err := m.client.GetProvider(ctx, m.job.ProviderAddr)
+		p, err := m.client.GetProvider(ctx, provider)
 		if err != nil {
 			return errorMsg(err)
 		}
@@ -109,7 +109,7 @@ type model struct {
 
 	watchJob channel.Model[transitionMsg]
 
-	keyMap KeyMap
+	keyMap keyMap
 
 	job      types.Job
 	provider *metaschedulerabi.Provider

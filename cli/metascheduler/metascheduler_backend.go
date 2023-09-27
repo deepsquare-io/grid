@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package deepsquare defines APIs for interacting with the DeepSquare Grid.
+// Package metascheduler defines APIs for interacting with the DeepSquare Grid.
 package metascheduler
 
 import (
@@ -30,6 +30,9 @@ import (
 )
 
 var (
+	// ErrNewRequestJobNotFound happens when submitting a job, but the job is not found.
+	//
+	// This would typically be used for panicking.
 	ErrNewRequestJobNotFound = errors.New("new request job event not found")
 )
 
@@ -75,6 +78,7 @@ func init() {
 	}
 }
 
+// EthereumBackend combines [bind.ContractBackend] and [bind.DeployBackend].
 type EthereumBackend interface {
 	bind.ContractBackend
 	bind.DeployBackend

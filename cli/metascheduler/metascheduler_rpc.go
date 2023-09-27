@@ -26,6 +26,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
+// RPCClientSet is a set of clients that interact with DeepSquare.
 type RPCClientSet struct {
 	*Backend
 }
@@ -55,12 +56,14 @@ func (c *RPCClientSet) authOpts(ctx context.Context) (*bind.TransactOpts, error)
 	return auth, nil
 }
 
+// NewRPCClientSet creates an RPCClientSet.
 func NewRPCClientSet(b Backend) *RPCClientSet {
 	return &RPCClientSet{
 		Backend: &b,
 	}
 }
 
+// JobScheduler creates a [types.JobScheduler].
 func (c *RPCClientSet) JobScheduler(
 	sbatch sbatch.Service,
 ) types.JobScheduler {
@@ -75,6 +78,7 @@ func (c *RPCClientSet) JobScheduler(
 	}
 }
 
+// JobFetcher creates a [types.JobFetcher].
 func (c *RPCClientSet) JobFetcher() types.JobFetcher {
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
 	if err != nil {
@@ -95,6 +99,7 @@ func (c *RPCClientSet) JobFetcher() types.JobFetcher {
 	}
 }
 
+// CreditManager creates a [types.CreditManager].
 func (c *RPCClientSet) CreditManager() types.CreditManager {
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
 	if err != nil {
@@ -114,6 +119,7 @@ func (c *RPCClientSet) CreditManager() types.CreditManager {
 	}
 }
 
+// AllowanceManager creates an [types.AllowanceManager].
 func (c *RPCClientSet) AllowanceManager() types.AllowanceManager {
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
 	if err != nil {
@@ -133,6 +139,7 @@ func (c *RPCClientSet) AllowanceManager() types.AllowanceManager {
 	}
 }
 
+// ProviderManager creates a [types.ProviderManager].
 func (c *RPCClientSet) ProviderManager() types.ProviderManager {
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
 	if err != nil {

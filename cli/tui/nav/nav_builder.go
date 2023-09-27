@@ -19,8 +19,7 @@ import (
 	"context"
 	"math/big"
 
-	_ "embed"
-
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	"github.com/deepsquare-io/grid/cli/tui/editor"
 	"github.com/deepsquare-io/grid/cli/tui/provider"
@@ -32,6 +31,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
+// ModelBuilder contains the dependencies used to build the bubbletea Model for the navigator.
 type ModelBuilder struct {
 	userAddress          common.Address
 	client               deepsquare.Client
@@ -40,36 +40,43 @@ type ModelBuilder struct {
 	metaschedulerAddress string
 }
 
+// NewModelBuilder create a ModelBuilder.
 func NewModelBuilder() *ModelBuilder {
 	return &ModelBuilder{}
 }
 
+// WithUserAddress sets the user public address.
 func (b *ModelBuilder) WithUserAddress(userAddress common.Address) *ModelBuilder {
 	b.userAddress = userAddress
 	return b
 }
 
+// WithClient sets the DeepSquare Client.
 func (b *ModelBuilder) WithClient(client deepsquare.Client) *ModelBuilder {
 	b.client = client
 	return b
 }
 
+// WithWatcher sets the DeepSquare Watcher.
 func (b *ModelBuilder) WithWatcher(watcher deepsquare.Watcher) *ModelBuilder {
 	b.watcher = watcher
 	return b
 }
 
+// WithVersion sets the version of the application.
 func (b *ModelBuilder) WithVersion(version string) *ModelBuilder {
 	b.version = version
 	return b
 }
 
+// WithMetaschedulerAddress sets the Meta-Scheduler smart-contract address.
 func (b *ModelBuilder) WithMetaschedulerAddress(metaschedulerAddress string) *ModelBuilder {
 	b.metaschedulerAddress = metaschedulerAddress
 	return b
 }
 
-func (b *ModelBuilder) Build(ctx context.Context) *model {
+// Build the bubbletea Model for the navigator.
+func (b *ModelBuilder) Build(ctx context.Context) tea.Model {
 	if b.client == nil {
 		panic("client is nil")
 	}

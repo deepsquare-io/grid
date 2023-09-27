@@ -37,6 +37,9 @@ type gridlogger struct {
 	pk *ecdsa.PrivateKey
 }
 
+// DialContext connects to the Grid Logger gRPC API and returns a client.
+//
+// The [context.Context] is only used for the Dial. Subsequent calls require a new context.
 func DialContext(
 	ctx context.Context,
 	endpoint string,

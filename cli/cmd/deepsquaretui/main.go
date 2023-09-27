@@ -83,7 +83,7 @@ import (
 )
 
 var (
-	version string = "dev"
+	version = "dev"
 
 	sbatchEndpoint             string
 	loggerEndpoint             string

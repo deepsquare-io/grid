@@ -27,6 +27,7 @@ var isMapRegex = regexp.MustCompile(
 	`^([a-zA-Z0-9.-]+=[a-zA-Z0-9.-]+,)*([a-zA-Z0-9.-]+=[a-zA-Z0-9.-]+)$`,
 )
 
+// IsNumber checks if the string is a number.
 func IsNumber(s string) error {
 	_, err := strconv.ParseFloat(s, 64)
 	if err != nil {
@@ -35,6 +36,9 @@ func IsNumber(s string) error {
 	return nil
 }
 
+// IsMap checks if the string can be parsed as a map.
+//
+// Example: "key=value,key2=value2" is a map.
 func IsMap(input string) error {
 	if input == "" {
 		// Empty string is an empty map

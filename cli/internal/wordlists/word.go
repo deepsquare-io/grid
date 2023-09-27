@@ -18,6 +18,7 @@ package wordlists
 
 import "math/rand"
 
+// GetRandomWords generates random words from the bip39.
 func GetRandomWords(length int) []string {
 	words := make([]string, length)
 	for i := 0; i < length; i++ {

@@ -21,6 +21,7 @@ import (
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 )
 
+// DurationToCredit converts a job duration to credits based on pricing and resources allocation.
 func DurationToCredit(
 	prices metaschedulerabi.ProviderPrices,
 	definition metaschedulerabi.JobDefinition,
@@ -53,6 +54,7 @@ func DurationToCredit(
 	return b
 }
 
+// CreditToDuration converts credits to a job duration based on pricing and resources allocation.
 func CreditToDuration(
 	prices metaschedulerabi.ProviderPrices,
 	definition metaschedulerabi.JobDefinition,

@@ -34,6 +34,7 @@ type eventSubscriber struct {
 	rpcMetascheduler *metaschedulerabi.MetaScheduler
 }
 
+// NewEventSubscriber creates an EventSubscriber used to watch events.
 func NewEventSubscriber(
 	rpc Backend,
 	ws Backend,

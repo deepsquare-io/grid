@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
-Job provides commands to manage the jobs of an user.
+Package job provides subcommands to manage the jobs of an user.
 
 USAGE:
 
@@ -116,6 +116,7 @@ var topupFlags = append(
 	},
 )
 
+// Command is the job subcommand used to manage jobs.
 var Command = cli.Command{
 	Name:  "job",
 	Usage: "Manage jobs.",

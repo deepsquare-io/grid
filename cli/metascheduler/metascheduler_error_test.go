@@ -40,7 +40,7 @@ type ErrorTestSuite struct {
 	backend         *backends.SimulatedBackend
 }
 
-func (suite *ErrorTestSuite) BeforeTest(suiteName, testName string) {
+func (suite *ErrorTestSuite) BeforeTest(_, _ string) {
 	// Genesis Account
 	privateKey, err := crypto.GenerateKey()
 	suite.Require().NoError(err)
@@ -404,7 +404,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 	}
 }
 
-func (suite *ErrorTestSuite) AfterTest(suiteName, testName string) {
+func (suite *ErrorTestSuite) AfterTest(_, _ string) {
 	_ = suite.backend.Close()
 }
 

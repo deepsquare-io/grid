@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package editor contains the Model, View and Update functions for the main navigator.
+// Package nav contains the Model, View and Update functions for the main navigator.
 package nav
 
 import (

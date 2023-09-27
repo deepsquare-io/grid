@@ -36,22 +36,32 @@ type Logger interface {
 	WatchLogs(ctx context.Context, jobID [32]byte) (LogStream, error)
 }
 
+// Job is the object stored in the smart-contract for accounting.
 type Job *metaschedulerabi.Job
+
+// Label is a key-value object used for filtering and annotating clusters.
 type Label metaschedulerabi.Label
+
+// Affinity is a key-value object with an operator for filtering clusters.
 type Affinity metaschedulerabi.Affinity
 
+// SubmitJobOption is used to apply default and optional parameters for submitting a job.
 type SubmitJobOption func(*SubmitJobOptions)
+
+// SubmitJobOptions is the object containing optional parameters for submitting a job.
 type SubmitJobOptions struct {
 	Uses       []Label
 	Affinities []Affinity
 }
 
+// WithUse adds strict key-value filters to the job, which filters the available clusters.
 func WithUse(labels ...Label) SubmitJobOption {
 	return func(sjo *SubmitJobOptions) {
 		sjo.Uses = labels
 	}
 }
 
+// WithAffinity adds key-value filters with operators to the job, which filters the available clusters.
 func WithAffinity(affinities ...Affinity) SubmitJobOption {
 	return func(sjo *SubmitJobOptions) {
 		sjo.Affinities = affinities
@@ -134,6 +144,7 @@ type AllowanceManager interface {
 	) (<-chan *big.Int, error)
 }
 
+// ProviderDetail contains all the specs and statuses of a Provider.
 type ProviderDetail struct {
 	metaschedulerabi.Provider
 	IsWaitingForApproval bool
@@ -149,11 +160,19 @@ type ProviderManager interface {
 	GetProviders(ctx context.Context) (providers []ProviderDetail, err error)
 }
 
+// NewJobRequest is an event that happens when a user submit a job.
 type NewJobRequest *metaschedulerabi.MetaSchedulerNewJobRequestEvent
+
+// JobTransition is an event that happens when the status of a job changes.
 type JobTransition *metaschedulerabi.MetaSchedulerJobTransitionEvent
+
+// Transfer is an event that happens when there is a ERC20 transaction.
 type Transfer *metaschedulerabi.IERC20Transfer
+
+// Approval is an event that happens when an user sets a new allowance.
 type Approval *metaschedulerabi.IERC20Approval
 
+// SubscriptionOptions contains the channels used to pass events.
 type SubscriptionOptions struct {
 	NewJobRequestChan chan<- NewJobRequest
 	JobTransitionChan chan<- JobTransition
@@ -161,20 +180,24 @@ type SubscriptionOptions struct {
 	ApprovalChan      chan<- Approval
 }
 
+// SubscriptionOption applies default and optional parameters to the SubscribeEvents method.
 type SubscriptionOption func(*SubscriptionOptions)
 
+// FilterTransfer allows taking the Transfer events from the subscription.
 func FilterTransfer(filtered chan<- Transfer) SubscriptionOption {
 	return func(so *SubscriptionOptions) {
 		so.TransferChan = filtered
 	}
 }
 
+// FilterApproval allows taking the Approval events from the subscription.
 func FilterApproval(filtered chan<- Approval) SubscriptionOption {
 	return func(so *SubscriptionOptions) {
 		so.ApprovalChan = filtered
 	}
 }
 
+// FilterNewJobRequest allows taking the NewJobRequest events from the subscription.
 func FilterNewJobRequest(
 	filtered chan<- NewJobRequest,
 ) SubscriptionOption {
@@ -183,6 +206,7 @@ func FilterNewJobRequest(
 	}
 }
 
+// FilterJobTransition allows taking the JobTransition events from the subscription.
 func FilterJobTransition(
 	filtered chan<- JobTransition,
 ) SubscriptionOption {

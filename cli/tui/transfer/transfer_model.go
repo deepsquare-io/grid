@@ -36,7 +36,7 @@ const (
 	amountInput
 )
 
-type KeyMap struct {
+type keyMap struct {
 	NextInput key.Binding
 	PrevInput key.Binding
 	Exit      key.Binding
@@ -98,7 +98,7 @@ type model struct {
 	errors  []error
 	focused int
 
-	keyMap KeyMap
+	keyMap keyMap
 
 	err       error
 	isRunning bool

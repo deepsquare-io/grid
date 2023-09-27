@@ -31,7 +31,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type KeyMap struct {
+type keyMap struct {
 	TableKeyMap         table.KeyMap
 	ShowProviderDetails key.Binding
 	Exit                key.Binding
@@ -44,6 +44,7 @@ func emitExitMsg() tea.Msg {
 	return ExitMsg{}
 }
 
+// ShowProviderDetailsMsg is the signal when a user select a provider.
 type ShowProviderDetailsMsg types.ProviderDetail
 
 func emitShowProviderDetailsMsg(p types.ProviderDetail) tea.Cmd {
@@ -55,7 +56,7 @@ func emitShowProviderDetailsMsg(p types.ProviderDetail) tea.Cmd {
 type model struct {
 	table  table.Model
 	help   help.Model
-	keyMap KeyMap
+	keyMap keyMap
 
 	client    types.ProviderManager
 	providers map[string]types.ProviderDetail

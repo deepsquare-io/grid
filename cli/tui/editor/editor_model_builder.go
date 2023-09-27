@@ -32,6 +32,7 @@ import (
 	"github.com/mistakenelf/teacup/code"
 )
 
+// ModelBuilder contains the dependencies used to build the bubbletea Model for the text editor.
 type ModelBuilder struct {
 	Client deepsquare.Client
 }
@@ -58,6 +59,7 @@ func prepareFiles() (words string, jobSchemaPath string, jobPath string, err err
 	return words, jobSchemaPath, jobPath, nil
 }
 
+// Build the bubbletea Model for the text editor.
 func (b *ModelBuilder) Build() tea.Model {
 	if b.Client == nil {
 		panic("Client is nil")
@@ -96,7 +98,7 @@ func (b *ModelBuilder) Build() tea.Model {
 		code:   code,
 		inputs: inputs,
 		errors: make([]error, 3),
-		keyMap: KeyMap{
+		keyMap: keyMap{
 			EditAgain: key.NewBinding(
 				key.WithKeys("ctrl+e"),
 				key.WithHelp("ctrl+e", "edit job"),

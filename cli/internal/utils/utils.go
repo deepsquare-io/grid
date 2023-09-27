@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// Package utils provides utilities functions.
 package utils
 
 import (
@@ -23,6 +24,24 @@ import (
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 )
 
+// BoolToYN converts a boolean to "yes" or "no".
+func BoolToYN(b bool) string {
+	if b {
+		return "yes"
+	}
+	return "no"
+}
+
+// ErrorfOrEmpty returns a formatted message if the error is not nil.
+func ErrorfOrEmpty(format string, err error, va ...any) string {
+	if err != nil {
+		a := append([]any{err}, va...)
+		return fmt.Sprintf(format, a...)
+	}
+	return ""
+}
+
+// FormatLabels formats labels into a slice of "key: value".
 func FormatLabels(labels []metaschedulerabi.Label) []string {
 	out := make([]string, 0, len(labels))
 	for _, l := range labels {
@@ -31,6 +50,7 @@ func FormatLabels(labels []metaschedulerabi.Label) []string {
 	return out
 }
 
+// StringsToLabels converts a "key=value,key2=value2" into a slice of labels.
 func StringsToLabels(input string) ([]types.Label, error) {
 	if input == "" {
 		// Empty string is an empty map
