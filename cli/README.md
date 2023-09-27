@@ -156,6 +156,14 @@ client, err := deepsquare.NewClient(ctx, &deepsquare.ClientConfig{
 })
 
 // Example of job submit
+curr, err := client.GetAllowance(ctx)
+if err != nil {
+   // ...
+}
+err = client.SetAllowance(ctx, curr.Add(curr, lockedAmount))
+if err != nil {
+   // ...
+}
 jobID, err = client.SubmitJob(
    ctx,
    &sbatch.Job{

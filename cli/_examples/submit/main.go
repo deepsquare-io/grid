@@ -49,7 +49,16 @@ func main() {
 	// Submit a fake job.
 	var jobName [32]byte
 	jobNameS := "test"
+	lockedAmount, _ := new(big.Int).SetString("100000000000000000000", 10)
 	copy(jobName[:], jobNameS)
+	curr, err := client.GetAllowance(ctx)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	err = client.SetAllowance(ctx, curr.Add(curr, lockedAmount))
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 	_, err = client.SubmitJob(
 		ctx,
 		&sbatch.Job{
@@ -67,7 +76,7 @@ func main() {
 				},
 			},
 		},
-		big.NewInt(100),
+		lockedAmount,
 		jobName,
 	)
 

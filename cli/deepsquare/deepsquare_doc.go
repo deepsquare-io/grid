@@ -60,7 +60,30 @@ The private key can be parsed with the `go-ethereum` package:
 
 # Submitting Jobs
 
-To submit jobs, simply do:
+To submit jobs, you need to set the allowance first to allow the meta-scheduler to take you some credits:
+
+	lockedCredits, _ := new(big.Int).SetString("100000000000000000000", 10)
+
+	// Set allowance
+	curr, err := client.GetAllowance(ctx)
+	if err != nil {
+		return err
+	}
+	if err = client.SetAllowance(ctx, curr.Add(curr, lockedCredits)); err != nil {
+		return err
+	}
+
+You can set a high number to allow auto-topup:
+
+	// Set allowance
+	limit, _ := new(big.Int).SetString("10000000000000000000000000000000000000", 10)
+	if err = client.SetAllowance(ctx, curr.Add(curr, limit)); err != nil {
+		return err
+	}
+
+The credits will be used to finance the project and the infrastructure providers.
+
+After settings the allowance, you can submit a job:
 
 	_, err = client.SubmitJob(
 		ctx,
@@ -79,7 +102,7 @@ To submit jobs, simply do:
 				},
 			},
 		},
-		big.NewInt(100),
+		lockedCredits,
 		jobName,
 	)
 

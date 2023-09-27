@@ -49,6 +49,14 @@ Example:
 	})
 
 	// Example of job submit
+	curr, err := client.GetAllowance(ctx)
+	if err != nil {
+		// ...
+	}
+	err = client.SetAllowance(ctx, curr.Add(curr, lockedAmount))
+	if err != nil {
+		// ...
+	}
 	jobID, err := client.SubmitJob(ctx, job, lockedAmount, jobName, types.WithAffinity(affinities))
 
 	// Initialize client for streaming RPCs
@@ -92,9 +100,16 @@ Example:
 	clientset := metascheduler.NewRPCClientSet(rpcBackend)
 
 	// Example of job submit
+	curr, err := clientset.AllowanceManager().GetAllowance(ctx)
+	if err != nil {
+		// ...
+	}
+	err = clientset.AllowanceManager().SetAllowance(ctx, curr.Add(curr, lockedAmount))
+	if err != nil {
+		// ...
+	}
+
 	sbatch := sbatch.NewService(http.DefaultClient, "https://sbatch.deepsquare.run/graphql")
-
-
 	jobID, err := clientset.JobScheduler(sbatch).SubmitJob(ctx, job, lockedAmount, jobName, types.WithAffinity(affinities))
 
 	// Initialize WebSocket client
