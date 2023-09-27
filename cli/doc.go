@@ -18,17 +18,17 @@ Package cli is the root of the Go client for interacting with the DeepSquare Gri
 
 # The Terminal User Interface
 
-The TUI can be run by simply running the [cli/cmd/deepsquaretui] package.
-Its implementation is in the [cli/tui] package and uses the [bubbletea framework](https://github.com/charmbracelet/bubbletea) to build the terminal application.
+The TUI can be run by simply running the [github.com/deepsquare-io/grid/cli/cmd/deepsquaretui] package.
+Its implementation is in the [github.com/deepsquare-io/grid/cli/tui] package and uses the [bubbletea framework] to build the terminal application.
 
 # The Command Line Interface
 
-The CLI can be run by running subcommands defined in the [cli/cmd] package.
+The CLI can be run by running subcommands defined in the [github.com/deepsquare-io/grid/cli/cmd] package.
 Compared to the TUI, the CLI contains all the commands of the DeepSquare Client.
 
 # The DeepSquare Client
 
-A DeepSquare client is available in the [cli/deepsquare] package. It implements
+A DeepSquare client is available in the [github.com/deepsquare-io/grid/cli/deepsquare] package. It implements
 all of the features needed to manage jobs, providers, credits and job logs.
 
 Example:
@@ -68,12 +68,12 @@ Example:
 	}
 	defer sub.Unsubscribe()
 
-See the [cli/deepsquare] package documentation for more information.
+See the [github.com/deepsquare-io/grid/cli/deepsquare] package documentation for more information.
 
 # Fine-grained RPC or WebSocket client
 
 If the DeepSquare client is too much "coupled", a more fine-grained client is
-available in the [cli/metascheduler] package.
+available in the [github.com/deepsquare-io/grid/cli/metascheduler] package.
 
 Example:
 
@@ -89,12 +89,7 @@ Example:
 		ChainID:              chainID,
 		UserPrivateKey:       pk,
 	}
-	clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
-		EthereumBackend:      ethClientRPC,
-		MetaschedulerAddress: common.HexToAddress("0x..."),
-		ChainID:              chainID,
-		UserPrivateKey:       pk,
-	})
+	clientset := metascheduler.NewRPCClientSet(rpcBackend)
 
 	// Example of job submit
 	sbatch := sbatch.NewService(http.DefaultClient, "https://sbatch.deepsquare.run/graphql")
@@ -121,6 +116,8 @@ Example:
 	}
 	defer sub.Unsubscribe()
 
-See the [cli/metascheduler] package documentation for more information.
+See the [github.com/deepsquare-io/grid/cli/metascheduler] package documentation for more information.
+
+[bubbletea framework]: https://github.com/charmbracelet/bubbletea
 */
 package cli

@@ -68,7 +68,7 @@ OPTIONS:
 
 ```
 
-## Install binraries
+## Install binaries
 
 You can download static binaries in the [Releases tab](https://github.com/deepsquare-io/grid/releases?q=cli&expanded=true).
 
@@ -132,8 +132,57 @@ unit
 version
 ```
 
+## Use as a library
+
+The `deepsquare`, `sbatch`, `logger` and `metascheduler` packages can be used as a library. For example, to submit a job:
+
+```go
+// Parse private key
+pk, err := crypto.HexToECDSA(ethHexPK)
+if err != nil {
+   // ...
+}
+
+// Initialize client for simple RPCs
+client, err := deepsquare.NewClient(ctx, &deepsquare.ClientConfig{
+   MetaschedulerAddress: common.HexToAddress("0x..."),
+   RPCEndpoint:          "https://testnet.deepsquare.run/rpc",  // Optional
+   SBatchEndpoint:       "https://sbatch.deepsquare.run/graphql",  // Optional
+   LoggerEndpoint:       "https://grid-logger.deepsquare.run",  // Optional
+   UserPrivateKey:       pk,  // Optional, but needed for authenticated requests
+})
+
+// Example of job submit
+jobID, err = client.SubmitJob(
+   ctx,
+   &sbatch.Job{
+      Resources: &sbatch.JobResources{
+         Tasks:       1,
+         CpusPerTask: 1,
+         MemPerCPU:   100,
+         GpusPerTask: 0,
+      },
+      Steps: []*sbatch.Step{
+         {
+            Run: &sbatch.StepRun{
+               Command: "echo test",
+            },
+         },
+      },
+   },
+   big.NewInt(100),
+   jobName,
+)
+```
+
+For more information, check out:
+
+- [The Go Package Documentation: Library documentation](https://pkg.go.dev/github.com/deepsquare-io/grid/cli)
+- [The Go Package Documentation: DeepSquare Client](https://pkg.go.dev/github.com/deepsquare-io/grid/cli/deepsquare)
+- [Examples](https://github.com/deepsquare-io/grid/tree/main/cli/_examples)
+
 ## Licence
 
-The DeepSquare CLI library (i.e. all code outside of the `cmd` and `tui` directories) is licensed under the GNU Lesser General Public License v3.0, also included in our repository in the COPYING file.
+The DeepSquare CLI library (i.e. all code outside the `cmd` and `tui` directories) is licensed under the GNU Lesser General Public License v3.0, also included in our repository in the COPYING file.
 
-The DeepSquare CLI binaries (i.e. all code inside of the `cmd` and `tui` directories) are licensed under the GNU General Public License v3.0, also included in our repository in the COPYING.GPL3 file.
+The DeepSquare CLI binaries (i.e. all code inside the `cmd` and `tui` directories) are licensed under the GNU General Public License v3.0, also included in our repository in the COPYING.GPL3 file.

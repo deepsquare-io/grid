@@ -83,7 +83,7 @@ To submit jobs, simply do:
 		jobName,
 	)
 
-The object `sbatch.Job` has `json` and `yaml` tags, so it's possible to unmarshall a JSON object to an sbatch.Job.
+The object [sbatch.Job] has `json` and `yaml` tags, so it's possible to unmarshall a JSON object to an [sbatch.Job].
 
 # Managing Jobs
 
