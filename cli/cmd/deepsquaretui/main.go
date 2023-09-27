@@ -106,11 +106,12 @@ var flags = []cli.Flag{
 }
 
 var app = &cli.App{
-	Name:    "deepsquaretui",
-	Version: version,
-	Usage:   "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
-	Flags:   flags,
-	Suggest: true,
+	Name:                 "deepsquaretui",
+	Version:              version,
+	Usage:                "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
+	Flags:                flags,
+	Suggest:              true,
+	EnableBashCompletion: true,
 	Copyright: `deepsquaretui  Copyright (C) 2023 DeepSquare Association
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it

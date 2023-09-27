@@ -667,11 +667,12 @@ func Init(ctx context.Context) *Container {
 }
 
 var app = &cli.App{
-	Name:    "supervisor",
-	Version: version,
-	Usage:   "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
-	Flags:   flags,
-	Suggest: true,
+	Name:                 "supervisor",
+	Version:              version,
+	Usage:                "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
+	Flags:                flags,
+	Suggest:              true,
+	EnableBashCompletion: true,
 	Copyright: `supervisor  Copyright (C) 2023 DeepSquare Association
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
