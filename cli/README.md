@@ -84,6 +84,6 @@ More examples are stored in the [`scripts/999.build-all.sh` script](scripts/999.
 
 ## Licence
 
-The DeepSquare CLI library (i.e. all code outside of the `cmd` and `tui` directories) is licensed under the GNU Lesser General Public License v3.0, also included in our repository in the COPYING.LGPL3 file.
+The DeepSquare CLI library (i.e. all code outside of the `cmd` and `tui` directories) is licensed under the GNU Lesser General Public License v3.0, also included in our repository in the COPYING file.
 
 The DeepSquare CLI binaries (i.e. all code inside of the `cmd` and `tui` directories) are licensed under the GNU General Public License v3.0, also included in our repository in the COPYING.GPL3 file.
