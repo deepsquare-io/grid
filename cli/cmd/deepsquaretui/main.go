@@ -13,6 +13,53 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+/*
+DeepSquare TUI is a client to launch jobs on the DeepSquare Grid.
+
+The DeepSquare Terminal User Interface (TUI) shows the job statuses, logs
+and is able to launch DeepSquare Workflows from the terminal via the
+meta-scheduler smart-contract deployed on a EVM blockchain.
+
+USAGE:
+
+To run the TUI:
+
+	deepsquaretui
+
+To run the CLI commands:
+
+	deepsquaretui [global options] command [command options] [arguments...]
+
+COMMANDS:
+
+	allowance  Manage allowance.
+	credit     Manage credits.
+	init       Bootstrap a job workflow file.
+	job        Manage jobs.
+	provider   Manage providers (need to use an admin smart-contract).
+	submit     Quickly submit a job.
+
+GLOBAL OPTIONS:
+
+	--metascheduler.rpc value             Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
+
+
+	--metascheduler.ws value              Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_WS]
+
+
+	--metascheduler.smart-contract value  Metascheduler smart-contract address. (default: "0x3707aB457CF457275b7ec32e203c54df80C299d5") [$METASCHEDULER_SMART_CONTRACT]
+
+
+	--sbatch.endpoint value               SBatch Service GraphQL endpoint. (default: "https://sbatch.deepsquare.run/graphql") [$SBATCH_ENDPOINT]
+
+
+	--logger.endpoint value               Grid Logger endpoint. (default: "https://grid-logger.deepsquare.run") [$LOGGER_ENDPOINT]
+
+
+	--private-key value                   An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
+
+The environment variables must be initialized for proper usage.
+*/
 package main
 
 import (

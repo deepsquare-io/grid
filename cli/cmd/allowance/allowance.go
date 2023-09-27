@@ -13,6 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+/*
+Allowance provides commands to manage the allowance of an user.
+
+USAGE:
+
+	deepsquaretui allowance command [command options] [arguments...]
+
+COMMANDS:
+
+	set      Set credits allowance.
+	get      Get the allowance.
+*/
 package allowance
 
 import (

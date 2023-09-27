@@ -13,6 +13,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+/*
+Provider provides commands to manage the providers of the Grid.
+
+USAGE:
+
+	deepsquaretui provider command [command options] [arguments...]
+
+COMMANDS:
+
+	list     List providers.
+	approve  Approve a provider.
+	remove   Remove a provider.
+	help, h  Shows a list of commands or help for one command
+*/
 package provider
 
 import (

@@ -13,6 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+/*
+Initc provides commands to initialize templates to get started with DeepSquare.
+It will initialize a job.<generated name>.yaml with a JSON schema in the /tmp directory.
+
+USAGE:
+
+	deepsquaretui init [command options] [arguments...]
+
+OPTIONS:
+
+	--output value, -o value  Output path.
+*/
 package initc
 
 import (

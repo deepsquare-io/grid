@@ -15,6 +15,7 @@
 
 //go:generate go run generate.go
 
+// Package sbatch provides implementations of the SBatchService client.
 package sbatch
 
 import (

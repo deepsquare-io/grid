@@ -13,6 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+/*
+Credit provides commands to manage the credits of an user.
+
+USAGE:
+
+	deepsquaretui credit command [command options] [arguments...]
+
+COMMANDS:
+
+	transfer  Transfer credits to an another account
+	get       Get the amount of credits owned by you or an user (if first argument is specified).
+*/
 package credit
 
 import (

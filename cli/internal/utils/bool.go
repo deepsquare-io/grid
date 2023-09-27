@@ -15,6 +15,7 @@
 
 package utils
 
+// BoolToYN converts a boolean to "yes" or "no".
 func BoolToYN(b bool) string {
 	if b {
 		return "yes"

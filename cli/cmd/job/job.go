@@ -13,6 +13,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+/*
+Job provides commands to manage the jobs of an user.
+
+USAGE:
+
+	deepsquaretui job command [command options] [arguments...]
+
+COMMANDS:
+
+	get      Get job.
+	panic    Panic a job (need a METASCHEDULER role).
+	topup    Top up a job.
+	help, h  Shows a list of commands or help for one command
+*/
 package job
 
 import (

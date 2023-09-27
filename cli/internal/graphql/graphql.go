@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// Package graphql provides wrappers for graphQL API objects.
 package graphql
 
 import "github.com/vektah/gqlparser/v2/gqlerror"

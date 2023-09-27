@@ -13,6 +13,36 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+/*
+Submit permits the submission of a job to the DeepSquare Grid.
+
+USAGE:
+
+	deepsquaretui submit [command options] <job.yaml>
+
+OPTIONS:
+
+Submit Settings:
+
+	--affinities key<value [ --affinities key<value ]  Affinities flag. Used to filter the clusters. Format: key<value, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value`
+
+
+	--credits value                                    Allocated a number of credits. Unit is 1e18. Is a float and is not precise. (default: 0)
+
+
+	--credits-wei value                                Allocated a number of credits. Unit is wei. Is a big int.
+
+
+	--exit-on-job-exit, -e                             Exit the job after the job has finished and throw on error. (default: false)
+	--job-name value                                   The job name.
+	--no-timestamp, --no-ts                            Hide timestamp. (default: false)
+
+
+	--uses key=value [ --uses key=value ]              Uses flag. Used to filter the clusters. Format: key=value
+
+
+	--watch, -w                                        Watch logs after submitting the job (default: false)
+*/
 package submit
 
 import (

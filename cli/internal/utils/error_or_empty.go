@@ -17,6 +17,7 @@ package utils
 
 import "fmt"
 
+// ErrorfOrEmpty returns a formatted message if the error is not nil.
 func ErrorfOrEmpty(format string, err error, va ...any) string {
 	if err != nil {
 		a := append([]any{err}, va...)

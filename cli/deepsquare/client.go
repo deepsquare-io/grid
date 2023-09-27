@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Package deepsquare provides a simple Client that implement all the DeepSquare services.
+// Package deepsquare provides a all-in-one Client that implements all of the DeepSquare services.
 package deepsquare
 
 import (
