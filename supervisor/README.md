@@ -111,8 +111,12 @@ More details [here](https://github.com/deepsquare-io/grid/pkgs/container/supervi
 
 ## Build
 
-The `main` function is stored in the `cmd` package. To build the supervisor, do:
+To build the supervisor, just do:
 
 ```shell
 make
 ```
+
+## License
+
+The supervisor is [licensed under GPL3](./LICENSE).

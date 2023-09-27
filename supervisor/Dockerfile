@@ -10,7 +10,7 @@ ARG TARGETOS TARGETARCH
 ARG BUILDVERSION=dev
 RUN --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/go/pkg \
-  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -ldflags "-s -w -X main.version=${BUILDVERSION}" -o /out/app ./cmd
+  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -a -ldflags "-s -w -X main.version=${BUILDVERSION}" -o /out/supervisor ./
 
 # ---
 FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/alpine as certs
@@ -28,7 +28,7 @@ RUN mkdir /app
 RUN addgroup -S app && adduser -S -G app app
 WORKDIR /app
 
-COPY --from=builder /out/app .
+COPY --from=builder /out/supervisor .
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
 ADD https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.4.13/grpc_health_probe-$TARGETOS-$TARGETARCH /bin/grpc_health_probe
@@ -40,4 +40,4 @@ USER app
 
 EXPOSE 3000
 
-ENTRYPOINT [ "/tini", "--", "./app" ]
+ENTRYPOINT [ "/tini", "--", "./supervisor" ]
