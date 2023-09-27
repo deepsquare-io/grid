@@ -60,14 +60,168 @@ The private key can be parsed with the `go-ethereum` package:
 
 # Submitting Jobs
 
+To submit jobs, simply do:
+
+	_, err = client.SubmitJob(
+		ctx,
+		&sbatch.Job{
+			Resources: &sbatch.JobResources{
+				Tasks:       1,
+				CpusPerTask: 1,
+				MemPerCPU:   100,
+				GpusPerTask: 0,
+			},
+			Steps: []*sbatch.Step{
+				{
+					Run: &sbatch.StepRun{
+						Command: "echo test",
+					},
+				},
+			},
+		},
+		big.NewInt(100),
+		jobName,
+	)
+
+The object `sbatch.Job` has `json` and `yaml` tags, so it's possible to unmarshall a JSON object to an sbatch.Job.
+
 # Managing Jobs
+
+Get a job:
+
+	job, err := client.GetJob(ctx, jobID)
+
+Get your jobs:
+
+	jobs, err := client.GetJobs(ctx)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	// Iterate
+	for jobs.Next(ctx) {
+		fmt.Println(jobs.Current())
+	}
+
+	// Handle error
+	if jobs.Error() != nil {
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+	}
+
+Top-up a job:
+
+	err := client.TopUpJob(ctx, jobID, amount)
+
+Panicking a job (only for admins):
+
+	err := client.PanicJob(ctx, jobID, reason)
 
 # Managing Allowance
 
+To get, do:
+
+	allowance, err := client.GetAllowance(ctx)
+
+To set, do:
+
+	err := client.SetAllowance(ctx, amount)
+
+To watch, do:
+
+	approvals := make(chan types.Approval, 1)
+		sub, err := m.watcher.SubscribeEvents(
+			ctx,
+			types.FilterApproval(approvals),
+		)
+		if err != nil {
+			// ...
+		}
+		defer sub.Unsubscribe()
+
+		allowances, err := m.client.ReduceToAllowance(ctx, approvals)
+
+		for {
+			select {
+			case allowance := <-allowances:
+				// Handle allowance
+
+			case err := <-sub.Err():
+				// Handle error
+			}
+		}
+
 # Managing Credits
 
-# Managing Providers
+To get, do:
+
+	credits, err := client.Balance(ctx)
+	// Or
+	credits, err := client.BalanceOf(ctx, address)
+
+To transfer, do:
+
+	err := client.Transfer(ctx, address, amount)
+
+To watch, do:
+
+	transfers := make(chan types.Transfer, 1)
+	sub, err := m.watcher.SubscribeEvents(
+		ctx,
+		types.FilterTransfer(transfers),
+	)
+	if err != nil {
+		// ...
+	}
+	defer sub.Unsubscribe()
+
+	balances, err := m.client.ReduceToBalance(ctx, transfers)
+
+	for {
+		select {
+		case balance := <-balances:
+			// Handle balance
+
+		case err := <-sub.Err():
+			// Handle error
+		}
+	}
+
+# Managing Providers (for admins)
+
+To get, do:
+
+	provider, err := client.GetProvider(ctx, providerAddress)
+
+To list all providers, do:
+
+	providers, err := client.GetProviders(ctx, providerAddress)
+
+To approve, do:
+
+	err := client.Approve(ctx, providerAddress)
+
+To remove, do:
+
+	err := client.Remove(ctx, providerAddress)
 
 # Watching events
+
+To watch the events, the watcher has a `SubscribeEvents` method in which you can pass filters:
+
+	transfers := make(chan types.Transfer, 1)
+	sub, err := m.watcher.SubscribeEvents(
+		ctx,
+		types.FilterTransfer(transfers),
+	)
+	if err != nil {
+		// ...
+	}
+	defer sub.Unsubscribe()
+
+A thread will be handling the passing of data to the channels.
+
+Call `sub.Unsubscribe()` to stop the subscription, and use `<-sub.Err()` to fetch the error.
 */
 package deepsquare

@@ -81,11 +81,13 @@ type JobScheduler interface {
 // When calling Next or Prev, a request will be sent to the data source.
 type JobLazyIterator interface {
 	// Fetches the next job.
-	Next(ctx context.Context) (next JobLazyIterator, ok bool, err error)
+	Next(ctx context.Context) (ok bool)
 	// Fetches the previous job.
-	Prev(ctx context.Context) (prev JobLazyIterator, ok bool, err error)
+	Prev(ctx context.Context) (ok bool)
 	// Get the current job.
 	Current() Job
+	// Get the current error.
+	Error() error
 }
 
 // JobFetcher fetches jobs.

@@ -140,20 +140,17 @@ func initializeRows(
 	}
 	rows = make([]table.Row, 0, style.StandardHeight)
 	idToRow = make(map[[32]byte]table.Row)
-	var ok bool
 	for i := 0; i < style.StandardHeight; i++ {
+		if !it.Next(ctx) {
+			if it.Error() != nil {
+				log.I.Error("failed to get next job, ignoring...", zap.Error(err))
+			}
+			break
+		}
 		job := it.Current()
 		row := jobToRow(job)
 		idToRow[job.JobId] = row
 		rows = append(rows, row)
-		it, ok, err = it.Next(ctx)
-		if err != nil {
-			log.I.Error("failed to get next job, ignoring...", zap.Error(err))
-			break
-		}
-		if !ok {
-			break
-		}
 	}
 	return rows, idToRow, it
 }
@@ -167,21 +164,18 @@ func (m *model) addMoreRows(ctx context.Context) {
 		return
 	}
 	rows = append(rows, m.table.Rows()...)
-	var ok bool
 	var err error
 	for i := 0; i < style.StandardHeight; i++ {
+		if !m.it.Next(ctx) {
+			if m.it.Error() != nil {
+				log.I.Error("failed to get next job, ignoring...", zap.Error(err))
+			}
+			break
+		}
 		job := m.it.Current()
 		row := jobToRow(job)
 		m.idToRow[job.JobId] = row
 		rows = append(rows, row)
-		m.it, ok, err = m.it.Next(ctx)
-		if err != nil {
-			log.I.Error("failed to get next job, ignoring...", zap.Error(err))
-			break
-		}
-		if !ok {
-			break
-		}
 	}
 	m.table.SetRows(rows)
 }

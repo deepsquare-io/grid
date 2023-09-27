@@ -40,55 +40,56 @@ func (c *jobFetcher) GetJob(ctx context.Context, id [32]byte) (types.Job, error)
 }
 
 type jobIterator struct {
-	*jobFetcher
+	types.JobFetcher
 	array  [][32]byte
 	length int
 	index  int
 	job    types.Job
+	err    error
 }
 
 func (it *jobIterator) Next(
 	ctx context.Context,
-) (next types.JobLazyIterator, ok bool, err error) {
+) (ok bool) {
 	if it.index+1 >= it.length {
-		return nil, false, nil
+		return false
 	}
 	job, err := it.GetJob(ctx, it.array[it.index+1])
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to get job: %w", err)
+		it.err = fmt.Errorf("failed to get job: %w", err)
+		return false
 	}
 
-	return &jobIterator{
-		jobFetcher: it.jobFetcher,
-		array:      it.array,
-		length:     it.length,
-		index:      it.index + 1,
-		job:        job,
-	}, true, nil
+	it.index++
+	it.job = job
+
+	return true
 }
 
 func (it *jobIterator) Prev(
 	ctx context.Context,
-) (prev types.JobLazyIterator, ok bool, err error) {
+) (ok bool) {
 	if it.index-1 < 0 {
-		return nil, false, nil
+		return false
 	}
 	job, err := it.GetJob(ctx, it.array[it.index-1])
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to get job: %w", err)
+		it.err = fmt.Errorf("failed to get job: %w", err)
+		return false
 	}
 
-	return &jobIterator{
-		jobFetcher: it.jobFetcher,
-		array:      it.array,
-		length:     it.length,
-		index:      it.index - 1,
-		job:        job,
-	}, true, nil
+	it.index--
+	it.job = job
+
+	return true
 }
 
 func (it *jobIterator) Current() types.Job {
 	return it.job
+}
+
+func (it *jobIterator) Error() error {
+	return it.err
 }
 
 func (c *jobFetcher) GetJobs(ctx context.Context) (types.JobLazyIterator, error) {
@@ -98,23 +99,15 @@ func (c *jobFetcher) GetJobs(ctx context.Context) (types.JobLazyIterator, error)
 	if err != nil {
 		return nil, WrapError(err)
 	}
-	if len(jobIDs) == 0 {
-		return nil, nil
-	}
 	// Reverse array, from new to old
 	for i, j := 0, len(jobIDs)-1; i < j; i, j = i+1, j-1 {
 		jobIDs[i], jobIDs[j] = jobIDs[j], jobIDs[i]
 	}
-	// Initialize first data
-	job, err := c.GetJob(ctx, jobIDs[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed to get job: %w", err)
-	}
 	return &jobIterator{
-		jobFetcher: c,
+		JobFetcher: c,
 		array:      jobIDs,
 		length:     len(jobIDs),
-		index:      0,
-		job:        job,
+		index:      -1,
+		job:        nil,
 	}, nil
 }
