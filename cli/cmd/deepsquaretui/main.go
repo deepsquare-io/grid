@@ -114,7 +114,8 @@ var app = &cli.App{
 	Copyright: `deepsquaretui  Copyright (C) 2023 DeepSquare Association
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
-under certain conditions.`,
+under certain conditions.
+See the GNU General Public License for more details.`,
 	Commands: []*cli.Command{
 		&allowance.Command,
 		&credit.Command,
