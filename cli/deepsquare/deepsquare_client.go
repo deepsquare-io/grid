@@ -61,12 +61,19 @@ type Client interface {
 // ClientConfig is used to configure the Client's services.
 type ClientConfig struct {
 	http.Client
+	// MetaschedulerAddress is the address of the smart-contract.
 	MetaschedulerAddress common.Address
-	RPCEndpoint          string
-	SBatchEndpoint       string
-	LoggerEndpoint       string
-	UserPrivateKey       *ecdsa.PrivateKey
-	TLSConfig            *tls.Config
+	// RPCEndpoint is the URL of the network API of the Ethereum Virtual Machine (EVM). The parameter is optional.
+	RPCEndpoint string
+	// SBatchEndpoint is the URL of the SBatch service. The parameter is optional.
+	SBatchEndpoint string
+	// SBatchEndpoint is the URL of the grid logger. The parameter is optional.
+	LoggerEndpoint string
+	// UserPrivateKey is the ECDSA private key of an ethereum wallet. This permits
+	// authenticated requests if specified.
+	UserPrivateKey *ecdsa.PrivateKey
+	// TLSConfig of the HTTP and WS client used for all the connections. This parameter is optional.
+	TLSConfig *tls.Config
 }
 
 func (c *ClientConfig) applyDefault() {
