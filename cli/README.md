@@ -89,47 +89,50 @@ make
 # Defaults to: make bin/deepsquaretui
 ```
 
-Available `make`` commands:
+Available `make` commands:
 
 ```shell
 # Build
-bin/deepsquaretui
-bin/deepsquaretui-darwin-amd64
-bin/deepsquaretui-darwin-arm64
-bin/deepsquaretui-freebsd-amd64
-bin/deepsquaretui-freebsd-arm64
-bin/deepsquaretui-linux-amd64
-bin/deepsquaretui-linux-arm64
-bin/deepsquaretui-linux-mips64
-bin/deepsquaretui-linux-mips64le
-bin/deepsquaretui-linux-ppc64
-bin/deepsquaretui-linux-ppc64le
-bin/deepsquaretui-linux-riscv64
-bin/deepsquaretui-linux-s390x
-bin/deepsquaretui-windows-amd64.exe
-build-all
+make bin/deepsquaretui
+make bin/deepsquaretui-darwin-amd64
+make bin/deepsquaretui-darwin-arm64
+make bin/deepsquaretui-freebsd-amd64
+make bin/deepsquaretui-freebsd-arm64
+make bin/deepsquaretui-linux-amd64
+make bin/deepsquaretui-linux-arm64
+make bin/deepsquaretui-linux-mips64
+make bin/deepsquaretui-linux-mips64le
+make bin/deepsquaretui-linux-ppc64
+make bin/deepsquaretui-linux-ppc64le
+make bin/deepsquaretui-linux-riscv64
+make bin/deepsquaretui-linux-s390x
+make bin/deepsquaretui-windows-amd64.exe
+make build-all
 
 # Checksums
-bin/checksums.md
-bin/checksums.txt
+make bin/checksums.md
+make bin/checksums.txt
 
 # Clean builds
-clean
+make clean
 
 # Generate code
-generate
+make generate
 
 # Generate license
-license
+make license
 
 # Lint code
-lint
+make lint
 
 # Run unit tests
-unit
+make unit
 
 # Print version that will be used for the next build.
-version
+make version
+
+# Preview doc
+make doc
 ```
 
 ## Use as a library

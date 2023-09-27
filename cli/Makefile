@@ -11,6 +11,10 @@ ifeq ($(golint),)
 golint := $(shell go env GOPATH)/bin/golangci-lint
 endif
 
+ifeq ($(pkgsite),)
+pkgsite := $(shell go env GOPATH)/bin/pkgsite
+endif
+
 bin/deepsquaretui: $(GO_SRCS)
 	go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
 
@@ -79,6 +83,9 @@ generate:
 $(golint):
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
+$(pkgsite):
+	go install golang.org/x/pkgsite/cmd/pkgsite@latest
+
 .PHONY: license
 license:
 	go run ./licensing.go
@@ -101,3 +108,7 @@ version:
 .PHONY: list
 list:
 	@LC_ALL=C $(MAKE) -pRrq -f $(firstword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/(^|\n)# Files(\n|$$)/,/(^|\n)# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | grep -E -v -e '^[^[:alnum:]]' -e '^$@$$'
+
+.PHONY: doc
+doc:
+	$(pkgsite) -open .
