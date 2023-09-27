@@ -9,7 +9,7 @@ COPY . .
 ARG TARGETOS TARGETARCH
 RUN --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/go/pkg \
-  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w" -a -o /out/app ./cmd
+  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w" -a -o /out/ldap-connector ./
 
 # ---
 FROM --platform=$BUILDPLATFORM registry-1.docker.io/library/alpine as certs
@@ -27,10 +27,10 @@ RUN mkdir /app
 RUN addgroup -S app && adduser -S -G app app
 WORKDIR /app
 
-COPY --from=builder /out/app .
+COPY --from=builder /out/ldap-connector .
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
 RUN chown -R app:app .
 USER app
 
-ENTRYPOINT [ "/tini", "--", "./app" ]
+ENTRYPOINT [ "/tini", "--", "./ldap-connector" ]
