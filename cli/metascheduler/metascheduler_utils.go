@@ -21,37 +21,41 @@ import (
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 )
 
+func creditsPerMin(
+	prices metaschedulerabi.ProviderPrices,
+	definition metaschedulerabi.JobDefinition,
+) *big.Int {
+	// GpuPricePerMin * GpusPerTask
+	gpusCostPerMinPerTask := new(big.Int).
+		Mul(prices.GpuPricePerMin, new(big.Int).SetUint64(definition.GpusPerTask))
+
+	// CpuPricePerMin * CpusPerTask
+	cpusCostPerMinPerTask := new(big.Int).
+		Mul(prices.CpuPricePerMin, new(big.Int).SetUint64(definition.CpusPerTask))
+
+	// MemPerCpu * CpusPerTask * MemPricePerMin
+	memCostPerMinPerTask := new(big.Int).
+		Mul(prices.MemPricePerMin, new(big.Int).SetUint64(definition.MemPerCpu))
+	memCostPerMinPerTask.Mul(memCostPerMinPerTask, new(big.Int).SetUint64(definition.CpusPerTask))
+
+	// creditsPerMin = Ntasks * (cpusPricePerMinPerTask + memPricePerMinPerTask + gpusPricePerMinPerTask)
+	creditsPerMin := new(big.Int).Set(gpusCostPerMinPerTask)
+	creditsPerMin.Add(creditsPerMin, cpusCostPerMinPerTask)
+	creditsPerMin.Add(creditsPerMin, memCostPerMinPerTask)
+	creditsPerMin.Mul(creditsPerMin, new(big.Int).SetUint64(definition.Ntasks))
+
+	return creditsPerMin
+}
+
 // DurationToCredit converts a job duration to credits based on pricing and resources allocation.
 func DurationToCredit(
 	prices metaschedulerabi.ProviderPrices,
 	definition metaschedulerabi.JobDefinition,
 	durationMinutes *big.Int,
 ) *big.Int {
-	// GpuPricePerMin * GpusPerTask
-	gpusPricePerMinPerTask := new(big.Int).
-		Mul(prices.GpuPricePerMin, new(big.Int).SetUint64(definition.GpusPerTask))
-
-	// CpuPricePerMin * CpusPerTask
-	cpusPricePerMinPerTask := new(big.Int).
-		Mul(prices.CpuPricePerMin, new(big.Int).SetUint64(definition.CpusPerTask))
-
-	// MemPerCpu * CpusPerTask * MemPricePerMin
-	memPricePerMinPerTask := new(
-		big.Int,
-	).Mul(prices.MemPricePerMin, new(big.Int).SetUint64(definition.MemPerCpu))
-	memPricePerMinPerTask = memPricePerMinPerTask.Mul(
-		memPricePerMinPerTask,
-		new(big.Int).SetUint64(definition.CpusPerTask),
-	)
-
-	// pricePerMin = Ntasks * (cpusPricePerMinPerTask + memPricePerMinPerTask + gpusPricePerMinPerTask)
-	b := new(big.Int).Add(gpusPricePerMinPerTask, cpusPricePerMinPerTask)
-	b = b.Add(b, memPricePerMinPerTask)
-	b = b.Mul(b, new(big.Int).SetUint64(definition.Ntasks))
-
+	creditsPerMin := creditsPerMin(prices, definition)
 	// price = duration*pricePerMin
-	b.Mul(b, durationMinutes)
-	return b
+	return creditsPerMin.Mul(creditsPerMin, durationMinutes)
 }
 
 // CreditToDuration converts credits to a job duration based on pricing and resources allocation.
@@ -60,28 +64,7 @@ func CreditToDuration(
 	definition metaschedulerabi.JobDefinition,
 	creditsWei *big.Int,
 ) *big.Int {
-	// GpuPricePerMin * GpusPerTask
-	gpusPricePerMinPerTask := new(big.Int).
-		Mul(prices.GpuPricePerMin, new(big.Int).SetUint64(definition.GpusPerTask))
-
-	// CpuPricePerMin * CpusPerTask
-	cpusPricePerMinPerTask := new(big.Int).
-		Mul(prices.CpuPricePerMin, new(big.Int).SetUint64(definition.CpusPerTask))
-
-	// MemPerCpu * CpusPerTask * MemPricePerMin
-	memPricePerMinPerTask := new(
-		big.Int,
-	).Mul(prices.MemPricePerMin, new(big.Int).SetUint64(definition.MemPerCpu))
-	memPricePerMinPerTask = memPricePerMinPerTask.Mul(
-		memPricePerMinPerTask,
-		new(big.Int).SetUint64(definition.CpusPerTask),
-	)
-
-	// pricePerMin = Ntasks * (cpusPricePerMinPerTask + memPricePerMinPerTask + gpusPricePerMinPerTask)
-	pricePerMin := new(big.Int).Add(gpusPricePerMinPerTask, cpusPricePerMinPerTask)
-	pricePerMin = pricePerMin.Add(pricePerMin, memPricePerMinPerTask)
-	pricePerMin = pricePerMin.Mul(pricePerMin, new(big.Int).SetUint64(definition.Ntasks))
-
+	creditsPerMin := creditsPerMin(prices, definition)
 	// duration = price/pricePerMin
-	return new(big.Int).Div(creditsWei, pricePerMin)
+	return new(big.Int).Div(creditsWei, creditsPerMin)
 }
