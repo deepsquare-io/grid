@@ -313,8 +313,8 @@ func Model(
 				key.WithHelp("enter", "show job logs"),
 			),
 			TopupJob: key.NewBinding(
-				key.WithKeys("t"),
-				key.WithHelp("t", "topup job"),
+				key.WithKeys("t", "v"),
+				key.WithHelp("t/v", "topup/view job"),
 			),
 			CancelJob: key.NewBinding(
 				key.WithKeys("c"),
