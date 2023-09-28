@@ -81,12 +81,12 @@ Elapsed: ...
 				m.provider.ProviderPrices,
 				m.job.Definition,
 				m.job.Cost.MaxCost,
-			).Int64()) * time.Second).String()
+			).Int64()) * time.Minute).String()
 		}
 		var elapsed time.Duration
 		start := m.job.Time.Start.Int64()
 		end := m.job.Time.End.Int64()
-		if end != 0 {
+		if end > start {
 			elapsed = time.Duration(end-start) * time.Second
 		} else {
 			elapsed = time.Since(time.Unix(start, 0))
