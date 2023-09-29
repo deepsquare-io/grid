@@ -70,6 +70,7 @@ func (b *ModelBuilder) WithVersion(version string) *ModelBuilder {
 	return b
 }
 
+// WithAvailableVersion sets the available version of the application.
 func (b *ModelBuilder) WithAvailableVersion(version string) *ModelBuilder {
 	b.availableVersion = version
 	return b

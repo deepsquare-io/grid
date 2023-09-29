@@ -107,6 +107,7 @@ func OnError(errorStyle lipgloss.Style, v string, err error) string {
 	return v
 }
 
+// JobStatusStyle choose the right style for the right status.
 func JobStatusStyle(s string) lipgloss.Style {
 	switch strings.Trim(s, " ") {
 	case metascheduler.JobStatusPending.String():
