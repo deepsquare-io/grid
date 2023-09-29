@@ -63,7 +63,10 @@ The environment variables must be initialized for proper usage.
 package main
 
 import (
+	"context"
+	"fmt"
 	"os"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/grid/cli/cmd/allowance"
@@ -75,15 +78,18 @@ import (
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/tui/nav"
+	versionpkg "github.com/deepsquare-io/grid/cli/version"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
+	"golang.org/x/mod/semver"
 )
 
 var (
-	version = "dev"
+	version          = "dev"
+	availableVersion string
 
 	sbatchEndpoint             string
 	loggerEndpoint             string
@@ -214,6 +220,7 @@ See the GNU General Public License for more details.`,
 			WithClient(client).
 			WithWatcher(watcher).
 			WithVersion(version).
+			WithAvailableVersion(availableVersion).
 			WithMetaschedulerAddress(metaschedulerSmartContract).
 			Build(ctx)
 
@@ -224,6 +231,19 @@ See the GNU General Public License for more details.`,
 		).Run()
 		return err
 	},
+}
+
+func init() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	v, err := versionpkg.CheckLatest(ctx)
+	if err != nil {
+		internallog.I.Warn("failed to check version", zap.Error(err))
+	}
+	availableVersion = v
+	if semver.Compare(availableVersion, version) > 0 {
+		app.Version = fmt.Sprintf("%s (new version available: %s)", version, availableVersion)
+	}
 }
 
 func main() {

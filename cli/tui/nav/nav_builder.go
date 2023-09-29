@@ -37,6 +37,7 @@ type ModelBuilder struct {
 	client               deepsquare.Client
 	watcher              deepsquare.Watcher
 	version              string
+	availableVersion     string
 	metaschedulerAddress string
 }
 
@@ -66,6 +67,11 @@ func (b *ModelBuilder) WithWatcher(watcher deepsquare.Watcher) *ModelBuilder {
 // WithVersion sets the version of the application.
 func (b *ModelBuilder) WithVersion(version string) *ModelBuilder {
 	b.version = version
+	return b
+}
+
+func (b *ModelBuilder) WithAvailableVersion(version string) *ModelBuilder {
+	b.availableVersion = version
 	return b
 }
 
@@ -111,6 +117,7 @@ func (b *ModelBuilder) Build(ctx context.Context) tea.Model {
 		client:               b.client,
 		watcher:              b.watcher,
 		version:              b.version,
+		availableVersion:     b.availableVersion,
 		metaschedulerAddress: b.metaschedulerAddress,
 	}
 }

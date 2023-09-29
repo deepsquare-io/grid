@@ -39,10 +39,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
+	"golang.org/x/mod/semver"
 )
 
 type model struct {
 	version              string
+	availableVersion     string
 	metaschedulerAddress string
 	logs                 chan ethtypes.Log
 	balance              *big.Int
@@ -264,12 +266,17 @@ func (m model) View() string {
 		navView = m.statusModel.View()
 	}
 
+	version := m.version
+	if semver.Compare(m.availableVersion, m.version) > 0 {
+		version = fmt.Sprintf("%s (new version available: %s)", version, m.availableVersion)
+	}
+
 	values := fmt.Sprintf(`%s
 %s
 %s
 %s credits (%s wei)
 %s credits (%s wei)`,
-		m.version,
+		version,
 		m.userAddress,
 		m.metaschedulerAddress,
 		ether.FromWei(m.balance).String(),
