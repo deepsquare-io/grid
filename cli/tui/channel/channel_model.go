@@ -16,14 +16,16 @@
 // Package channel provides utilities to create an Bubbletea model compatible with Go channels.
 package channel
 
-import tea "github.com/charmbracelet/bubbletea"
+import (
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 type initMsg struct {
 	Cancel func() error
 }
 
-// DisposeMsg is a signal used to close the channel of the Model.
-type DisposeMsg[T any] struct{}
+// ErrorMsg is a signal used to close the channel of the Model.
+type ErrorMsg[T any] error
 
 // Model is the object used to implement a bubbletea model with a channel.
 type Model[T any] struct {
@@ -36,6 +38,9 @@ type Model[T any] struct {
 
 func (m *Model[T]) init() tea.Msg {
 	dispose := m.OnInit(m.Channel)
+	if dispose == nil {
+		panic("missing dispose function")
+	}
 
 	return initMsg{
 		Cancel: dispose,
@@ -60,17 +65,18 @@ func (m Model[T]) Update(msg tea.Msg) (Model[T], tea.Cmd) {
 		m.dispose = msg.Cancel
 	case T:
 		return m, m.tick
-	case DisposeMsg[T]:
-		if m.dispose != nil {
-			if err := m.dispose(); err != nil {
-				return m, tea.Println(err)
-			}
+	case ErrorMsg[T]:
+		if msg != nil {
+			return m, tea.Println(msg)
 		}
 	}
 	return m, nil
 }
 
-// Dispose is the signal that closes the model and executes the dispose function.
+// Dispose executes the dispose function.
 func (m *Model[T]) Dispose() tea.Msg {
-	return DisposeMsg[T]{}
+	if err := m.dispose(); err != nil {
+		return ErrorMsg[T](err)
+	}
+	return nil
 }

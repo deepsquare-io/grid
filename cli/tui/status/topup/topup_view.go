@@ -35,7 +35,7 @@ func indent(spaces int, v string) string {
 }
 
 func (m model) loading() string {
-	if m.isRunning {
+	if m.isToppingUp {
 		return "Topping up..."
 	}
 	return ""
@@ -66,7 +66,10 @@ func (m model) View() string {
 			ether.FromWei(m.provider.ProviderPrices.GpuPricePerMin).String(),
 		)
 	}
-	definition := `Tasks: ...
+	definition := `Name: ...
+Status: ...
+LastError: ...
+Tasks: ...
 CPU/task: ... (Total CPU: ...)
 Mem(MB)/CPU: ... MB (Total Mem: ... MB)
 GPU/task: ... (Total GPU: ...)
@@ -86,13 +89,16 @@ Elapsed: ...
 		var elapsed time.Duration
 		start := m.job.Time.Start.Int64()
 		end := m.job.Time.End.Int64()
-		if end > start {
+		if end >= start || isFinished(metascheduler.JobStatus(m.job.Status)) {
 			elapsed = time.Duration(end-start) * time.Second
 		} else {
 			elapsed = time.Since(time.Unix(start, 0))
 		}
 		definition = fmt.Sprintf(
-			`Tasks: %d
+			`Name: %s
+Status: %s
+LastError: %s
+Tasks: %d
 CPU/task: %d (Total CPU: %d)
 Mem(MB)/CPU: %d MB (Total Mem: %d MB)
 GPU/task: %d (Total GPU: %d)
@@ -100,6 +106,10 @@ Credits Allocated: %s credits
 Max Duration: %s
 Elapsed: %s
 `,
+			string(m.job.JobName[:]),
+			style.JobStatusStyle(metascheduler.JobStatus(m.job.Status).String()).
+				Render(metascheduler.JobStatus(m.job.Status).String()),
+			renderOnError(style.Error.Render(m.job.LastError), m.job.LastError),
 			m.job.Definition.Ntasks,
 			m.job.Definition.CpusPerTask,
 			m.job.Definition.CpusPerTask*m.job.Definition.Ntasks,
@@ -151,10 +161,25 @@ Expected duration gain: %s
 		provider,
 		style.Foreground.Render("Amount in credits (not in wei)"),
 		m.inputs[amountInput].View(),
-		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[amountInput])),
+		style.Error.Width(50).Render(utils.ErrorfOrEmpty("^^^%s", m.errors[amountInput])),
 		duration,
-		style.Error.Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
+		style.Error.Width(50).Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
 		m.loading(),
 		help,
 	)
+}
+
+func isFinished(s metascheduler.JobStatus) bool {
+	return s == metascheduler.JobStatusCancelled ||
+		s == metascheduler.JobStatusFinished ||
+		s == metascheduler.JobStatusOutOfCredits ||
+		s == metascheduler.JobStatusPanicked ||
+		s == metascheduler.JobStatusFailed
+}
+
+func renderOnError(v string, err string) string {
+	if err == "" {
+		return "no error reported"
+	}
+	return v
 }

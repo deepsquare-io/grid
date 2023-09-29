@@ -28,8 +28,13 @@ import (
 // ExitMsg msg closes to log model
 type ExitMsg struct{}
 
-func emitExitMsg() tea.Msg {
-	return ExitMsg{}
+func (m *model) emitExitMsg() tea.Cmd {
+	return tea.Sequence(
+		m.watchLogs.Dispose,
+		func() tea.Msg {
+			return ExitMsg{}
+		},
+	)
 }
 
 type model struct {
@@ -74,8 +79,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if sCmd != nil {
 			cmds = append(cmds, sCmd)
 		}
-	case ExitMsg:
-		cmds = append(cmds, m.watchLogs.Dispose)
 	case logMsg:
 		m.logs = append(m.logs, msg)
 		if m.showTimestamp {
@@ -89,7 +92,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case msg.Type == tea.KeyEscape, msg.String() == "q":
-			cmds = append(cmds, emitExitMsg)
+			cmds = append(cmds, m.emitExitMsg())
 		}
 	}
 	return m, tea.Batch(cmds...)

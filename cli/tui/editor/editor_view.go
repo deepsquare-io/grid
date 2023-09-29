@@ -59,19 +59,19 @@ func (m model) formView() string {
 		style.Title1.Width(20).Render("Submit a Job"),
 		style.Foreground.Render("Allocate Credits"),
 		m.inputs[creditsLockingInput].View(),
-		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[creditsLockingInput])),
+		style.Error.Width(50).Render(utils.ErrorfOrEmpty("^^^%s", m.errors[creditsLockingInput])),
 		style.Foreground.Render("Use flags"),
 		m.inputs[usesInput].View(),
-		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[usesInput])),
+		style.Error.Width(50).Render(utils.ErrorfOrEmpty("^^^%s", m.errors[usesInput])),
 		style.Foreground.Render("Job Name"),
 		m.inputs[jobNameInput].View(),
-		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[jobNameInput])),
-		style.Error.Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
+		style.Error.Width(50).Render(utils.ErrorfOrEmpty("^^^%s", m.errors[jobNameInput])),
+		style.Error.Width(50).Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
 	)
 }
 
 func (m model) loading() string {
-	if m.isRunning {
+	if m.isSubmitting {
 		return "Submitting..."
 	}
 	return ""

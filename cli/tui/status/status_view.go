@@ -19,9 +19,9 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/grid/cli/internal/utils"
+	"github.com/deepsquare-io/grid/cli/tui/components/table"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 )
 
@@ -48,9 +48,14 @@ func (m model) View() string {
 			m.keyMap.TableKeyMap.LineDown,
 		},
 	})
+	var status string
+	if m.isCancelling {
+		status += "Cancelling..."
+	}
+	status += style.Error.Width(30).Render(utils.ErrorfOrEmpty("Error: %s", m.err))
 	right := fmt.Sprintf(
 		"%s\n%s",
-		style.Error.Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
+		status,
 		help,
 	)
 	return lipgloss.JoinHorizontal(lipgloss.Center, style.Base.Render(m.table.View()), right)

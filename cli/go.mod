@@ -10,6 +10,7 @@ require (
 	github.com/erikgeiser/promptkit v0.9.0
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/joho/godotenv v1.5.1
+	github.com/mattn/go-runewidth v0.0.15
 	github.com/mistakenelf/teacup v0.4.1
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.7
@@ -70,7 +71,6 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect

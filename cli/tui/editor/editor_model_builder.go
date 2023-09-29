@@ -76,23 +76,23 @@ func (b *ModelBuilder) Build() tea.Model {
 	inputs[creditsLockingInput].Placeholder = "example: 100"
 	inputs[creditsLockingInput].Focus()
 	inputs[creditsLockingInput].Width = 32
-	inputs[creditsLockingInput].Prompt = ""
+	inputs[creditsLockingInput].Prompt = style.Foreground.Render("❱ ")
 	inputs[creditsLockingInput].Validate = allowedNumber
 
 	inputs[usesInput] = textinput.New()
 	inputs[usesInput].Placeholder = "example: os=linux,arch=amd64"
 	inputs[usesInput].Width = 32
-	inputs[usesInput].Prompt = ""
+	inputs[usesInput].Prompt = style.Foreground.Render("❱ ")
 
 	inputs[jobNameInput] = textinput.New()
 	inputs[jobNameInput].Width = 32
-	inputs[jobNameInput].Prompt = ""
+	inputs[jobNameInput].Prompt = style.Foreground.Render("❱ ")
 
 	jobName, _, jobPath, err := prepareFiles()
 	if err != nil {
 		panic(err.Error())
 	}
-	inputs[jobNameInput].Prompt = jobName
+	inputs[jobNameInput].SetValue(jobName)
 
 	return &model{
 		code:   code,

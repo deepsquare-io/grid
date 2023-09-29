@@ -55,34 +55,43 @@ func emitClearErrorsMsg() tea.Msg {
 // ExitMsg msg closes to topup model
 type ExitMsg struct{}
 
-func emitExitMsg() tea.Msg {
-	return ExitMsg{}
+func (m *model) emitExitMsg() tea.Cmd {
+	return tea.Sequence(
+		m.watchJob.Dispose,
+		func() tea.Msg {
+			return ExitMsg{}
+		},
+	)
 }
 
-type topupProgressMsg struct{}
-
-func emitTransferProgressMsg() tea.Msg {
-	return topupProgressMsg{}
-}
-
-type topupDoneMsg struct{}
+type topupProgressMsg bool
 
 func (m *model) topup(ctx context.Context) tea.Cmd {
-	return func() tea.Msg {
-		// Parse input
-		in, ok := new(big.Float).SetString(m.inputs[amountInput].Value())
-		if !ok {
-			err := errors.New("couldn't parse amount value")
-			m.errors[amountInput] = err
-			return errorMsg(err)
-		}
-		amount := ether.ToWei(in)
+	return tea.Batch(
+		tea.Sequence(
+			func() tea.Msg {
+				// Parse input
+				in, ok := new(big.Float).SetString(m.inputs[amountInput].Value())
+				if !ok {
+					err := errors.New("couldn't parse amount value")
+					m.errors[amountInput] = err
+					return errorMsg(err)
+				}
+				amount := ether.ToWei(in)
 
-		if err := m.client.TopUpJob(ctx, m.jobID, amount); err != nil {
-			return errorMsg(err)
-		}
-		return topupDoneMsg{}
-	}
+				if err := m.client.TopUpJob(ctx, m.jobID, amount); err != nil {
+					return errorMsg(err)
+				}
+				return m.emitExitMsg()()
+			},
+			func() tea.Msg {
+				return topupProgressMsg(false)
+			},
+		),
+		func() tea.Msg {
+			return topupProgressMsg(true)
+		},
+	)
 }
 
 type updateProviderMsg metaschedulerabi.Provider
@@ -114,8 +123,8 @@ type model struct {
 	job      types.Job
 	provider *metaschedulerabi.Provider
 
-	err       error
-	isRunning bool
+	err         error
+	isToppingUp bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -135,8 +144,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	switch msg := msg.(type) {
-	case ExitMsg:
-		cmds = append(cmds, m.watchJob.Dispose)
 	case updateProviderMsg:
 		p := metaschedulerabi.Provider(msg)
 		m.provider = &p
@@ -149,23 +156,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case errorMsg:
 		m.err = msg
-		m.isRunning = false
 		return m, nil
 	case clearErrorsMsg:
 		m.errors[amountInput] = nil
 		m.err = nil
-		m.isRunning = false
-	case topupDoneMsg:
-		m.isRunning = false
-		cmds = append(cmds, emitExitMsg)
 	case topupProgressMsg:
-		m.isRunning = true
+		m.isToppingUp = bool(msg)
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keyMap.Exit):
-			cmds = append(cmds, emitExitMsg)
+			cmds = append(cmds, m.emitExitMsg())
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
-			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, emitTransferProgressMsg, m.topup(context.TODO())))
+			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.topup(context.TODO())))
 		case key.Matches(msg, m.keyMap.NextInput):
 			m.nextInput()
 		case key.Matches(msg, m.keyMap.PrevInput):

@@ -59,23 +59,18 @@ type ExitMsg struct {
 	JobID [32]byte
 }
 
-func emitExitMsg(jobID [32]byte) tea.Cmd {
-	return func() tea.Msg {
-		return ExitMsg{
-			JobID: jobID,
-		}
-	}
+func (m *model) emitExitMsg(jobID [32]byte) tea.Cmd {
+	return tea.Sequence(
+		m.watchFileChanges.Dispose,
+		func() tea.Msg {
+			return ExitMsg{
+				JobID: jobID,
+			}
+		},
+	)
 }
 
-type submitProgressMsg struct{}
-
-func emitSubmitProgressMsg() tea.Msg {
-	return submitProgressMsg{}
-}
-
-type submitDoneMsg struct {
-	JobID [32]byte
-}
+type submitProgressMsg bool
 
 type errorMsg error
 
@@ -103,7 +98,7 @@ type model struct {
 
 	client deepsquare.Client
 
-	isRunning bool
+	isSubmitting bool
 }
 
 type editorDone struct {
@@ -124,70 +119,78 @@ func (m *model) openEditor(
 }
 
 func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
-	return func() tea.Msg {
-		// Read file
-		dat, err := os.ReadFile(jobPath)
-		if err != nil {
-			return errorMsg(err)
-		}
-		var job sbatch.Job
-		if err := yaml.Unmarshal(dat, &job); err != nil {
-			return errorMsg(err)
-		}
+	return tea.Batch(
+		tea.Sequence(
+			func() tea.Msg {
+				// Read file
+				dat, err := os.ReadFile(jobPath)
+				if err != nil {
+					return errorMsg(err)
+				}
+				var job sbatch.Job
+				if err := yaml.Unmarshal(dat, &job); err != nil {
+					return errorMsg(err)
+				}
 
-		// Validate input
-		if m.inputs[jobNameInput].Value() == "" {
-			err := errors.New("empty value is not allowed")
-			m.errors[jobNameInput] = err
-			return fmt.Errorf("job name field: %w", err)
-		}
-		if err := validator.IsNumber(m.inputs[creditsLockingInput].Value()); err != nil {
-			m.errors[creditsLockingInput] = err
-			return fmt.Errorf("allocate credits field: %w", err)
-		}
-		if err := validator.IsMap(m.inputs[usesInput].Value()); err != nil {
-			m.errors[usesInput] = err
-			return fmt.Errorf("use flags field: %w", err)
-		}
+				// Validate input
+				if m.inputs[jobNameInput].Value() == "" {
+					err := errors.New("empty value is not allowed")
+					m.errors[jobNameInput] = err
+					return fmt.Errorf("job name field: %w", err)
+				}
+				if err := validator.IsNumber(m.inputs[creditsLockingInput].Value()); err != nil {
+					m.errors[creditsLockingInput] = err
+					return fmt.Errorf("allocate credits field: %w", err)
+				}
+				if err := validator.IsMap(m.inputs[usesInput].Value()); err != nil {
+					m.errors[usesInput] = err
+					return fmt.Errorf("use flags field: %w", err)
+				}
 
-		// Parse input
-		allocatedCredits := m.inputs[creditsLockingInput].Value()
-		allocatedCreditsF, err := strconv.ParseFloat(allocatedCredits, 64)
-		if err != nil {
-			return errorMsg(err)
-		}
-		allocatedCreditsBigF := new(big.Float).SetFloat64(allocatedCreditsF)
-		curr, err := m.client.GetAllowance(ctx)
-		if err != nil {
-			return errorMsg(err)
-		}
-		labels, err := utils.StringsToLabels(m.inputs[usesInput].Value())
-		if err != nil {
-			return errorMsg(err)
-		}
+				// Parse input
+				allocatedCredits := m.inputs[creditsLockingInput].Value()
+				allocatedCreditsF, err := strconv.ParseFloat(allocatedCredits, 64)
+				if err != nil {
+					return errorMsg(err)
+				}
+				allocatedCreditsBigF := new(big.Float).SetFloat64(allocatedCreditsF)
+				curr, err := m.client.GetAllowance(ctx)
+				if err != nil {
+					return errorMsg(err)
+				}
+				labels, err := utils.StringsToLabels(m.inputs[usesInput].Value())
+				if err != nil {
+					return errorMsg(err)
+				}
 
-		// Mutate
-		allocatedCreditsBigI := ether.ToWei(allocatedCreditsBigF)
-		if err = m.client.SetAllowance(ctx, curr.Add(curr, allocatedCreditsBigI)); err != nil {
-			return errorMsg(err)
-		}
+				// Mutate
+				allocatedCreditsBigI := ether.ToWei(allocatedCreditsBigF)
+				if err = m.client.SetAllowance(ctx, curr.Add(curr, allocatedCreditsBigI)); err != nil {
+					return errorMsg(err)
+				}
 
-		var jobName [32]byte
-		copy(jobName[:], m.inputs[jobNameInput].Value())
-		jobID, err := m.client.SubmitJob(
-			ctx,
-			&job,
-			allocatedCreditsBigI,
-			jobName,
-			types.WithUse(labels...),
-		)
-		if err != nil {
-			return errorMsg(err)
-		}
-		return submitDoneMsg{
-			JobID: jobID,
-		}
-	}
+				var jobName [32]byte
+				copy(jobName[:], m.inputs[jobNameInput].Value())
+				jobID, err := m.client.SubmitJob(
+					ctx,
+					&job,
+					allocatedCreditsBigI,
+					jobName,
+					types.WithUse(labels...),
+				)
+				if err != nil {
+					return errorMsg(err)
+				}
+				return m.emitExitMsg(jobID)()
+			},
+			func() tea.Msg {
+				return submitProgressMsg(false)
+			},
+		),
+		func() tea.Msg {
+			return submitProgressMsg(true)
+		},
+	)
 }
 
 func (m model) Init() tea.Cmd {
@@ -213,8 +216,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 switchmsg:
 	switch msg := msg.(type) {
-	case ExitMsg:
-		return m, m.watchFileChanges.Dispose
 	case editorDone:
 		if msg.err != nil {
 			m.err = msg.err
@@ -225,25 +226,21 @@ switchmsg:
 	case fileChangedMsg:
 		cmds = append(cmds, m.code.SetFileName(m.jobPath))
 	case submitProgressMsg:
-		m.isRunning = true
-	case submitDoneMsg:
-		m.isRunning = false
-		cmds = append(cmds, emitExitMsg(msg.JobID))
+		m.isSubmitting = bool(msg)
 	case errorMsg:
-		m.isRunning = false
 		m.err = msg
 		return m, nil
 	case tea.KeyMsg:
-		if m.isRunning {
+		if m.isSubmitting {
 			break switchmsg
 		}
 		switch {
 		case key.Matches(msg, m.keyMap.EditAgain):
 			cmds = append(cmds, m.openEditor(context.TODO(), m.jobPath))
 		case key.Matches(msg, m.keyMap.Exit):
-			cmds = append(cmds, emitExitMsg([32]byte{}))
+			cmds = append(cmds, m.emitExitMsg([32]byte{}))
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
-			cmds = append(cmds, tea.Sequence(tea.Batch(emitSubmitProgressMsg, emitClearErrorsMsg), m.submitJob(context.TODO(), m.jobPath)))
+			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.submitJob(context.TODO(), m.jobPath)))
 		case key.Matches(msg, m.keyMap.NextInput):
 			m.nextInput()
 		case key.Matches(msg, m.keyMap.PrevInput):

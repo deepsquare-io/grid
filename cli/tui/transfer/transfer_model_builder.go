@@ -21,6 +21,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/tui/style"
 )
 
 // ModelBuilder contains the dependencies to build the model for the transfer page.
@@ -41,13 +42,13 @@ func (b *ModelBuilder) Build() tea.Model {
 	inputs[toInput].Focus()
 	inputs[toInput].Placeholder = "example: 0x0000000000000000000000000000000000000000"
 	inputs[toInput].Width = 64
-	inputs[toInput].Prompt = ""
+	inputs[toInput].Prompt = style.Foreground.Render("❱ ")
 	inputs[toInput].Validate = allowedHex
 
 	inputs[amountInput] = textinput.New()
 	inputs[amountInput].Placeholder = "example: 0.0"
 	inputs[amountInput].Width = 64
-	inputs[amountInput].Prompt = ""
+	inputs[amountInput].Prompt = style.Foreground.Render("❱ ")
 	inputs[amountInput].Validate = allowedNumber
 
 	return &model{

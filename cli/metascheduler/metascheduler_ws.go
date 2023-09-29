@@ -153,7 +153,10 @@ func (c *eventSubscriber) filter(
 			}
 
 			if o.NewJobRequestChan != nil {
-				o.NewJobRequestChan <- event
+				select {
+				case o.NewJobRequestChan <- event:
+				default:
+				}
 			}
 		case jobTransitionEvent.ID.Hex():
 			event, err := c.rpcMetascheduler.ParseJobTransitionEvent(log)
@@ -162,7 +165,10 @@ func (c *eventSubscriber) filter(
 			}
 
 			if o.JobTransitionChan != nil {
-				o.JobTransitionChan <- event
+				select {
+				case o.JobTransitionChan <- event:
+				default:
+				}
 			}
 		case transferEvent.ID.Hex():
 			event, err := creditFilterer.ParseTransfer(log)
@@ -171,7 +177,10 @@ func (c *eventSubscriber) filter(
 			}
 
 			if o.TransferChan != nil {
-				o.TransferChan <- event
+				select {
+				case o.TransferChan <- event:
+				default:
+				}
 			}
 		case approvalEvent.ID.Hex():
 			event, err := creditFilterer.ParseApproval(log)
@@ -180,7 +189,10 @@ func (c *eventSubscriber) filter(
 			}
 
 			if o.ApprovalChan != nil {
-				o.ApprovalChan <- event
+				select {
+				case o.ApprovalChan <- event:
+				default:
+				}
 			}
 		}
 	}

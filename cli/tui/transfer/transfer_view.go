@@ -24,7 +24,7 @@ import (
 )
 
 func (m model) loading() string {
-	if m.isRunning {
+	if m.isTransferring {
 		return "Transferring..."
 	}
 	return ""
@@ -53,11 +53,11 @@ func (m model) View() string {
 		style.Title1.Width(20).Render("Transfer credits"),
 		style.Foreground.Render("Send to"),
 		m.inputs[toInput].View(),
-		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[toInput])),
+		style.Error.Width(50).Render(utils.ErrorfOrEmpty("^^^%s", m.errors[toInput])),
 		style.Foreground.Render("Amount in credits (not in wei)"),
 		m.inputs[amountInput].View(),
-		style.Error.Render(utils.ErrorfOrEmpty("^^^%s", m.errors[amountInput])),
-		style.Error.Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
+		style.Error.Width(50).Render(utils.ErrorfOrEmpty("^^^%s", m.errors[amountInput])),
+		style.Error.Width(50).Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
 		m.loading(),
 		help,
 	)

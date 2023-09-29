@@ -57,36 +57,40 @@ func emitExitMsg() tea.Msg {
 	return ExitMsg{}
 }
 
-type transferProgressMsg struct{}
-
-func emitTransferProgressMsg() tea.Msg {
-	return transferProgressMsg{}
-}
-
-type transferDoneMsg struct{}
+type transferProgressMsg bool
 
 func (m *model) transfer(ctx context.Context) tea.Cmd {
-	return func() tea.Msg {
-		// Parse input
-		if !common.IsHexAddress(m.inputs[toInput].Value()) {
-			err := errors.New("field is not an hex address")
-			m.errors[toInput] = err
-			return errorMsg(err)
-		}
-		to := common.HexToAddress(m.inputs[toInput].Value())
-		in, ok := new(big.Float).SetString(m.inputs[amountInput].Value())
-		if !ok {
-			err := errors.New("couldn't parse amount value")
-			m.errors[amountInput] = err
-			return errorMsg(err)
-		}
-		amount := ether.ToWei(in)
+	return tea.Batch(
+		tea.Sequence(
+			func() tea.Msg {
+				// Parse input
+				if !common.IsHexAddress(m.inputs[toInput].Value()) {
+					err := errors.New("field is not an hex address")
+					m.errors[toInput] = err
+					return errorMsg(err)
+				}
+				to := common.HexToAddress(m.inputs[toInput].Value())
+				in, ok := new(big.Float).SetString(m.inputs[amountInput].Value())
+				if !ok {
+					err := errors.New("couldn't parse amount value")
+					m.errors[amountInput] = err
+					return errorMsg(err)
+				}
+				amount := ether.ToWei(in)
 
-		if err := m.client.Transfer(ctx, to, amount); err != nil {
-			return errorMsg(err)
-		}
-		return transferDoneMsg{}
-	}
+				if err := m.client.Transfer(ctx, to, amount); err != nil {
+					return errorMsg(err)
+				}
+				return emitExitMsg
+			},
+			func() tea.Msg {
+				return transferProgressMsg(false)
+			},
+		),
+		func() tea.Msg {
+			return transferProgressMsg(true)
+		},
+	)
 }
 
 type model struct {
@@ -100,8 +104,8 @@ type model struct {
 
 	keyMap keyMap
 
-	err       error
-	isRunning bool
+	err            error
+	isTransferring bool
 }
 
 func (m model) Init() tea.Cmd {
@@ -116,24 +120,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case errorMsg:
 		m.err = msg
-		m.isRunning = false
 		return m, nil
 	case clearErrorsMsg:
 		m.errors[toInput] = nil
 		m.errors[amountInput] = nil
 		m.err = nil
-		m.isRunning = false
-	case transferDoneMsg:
-		m.isRunning = false
-		cmds = append(cmds, emitExitMsg)
 	case transferProgressMsg:
-		m.isRunning = true
+		m.isTransferring = bool(msg)
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, emitExitMsg)
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
-			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, emitTransferProgressMsg, m.transfer(context.TODO())))
+			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.transfer(context.TODO())))
 		case key.Matches(msg, m.keyMap.NextInput):
 			m.nextInput()
 		case key.Matches(msg, m.keyMap.PrevInput):

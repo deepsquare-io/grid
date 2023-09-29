@@ -23,6 +23,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/tui/style"
 )
 
 // ModelBuilder contains the dependencies used to build the bubbletea Model for the topup page.
@@ -47,7 +48,7 @@ func (b *ModelBuilder) Build(jobID [32]byte) tea.Model {
 	inputs[amountInput].Focus()
 	inputs[amountInput].Placeholder = "example: 0.0"
 	inputs[amountInput].Width = 64
-	inputs[amountInput].Prompt = ""
+	inputs[amountInput].Prompt = style.Foreground.Render("❱ ")
 	inputs[amountInput].Validate = allowedNumber
 
 	return &model{

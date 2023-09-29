@@ -72,24 +72,26 @@ func makeWatchFileChangeModel(
 
 			debouncedEvents := debounce(watcher.Events, time.Second)
 
-			for range debouncedEvents {
-				stat, err := os.Stat(filePath)
-				if err != nil {
-					log.I.Error(err.Error())
-					continue
-				}
-
-				if !stat.ModTime().Equal(lastModTime) {
-					lastModTime = stat.ModTime()
-
-					select {
-					case c <- fileChangedMsg{}:
-						// Config sent successfully
-					default:
+			go func() {
+				for range debouncedEvents {
+					stat, err := os.Stat(filePath)
+					if err != nil {
+						log.I.Error(err.Error())
+						continue
 					}
+
+					if !stat.ModTime().Equal(lastModTime) {
+						lastModTime = stat.ModTime()
+
+						select {
+						case c <- fileChangedMsg{}:
+							// Config sent successfully
+						default:
+						}
+					}
+					c <- fileChangedMsg{}
 				}
-				c <- fileChangedMsg{}
-			}
+			}()
 
 			return func() error {
 				return watcher.Close()

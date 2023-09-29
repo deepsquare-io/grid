@@ -16,17 +16,27 @@
 // Package style provides object for styling the TUI.
 package style
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/deepsquare-io/grid/cli/metascheduler"
+)
 
 var (
 	// StandardHeight is the height of the main window.
 	StandardHeight       = 13
+	black                = lipgloss.Color("#000000")
 	primaryDarkestColor  = lipgloss.Color("#9202de")
 	primaryColor         = lipgloss.Color("#BD43FD")
 	primaryLightestColor = lipgloss.Color("#dea2fe")
 	errorColor           = lipgloss.Color("#ff3333")
 	green                = lipgloss.Color("#04B575")
 	white                = lipgloss.Color("#FAFAFA")
+	lightGray            = lipgloss.Color("#CCCCCC")
+	lightBlue            = lipgloss.Color("#3399FF")
+	yellow               = lipgloss.Color("#FFFF00")
+	warning              = lipgloss.Color("#FFA500")
 	// Base is the box of the main window.
 	Base = Box.Copy()
 	// Error is the style for errors.
@@ -95,4 +105,37 @@ func OnError(errorStyle lipgloss.Style, v string, err error) string {
 		return errorStyle.Render(v)
 	}
 	return v
+}
+
+func JobStatusStyle(s string) lipgloss.Style {
+	switch strings.Trim(s, " ") {
+	case metascheduler.JobStatusPending.String():
+		return lipgloss.NewStyle().
+			Foreground(lightGray)
+	case metascheduler.JobStatusMetaScheduled.String():
+		return lipgloss.NewStyle().
+			Foreground(lightBlue)
+	case metascheduler.JobStatusScheduled.String():
+		return lipgloss.NewStyle().
+			Foreground(lightBlue)
+	case metascheduler.JobStatusRunning.String():
+		return lipgloss.NewStyle().
+			Foreground(yellow)
+	case metascheduler.JobStatusCancelled.String():
+		return lipgloss.NewStyle().
+			Foreground(warning)
+	case metascheduler.JobStatusFinished.String():
+		return lipgloss.NewStyle().
+			Foreground(green)
+	case metascheduler.JobStatusFailed.String(),
+		metascheduler.JobStatusOutOfCredits.String():
+		return lipgloss.NewStyle().
+			Foreground(errorColor)
+	case metascheduler.JobStatusPanicked.String():
+		return lipgloss.NewStyle().
+			Background(errorColor).
+			Foreground(black)
+	default:
+		return lipgloss.NewStyle()
+	}
 }

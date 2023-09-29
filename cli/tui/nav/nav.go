@@ -228,9 +228,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.providerModel, pageCmd = m.providerModel.Update(msg)
 		case m.topupModel != nil:
 			m.topupModel, pageCmd = m.topupModel.Update(msg)
-		default:
-			m.statusModel, pageCmd = m.statusModel.Update(msg)
 		}
+		cmds = append(cmds, pageCmd)
+
+		m.statusModel, pageCmd = m.statusModel.Update(msg)
 		cmds = append(cmds, pageCmd)
 	}
 

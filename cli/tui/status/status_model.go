@@ -22,13 +22,13 @@ import (
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	"github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/tui/channel"
+	"github.com/deepsquare-io/grid/cli/tui/components/table"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 	"github.com/deepsquare-io/grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -55,8 +55,12 @@ type model struct {
 	scheduler types.JobScheduler
 	keyMap    keyMap
 
+	isCancelling bool
+
 	err error
 }
+
+type cancellingProgressMsg bool
 
 type errorMsg error
 
@@ -182,12 +186,16 @@ func (m *model) addMoreRows(ctx context.Context) {
 }
 
 func (m model) CancelJob(ctx context.Context, jobID [32]byte) tea.Cmd {
-	return func() tea.Msg {
+	return tea.Batch(tea.Sequence(func() tea.Msg {
 		if err := m.scheduler.CancelJob(ctx, jobID); err != nil {
 			return errorMsg(err)
 		}
 		return nil
-	}
+	}, func() tea.Msg {
+		return cancellingProgressMsg(false)
+	}), func() tea.Msg {
+		return cancellingProgressMsg(true)
+	})
 }
 
 func (m model) Init() tea.Cmd {
@@ -209,6 +217,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case errorMsg:
 		m.err = msg
 		return m, nil
+	case cancellingProgressMsg:
+		m.isCancelling = bool(msg)
 	case clearErrorsMsg:
 		m.err = nil
 	case transitionMsg:
@@ -250,7 +260,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keyMap.ViewProviders):
 			cmds = append(cmds, emitViewProvidersMsg)
 		case key.Matches(msg, m.keyMap.Exit):
-			return m, tea.Batch(
+			return m, tea.Sequence(
 				m.watchJobs.Dispose,
 				tea.Quit,
 			)
@@ -296,6 +306,13 @@ func Model(
 		Foreground(lipgloss.Color("229")).
 		Background(lipgloss.Color("57")).
 		Bold(false)
+	s.RenderCell = func(model table.Model, value string, rawValue string, position table.CellPosition) string {
+		// Job Status
+		if position.Column == 2 {
+			return style.JobStatusStyle(rawValue).Render(value)
+		}
+		return value
+	}
 	t.SetStyles(s)
 
 	help := help.New()
