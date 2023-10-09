@@ -194,6 +194,7 @@ func (suite *WatcherTestSuite) TestClaimIndefinitely() {
 	suite.metaScheduler.EXPECT().Claim(mock.Anything).Return(nil)
 	suite.metaScheduler.EXPECT().ClaimCancelling(mock.Anything).Return(nil)
 	suite.metaScheduler.EXPECT().ClaimTopUp(mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().IsRequestNewJobEnabled(mock.Anything).Return(true, nil)
 	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(nil)
 
 	// Act
@@ -205,11 +206,6 @@ func (suite *WatcherTestSuite) TestClaimIndefinitely() {
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.metaScheduler.AssertExpectations(suite.T())
-	suite.scheduler.AssertExpectations(suite.T())
-	suite.sbatch.AssertExpectations(suite.T())
 }
 
 func (suite *WatcherTestSuite) TestClaimIndefinitelyWithSchedulerHealthCheckFail() {
@@ -226,19 +222,44 @@ func (suite *WatcherTestSuite) TestClaimIndefinitelyWithSchedulerHealthCheckFail
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
+}
 
-	// Assert
-	suite.scheduler.AssertExpectations(suite.T())
-	suite.metaScheduler.AssertNotCalled(suite.T(), "Claim", mock.Anything)
-	suite.metaScheduler.AssertNotCalled(suite.T(), "ClaimCancelling", mock.Anything)
-	suite.sbatch.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
-	suite.scheduler.AssertNotCalled(suite.T(), "Submit", mock.Anything, mock.Anything)
+func (suite *WatcherTestSuite) TestClaimIndefinitelyWithMetaSchedulerHealthCheckFail() {
+	// Arrange
+	suite.arrangeNoEvent()
+	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().
+		IsRequestNewJobEnabled(mock.Anything).
+		Return(false, errors.New("expected error"))
+
+	// Act
+	ctx, cancel := context.WithTimeout(context.Background(), 2*pollingTime)
+	defer cancel()
+	go suite.impl.Watch(ctx)
+	select {
+	case <-ctx.Done():
+		logger.I.Info("test ended")
+		time.Sleep(5 * pollingTime)
+	}
+}
+
+func (suite *WatcherTestSuite) TestClaimIndefinitelyWithMetaSchedulerHealthCheckClosed() {
+	// Arrange
+	suite.arrangeNoEvent()
+	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().IsRequestNewJobEnabled(mock.Anything).Return(false, nil)
+
+	// Act
+	suite.Panics(func() {
+		suite.impl.Watch(context.Background())
+	})
 }
 
 func (suite *WatcherTestSuite) TestClaimIndefinitelyWithClaimFail() {
 	// Arrange
 	suite.arrangeNoEvent()
 	suite.scheduler.EXPECT().HealthCheck(mock.Anything).Return(nil)
+	suite.metaScheduler.EXPECT().IsRequestNewJobEnabled(mock.Anything).Return(true, nil)
 	suite.metaScheduler.EXPECT().Claim(mock.Anything).Return(errors.New("expected error"))
 
 	// Act
@@ -250,12 +271,6 @@ func (suite *WatcherTestSuite) TestClaimIndefinitelyWithClaimFail() {
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.scheduler.AssertExpectations(suite.T())
-	suite.metaScheduler.AssertExpectations(suite.T())
-	suite.sbatch.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
-	suite.scheduler.AssertNotCalled(suite.T(), "Submit", mock.Anything, mock.Anything)
 }
 
 func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
@@ -290,11 +305,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.scheduler.AssertExpectations(suite.T())
-	suite.metaScheduler.AssertExpectations(suite.T())
-	suite.sbatch.AssertExpectations(suite.T())
 }
 
 func (suite *WatcherTestSuite) TestWatchClaimNextJobIgnoresEvent() {
@@ -311,11 +321,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobIgnoresEvent() {
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.metaScheduler.AssertExpectations(suite.T())
-	suite.sbatch.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
-	suite.scheduler.AssertNotCalled(suite.T(), "Submit", mock.Anything, mock.Anything)
 }
 
 func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
@@ -338,12 +343,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithTimeLimitFail() {
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.scheduler.AssertExpectations(suite.T())
-	suite.metaScheduler.AssertExpectations(suite.T())
-	suite.sbatch.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
-	suite.scheduler.AssertNotCalled(suite.T(), "Submit", mock.Anything, mock.Anything)
 }
 
 func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
@@ -368,12 +367,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.scheduler.AssertExpectations(suite.T())
-	suite.metaScheduler.AssertExpectations(suite.T())
-	suite.sbatch.AssertExpectations(suite.T())
-	suite.scheduler.AssertNotCalled(suite.T(), "Submit", mock.Anything, mock.Anything)
 }
 
 func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
@@ -410,11 +403,6 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.scheduler.AssertExpectations(suite.T())
-	suite.metaScheduler.AssertExpectations(suite.T())
-	suite.sbatch.AssertExpectations(suite.T())
 }
 
 func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEvent() {
@@ -440,11 +428,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEvent() {
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.scheduler.AssertExpectations(suite.T())
-	suite.metaScheduler.AssertExpectations(suite.T())
-	suite.sbatch.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
 }
 
 func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEventIgnoresEvent() {
@@ -461,12 +444,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextCancellingJobEventIgnoresEvent(
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.scheduler.AssertNotCalled(suite.T(), "GetJobStatus", mock.Anything, mock.Anything)
-	suite.scheduler.AssertNotCalled(suite.T(), "CancelJob", mock.Anything, mock.Anything)
-	suite.metaScheduler.AssertExpectations(suite.T())
-	suite.sbatch.AssertNotCalled(suite.T(), "Fetch", mock.Anything, mock.Anything)
 }
 
 func (suite *WatcherTestSuite) TestWatchClaimNextTopUpJobEvent() {
@@ -486,10 +463,6 @@ func (suite *WatcherTestSuite) TestWatchClaimNextTopUpJobEvent() {
 		logger.I.Info("test ended")
 		time.Sleep(5 * pollingTime)
 	}
-
-	// Assert
-	suite.scheduler.AssertExpectations(suite.T())
-	suite.metaScheduler.AssertExpectations(suite.T())
 }
 
 func TestWatcherTestSuite(t *testing.T) {

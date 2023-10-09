@@ -152,6 +152,16 @@ func NewClient(
 	}
 }
 
+func (c *Client) IsRequestNewJobEnabled(ctx context.Context) (bool, error) {
+	v, err := c.contractRPC.EnableRequestNewJob(&bind.CallOpts{
+		Context: ctx,
+	})
+	if err != nil {
+		return false, WrapError(err)
+	}
+	return v, nil
+}
+
 func (c *Client) GetProviderAddress() common.Address {
 	return c.fromAddress
 }

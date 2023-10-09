@@ -200,7 +200,7 @@ func (w *Watcher) Watch(parent context.Context) error {
 		// Claim indefinitely
 		case <-queryTicker.C:
 			if w.claimMutex.TryLock() {
-				go w.claimIndefinitely(parent)
+				w.claimIndefinitely(parent)
 			}
 
 		case err := <-sub.Err():
@@ -214,10 +214,21 @@ func (w *Watcher) claimIndefinitely(parent context.Context) {
 	ctx, cancel := context.WithTimeout(parent, claimJobMaxTimeout)
 	defer cancel()
 
-	// Slurm healthcheck first
+	// Slurm healthcheck
 	if err := w.scheduler.HealthCheck(ctx); err != nil {
 		logger.I.Error("failed healthcheck", zap.Error(err))
 		return
+	}
+
+	// MetaScheduler healthcheck
+	val, err := w.metascheduler.IsRequestNewJobEnabled(ctx)
+	if err != nil {
+		logger.I.Error("failed to check metascheduler health", zap.Error(err))
+		return
+	} else if !val {
+		logger.I.Panic(`The smart-contract has closed the submission of a new job.
+The smart-contract is therefore deprecated.
+Please check for new smart-contract versions.`)
 	}
 
 	if err := w.metascheduler.Claim(ctx); err != nil {

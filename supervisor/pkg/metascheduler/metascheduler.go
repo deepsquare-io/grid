@@ -102,6 +102,7 @@ func SetJobStatusWithError(err error) SetJobStatusOption {
 }
 
 type MetaScheduler interface {
+	IsRequestNewJobEnabled(ctx context.Context) (bool, error)
 	// Claim a job for scheduling.
 	Claim(ctx context.Context) error
 	// Claim cancelling calls.
