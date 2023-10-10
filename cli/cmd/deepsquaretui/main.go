@@ -64,6 +64,8 @@ package main
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -118,7 +120,6 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
-		Required:    true,
 		Usage:       "Metascheduler smart-contract address.",
 		Destination: &metaschedulerSmartContract,
 		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
@@ -140,7 +141,6 @@ var flags = []cli.Flag{
 	&cli.StringFlag{
 		Name:        "private-key",
 		Usage:       "An hexadecimal private key for ethereum transactions.",
-		Required:    true,
 		Destination: &ethHexPK,
 		EnvVars:     []string{"ETH_PRIVATE_KEY"},
 	},
@@ -178,12 +178,20 @@ See the GNU General Public License for more details.`,
 		&provider.Command,
 		&submit.Command,
 	},
-	Action: func(cCtx *cli.Context) error {
+	Action: func(cCtx *cli.Context) (err error) {
 		ctx := cCtx.Context
-		pk, err := crypto.HexToECDSA(ethHexPK)
-		if err != nil {
-			return err
+		var pk *ecdsa.PrivateKey
+		if ethHexPK != "" {
+			pk, err = crypto.HexToECDSA(ethHexPK)
+			if err != nil {
+				return err
+			}
 		}
+
+		if metaschedulerSmartContract == "" {
+			return errors.New("metascheduler smart-contract address not set")
+		}
+
 		client, err := deepsquare.NewClient(ctx, &deepsquare.ClientConfig{
 			MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
 			RPCEndpoint:          ethEndpointRPC,
