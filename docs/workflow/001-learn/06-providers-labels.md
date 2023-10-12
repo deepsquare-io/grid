@@ -1,4 +1,4 @@
-# Provider labels and Job Affinities/Uses
+# Provider Labels and Job Affinities/Uses
 
 ## Labels
 
