@@ -24,7 +24,7 @@ OPTIONS:
 
 Submit Settings:
 
-	--affinities key<value [ --affinities key<value ]  Affinities flag. Used to filter the clusters. Format: key<value, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value`
+	--affinities key<value [ --affinities key<value ]  Affinities flag. Used to filter the clusters. Format: key<value, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value` or `key:in:value`.
 
 
 	--credits value                                    Allocated a number of credits. Unit is 1e18. Is a float and is not precise. (default: 0)
@@ -174,7 +174,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringSliceFlag{
 		Name:        "affinities",
-		Usage:       "Affinities flag. Used to filter the clusters. Format: `key<value`, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value`",
+		Usage:       "Affinities flag. Used to filter the clusters. Format: `key<value`, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value` or `key:in:value`",
 		Destination: &affinitiesSlice,
 		Category:    "Submit Settings:",
 	},
@@ -212,7 +212,7 @@ var flags = []cli.Flag{
 }
 
 var keyValueOperatorRegex = regexp.MustCompile(
-	`^([^<>=!]+)\s*(==|<=|>=|<|>|!=|=)\s*([^<>=!]+)$`,
+	`^([^<>=!in:]+)\s*(==|<=|>=|<|>|!=|=|:in:)\s*([^<>=!in:]+)$`,
 )
 
 // parseKeyValueOperator parses a string in the format "key operator value" and returns the key, value, and operator.
@@ -317,7 +317,14 @@ var Command = cli.Command{
 			}
 
 			var opB [2]byte
-			copy(opB[:], op)
+			switch op {
+			case ":in:":
+				opB = [2]byte{'i', 'n'}
+			case "=", "==":
+				opB = [2]byte{'=', '='}
+			default:
+				copy(opB[:], op)
+			}
 			affinities = append(affinities, types.Affinity{
 				Label: metaschedulerabi.Label{
 					Key:   k,
