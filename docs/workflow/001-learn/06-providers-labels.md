@@ -42,11 +42,11 @@ Standard labels are:
 
 ## Affinities and Use flags when submitting jobs
 
-A job can filters the clusters by using affinities. An affinity is basically a rule. Affinities are a set of rules which limits the selection of clusters. A Use flag is a simplified notation of the affinity using the `=` operator.
+A job can filter the clusters by using affinities. An affinity is basically a rule. Affinities are a set of rules which limits the selection of clusters. A Use flag is a simplified notation of the affinity using the `=` operator.
 
-A affinity is represented by a key, a value and an operator.
+An affinity is represented by a key, a value and an operator.
 
-The key is used to select a label of an provider, the value is used for the comparison, and the operator is the type of rule.
+The key is used to select a label of a provider, the value is used for the comparison, and the operator is the type of rule.
 
 There are 6 supported operators: `<` (less than), `<=` (less than or equal), `=` or `==` (equal), `>` (greater than), `>=` (greater than or equal), `in` (includes).
 
