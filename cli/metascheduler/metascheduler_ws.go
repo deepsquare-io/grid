@@ -54,6 +54,7 @@ func (c *eventSubscriber) SubscribeEvents(
 	ctx context.Context,
 	opts ...types.SubscriptionOption,
 ) (ethereum.Subscription, error) {
+	var err error
 	logs := make(chan ethtypes.Log, 100)
 	var o types.SubscriptionOptions
 	for _, opt := range opts {
@@ -70,7 +71,18 @@ func (c *eventSubscriber) SubscribeEvents(
 		topics = append(topics, newJobRequestEvent.ID)
 	}
 
+	// JobRepository events
+	var jobsAddress common.Address
 	if o.JobTransitionChan != nil {
+		if (jobsAddress == common.Address{}) {
+			jobsAddress, err = c.rpcMetascheduler.Jobs(&bind.CallOpts{
+				Context: ctx,
+			})
+			if err != nil {
+				panic(fmt.Errorf("failed to find Credit address: %w", err))
+			}
+			addresses = append(addresses, jobsAddress)
+		}
 		topics = append(topics, jobTransitionEvent.ID)
 	}
 
@@ -78,7 +90,7 @@ func (c *eventSubscriber) SubscribeEvents(
 	var creditAddress common.Address
 	if o.ApprovalChan != nil {
 		if (creditAddress == common.Address{}) {
-			creditAddress, err := c.rpcMetascheduler.Credit(&bind.CallOpts{
+			creditAddress, err = c.rpcMetascheduler.Credit(&bind.CallOpts{
 				Context: ctx,
 			})
 			if err != nil {
@@ -90,7 +102,7 @@ func (c *eventSubscriber) SubscribeEvents(
 	}
 	if o.TransferChan != nil {
 		if (creditAddress == common.Address{}) {
-			creditAddress, err := c.rpcMetascheduler.Credit(&bind.CallOpts{
+			creditAddress, err = c.rpcMetascheduler.Credit(&bind.CallOpts{
 				Context: ctx,
 			})
 			if err != nil {
@@ -141,6 +153,18 @@ func (c *eventSubscriber) filter(
 		}
 		creditFilterer = ierc20.IERC20Filterer
 	}
+	var jobsFilterer metaschedulerabi.IJobRepositoryFilterer
+	if o.JobTransitionChan != nil {
+		jobsAddress, err := c.rpcMetascheduler.Jobs(&bind.CallOpts{})
+		if err != nil {
+			panic(fmt.Errorf("failed to fetch Jobs: %w", err))
+		}
+		jobs, err := metaschedulerabi.NewIJobRepository(jobsAddress, c.rpc)
+		if err != nil {
+			panic(fmt.Errorf("failed to instanciate Credit: %w", err))
+		}
+		jobsFilterer = jobs.IJobRepositoryFilterer
+	}
 	for log := range logs {
 		if len(log.Topics) == 0 {
 			return
@@ -159,7 +183,7 @@ func (c *eventSubscriber) filter(
 				}
 			}
 		case jobTransitionEvent.ID.Hex():
-			event, err := c.rpcMetascheduler.ParseJobTransitionEvent(log)
+			event, err := jobsFilterer.ParseJobTransitionEvent(log)
 			if err != nil {
 				panic(fmt.Errorf("failed to parse event: %w", err))
 			}

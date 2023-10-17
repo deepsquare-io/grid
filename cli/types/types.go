@@ -164,7 +164,7 @@ type ProviderManager interface {
 type NewJobRequest *metaschedulerabi.MetaSchedulerNewJobRequestEvent
 
 // JobTransition is an event that happens when the status of a job changes.
-type JobTransition *metaschedulerabi.MetaSchedulerJobTransitionEvent
+type JobTransition *metaschedulerabi.IJobRepositoryJobTransitionEvent
 
 // Transfer is an event that happens when there is a ERC20 transaction.
 type Transfer *metaschedulerabi.IERC20Transfer
