@@ -9,12 +9,13 @@ import DocCard from '@site/src/components/DocCard';
 import SchoolIcon from '@mui/icons-material/School';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import TerminalIcon from '@mui/icons-material/Terminal';
 import StarIcon from '@mui/icons-material/Star';
 import WorkIcon from '@mui/icons-material/Work';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import VideoLabelIcon from '@mui/icons-material/VideoLabel';
 import GoLogo from '@site/static/img/Go-Logo_Blue.svg';
-import JavaScriptLogo from '@site/static/img/Unofficial_JavaScript_logo_2.svg';
+import TypeScriptLogo from '@site/static/img/ts-logo-128.svg';
 
 ## Develop and Run workflows
 
@@ -61,6 +62,16 @@ Learn how to get up and running with DeepSquare through tutorials, guides and AP
       A list of workflows used by the DeepSquare portal.
     </DocCard>
   </Grid>
+  <Grid xs={6}>
+    <DocCard
+      title="Command Line Interface"
+      href="/workflow/cli/overview"
+      startDecorator={<TerminalIcon />}
+      sx={{ height: '100%' }}
+    >
+      Learn how to use the CLI to help you develop and run workflows locally!
+    </DocCard>
+  </Grid>
 </Grid>
 
 ## Develop and Integrate DeepSquare
@@ -70,9 +81,9 @@ Learn how to incorporate the DeepSquare SDK into your software!
 <Grid container spacing={2} sx={{ flexGrow: 1 }} columns={{ xs: 4, sm: 8, md: 12 }}>
   <Grid xs={3}>
     <DocCard
-      title="JavaScript"
+      title="TypeScript"
       href="/workflow/client-development/ts"
-      startDecorator={<JavaScriptLogo style={{ height: '1em', width: '1em' }} />}
+      startDecorator={<TypeScriptLogo style={{ height: '1em', width: '1em' }} />}
       sx={{ height: '100%' }}
     ></DocCard>
   </Grid>
