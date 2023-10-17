@@ -294,6 +294,7 @@ func (c *Client) SetJobStatus(
 		uint8(status),
 		jobDurationMinute,
 		errMsg,
+		o.exitCode,
 	)
 	if err != nil {
 		return WrapError(err)

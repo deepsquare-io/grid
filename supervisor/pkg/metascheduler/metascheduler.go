@@ -82,7 +82,8 @@ func (it *ProviderJobIterator) Next(ctx context.Context) bool {
 }
 
 type setJobStatusOptions struct {
-	err error
+	err      error
+	exitCode int64
 }
 
 func applySetJobStatusOptions(opts []SetJobStatusOption) *setJobStatusOptions {
@@ -98,6 +99,12 @@ type SetJobStatusOption func(*setJobStatusOptions)
 func SetJobStatusWithError(err error) SetJobStatusOption {
 	return func(sjso *setJobStatusOptions) {
 		sjso.err = err
+	}
+}
+
+func SetJobStatusWithExitCode(exitCode int64) SetJobStatusOption {
+	return func(sjso *setJobStatusOptions) {
+		sjso.exitCode = exitCode
 	}
 }
 
