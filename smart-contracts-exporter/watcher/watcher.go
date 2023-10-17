@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"strings"
 	"time"
 
 	"github.com/deepsquare-io/grid/smart-contracts-exporter/contracts/metascheduler"
@@ -38,37 +37,41 @@ const (
 
 var (
 	jobTransitionEvent abi.Event
-	newJobRequestEvent abi.Event
+	jobCreatedEvent    abi.Event
 	jobRefusedEvent    abi.Event
 	billedTooMuchEvent abi.Event
 )
 
 func init() {
-	contractABI, err := abi.JSON(strings.NewReader(metascheduler.MetaSchedulerABI))
+	contractABI, err := metascheduler.MetaSchedulerMetaData.GetAbi()
 	if err != nil {
-		logger.I.Fatal("failed to parse contract ABI", zap.Error(err))
+		logger.I.Panic("failed to parse fetch meta-scheduler ABI", zap.Error(err))
+	}
+	jobsABI, err := metascheduler.IJobRepositoryMetaData.GetAbi()
+	if err != nil {
+		logger.I.Panic("failed to parse fetch meta-scheduler ABI", zap.Error(err))
 	}
 
 	// Find the event signature dynamically
 	var ok bool
-	jobTransitionEvent, ok = contractABI.Events["JobTransitionEvent"]
+	jobTransitionEvent, ok = jobsABI.Events["JobTransitionEvent"]
 	if !ok {
-		logger.I.Fatal("failed to parse contract ABI", zap.Error(err))
+		logger.I.Panic("failed to parse contract ABI", zap.Error(err))
 	}
 
-	newJobRequestEvent, ok = contractABI.Events["NewJobRequestEvent"]
+	jobCreatedEvent, ok = jobsABI.Events["JobCreated"]
 	if !ok {
-		logger.I.Fatal("failed to parse contract ABI", zap.Error(err))
+		logger.I.Panic("failed to parse contract ABI", zap.Error(err))
 	}
 
 	jobRefusedEvent, ok = contractABI.Events["JobRefusedEvent"]
 	if !ok {
-		logger.I.Fatal("failed to parse contract ABI", zap.Error(err))
+		logger.I.Panic("failed to parse contract ABI", zap.Error(err))
 	}
 
 	billedTooMuchEvent, ok = contractABI.Events["BilledTooMuchEvent"]
 	if !ok {
-		logger.I.Fatal("failed to parse contract ABI", zap.Error(err))
+		logger.I.Panic("failed to parse contract ABI", zap.Error(err))
 	}
 }
 
@@ -77,6 +80,7 @@ type Watcher struct {
 	clientWS             *ethclient.Client
 	contractRPC          *metascheduler.MetaScheduler
 	jobs                 *metascheduler.IJobRepository
+	jobsAddress          common.Address
 	contractWS           *metascheduler.MetaScheduler
 	metaschedulerAddress common.Address
 }
@@ -102,6 +106,7 @@ func New(
 		contractRPC:          contractRPC,
 		contractWS:           contractWS,
 		jobs:                 jobs,
+		jobsAddress:          jobsAddress,
 		metaschedulerAddress: metaschedulerAddress,
 	}
 }
@@ -118,12 +123,16 @@ func (w *Watcher) WatchNewEvents(ctx context.Context, readyChan chan<- struct{})
 	logger.I.Info("found head block", zap.String("head block", header.Number.String()))
 
 	query := ethereum.FilterQuery{
-		Addresses: []common.Address{w.metaschedulerAddress},
+		Addresses: []common.Address{
+			w.metaschedulerAddress,
+			w.jobsAddress,
+		},
 		Topics: [][]common.Hash{
 			{
 				jobTransitionEvent.ID,
-				newJobRequestEvent.ID,
+				jobCreatedEvent.ID,
 				jobRefusedEvent.ID,
+				billedTooMuchEvent.ID,
 			},
 		},
 	}
@@ -201,7 +210,7 @@ func (w *Watcher) WatchNewEvents(ctx context.Context, readyChan chan<- struct{})
 func (w *Watcher) handleLog(ctx context.Context, log types.Log) error {
 	switch log.Topics[0].Hex() {
 	case jobTransitionEvent.ID.Hex():
-		event, err := w.contractRPC.ParseJobTransitionEvent(log)
+		event, err := w.jobs.ParseJobTransitionEvent(log)
 		if err != nil {
 			logger.I.Panic("failed to parse event", zap.Error(err))
 		}
@@ -209,12 +218,12 @@ func (w *Watcher) handleLog(ctx context.Context, log types.Log) error {
 			return err
 		}
 
-	case newJobRequestEvent.ID.Hex():
-		event, err := w.contractRPC.ParseNewJobRequestEvent(log)
+	case jobCreatedEvent.ID.Hex():
+		event, err := w.jobs.ParseJobCreated(log)
 		if err != nil {
 			logger.I.Panic("failed to parse event", zap.Error(err))
 		}
-		if err := w.handleNewJobRequest(ctx, event); err != nil {
+		if err := w.handleJobCreated(ctx, event); err != nil {
 			return err
 		}
 
@@ -245,7 +254,7 @@ func (w *Watcher) handleLog(ctx context.Context, log types.Log) error {
 
 func (w *Watcher) handleJobTransition(
 	ctx context.Context,
-	event *metascheduler.MetaSchedulerJobTransitionEvent,
+	event *metascheduler.IJobRepositoryJobTransitionEvent,
 ) error {
 	from := JobStatus(event.From)
 	to := JobStatus(event.To)
@@ -274,6 +283,8 @@ func (w *Watcher) handleJobTransition(
 		metricsv1.TotalJobsFailed(job.CustomerAddr.Hex()).Dec()
 	case JobStatusOutOfCredits:
 		metricsv1.TotalJobsOutOfCredits(job.CustomerAddr.Hex()).Dec()
+	case JobStatusPanicked:
+		metricsv1.TotalJobsPanicked(job.CustomerAddr.Hex()).Dec()
 	}
 
 	// Move a state to
@@ -294,6 +305,8 @@ func (w *Watcher) handleJobTransition(
 		metricsv1.TotalJobsFailed(job.CustomerAddr.Hex()).Inc()
 	case JobStatusOutOfCredits:
 		metricsv1.TotalJobsOutOfCredits(job.CustomerAddr.Hex()).Inc()
+	case JobStatusPanicked:
+		metricsv1.TotalJobsPanicked(job.CustomerAddr.Hex()).Inc()
 	}
 
 	// Add statistics from cold states
@@ -335,18 +348,37 @@ func (w *Watcher) handleJobTransition(
 	return nil
 }
 
-func (w *Watcher) handleNewJobRequest(
+func (w *Watcher) handleJobCreated(
 	ctx context.Context,
-	event *metascheduler.MetaSchedulerNewJobRequestEvent,
+	event *metascheduler.IJobRepositoryJobCreated,
 ) error {
-	metricsv1.TotalJobsPending(event.CustomerAddr.Hex()).Inc()
-	metricsv1.TotalNumberOfJobs(event.CustomerAddr.Hex()).Inc()
 	job, err := w.jobs.Get(&bind.CallOpts{
 		Context: ctx,
 	}, event.JobId)
 	if err != nil {
 		return err
 	}
+	switch JobStatus(job.Status) {
+	case JobStatusPending:
+		metricsv1.TotalJobsPending(job.CustomerAddr.Hex()).Inc()
+	case JobStatusMetaScheduled:
+		metricsv1.TotalJobsMetaScheduled(job.CustomerAddr.Hex()).Inc()
+	case JobStatusScheduled:
+		metricsv1.TotalJobsScheduled(job.CustomerAddr.Hex()).Inc()
+	case JobStatusRunning:
+		metricsv1.TotalJobsRunning(job.CustomerAddr.Hex()).Inc()
+	case JobStatusCancelled:
+		metricsv1.TotalJobsCancelled(job.CustomerAddr.Hex()).Inc()
+	case JobStatusFinished:
+		metricsv1.TotalJobsFinished(job.CustomerAddr.Hex()).Inc()
+	case JobStatusFailed:
+		metricsv1.TotalJobsFailed(job.CustomerAddr.Hex()).Inc()
+	case JobStatusOutOfCredits:
+		metricsv1.TotalJobsOutOfCredits(job.CustomerAddr.Hex()).Inc()
+	case JobStatusPanicked:
+		metricsv1.TotalJobsPanicked(job.CustomerAddr.Hex()).Inc()
+	}
+	metricsv1.TotalNumberOfJobs(job.CustomerAddr.Hex()).Inc()
 	metricsv1.AddJob(&job)
 
 	return nil

@@ -26,13 +26,14 @@ message Metrics {
   repeated LabeledMetric total_jobs_finished = 8;
   repeated LabeledMetric total_jobs_failed = 9;
   repeated LabeledMetric total_jobs_out_of_credits = 10;
-  repeated LabeledMetric total_credit_spent = 11;
-  repeated LabeledMetric total_gpu_time = 12;
-  repeated LabeledMetric total_cpu_time = 13;
-  repeated LabeledMetric total_job_duration = 14;
-  double last_block_watched = 15;
-  repeated LabeledMetric total_job_refused = 16;
-  repeated LabeledMetric total_billed_too_much = 17;
+  repeated LabeledMetric total_jobs_panicked = 11;
+  repeated LabeledMetric total_credit_spent = 12;
+  repeated LabeledMetric total_gpu_time = 13;
+  repeated LabeledMetric total_cpu_time = 14;
+  repeated LabeledMetric total_job_duration = 15;
+  double last_block_watched = 16;
+  repeated LabeledMetric total_job_refused = 17;
+  repeated LabeledMetric total_billed_too_much = 18;
 }
 
 /**
