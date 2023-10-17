@@ -39,6 +39,7 @@ var (
 var (
 	metaschedulerABI   *abi.ABI
 	ierc20ABI          *abi.ABI
+	jobsABI            *abi.ABI
 	newJobRequestEvent abi.Event
 	jobTransitionEvent abi.Event
 	transferEvent      abi.Event
@@ -55,6 +56,10 @@ func init() {
 	if err != nil {
 		panic(fmt.Errorf("failed to parse erc20 contract ABI: %w", err))
 	}
+	jobsABI, err = metaschedulerabi.IJobRepositoryMetaData.GetAbi()
+	if err != nil {
+		panic(fmt.Errorf("failed to parse jobRepository contract ABI: %w", err))
+	}
 
 	// Find the event signature dynamically
 	var ok bool
@@ -63,7 +68,7 @@ func init() {
 		panic(fmt.Errorf("failed to get NewJobRequestEvent: %w", err))
 	}
 
-	jobTransitionEvent, ok = metaschedulerABI.Events["JobTransitionEvent"]
+	jobTransitionEvent, ok = jobsABI.Events["JobTransitionEvent"]
 	if !ok {
 		panic(fmt.Errorf("failed to get JobTransitionEvent: %w", err))
 	}

@@ -374,6 +374,7 @@ func (suite *ClientTestSuite) TestSetJobStatus() {
 		uint8(metascheduler.JobStatusFailed),
 		jobDuration,
 		"",
+		int64(0),
 	)
 	// Must wait
 	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
@@ -497,6 +498,7 @@ func (suite *ClientTestSuite) TestGetJobStatus() {
 					PendingTopUp: new(big.Int),
 				},
 				Time: metaschedulerabi.JobTime{
+					Submit:                 new(big.Int),
 					Start:                  new(big.Int),
 					End:                    new(big.Int),
 					CancelRequestTimestamp: new(big.Int),
@@ -506,6 +508,7 @@ func (suite *ClientTestSuite) TestGetJobStatus() {
 				JobName:          [32]byte{1},
 				HasCancelRequest: false,
 				LastError:        "",
+				ExitCode:         0,
 			},
 		},
 	)

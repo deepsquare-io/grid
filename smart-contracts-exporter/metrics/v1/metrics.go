@@ -87,6 +87,8 @@ var (
 	TotalJobsFailed           func(key string) prometheus.Gauge
 	mapTotalJobsOutOfCredits  = make(map[string]prometheus.Gauge)
 	TotalJobsOutOfCredits     func(key string) prometheus.Gauge
+	mapTotalJobsPanicked      = make(map[string]prometheus.Gauge)
+	TotalJobsPanicked         func(key string) prometheus.Gauge
 	mapTotalCreditSpent       = make(map[string]prometheus.Counter)
 	TotalCreditSpent          func(key string) prometheus.Counter
 	mapTotalGPUTime           = make(map[string]prometheus.Counter)
@@ -220,6 +222,21 @@ func Init(msAddress string, file string, version string) {
 			})
 		},
 	)
+	TotalJobsPanicked = singleton.Map(
+		mapTotalJobsPanicked,
+		func(key string) prometheus.Gauge {
+			return promauto.NewGauge(prometheus.GaugeOpts{
+				Namespace: "metascheduler",
+				Subsystem: "jobs",
+				Name:      "panicked_total",
+				Help:      "Total jobs panicked",
+				ConstLabels: prometheus.Labels{
+					"wallet_address":        key,
+					"metascheduler_address": msAddress,
+				},
+			})
+		},
+	)
 	TotalCreditSpent = singleton.Map(mapTotalCreditSpent, func(key string) prometheus.Counter {
 		return promauto.NewCounter(prometheus.CounterOpts{
 			Namespace: "metascheduler",
@@ -320,6 +337,7 @@ func Save() error {
 			TotalJobsFinished:      dumpGaugeMap(mapTotalJobsFinished),
 			TotalJobsFailed:        dumpGaugeMap(mapTotalJobsFailed),
 			TotalJobsOutOfCredits:  dumpGaugeMap(mapTotalJobsOutOfCredits),
+			TotalJobsPanicked:      dumpGaugeMap(mapTotalJobsPanicked),
 			TotalCreditSpent:       dumpCounterMap(mapTotalCreditSpent),
 			TotalGpuTime:           dumpCounterMap(mapTotalGPUTime),
 			TotalCpuTime:           dumpCounterMap(mapTotalCPUTime),
@@ -383,6 +401,7 @@ func Load() error {
 	loadMap(db.Metrics.TotalJobsFinished, TotalJobsFinished)
 	loadMap(db.Metrics.TotalJobsFailed, TotalJobsFailed)
 	loadMap(db.Metrics.TotalJobsOutOfCredits, TotalJobsOutOfCredits)
+	loadMap(db.Metrics.TotalJobsPanicked, TotalJobsPanicked)
 	loadMap(db.Metrics.TotalCreditSpent, TotalCreditSpent)
 	loadMap(db.Metrics.TotalGpuTime, TotalGPUTime)
 	loadMap(db.Metrics.TotalCpuTime, TotalCPUTime)
