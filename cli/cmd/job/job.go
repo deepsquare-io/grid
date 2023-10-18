@@ -169,6 +169,53 @@ var Command = cli.Command{
 			},
 		},
 		{
+			Name:      "cancel",
+			Usage:     "Cancel job.",
+			Flags:     flags,
+			ArgsUsage: "<job ID>",
+			Action: func(cCtx *cli.Context) error {
+				if cCtx.NArg() < 1 {
+					return errors.New("missing arguments")
+				}
+				pk, err := crypto.HexToECDSA(ethHexPK)
+				if err != nil {
+					return err
+				}
+				jobIDBig, ok := new(big.Int).SetString(cCtx.Args().First(), 10)
+				if !ok {
+					return errors.New("failed to parse job ID")
+				}
+				var jobID [32]byte
+				jobIDBig.FillBytes(jobID[:])
+				ctx := cCtx.Context
+				rpcClient, err := rpc.DialOptions(
+					ctx,
+					ethEndpointRPC,
+					rpc.WithHTTPClient(http.DefaultClient),
+				)
+				if err != nil {
+					return err
+				}
+				defer rpcClient.Close()
+				ethClientRPC := ethclient.NewClient(rpcClient)
+				chainID, err := ethClientRPC.ChainID(ctx)
+				if err != nil {
+					return err
+				}
+				clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
+					EthereumBackend:      ethClientRPC,
+					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
+					ChainID:              chainID,
+					UserPrivateKey:       pk,
+				})
+				if err := clientset.JobScheduler(nil).CancelJob(ctx, jobID); err != nil {
+					return err
+				}
+				fmt.Println("Done.")
+				return nil
+			},
+		},
+		{
 			Name:      "panic",
 			Usage:     "Panic a job (need a METASCHEDULER role).",
 			Flags:     panicFlags,
