@@ -32,6 +32,7 @@ func BoolToYN(b bool) string {
 	return "no"
 }
 
+// YNToBool converts a yes/no to bool. Defaults to "no" on failure.
 func YNToBool(b string) bool {
 	return strings.Contains(b, "yes")
 }

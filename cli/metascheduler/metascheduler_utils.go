@@ -23,7 +23,9 @@ import (
 )
 
 var zero = new(big.Int)
-var DivByZero = errors.New("division by zero")
+
+// ErrDivByZero is the error returned when a division by zero happens.
+var ErrDivByZero = errors.New("division by zero")
 
 func creditsPerMin(
 	prices metaschedulerabi.ProviderPrices,
@@ -71,7 +73,7 @@ func CreditToDuration(
 	creditsPerMin := creditsPerMin(prices, definition)
 	// duration = price/pricePerMin
 	if creditsPerMin.Cmp(zero) == 0 {
-		return nil, DivByZero
+		return nil, ErrDivByZero
 	}
 	return new(big.Int).Div(creditsWei, creditsPerMin), nil
 }

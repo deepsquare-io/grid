@@ -78,15 +78,13 @@ func (b *ModelBuilder) Build() tea.Model {
 		case 1:
 			if utils.YNToBool(rawValue) {
 				return style.NoError.Render(value)
-			} else {
-				return style.Error.Render(value)
 			}
+			return style.Error.Render(value)
 		case 2, 3:
 			if utils.YNToBool(rawValue) {
 				return style.Error.Render(value)
-			} else {
-				return style.NoError.Render(value)
 			}
+			return style.NoError.Render(value)
 		}
 		return value
 	}

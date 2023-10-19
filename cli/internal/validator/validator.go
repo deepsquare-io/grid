@@ -72,10 +72,12 @@ func IsMap(input string) error {
 	return nil
 }
 
+// IsNumberChar returns true when the character is allowed when writing a number.
 func IsNumberChar(ch rune) bool {
-	return unicode.IsDigit(ch) || ch == 'e' || ch == '.'
+	return unicode.IsDigit(ch) || ch == 'e' || ch == '.' || ch == '-'
 }
 
+// AllowedNumberChar checks if a string contains allowed number characters.
 func AllowedNumberChar(input string) error {
 	for _, ch := range input {
 		if !IsNumberChar(ch) {
@@ -85,6 +87,7 @@ func AllowedNumberChar(input string) error {
 	return nil
 }
 
+// AllowedHexChar checks if a string contains allowed hex characters.
 func AllowedHexChar(input string) error {
 	for _, ch := range input {
 		if !unicode.Is(unicode.Hex_Digit, ch) && ch != 'x' {
