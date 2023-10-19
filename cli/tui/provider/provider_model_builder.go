@@ -16,12 +16,15 @@
 package provider
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/internal/utils"
+	"github.com/deepsquare-io/grid/cli/tui/components/table"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 	"github.com/deepsquare-io/grid/cli/types"
 )
@@ -66,6 +69,27 @@ func (b *ModelBuilder) Build() tea.Model {
 		Foreground(lipgloss.Color("229")).
 		Background(lipgloss.Color("57")).
 		Bold(false)
+	s.RenderCell = func(model table.Model, value string, rawValue string, position table.CellPosition) string {
+		if strings.Contains(rawValue, "Loading") {
+			return value
+		}
+		switch position.Column {
+		// Is Schedulable
+		case 1:
+			if utils.YNToBool(rawValue) {
+				return style.NoError.Render(value)
+			} else {
+				return style.Error.Render(value)
+			}
+		case 2, 3:
+			if utils.YNToBool(rawValue) {
+				return style.Error.Render(value)
+			} else {
+				return style.NoError.Render(value)
+			}
+		}
+		return value
+	}
 	t.SetStyles(s)
 
 	help := help.New()

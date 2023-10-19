@@ -80,11 +80,16 @@ Elapsed: ...
 	if m.job != nil {
 		maxDuration := "..."
 		if m.provider != nil {
-			maxDuration = (time.Duration(metascheduler.CreditToDuration(
+			maxDurationB, err := metascheduler.CreditToDuration(
 				m.provider.ProviderPrices,
 				m.job.Definition,
 				m.job.Cost.MaxCost,
-			).Int64()) * time.Minute).String()
+			)
+			if err != nil {
+				maxDuration = "NaN"
+			} else {
+				maxDuration = (time.Duration(maxDurationB.Int64()) * time.Minute).String()
+			}
 		}
 		var elapsed time.Duration
 		start := m.job.Time.Start.Int64()
@@ -130,14 +135,17 @@ Elapsed: %s
 			if err != nil {
 				return
 			}
-			durationB := metascheduler.CreditToDuration(
+			durationB, err := metascheduler.CreditToDuration(
 				m.provider.ProviderPrices,
 				m.job.Definition,
 				ether.ToWei(big.NewFloat(value)),
 			)
+			if err != nil {
+				duration = "NaN"
+				return
+			}
 			duration = (time.Duration(durationB.Int64()) * time.Minute).String()
 		}()
-
 	}
 
 	return fmt.Sprintf(

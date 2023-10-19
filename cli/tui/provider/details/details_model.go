@@ -16,16 +16,37 @@
 package details
 
 import (
+	"errors"
+	"math/big"
+	"strconv"
+	"time"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/deepsquare-io/grid/cli/internal/ether"
+	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/types"
+	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+)
+
+const (
+	tasksInput = iota
+	cpusPerTaskInput
+	memPerCPUInput
+	gpusPerTaskInput
+	creditsInput
+
+	inputsSize
 )
 
 type keyMap struct {
 	ViewPortKeyMap viewport.KeyMap
 	Exit           key.Binding
+	NextInput      key.Binding
+	PrevInput      key.Binding
 }
 
 // ExitMsg msg closes to details model
@@ -40,17 +61,34 @@ type model struct {
 	viewport viewport.Model
 	keyMap   keyMap
 
+	// Form
+	inputs  []textinput.Model
+	errors  []error
+	focused int
+	err     error
+
+	// Intermediary variables
+	tasks       uint64
+	cpusPerTask uint64
+	memPerCPU   uint64
+	gpusPerTask uint64
+	credits     *big.Float
+
+	// Form result
+	duration string
+
 	types.ProviderDetail
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return textinput.Blink
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
-		vpCmd tea.Cmd
-		cmds  = make([]tea.Cmd, 0)
+		vpCmd    tea.Cmd
+		inputCmd tea.Cmd
+		cmds     = make([]tea.Cmd, 0)
 	)
 
 	m.viewport, vpCmd = m.viewport.Update(msg)
@@ -63,7 +101,78 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, emitExitMsg)
+		case key.Matches(msg, m.keyMap.NextInput):
+			m.nextInput()
+		case key.Matches(msg, m.keyMap.PrevInput):
+			m.prevInput()
 		}
+		for i := range m.inputs {
+			m.inputs[i].Blur()
+		}
+		m.inputs[m.focused].Focus()
+		cmds = append(cmds, textinput.Blink)
 	}
+
+	for i := range m.inputs {
+		m.inputs[i], inputCmd = m.inputs[i].Update(msg)
+		cmds = append(cmds, inputCmd)
+	}
+
+	var err error
+	m.cpusPerTask, err = strconv.ParseUint(m.inputs[cpusPerTaskInput].Value(), 10, 64)
+	m.errors[cpusPerTaskInput] = err
+	if m.cpusPerTask <= 0 && m.errors[cpusPerTaskInput] == nil {
+		m.errors[cpusPerTaskInput] = errors.New("must be greater than 0")
+	}
+	m.memPerCPU, err = strconv.ParseUint(m.inputs[memPerCPUInput].Value(), 10, 64)
+	m.errors[memPerCPUInput] = err
+	if m.memPerCPU <= 0 && m.errors[memPerCPUInput] == nil {
+		m.errors[memPerCPUInput] = errors.New("must be greater than 0")
+	}
+	m.gpusPerTask, err = strconv.ParseUint(m.inputs[gpusPerTaskInput].Value(), 10, 64)
+	m.errors[gpusPerTaskInput] = err
+	m.tasks, err = strconv.ParseUint(m.inputs[tasksInput].Value(), 10, 64)
+	m.errors[tasksInput] = err
+	if m.tasks <= 0 && m.errors[tasksInput] == nil {
+		m.errors[tasksInput] = errors.New("must be greater than 0")
+	}
+	var ok bool
+	_, ok = m.credits.SetString(m.inputs[creditsInput].Value())
+	if !ok {
+		m.errors[creditsInput] = errors.New("value couldn't be parsed")
+	} else {
+		m.errors[creditsInput] = nil
+	}
+	durationB, err := metascheduler.CreditToDuration(
+		m.ProviderPrices,
+		metaschedulerabi.JobDefinition{
+			GpusPerTask: m.gpusPerTask,
+			MemPerCpu:   m.memPerCPU,
+			CpusPerTask: m.cpusPerTask,
+			Ntasks:      m.tasks,
+		},
+		ether.ToWei(m.credits),
+	)
+	m.err = err
+	if err != nil {
+		m.duration = "NaN"
+	} else {
+		m.duration = (time.Duration(durationB.Int64()) * time.Minute).String()
+	}
+
 	return m, tea.Batch(cmds...)
+}
+
+// nextInput focuses the next input field
+func (m *model) nextInput() {
+	m.focused = (m.focused + 1) % len(m.inputs)
+}
+
+// prevInput focuses the previous input field
+func (m *model) prevInput() {
+	m.focused--
+	// Wrap around
+	if m.focused < 0 {
+		m.focused = len(m.inputs) - 1
+	}
 }

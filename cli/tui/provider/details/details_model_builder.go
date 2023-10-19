@@ -17,14 +17,17 @@ package details
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/grid/cli/internal/ether"
 	"github.com/deepsquare-io/grid/cli/internal/utils"
+	"github.com/deepsquare-io/grid/cli/internal/validator"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 	"github.com/deepsquare-io/grid/cli/types"
 	"gopkg.in/yaml.v3"
@@ -91,15 +94,63 @@ Is banned: %s
 	help := help.New()
 	help.ShowAll = true
 
+	inputs := make([]textinput.Model, inputsSize)
+	inputs[tasksInput] = textinput.New()
+	inputs[tasksInput].Focus()
+	inputs[tasksInput].Placeholder = "example: 1"
+	inputs[tasksInput].Width = 10
+	inputs[tasksInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[tasksInput].Validate = validator.AllowedNumberChar
+	inputs[tasksInput].SetValue("1")
+
+	inputs[cpusPerTaskInput] = textinput.New()
+	inputs[cpusPerTaskInput].Placeholder = "example: 1"
+	inputs[cpusPerTaskInput].Width = 10
+	inputs[cpusPerTaskInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[cpusPerTaskInput].Validate = validator.AllowedNumberChar
+	inputs[cpusPerTaskInput].SetValue("1")
+
+	inputs[memPerCPUInput] = textinput.New()
+	inputs[memPerCPUInput].Placeholder = "example: 200"
+	inputs[memPerCPUInput].Width = 10
+	inputs[memPerCPUInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[memPerCPUInput].Validate = validator.AllowedNumberChar
+	inputs[memPerCPUInput].SetValue("200")
+
+	inputs[gpusPerTaskInput] = textinput.New()
+	inputs[gpusPerTaskInput].Placeholder = "example: 1"
+	inputs[gpusPerTaskInput].Width = 10
+	inputs[gpusPerTaskInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[gpusPerTaskInput].Validate = validator.AllowedNumberChar
+	inputs[gpusPerTaskInput].SetValue("0")
+
+	inputs[creditsInput] = textinput.New()
+	inputs[creditsInput].Placeholder = "example: 100"
+	inputs[creditsInput].Width = 10
+	inputs[creditsInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[creditsInput].Validate = validator.AllowedNumberChar
+	inputs[creditsInput].SetValue("100")
+
 	return &model{
 		ProviderDetail: p,
 		help:           help,
 		viewport:       vp,
+		inputs:         inputs,
+		credits:        new(big.Float),
+		errors:         make([]error, inputsSize),
 		keyMap: keyMap{
 			ViewPortKeyMap: vp.KeyMap,
 			Exit: key.NewBinding(
-				key.WithKeys("esc", "q"),
-				key.WithHelp("esc/q", "exit"),
+				key.WithKeys("esc", "ctrl+q"),
+				key.WithHelp("esc/ctrl+q", "exit"),
+			),
+			NextInput: key.NewBinding(
+				key.WithKeys("tab", "ctrl+n", "enter"),
+				key.WithHelp("tab/enter", "next input"),
+			),
+			PrevInput: key.NewBinding(
+				key.WithKeys("shift+tab", "ctrl+p"),
+				key.WithHelp("shift+tab", "prev input"),
 			),
 		},
 	}

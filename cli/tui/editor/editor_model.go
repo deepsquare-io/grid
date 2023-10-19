@@ -22,7 +22,6 @@ import (
 	"math/big"
 	"os"
 	"strconv"
-	"unicode"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -44,6 +43,8 @@ const (
 	creditsLockingInput = iota
 	usesInput
 	jobNameInput
+
+	inputsSize
 )
 
 type keyMap struct {
@@ -253,14 +254,10 @@ switchmsg:
 		cmds = append(cmds, textinput.Blink)
 	}
 
-	m.inputs[creditsLockingInput], inputCmd = m.inputs[creditsLockingInput].Update(msg)
-	cmds = append(cmds, inputCmd)
-
-	m.inputs[usesInput], inputCmd = m.inputs[usesInput].Update(msg)
-	cmds = append(cmds, inputCmd)
-
-	m.inputs[jobNameInput], inputCmd = m.inputs[jobNameInput].Update(msg)
-	cmds = append(cmds, inputCmd)
+	for i := range m.inputs {
+		m.inputs[i], inputCmd = m.inputs[i].Update(msg)
+		cmds = append(cmds, inputCmd)
+	}
 
 	m.code, codeCmd = m.code.Update(msg)
 	if codeCmd != nil {
@@ -282,17 +279,4 @@ func (m *model) prevInput() {
 	if m.focused < 0 {
 		m.focused = len(m.inputs) - 1
 	}
-}
-
-func isNumberCharacter(ch rune) bool {
-	return unicode.IsDigit(ch) || ch == 'e' || ch == '.'
-}
-
-func allowedNumber(input string) error {
-	for _, ch := range input {
-		if !isNumberCharacter(ch) {
-			return fmt.Errorf("character '%c' is not allowed", ch)
-		}
-	}
-	return nil
 }

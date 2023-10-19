@@ -27,6 +27,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/internal/validator"
 	"github.com/deepsquare-io/grid/cli/internal/wordlists"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 	"github.com/mistakenelf/teacup/code"
@@ -71,13 +72,13 @@ func (b *ModelBuilder) Build() tea.Model {
 	help := help.New()
 	help.ShowAll = true
 
-	inputs := make([]textinput.Model, 3)
+	inputs := make([]textinput.Model, inputsSize)
 	inputs[creditsLockingInput] = textinput.New()
 	inputs[creditsLockingInput].Placeholder = "example: 100"
 	inputs[creditsLockingInput].Focus()
 	inputs[creditsLockingInput].Width = 32
 	inputs[creditsLockingInput].Prompt = style.Foreground.Render("❱ ")
-	inputs[creditsLockingInput].Validate = allowedNumber
+	inputs[creditsLockingInput].Validate = validator.AllowedNumberChar
 
 	inputs[usesInput] = textinput.New()
 	inputs[usesInput].Placeholder = "example: os=linux,arch=amd64"
@@ -97,7 +98,7 @@ func (b *ModelBuilder) Build() tea.Model {
 	return &model{
 		code:   code,
 		inputs: inputs,
-		errors: make([]error, 3),
+		errors: make([]error, inputsSize),
 		keyMap: keyMap{
 			EditAgain: key.NewBinding(
 				key.WithKeys("ctrl+e"),

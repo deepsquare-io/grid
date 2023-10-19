@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 var isMapRegex = regexp.MustCompile(
@@ -68,5 +69,27 @@ func IsMap(input string) error {
 		}
 	}
 
+	return nil
+}
+
+func IsNumberChar(ch rune) bool {
+	return unicode.IsDigit(ch) || ch == 'e' || ch == '.'
+}
+
+func AllowedNumberChar(input string) error {
+	for _, ch := range input {
+		if !IsNumberChar(ch) {
+			return fmt.Errorf("character '%c' is not allowed", ch)
+		}
+	}
+	return nil
+}
+
+func AllowedHexChar(input string) error {
+	for _, ch := range input {
+		if !unicode.Is(unicode.Hex_Digit, ch) && ch != 'x' {
+			return fmt.Errorf("character '%c' is not allowed", ch)
+		}
+	}
 	return nil
 }

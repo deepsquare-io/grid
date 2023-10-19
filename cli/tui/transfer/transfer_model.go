@@ -18,9 +18,7 @@ package transfer
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/big"
-	"unicode"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -34,6 +32,8 @@ import (
 const (
 	toInput = iota
 	amountInput
+
+	inputsSize
 )
 
 type keyMap struct {
@@ -145,11 +145,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, textinput.Blink)
 	}
 
-	m.inputs[toInput], inputCmd = m.inputs[toInput].Update(msg)
-	cmds = append(cmds, inputCmd)
-
-	m.inputs[amountInput], inputCmd = m.inputs[amountInput].Update(msg)
-	cmds = append(cmds, inputCmd)
+	for i := range m.inputs {
+		m.inputs[i], inputCmd = m.inputs[i].Update(msg)
+		cmds = append(cmds, inputCmd)
+	}
 
 	return m, tea.Batch(cmds...)
 }
@@ -166,26 +165,4 @@ func (m *model) prevInput() {
 	if m.focused < 0 {
 		m.focused = len(m.inputs) - 1
 	}
-}
-
-func isNumberCharacter(ch rune) bool {
-	return unicode.IsDigit(ch) || ch == 'e' || ch == '.'
-}
-
-func allowedNumber(input string) error {
-	for _, ch := range input {
-		if !isNumberCharacter(ch) {
-			return fmt.Errorf("character '%c' is not allowed", ch)
-		}
-	}
-	return nil
-}
-
-func allowedHex(input string) error {
-	for _, ch := range input {
-		if !unicode.Is(unicode.Hex_Digit, ch) && ch != 'x' {
-			return fmt.Errorf("character '%c' is not allowed", ch)
-		}
-	}
-	return nil
 }

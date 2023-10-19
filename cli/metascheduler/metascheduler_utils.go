@@ -16,10 +16,14 @@
 package metascheduler
 
 import (
+	"errors"
 	"math/big"
 
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 )
+
+var zero = new(big.Int)
+var DivByZero = errors.New("division by zero")
 
 func creditsPerMin(
 	prices metaschedulerabi.ProviderPrices,
@@ -63,8 +67,11 @@ func CreditToDuration(
 	prices metaschedulerabi.ProviderPrices,
 	definition metaschedulerabi.JobDefinition,
 	creditsWei *big.Int,
-) *big.Int {
+) (*big.Int, error) {
 	creditsPerMin := creditsPerMin(prices, definition)
 	// duration = price/pricePerMin
-	return new(big.Int).Div(creditsWei, creditsPerMin)
+	if creditsPerMin.Cmp(zero) == 0 {
+		return nil, DivByZero
+	}
+	return new(big.Int).Div(creditsWei, creditsPerMin), nil
 }

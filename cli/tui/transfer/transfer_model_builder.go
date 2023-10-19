@@ -21,6 +21,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/internal/validator"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 )
 
@@ -37,25 +38,25 @@ func (b *ModelBuilder) Build() tea.Model {
 	help := help.New()
 	help.ShowAll = true
 
-	inputs := make([]textinput.Model, 2)
+	inputs := make([]textinput.Model, inputsSize)
 	inputs[toInput] = textinput.New()
 	inputs[toInput].Focus()
 	inputs[toInput].Placeholder = "example: 0x0000000000000000000000000000000000000000"
 	inputs[toInput].Width = 64
 	inputs[toInput].Prompt = style.Foreground.Render("❱ ")
-	inputs[toInput].Validate = allowedHex
+	inputs[toInput].Validate = validator.AllowedHexChar
 
 	inputs[amountInput] = textinput.New()
 	inputs[amountInput].Placeholder = "example: 0.0"
 	inputs[amountInput].Width = 64
 	inputs[amountInput].Prompt = style.Foreground.Render("❱ ")
-	inputs[amountInput].Validate = allowedNumber
+	inputs[amountInput].Validate = validator.AllowedNumberChar
 
 	return &model{
 		client: b.Client,
 		help:   help,
 		inputs: inputs,
-		errors: make([]error, 2),
+		errors: make([]error, inputsSize),
 		keyMap: keyMap{
 			Exit: key.NewBinding(
 				key.WithKeys("esc", "ctrl+q"),

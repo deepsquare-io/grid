@@ -32,6 +32,10 @@ func BoolToYN(b bool) string {
 	return "no"
 }
 
+func YNToBool(b string) bool {
+	return strings.Contains(b, "yes")
+}
+
 // ErrorfOrEmpty returns a formatted message if the error is not nil.
 func ErrorfOrEmpty(format string, err error, va ...any) string {
 	if err != nil {

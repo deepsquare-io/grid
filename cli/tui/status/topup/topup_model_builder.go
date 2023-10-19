@@ -23,6 +23,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/internal/validator"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 )
 
@@ -43,13 +44,13 @@ func (b *ModelBuilder) Build(jobID [32]byte) tea.Model {
 	help := help.New()
 	help.ShowAll = true
 
-	inputs := make([]textinput.Model, 1)
+	inputs := make([]textinput.Model, inputsSize)
 	inputs[amountInput] = textinput.New()
 	inputs[amountInput].Focus()
 	inputs[amountInput].Placeholder = "example: 0.0"
 	inputs[amountInput].Width = 64
 	inputs[amountInput].Prompt = style.Foreground.Render("❱ ")
-	inputs[amountInput].Validate = allowedNumber
+	inputs[amountInput].Validate = validator.AllowedNumberChar
 
 	return &model{
 		client:   b.Client,
@@ -57,7 +58,7 @@ func (b *ModelBuilder) Build(jobID [32]byte) tea.Model {
 		inputs:   inputs,
 		jobID:    jobID,
 		watchJob: makeWatchJobModel(context.TODO(), jobID, b.Watcher, b.Client),
-		errors:   make([]error, 1),
+		errors:   make([]error, inputsSize),
 		keyMap: keyMap{
 			Exit: key.NewBinding(
 				key.WithKeys("esc", "ctrl+q"),
