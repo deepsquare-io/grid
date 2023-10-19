@@ -8,6 +8,6 @@ cd "${SCRIPTPATH}/../../protos/supervisorapis"
 
 buf generate
 
-cd "${SCRIPTPATH}/../../protos/customerapis"
+cd "${SCRIPTPATH}/../../protos/sbatchapis"
 
 buf generate

@@ -20,6 +20,8 @@ typedef struct report {
   time_t elapsed;
   /** @brief The job comment. Used to filter. */
   std::string comment;
+  /** @brief The job exit code. */
+  uint32_t exit_code;
 } report_t;
 
 #endif // REPORT_H

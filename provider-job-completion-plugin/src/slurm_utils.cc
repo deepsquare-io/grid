@@ -10,4 +10,5 @@ void parse_slurm_job_info(const job_record_t &job, report_t &report) {
   report.elapsed = job.end_time - job.start_time;
   if (job.comment && job.comment[0])
     report.comment = std::string(job.comment);
+  report.exit_code = job.exit_code;
 }

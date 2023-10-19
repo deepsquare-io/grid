@@ -106,18 +106,18 @@ const char descriptor_table_protodef_grpc_2fhealth_2fv1_2fhealth_2eproto[] PROTO
     "ckRequest\032#.grpc.health.v1.HealthCheckRe"
     "sponse\022R\n\005Watch\022\".grpc.health.v1.HealthC"
     "heckRequest\032#.grpc.health.v1.HealthCheck"
-    "Response0\001B\326\001\n\022com.grpc.health.v1B\013Healt"
-    "hProtoP\001ZVgithub.com/deepsquare-io/the-g"
-    "rid/supervisorapis/protos/gen/go/grpc/he"
-    "alth/v1;healthv1\370\001\000\242\002\003GHX\252\002\016Grpc.Health."
-    "V1\312\002\016Grpc\\Health\\V1\342\002\032Grpc\\Health\\V1\\GPB"
-    "Metadata\352\002\020Grpc::Health::V1b\006proto3"
+    "Response0\001B\322\001\n\022com.grpc.health.v1B\013Healt"
+    "hProtoP\001ZRgithub.com/deepsquare-io/grid/"
+    "supervisorapis/protos/gen/go/grpc/health"
+    "/v1;healthv1\370\001\000\242\002\003GHX\252\002\016Grpc.Health.V1\312\002"
+    "\016Grpc\\Health\\V1\342\002\032Grpc\\Health\\V1\\GPBMeta"
+    "data\352\002\020Grpc::Health::V1b\006proto3"
 };
 static ::absl::once_flag descriptor_table_grpc_2fhealth_2fv1_2fhealth_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_grpc_2fhealth_2fv1_2fhealth_2eproto = {
     false,
     false,
-    675,
+    671,
     descriptor_table_protodef_grpc_2fhealth_2fv1_2fhealth_2eproto,
     "grpc/health/v1/health.proto",
     &descriptor_table_grpc_2fhealth_2fv1_2fhealth_2eproto_once,

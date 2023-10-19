@@ -13,6 +13,7 @@ SetJobStatusRequest MakeSetJobStatusRequest(const report_t &report) {
   req.set_name(report.job_name);
   req.set_id(report.job_id);
   req.set_duration(report.elapsed);
+  req.set_exit_code(report.exit_code);
 
   switch (report.job_state & JOB_STATE_BASE) {
   case JOB_FAILED:

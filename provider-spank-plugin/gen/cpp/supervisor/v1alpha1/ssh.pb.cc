@@ -97,19 +97,19 @@ const char descriptor_table_protodef_supervisor_2fv1alpha1_2fssh_2eproto[] PROTO
     "shAPI\022z\n\023FetchAuthorizedKeys\022/.superviso"
     "r.v1alpha1.FetchAuthorizedKeysRequest\0320."
     "supervisor.v1alpha1.FetchAuthorizedKeysR"
-    "esponse\"\000B\372\001\n\027com.supervisor.v1alpha1B\010S"
-    "shProtoP\001Zegithub.com/deepsquare-io/the-"
-    "grid/supervisorapis/protos/gen/go/superv"
-    "isor/v1alpha1;supervisorv1alpha1\370\001\000\242\002\003SX"
-    "X\252\002\023Supervisor.V1alpha1\312\002\023Supervisor\\V1a"
-    "lpha1\342\002\037Supervisor\\V1alpha1\\GPBMetadata\352"
-    "\002\024Supervisor::V1alpha1b\006proto3"
+    "esponse\"\000B\366\001\n\027com.supervisor.v1alpha1B\010S"
+    "shProtoP\001Zagithub.com/deepsquare-io/grid"
+    "/supervisorapis/protos/gen/go/supervisor"
+    "/v1alpha1;supervisorv1alpha1\370\001\000\242\002\003SXX\252\002\023"
+    "Supervisor.V1alpha1\312\002\023Supervisor\\V1alpha"
+    "1\342\002\037Supervisor\\V1alpha1\\GPBMetadata\352\002\024Su"
+    "pervisor::V1alpha1b\006proto3"
 };
 static ::absl::once_flag descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto = {
     false,
     false,
-    550,
+    546,
     descriptor_table_protodef_supervisor_2fv1alpha1_2fssh_2eproto,
     "supervisor/v1alpha1/ssh.proto",
     &descriptor_table_supervisor_2fv1alpha1_2fssh_2eproto_once,

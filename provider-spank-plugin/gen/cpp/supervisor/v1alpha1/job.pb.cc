@@ -31,6 +31,8 @@ PROTOBUF_CONSTEXPR SetJobStatusRequest::SetJobStatusRequest(
 
   , /*decltype(_impl_.duration_)*/ ::uint64_t{0u}
 
+  , /*decltype(_impl_.exit_code_)*/ ::int64_t{0}
+
   , /*decltype(_impl_.status_)*/ 0
 
   , /*decltype(_impl_._cached_size_)*/{}} {}
@@ -77,6 +79,7 @@ const ::uint32_t TableStruct_supervisor_2fv1alpha1_2fjob_2eproto::offsets[] PROT
     PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.id_),
     PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.duration_),
     PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.status_),
+    PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusRequest, _impl_.exit_code_),
     ~0u,  // no _has_bits_
     PROTOBUF_FIELD_OFFSET(::supervisor::v1alpha1::SetJobStatusResponse, _internal_metadata_),
     ~0u,  // no _extensions_
@@ -90,7 +93,7 @@ const ::uint32_t TableStruct_supervisor_2fv1alpha1_2fjob_2eproto::offsets[] PROT
 static const ::_pbi::MigrationSchema
     schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
         { 0, -1, -1, sizeof(::supervisor::v1alpha1::SetJobStatusRequest)},
-        { 12, -1, -1, sizeof(::supervisor::v1alpha1::SetJobStatusResponse)},
+        { 13, -1, -1, sizeof(::supervisor::v1alpha1::SetJobStatusResponse)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -99,34 +102,35 @@ static const ::_pb::Message* const file_default_instances[] = {
 };
 const char descriptor_table_protodef_supervisor_2fv1alpha1_2fjob_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
     "\n\035supervisor/v1alpha1/job.proto\022\023supervi"
-    "sor.v1alpha1\"\215\001\n\023SetJobStatusRequest\022\022\n\004"
+    "sor.v1alpha1\"\252\001\n\023SetJobStatusRequest\022\022\n\004"
     "name\030\001 \001(\tR\004name\022\016\n\002id\030\002 \001(\004R\002id\022\032\n\010dura"
     "tion\030\003 \001(\004R\010duration\0226\n\006status\030\004 \001(\0162\036.s"
-    "upervisor.v1alpha1.JobStatusR\006status\"\026\n\024"
-    "SetJobStatusResponse*\255\002\n\tJobStatus\022\032\n\026JO"
-    "B_STATUS_UNSPECIFIED\020\000\022\026\n\022JOB_STATUS_PEN"
-    "DING\020\001\022\035\n\031JOB_STATUS_META_SCHEDULED\020\002\022\030\n"
-    "\024JOB_STATUS_SCHEDULED\020\003\022\026\n\022JOB_STATUS_RU"
-    "NNING\020\004\022\031\n\025JOB_STATUS_CANCELLING\020\005\022\030\n\024JO"
-    "B_STATUS_CANCELLED\020\006\022\027\n\023JOB_STATUS_FINIS"
-    "HED\020\007\022\025\n\021JOB_STATUS_FAILED\020\010\022\035\n\031JOB_STAT"
-    "US_OUT_OF_CREDITS\020\t\022\027\n\023JOB_STATUS_PANICK"
-    "ED\020\n2o\n\006JobAPI\022e\n\014SetJobStatus\022(.supervi"
-    "sor.v1alpha1.SetJobStatusRequest\032).super"
-    "visor.v1alpha1.SetJobStatusResponse\"\000B\372\001"
-    "\n\027com.supervisor.v1alpha1B\010JobProtoP\001Zeg"
-    "ithub.com/deepsquare-io/the-grid/supervi"
-    "sorapis/protos/gen/go/supervisor/v1alpha"
-    "1;supervisorv1alpha1\370\001\000\242\002\003SXX\252\002\023Supervis"
-    "or.V1alpha1\312\002\023Supervisor\\V1alpha1\342\002\037Supe"
-    "rvisor\\V1alpha1\\GPBMetadata\352\002\024Supervisor"
-    "::V1alpha1b\006proto3"
+    "upervisor.v1alpha1.JobStatusR\006status\022\033\n\t"
+    "exit_code\030\005 \001(\003R\010exitCode\"\026\n\024SetJobStatu"
+    "sResponse*\255\002\n\tJobStatus\022\032\n\026JOB_STATUS_UN"
+    "SPECIFIED\020\000\022\026\n\022JOB_STATUS_PENDING\020\001\022\035\n\031J"
+    "OB_STATUS_META_SCHEDULED\020\002\022\030\n\024JOB_STATUS"
+    "_SCHEDULED\020\003\022\026\n\022JOB_STATUS_RUNNING\020\004\022\031\n\025"
+    "JOB_STATUS_CANCELLING\020\005\022\030\n\024JOB_STATUS_CA"
+    "NCELLED\020\006\022\027\n\023JOB_STATUS_FINISHED\020\007\022\025\n\021JO"
+    "B_STATUS_FAILED\020\010\022\035\n\031JOB_STATUS_OUT_OF_C"
+    "REDITS\020\t\022\027\n\023JOB_STATUS_PANICKED\020\n2o\n\006Job"
+    "API\022e\n\014SetJobStatus\022(.supervisor.v1alpha"
+    "1.SetJobStatusRequest\032).supervisor.v1alp"
+    "ha1.SetJobStatusResponse\"\000B\366\001\n\027com.super"
+    "visor.v1alpha1B\010JobProtoP\001Zagithub.com/d"
+    "eepsquare-io/grid/supervisorapis/protos/"
+    "gen/go/supervisor/v1alpha1;supervisorv1a"
+    "lpha1\370\001\000\242\002\003SXX\252\002\023Supervisor.V1alpha1\312\002\023S"
+    "upervisor\\V1alpha1\342\002\037Supervisor\\V1alpha1"
+    "\\GPBMetadata\352\002\024Supervisor::V1alpha1b\006pro"
+    "to3"
 };
 static ::absl::once_flag descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto = {
     false,
     false,
-    898,
+    923,
     descriptor_table_protodef_supervisor_2fv1alpha1_2fjob_2eproto,
     "supervisor/v1alpha1/job.proto",
     &descriptor_table_supervisor_2fv1alpha1_2fjob_2eproto_once,
@@ -203,6 +207,8 @@ SetJobStatusRequest::SetJobStatusRequest(const SetJobStatusRequest& from)
 
     , decltype(_impl_.duration_) {}
 
+    , decltype(_impl_.exit_code_) {}
+
     , decltype(_impl_.status_) {}
 
     , /*decltype(_impl_._cached_size_)*/{}};
@@ -229,6 +235,8 @@ inline void SetJobStatusRequest::SharedCtor(::_pb::Arena* arena) {
     , decltype(_impl_.id_) { ::uint64_t{0u} }
 
     , decltype(_impl_.duration_) { ::uint64_t{0u} }
+
+    , decltype(_impl_.exit_code_) { ::int64_t{0} }
 
     , decltype(_impl_.status_) { 0 }
 
@@ -316,6 +324,15 @@ const char* SetJobStatusRequest::_InternalParse(const char* ptr, ::_pbi::ParseCo
           goto handle_unusual;
         }
         continue;
+      // int64 exit_code = 5 [json_name = "exitCode"];
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::uint8_t>(tag) == 40)) {
+          _impl_.exit_code_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else {
+          goto handle_unusual;
+        }
+        continue;
       default:
         goto handle_unusual;
     }  // switch
@@ -374,6 +391,13 @@ failure:
         4, this->_internal_status(), target);
   }
 
+  // int64 exit_code = 5 [json_name = "exitCode"];
+  if (this->_internal_exit_code() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt64ToArray(
+        5, this->_internal_exit_code(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -408,6 +432,12 @@ failure:
         this->_internal_duration());
   }
 
+  // int64 exit_code = 5 [json_name = "exitCode"];
+  if (this->_internal_exit_code() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(
+        this->_internal_exit_code());
+  }
+
   // .supervisor.v1alpha1.JobStatus status = 4 [json_name = "status"];
   if (this->_internal_status() != 0) {
     total_size += 1 +
@@ -440,6 +470,9 @@ void SetJobStatusRequest::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, co
   }
   if (from._internal_duration() != 0) {
     _this->_internal_set_duration(from._internal_duration());
+  }
+  if (from._internal_exit_code() != 0) {
+    _this->_internal_set_exit_code(from._internal_exit_code());
   }
   if (from._internal_status() != 0) {
     _this->_internal_set_status(from._internal_status());

@@ -249,6 +249,7 @@ class SetJobStatusRequest final :
     kNameFieldNumber = 1,
     kIdFieldNumber = 2,
     kDurationFieldNumber = 3,
+    kExitCodeFieldNumber = 5,
     kStatusFieldNumber = 4,
   };
   // string name = 1 [json_name = "name"];
@@ -291,6 +292,16 @@ class SetJobStatusRequest final :
   void _internal_set_duration(::uint64_t value);
 
   public:
+  // int64 exit_code = 5 [json_name = "exitCode"];
+  void clear_exit_code() ;
+  ::int64_t exit_code() const;
+  void set_exit_code(::int64_t value);
+
+  private:
+  ::int64_t _internal_exit_code() const;
+  void _internal_set_exit_code(::int64_t value);
+
+  public:
   // .supervisor.v1alpha1.JobStatus status = 4 [json_name = "status"];
   void clear_status() ;
   ::supervisor::v1alpha1::JobStatus status() const;
@@ -312,6 +323,7 @@ class SetJobStatusRequest final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
     ::uint64_t id_;
     ::uint64_t duration_;
+    ::int64_t exit_code_;
     int status_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -564,6 +576,26 @@ inline ::supervisor::v1alpha1::JobStatus SetJobStatusRequest::_internal_status()
 inline void SetJobStatusRequest::_internal_set_status(::supervisor::v1alpha1::JobStatus value) {
   ;
   _impl_.status_ = value;
+}
+
+// int64 exit_code = 5 [json_name = "exitCode"];
+inline void SetJobStatusRequest::clear_exit_code() {
+  _impl_.exit_code_ = ::int64_t{0};
+}
+inline ::int64_t SetJobStatusRequest::exit_code() const {
+  // @@protoc_insertion_point(field_get:supervisor.v1alpha1.SetJobStatusRequest.exit_code)
+  return _internal_exit_code();
+}
+inline void SetJobStatusRequest::set_exit_code(::int64_t value) {
+  _internal_set_exit_code(value);
+  // @@protoc_insertion_point(field_set:supervisor.v1alpha1.SetJobStatusRequest.exit_code)
+}
+inline ::int64_t SetJobStatusRequest::_internal_exit_code() const {
+  return _impl_.exit_code_;
+}
+inline void SetJobStatusRequest::_internal_set_exit_code(::int64_t value) {
+  ;
+  _impl_.exit_code_ = value;
 }
 
 // -------------------------------------------------------------------

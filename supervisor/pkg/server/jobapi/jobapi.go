@@ -128,6 +128,7 @@ func (s *Server) setJobStatusTask(
 					jobNameFixedLength,
 					status,
 					req.Duration/60,
+					metascheduler.SetJobStatusWithExitCode(req.ExitCode),
 				)
 				if err != nil {
 					if errors.Is(err, &metascheduler.SameStatusError{}) {
