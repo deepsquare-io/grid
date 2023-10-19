@@ -30,33 +30,45 @@ COMMANDS:
 package job
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	"github.com/deepsquare-io/grid/cli/internal/ether"
+	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types"
 	"github.com/erikgeiser/promptkit/confirmation"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 )
 
 var (
 	ethEndpointRPC             string
+	ethEndpointWS              string
 	metaschedulerSmartContract string
 	ethHexPK                   string
 	panicReason                string
+	loggerEndpoint             string
 
-	wei   bool
-	time  bool
-	force bool
+	wei         bool
+	useTime     bool
+	force       bool
+	noTimestamp bool
 )
 
 var flags = []cli.Flag{
@@ -87,6 +99,31 @@ var authFlags = append(
 	},
 )
 
+var logsFlags = append(
+	authFlags,
+	&cli.StringFlag{
+		Name:        "metascheduler.ws",
+		Value:       deepsquare.DefaultWSEndpoint,
+		Usage:       "Metascheduler Avalanche C-Chain JSON-RPC endpoint.",
+		Destination: &ethEndpointWS,
+		EnvVars:     []string{"METASCHEDULER_WS"},
+	},
+	&cli.StringFlag{
+		Name:        "logger.endpoint",
+		Value:       deepsquare.DefaultLoggerEndpoint,
+		Usage:       "Grid Logger endpoint.",
+		Destination: &loggerEndpoint,
+		EnvVars:     []string{"LOGGER_ENDPOINT"},
+	},
+	&cli.BoolFlag{
+		Name:        "no-timestamp",
+		Usage:       "Hide timestamp.",
+		Aliases:     []string{"no-ts"},
+		Category:    "Submit Settings:",
+		Destination: &noTimestamp,
+	},
+)
+
 var panicFlags = append(
 	authFlags,
 	&cli.StringFlag{
@@ -107,7 +144,7 @@ var topupFlags = append(
 	&cli.BoolFlag{
 		Name:        "time",
 		Usage:       "Use duration instead of credits.",
-		Destination: &time,
+		Destination: &useTime,
 	},
 	&cli.BoolFlag{
 		Name:        "force",
@@ -166,6 +203,115 @@ var Command = cli.Command{
 				}
 				fmt.Println(string(jobJSON))
 				return nil
+			},
+		},
+		{
+			Name:      "logs",
+			Usage:     "Watch job logs.",
+			Flags:     logsFlags,
+			ArgsUsage: "<job ID>",
+			Action: func(cCtx *cli.Context) error {
+				if cCtx.NArg() < 1 {
+					return errors.New("missing arguments")
+				}
+				pk, err := crypto.HexToECDSA(ethHexPK)
+				if err != nil {
+					return err
+				}
+				jobIDBig, ok := new(big.Int).SetString(cCtx.Args().First(), 10)
+				if !ok {
+					return errors.New("failed to parse job ID")
+				}
+				var jobID [32]byte
+				jobIDBig.FillBytes(jobID[:])
+				ctx := cCtx.Context
+				client, err := deepsquare.NewClient(ctx, &deepsquare.ClientConfig{
+					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
+					RPCEndpoint:          ethEndpointRPC,
+					LoggerEndpoint:       loggerEndpoint,
+					UserPrivateKey:       pk,
+				})
+				if err != nil {
+					return err
+				}
+				defer func() {
+					if err := client.Close(); err != nil {
+						internallog.I.Error("failed to close client", zap.Error(err))
+					}
+				}()
+				watcher, err := deepsquare.NewWatcher(ctx, &deepsquare.WatcherConfig{
+					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
+					RPCEndpoint:          ethEndpointRPC,
+					WSEndpoint:           ethEndpointWS,
+					UserPrivateKey:       pk,
+				})
+				if err != nil {
+					return err
+				}
+				defer func() {
+					if err := watcher.Close(); err != nil {
+						internallog.I.Error("failed to close watcher", zap.Error(err))
+					}
+				}()
+				transitions := make(chan types.JobTransition, 1)
+				sub, err := watcher.SubscribeEvents(
+					ctx,
+					types.FilterJobTransition(transitions),
+				)
+				if err != nil {
+					return err
+				}
+				defer sub.Unsubscribe()
+
+				// Find job
+				job, err := client.GetJob(ctx, jobID)
+				if err != nil {
+					return err
+				}
+
+				switch metascheduler.JobStatus(job.Status) {
+				case metascheduler.JobStatusCancelled,
+					metascheduler.JobStatusFailed,
+					metascheduler.JobStatusFinished,
+					metascheduler.JobStatusPanicked,
+					metascheduler.JobStatusOutOfCredits,
+					metascheduler.JobStatusRunning:
+				default:
+					_, err = waitUntilJobRunningOrFinished(sub, transitions, jobID)
+					if err != nil {
+						fmt.Printf("---Waiting for job running failed---\n%s\n", err)
+						return err
+					}
+				}
+
+				stream, err := client.WatchLogs(ctx, jobID)
+				if err != nil {
+					fmt.Printf("---Watching logs has unexpectedly failed---\n%s\n", err)
+					return err
+				}
+				defer func() {
+					_ = stream.CloseSend()
+				}()
+				for {
+					req, err := stream.Recv()
+					if err == io.EOF || errors.Is(err, context.Canceled) {
+						fmt.Println("---Connection to logging server closed---")
+						return nil
+					}
+					if err != nil {
+						fmt.Printf(
+							"---Connection to logging server closed unexpectedly---\n%s\n",
+							err,
+						)
+						return err
+					}
+					clean := forbiddenReplacer.Replace(string(req.GetData()))
+					if noTimestamp {
+						fmt.Printf("%s\n", clean)
+					} else {
+						fmt.Printf("%s:\t%s\n", time.Unix(0, req.GetTimestamp()), clean)
+					}
+				}
 			},
 		},
 		{
@@ -306,7 +452,7 @@ var Command = cli.Command{
 
 				var creditsWei *big.Int
 				var credits *big.Float
-				if !time {
+				if !useTime {
 					if wei {
 						c, ok := new(big.Int).SetString(cCtx.Args().Get(1), 10)
 						if !ok {
@@ -366,3 +512,43 @@ var Command = cli.Command{
 		},
 	},
 }
+
+func waitUntilJobRunningOrFinished(
+	sub ethereum.Subscription,
+	ch <-chan types.JobTransition,
+	jobID [32]byte,
+) (metascheduler.JobStatus, error) {
+	for {
+		select {
+		case tr := <-ch:
+			if bytes.EqualFold(jobID[:], tr.JobId[:]) {
+				fmt.Printf("(Job is %s)\n", metascheduler.JobStatus(tr.To))
+				switch metascheduler.JobStatus(tr.To) {
+				case metascheduler.JobStatusCancelled,
+					metascheduler.JobStatusFailed,
+					metascheduler.JobStatusFinished,
+					metascheduler.JobStatusPanicked,
+					metascheduler.JobStatusOutOfCredits,
+					metascheduler.JobStatusRunning:
+					return metascheduler.JobStatus(tr.To), nil
+				}
+			}
+		case err := <-sub.Err():
+			return metascheduler.JobStatusUnknown, err
+		}
+	}
+}
+
+var forbiddenReplacer = strings.NewReplacer(
+	"\x1b[A", "", // Move Up
+	"\x1b[B", "", // Move Down
+	"\x1b[C", "", // Move Forward (Right)
+	"\x1b[D", "", // Move Backward (Left)
+	"\x1b[G", "", // Move to Beginning of Line
+	"\x1b[H", "", // Move to Specific Position
+	"\x1b[f", "", // Move to Specific Position (alternative)
+	"\x1b[s", "", // Save Cursor Position
+	"\x1b[u", "", // Restore Cursor Position
+	"\r\n", "\n",
+	"\r", "\n",
+)
