@@ -54,6 +54,7 @@ func (suite *ServerTestSuite) TestSetJobStatus() {
 		SetJobStatus(
 			mock.Anything,
 			mock.Anything,
+			metascheduler.JobStatusRunning,
 			mock.Anything,
 			mock.Anything,
 		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64, sjso ...metascheduler.SetJobStatusOption) error {
@@ -67,6 +68,7 @@ func (suite *ServerTestSuite) TestSetJobStatus() {
 		Id:       1,
 		Duration: 1,
 		Status:   supervisorv1alpha1.JobStatus_JOB_STATUS_RUNNING,
+		ExitCode: 10,
 	})
 
 	select {
@@ -85,6 +87,7 @@ func (suite *ServerTestSuite) TestSetJobStatusFailure() {
 
 	suite.jobHandler.EXPECT().
 		SetJobStatus(
+			mock.Anything,
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
@@ -119,6 +122,7 @@ func (suite *ServerTestSuite) TestSetJobStatusBlocking() {
 
 	suite.jobHandler.EXPECT().
 		SetJobStatus(
+			mock.Anything,
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
@@ -158,6 +162,7 @@ func (suite *ServerTestSuite) TestSetJobStatusThrowSameStatusError() {
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
+			mock.Anything,
 		).RunAndReturn(func(ctx context.Context, b [32]byte, js metascheduler.JobStatus, u uint64, sjso ...metascheduler.SetJobStatusOption) error {
 		done <- struct{}{}
 		return &metascheduler.SameStatusError{}
@@ -187,6 +192,7 @@ func (suite *ServerTestSuite) TestSetJobStatusThrowTransitionError() {
 
 	suite.jobHandler.EXPECT().
 		SetJobStatus(
+			mock.Anything,
 			mock.Anything,
 			mock.Anything,
 			mock.Anything,
