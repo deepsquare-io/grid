@@ -41,6 +41,14 @@ var (
 	claimJobEvent               abi.Event
 )
 
+// exitCodeQuotient is the divider that separate the exit code from the signal.
+//
+// Slurm is returning two values in one:
+//
+// - ExitCode = SlurmExitCode/256
+// - Signal = SlurmExitCode%256
+const exitCodeQuotient = 256
+
 func init() {
 	var err error
 	MetaschedulerABI, err = metaschedulerabi.MetaSchedulerMetaData.GetAbi()
@@ -294,7 +302,7 @@ func (c *Client) SetJobStatus(
 		uint8(status),
 		jobDurationMinute,
 		errMsg,
-		o.exitCode,
+		o.exitCode/exitCodeQuotient,
 	)
 	if err != nil {
 		return WrapError(err)
