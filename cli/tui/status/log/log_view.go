@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 )
@@ -44,6 +45,15 @@ func (m model) footerView() string {
 
 func (m model) View() string {
 	var view string
+	help := m.help.FullHelpView([][]key.Binding{
+		{
+			m.keyMap.Exit,
+		},
+		{
+			m.keyMap.ViewPort.Up,
+			m.keyMap.ViewPort.Down,
+		},
+	})
 	if len(m.logs) == 0 {
 		view = fmt.Sprintf(
 			"%s\nWaiting for logs... %s%s\n%s",
@@ -55,8 +65,10 @@ func (m model) View() string {
 	} else {
 		view = fmt.Sprintf(
 			"%s\n%s\n%s",
-			m.headerView(), m.viewport.View(), m.footerView(),
+			m.headerView(),
+			m.viewport.View(),
+			m.footerView(),
 		)
 	}
-	return style.Box.Render(view)
+	return style.Box.Render(view) + "\n" + help
 }

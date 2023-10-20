@@ -21,6 +21,8 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -45,6 +47,10 @@ func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	messages := &strings.Builder{}
 	messages.Grow(1048576)
+
+	help := help.New()
+	help.ShowAll = true
+
 	return &model{
 		viewport: vp,
 		spinner:  s,
@@ -53,6 +59,14 @@ func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
 			jobID,
 			b.Logger,
 		),
+		keyMap: keyMap{
+			ViewPort: vp.KeyMap,
+			Exit: key.NewBinding(
+				key.WithKeys("esc", "q"),
+				key.WithHelp("esc/q", "exit"),
+			),
+		},
+		help:     help,
 		logs:     make([]logMsg, 0, 100),
 		messages: messages,
 		title:    fmt.Sprintf("Job %s", new(big.Int).SetBytes(jobID[:])),

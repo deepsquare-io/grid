@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -37,6 +39,11 @@ func (m *model) emitExitMsg() tea.Cmd {
 	)
 }
 
+type keyMap struct {
+	ViewPort viewport.KeyMap
+	Exit     key.Binding
+}
+
 type model struct {
 	viewport  viewport.Model
 	spinner   spinner.Model
@@ -44,6 +51,9 @@ type model struct {
 	logs      []logMsg
 	watchLogs channel.Model[logMsg]
 	title     string
+
+	help   help.Model
+	keyMap keyMap
 
 	showTimestamp bool
 }
@@ -91,7 +101,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.viewport.GotoBottom()
 	case tea.KeyMsg:
 		switch {
-		case msg.Type == tea.KeyEscape, msg.String() == "q":
+		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, m.emitExitMsg())
 		}
 	}
