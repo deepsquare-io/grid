@@ -59,24 +59,9 @@ You can retrieve the `ProviderHardware`, which describes the cluster resources. 
 ```json
 {
   "Nodes": 4,
-  "GpusPerNode": [
-    2,
-    2,
-    2,
-    2
-  ],
-  "CpusPerNode": [
-    16,
-    16,
-    16,
-    16
-  ],
-  "MemPerNode": [
-    128460,
-    128460,
-    128460,
-    128460
-  ]
+  "GpusPerNode": [2, 2, 2, 2],
+  "CpusPerNode": [16, 16, 16, 16],
+  "MemPerNode": [128460, 128460, 128460, 128460]
 }
 ```
 
@@ -185,16 +170,14 @@ The first page shows a summary of providers:
 
 It's quite unreadable, so press <kbd>enter</kbd> to show the details of one provider:
 
-<center>
-
-![image-20231018160859531](./04-submit.assets/image-20231018160859531.png)
+![image-20231020022541099](./04-submit.assets/image-20231020022541099.png)
 
 </center>
 
 You can see the pricing and clusters structure.
 
 ```shell
-│  Nodes: 4 
+│  Nodes: 4
 │  CPU per node: [16 16 16 16]
 │  Mem(MB) per node: [128460 128460 128460 128460]
 │  GPU per node: [2 2 2 2]
@@ -231,15 +214,7 @@ classDiagram
 
 Naturally, the meta-scheduler already know which clusters can run your workload, so you may not need to filter the clusters based on resources. Instead, we recommend you to read the labels, and [filters using Use flags or Affinities](/workflow/learn/providers-labels).
 
-To compute the credits that need to be allocated, you need to compute this equation:
-
-```
-AllocatedCredits = MaxDuration * Tasks * (GpuPricePerMin * GpusPerTask + CpuPricePerMin * CpusPerTask + MemPricePerMin * MemPerCpu * CpuPerTask)
-```
-
-As you can see, the equation is quite long. You can use the TUI to compute the pricing by press <kbd>c</kbd>:
-
-(Work in Progress)
+To compute the credits that need to be allocated, you can use the Duration Estimator. Use <kbd>tab</kbd> to navigate between fields and type the values which represent the allocated resources. You should see the `Expected Max Duration` result getting updated.
 
 **Topping up a job**
 
