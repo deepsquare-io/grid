@@ -170,6 +170,8 @@ The first page shows a summary of providers:
 
 It's quite unreadable, so press <kbd>enter</kbd> to show the details of one provider:
 
+<center>
+
 ![image-20231020022541099](./04-submit.assets/image-20231020022541099.png)
 
 </center>
