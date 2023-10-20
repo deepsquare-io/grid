@@ -52,7 +52,7 @@ func (m model) View() string {
 	if m.isCancelling {
 		status += "Cancelling..."
 	}
-	status += style.Error.Width(30).Render(utils.ErrorfOrEmpty("Error: %s", m.err))
+	status += style.Error.Width(30).Render(utils.FormatErrorfOrEmpty("Error: %s", m.err))
 	right := fmt.Sprintf(
 		"%s\n%s",
 		status,

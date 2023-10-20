@@ -37,8 +37,16 @@ func YNToBool(b string) bool {
 	return strings.Contains(b, "yes")
 }
 
-// ErrorfOrEmpty returns a formatted message if the error is not nil.
-func ErrorfOrEmpty(format string, err error, va ...any) string {
+// ErrorfOrEmpty returns a message if the error is not nil.
+func ErrorfOrEmpty(msg string, err error) string {
+	if err != nil {
+		return msg
+	}
+	return ""
+}
+
+// FormatErrorfOrEmpty returns a formatted message if the error is not nil.
+func FormatErrorfOrEmpty(format string, err error, va ...any) string {
 	if err != nil {
 		a := append([]any{err}, va...)
 		return fmt.Sprintf(format, a...)

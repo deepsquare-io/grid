@@ -169,9 +169,9 @@ Expected duration gain: %s
 		provider,
 		style.Foreground.Render("Amount in credits (not in wei)"),
 		m.inputs[amountInput].View(),
-		style.Error.Width(50).Render(utils.ErrorfOrEmpty("^^^%s", m.errors[amountInput])),
+		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[amountInput])),
 		duration,
-		style.Error.Width(50).Render(utils.ErrorfOrEmpty("Error: %s", m.err)),
+		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("Error: %s", m.err)),
 		m.loading(),
 		help,
 	)

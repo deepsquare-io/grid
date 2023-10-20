@@ -59,30 +59,45 @@ func (m model) View() string {
 %s %s
 %s
 %s`,
-		style.LogTitle.Render("Cost Calculator"),
+		style.LogTitle.Render("Duration Estimator"),
 		style.Foreground.Render("Tasks:"),
 		m.inputs[tasksInput].View(),
-		style.Error.Width(m.viewport.Width/2).
-			Render(utils.ErrorfOrEmpty("\n^^^%s", m.errors[tasksInput])),
+		utils.ErrorfOrEmpty(
+			"\n"+style.Error.Width(m.viewport.Width/2).
+				Render(fmt.Sprintf("^^^%v", m.errors[tasksInput])),
+			m.errors[tasksInput],
+		),
 		style.Foreground.Render("CPUs per Task:"),
 		m.inputs[cpusPerTaskInput].View(),
-		style.Error.Width(m.viewport.Width/2).
-			Render(utils.ErrorfOrEmpty("\n^^^%s", m.errors[cpusPerTaskInput])),
+		utils.ErrorfOrEmpty(
+			"\n"+style.Error.Width(m.viewport.Width/2).
+				Render(fmt.Sprintf("^^^%v", m.errors[cpusPerTaskInput])),
+			m.errors[cpusPerTaskInput],
+		),
 		style.Foreground.Render("Memory (MB) per CPU:"),
 		m.inputs[memPerCPUInput].View(),
-		style.Error.Width(m.viewport.Width/2).
-			Render(utils.ErrorfOrEmpty("\n^^^%s", m.errors[memPerCPUInput])),
+		utils.ErrorfOrEmpty(
+			"\n"+style.Error.Width(m.viewport.Width/2).
+				Render(fmt.Sprintf("^^^%v", m.errors[memPerCPUInput])),
+			m.errors[memPerCPUInput],
+		),
 		style.Foreground.Render("GPUs Per Task:"),
 		m.inputs[gpusPerTaskInput].View(),
-		style.Error.Width(m.viewport.Width/2).
-			Render(utils.ErrorfOrEmpty("\n^^^%s", m.errors[gpusPerTaskInput])),
+		utils.ErrorfOrEmpty(
+			"\n"+style.Error.Width(m.viewport.Width/2).
+				Render(fmt.Sprintf("^^^%v", m.errors[gpusPerTaskInput])),
+			m.errors[gpusPerTaskInput],
+		),
 		style.Foreground.Render("Allocated credits:"),
 		m.inputs[creditsInput].View(),
-		style.Error.Width(m.viewport.Width/2).
-			Render(utils.ErrorfOrEmpty("\n^^^%s", m.errors[creditsInput])),
+		utils.ErrorfOrEmpty(
+			"\n"+style.Error.Width(m.viewport.Width/2).
+				Render(fmt.Sprintf("^^^%v", m.errors[creditsInput])),
+			m.errors[creditsInput],
+		),
 		"Expected Max Duration: ",
 		m.duration,
-		style.Error.Width(20).Render(utils.ErrorfOrEmpty("%s", m.err)),
+		style.Error.Width(m.viewport.Width/2).Render(utils.FormatErrorfOrEmpty("%s", m.err)),
 		emptyLine,
 	)
 	return lipgloss.JoinHorizontal(
