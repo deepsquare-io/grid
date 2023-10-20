@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/tui/components/table"
 	"github.com/deepsquare-io/grid/cli/tui/style"
@@ -31,6 +30,7 @@ var columns = []table.Column{
 	{Title: "Status", Width: 14},
 	{Title: "Start date", Width: 17},
 	{Title: "Duration", Width: 9},
+	{Title: "Cost", Width: 9},
 	{Title: "Exit Code", Width: 9},
 }
 
@@ -55,10 +55,10 @@ func (m model) View() string {
 		status += "Cancelling..."
 	}
 	status += style.Error.Width(30).Render(utils.FormatErrorfOrEmpty("Error: %s", m.err))
-	right := fmt.Sprintf(
+	helpView := fmt.Sprintf(
 		"%s\n%s",
 		status,
 		help,
 	)
-	return lipgloss.JoinHorizontal(lipgloss.Center, style.Base.Render(m.table.View()), right)
+	return style.Base.Render(m.table.View()) + "\n" + helpView
 }

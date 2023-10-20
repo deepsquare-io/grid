@@ -26,6 +26,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/internal/ether"
 	"github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/tui/channel"
@@ -136,6 +137,7 @@ func jobToRow(job types.Job) table.Row {
 		metascheduler.JobStatus(job.Status).String(),
 		startDate,
 		duration,
+		ether.FromWei(job.Cost.FinalCost).String(),
 		strconv.Itoa(int(job.ExitCode / 256)),
 	}
 }
