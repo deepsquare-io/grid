@@ -29,7 +29,9 @@ var columns = []table.Column{
 	{Title: "Job ID", Width: 6},
 	{Title: "Job Name", Width: 30},
 	{Title: "Status", Width: 14},
-	{Title: "Start date", Width: 30},
+	{Title: "Start date", Width: 17},
+	{Title: "Duration", Width: 9},
+	{Title: "Exit Code", Width: 9},
 }
 
 func (m model) View() string {

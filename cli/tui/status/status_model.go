@@ -18,6 +18,7 @@ package status
 import (
 	"context"
 	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -29,6 +30,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/tui/channel"
 	"github.com/deepsquare-io/grid/cli/tui/components/table"
+	"github.com/deepsquare-io/grid/cli/tui/components/ticker"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 	"github.com/deepsquare-io/grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -47,18 +49,26 @@ type keyMap struct {
 }
 
 type model struct {
-	table     table.Model
-	idToRow   map[[32]byte]table.Row
-	it        types.JobLazyIterator
-	help      help.Model
-	watchJobs channel.Model[transitionMsg]
-	scheduler types.JobScheduler
-	keyMap    keyMap
+	table table.Model
+	// Index jobID to row
+	idToRow map[[32]byte]table.Row
+	idToJob map[[32]byte]types.Job
+	// Index jobID to running job
+	runningIDs map[[32]byte]bool
+	it         types.JobLazyIterator
+	help       help.Model
+	watchJobs  channel.Model[transitionMsg]
+	scheduler  types.JobScheduler
+	keyMap     keyMap
+
+	ticker ticker.Model
 
 	isCancelling bool
 
 	err error
 }
+
+var zero = big.NewInt(0)
 
 type cancellingProgressMsg bool
 
@@ -111,11 +121,22 @@ func emitTopupJobMsg(msg [32]byte) tea.Cmd {
 }
 
 func jobToRow(job types.Job) table.Row {
+	startDate := "---"
+	if job.Time.Start.Cmp(zero) > 0 {
+		startDate = (time.UnixMilli(job.Time.Start.Int64() * 1000)).Format("15:04 _2 Jan 2006")
+	}
+	duration := "---"
+	if job.Time.End.Cmp(zero) > 0 && job.Time.End.Cmp(job.Time.Start) >= 0 {
+		durationB := new(big.Int).Sub(job.Time.End, job.Time.Start)
+		duration = (time.Duration(durationB.Int64()) * time.Second).String()
+	}
 	return table.Row{
 		new(big.Int).SetBytes(job.JobId[:]).String(),
 		string(job.JobName[:]),
 		metascheduler.JobStatus(job.Status).String(),
-		(time.UnixMilli(job.Time.Start.Int64() * 1000)).Format(time.UnixDate),
+		startDate,
+		duration,
+		strconv.Itoa(int(job.ExitCode / 256)),
 	}
 }
 
@@ -134,17 +155,25 @@ func rowToJobID(row table.Row) [32]byte {
 func initializeRows(
 	ctx context.Context,
 	fetcher types.JobFetcher,
-) (rows []table.Row, idToRow map[[32]byte]table.Row, it types.JobLazyIterator) {
+) (
+	rows []table.Row,
+	idToRow map[[32]byte]table.Row,
+	idToJob map[[32]byte]types.Job,
+	runningIDs map[[32]byte]bool,
+	it types.JobLazyIterator,
+) {
 	it, err := fetcher.GetJobs(ctx)
 	if err != nil {
 		log.I.Error("failed to get jobs", zap.Error(err))
-		return nil, nil, it
+		return nil, nil, nil, nil, it
 	}
 	if it == nil {
-		return nil, nil, it
+		return nil, nil, nil, nil, it
 	}
 	rows = make([]table.Row, 0, style.StandardHeight)
 	idToRow = make(map[[32]byte]table.Row)
+	idToJob = make(map[[32]byte]types.Job)
+	runningIDs = make(map[[32]byte]bool)
 	for i := 0; i < style.StandardHeight; i++ {
 		if !it.Next(ctx) {
 			if it.Error() != nil {
@@ -155,9 +184,13 @@ func initializeRows(
 		job := it.Current()
 		row := jobToRow(job)
 		idToRow[job.JobId] = row
+		idToJob[job.JobId] = job
+		if metascheduler.JobStatus(job.Status) == metascheduler.JobStatusRunning {
+			runningIDs[job.JobId] = true
+		}
 		rows = append(rows, row)
 	}
-	return rows, idToRow, it
+	return rows, idToRow, idToJob, runningIDs, it
 }
 
 // addMoreRows fetches the last "x" jobs and add it as row.
@@ -199,18 +232,37 @@ func (m model) CancelJob(ctx context.Context, jobID [32]byte) tea.Cmd {
 }
 
 func (m model) Init() tea.Cmd {
-	return m.watchJobs.Init()
+	return tea.Batch(m.watchJobs.Init(), m.ticker.Tick)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		tbCmd tea.Cmd
 		wCmd  tea.Cmd
+		tCmd  tea.Cmd
 		cmds  = make([]tea.Cmd, 0)
 	)
 	m.watchJobs, wCmd = m.watchJobs.Update(msg)
 	if wCmd != nil {
 		cmds = append(cmds, wCmd)
+	}
+
+	m.ticker, tCmd = m.ticker.Update(msg)
+	if tCmd != nil {
+		// Update duration column
+		var needRefresh bool
+		for id := range m.runningIDs {
+			job := m.idToJob[id]
+			row := m.idToRow[id]
+			// Duration column
+			elapsed := time.Since(time.Unix(job.Time.Start.Int64(), 0)).Truncate(time.Second)
+			row[4] = elapsed.String()
+			needRefresh = true
+		}
+		if needRefresh {
+			m.table.SetRows(m.table.Rows())
+		}
+		cmds = append(cmds, tCmd)
 	}
 
 	switch msg := msg.(type) {
@@ -223,14 +275,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.err = nil
 	case transitionMsg:
 		rows := m.table.Rows()
-		if row, ok := m.idToRow[msg.JobId]; ok {
-			row[2] = metascheduler.JobStatus(msg.Status).String()
+		m.idToJob[msg.JobId] = types.Job(msg)
+		row, ok := m.idToRow[msg.JobId]
+		if ok {
+			copy(row[:], jobToRow(types.Job(msg)))
 		} else {
 			row = jobToRow(types.Job(msg))
 			m.idToRow[msg.JobId] = row
 			rows = append(rows, table.Row{})
 			copy(rows[1:], rows)
 			rows[0] = row
+		}
+		if msg.Status == uint8(metascheduler.JobStatusRunning) {
+			m.runningIDs[msg.JobId] = true
+		} else {
+			if m.runningIDs[msg.JobId] {
+				delete(m.runningIDs, msg.JobId)
+			}
 		}
 		m.table.SetRows(rows)
 	case tea.KeyMsg:
@@ -285,7 +346,7 @@ func Model(
 		panic("watcher is nil")
 	}
 	// Initialize rows
-	rows, idToRow, it := initializeRows(ctx, client)
+	rows, idToRow, idToJob, runningIDs, it := initializeRows(ctx, client)
 
 	tableKeymap := table.DefaultKeyMap()
 	t := table.New(
@@ -319,10 +380,15 @@ func Model(
 	help.ShowAll = true
 
 	return &model{
-		table:   t,
-		idToRow: idToRow,
-		it:      it,
-		help:    help,
+		table:      t,
+		idToRow:    idToRow,
+		it:         it,
+		help:       help,
+		runningIDs: runningIDs,
+		idToJob:    idToJob,
+		ticker: ticker.Model{
+			Ticker: time.NewTicker(time.Second),
+		},
 		keyMap: keyMap{
 			TableKeyMap: tableKeymap,
 			OpenLogs: key.NewBinding(

@@ -97,7 +97,7 @@ Elapsed: ...
 		if end >= start || isFinished(metascheduler.JobStatus(m.job.Status)) {
 			elapsed = time.Duration(end-start) * time.Second
 		} else {
-			elapsed = time.Since(time.Unix(start, 0))
+			elapsed = time.Since(time.Unix(start, 0)).Truncate(time.Second)
 		}
 		definition = fmt.Sprintf(
 			`Name: %s

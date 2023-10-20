@@ -374,7 +374,9 @@ var Command = cli.Command{
 			return err
 		}
 
-		fmt.Println("---Waiting for job to be running...---")
+		jobIDBig := new(big.Int).SetBytes(jobID[:])
+
+		fmt.Printf("---Waiting for job %s to be running...---\n", jobIDBig.String())
 		_, err = waitUntilJobRunningOrFinished(sub, transitions, jobID)
 		if err != nil {
 			fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
@@ -388,16 +390,21 @@ var Command = cli.Command{
 					fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
 					os.Exit(1)
 				}
-				switch status {
-				case metascheduler.JobStatusFinished:
-					os.Exit(0)
-				case metascheduler.JobStatusCancelled:
-					os.Exit(130)
-				case metascheduler.JobStatusFailed, metascheduler.JobStatusPanicked:
-					os.Exit(1)
-				case metascheduler.JobStatusOutOfCredits:
-					os.Exit(143)
+				job, err := client.GetJob(ctx, jobID)
+				if err != nil {
+					fmt.Printf("failed to fetch job info: %s", err)
+					switch status {
+					case metascheduler.JobStatusFinished:
+						os.Exit(0)
+					case metascheduler.JobStatusCancelled:
+						os.Exit(130)
+					case metascheduler.JobStatusFailed, metascheduler.JobStatusPanicked:
+						os.Exit(1)
+					case metascheduler.JobStatusOutOfCredits:
+						os.Exit(143)
+					}
 				}
+				os.Exit(int(job.ExitCode / 256))
 			}()
 		}
 
