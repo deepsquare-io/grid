@@ -1408,7 +1408,6 @@ Go name: "X11".
 
 </td>
 </tr>
-</tr>
 <tr>
 <td colspan="2" valign="top"><strong>mountHome</strong></td>
 <td valign="top"><a href="#boolean">Boolean</a></td>
