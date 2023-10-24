@@ -84,6 +84,10 @@ type ContainerRun struct {
 	//
 	// Go name: "MountHome".
 	MountHome *bool `json:"mountHome,omitempty" yaml:"mountHome,omitempty"`
+	// Disable write permissions on the container root file system. Does not applies to mounts.
+	//
+	// Go name: "ReadOnlyRootFS"
+	ReadOnlyRootFS *bool `json:"readOnlyRootFS,omitempty" yaml:"readOnlyRootFS,omitempty"`
 }
 
 // An environment variable.

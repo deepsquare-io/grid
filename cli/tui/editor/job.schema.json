@@ -395,6 +395,10 @@
         "mountHome": {
           "$ref": "#/definitions/Boolean",
           "description": "Mount the home directories.\n\nGo name: \"MountHome\"."
+        },
+        "readOnlyRootFS": {
+          "$ref": "#/definitions/Boolean",
+          "description": "Disable write permissions on the container root file system. Does not applies to mounts.\n\nGo name: \"ReadOnlyRootFS\""
         }
       },
       "required": [
