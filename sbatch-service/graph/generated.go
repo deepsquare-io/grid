@@ -812,6 +812,14 @@ input ContainerRun {
   Go name: "MountHome".
   """
   mountHome: Boolean @goTag(key: "yaml", value: "mountHome,omitempty")
+  """
+  Disable write permissions on the container root file system. Does not applies to mounts.
+
+  Go name: "ReadOnlyRootFS"
+  """
+  readOnlyRootFS: Boolean
+    @goField(name: "ReadOnlyRootFS")
+    @goTag(key: "yaml", value: "readOnlyRootFS,omitempty")
 }
 
 """
@@ -3609,7 +3617,7 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"image", "mounts", "username", "password", "registry", "apptainer", "deepsquareHosted", "x11", "mountHome"}
+	fieldsInOrder := [...]string{"image", "mounts", "username", "password", "registry", "apptainer", "deepsquareHosted", "x11", "mountHome", "readOnlyRootFS"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3697,6 +3705,15 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 				return it, err
 			}
 			it.MountHome = data
+		case "readOnlyRootFS":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readOnlyRootFS"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReadOnlyRootFS = data
 		}
 	}
 

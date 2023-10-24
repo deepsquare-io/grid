@@ -122,6 +122,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --container-writable \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-workdir=/deepsquare \
@@ -177,6 +178,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --container-writable \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-workdir=/deepsquare \
@@ -248,6 +250,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --container-writable \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-workdir=/deepsquare \
@@ -303,6 +306,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --ntasks=1 \
   --gpu-bind=none \
   --no-container-remap-root \
+  --container-writable \
   --no-container-mount-home \
   --container-mounts="${MOUNTS}" \
   --container-workdir=/deepsquare \

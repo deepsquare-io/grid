@@ -177,6 +177,11 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
 {{- else }}
   --no-container-remap-root \
 {{- end }}
+{{- if and .Step.Run.Container.ReadOnlyRootFS (derefBool .Step.Run.Container.ReadOnlyRootFS) }}
+  --container-readonly \
+{{- else }}
+  --container-writable \
+{{- end }}
 {{- if and .Step.Run.Container.MountHome (derefBool .Step.Run.Container.MountHome) }}
   --container-mount-home \
 {{- else }}

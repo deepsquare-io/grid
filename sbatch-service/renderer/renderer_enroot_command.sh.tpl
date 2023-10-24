@@ -4,7 +4,12 @@
 {{- else }}
 #ENROOT_REMAP_ROOT=n
 {{- end }}
+{{- if and .Run.Container.ReadOnlyRootFS (derefBool .Run.Container.ReadOnlyRootFS) }}
+#ENROOT_ROOTFS_WRITABLE=n
+{{- else }}
 #ENROOT_ROOTFS_WRITABLE=y
+{{- end }}
+
 {{- if and .Run.Container.MountHome (derefBool .Run.Container.MountHome) }}
 #ENROOT_MOUNT_HOME=y
 {{- else }}
