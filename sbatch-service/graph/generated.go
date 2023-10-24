@@ -23,6 +23,7 @@ import (
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
 func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
 	return &executableSchema{
+		schema:     cfg.Schema,
 		resolvers:  cfg.Resolvers,
 		directives: cfg.Directives,
 		complexity: cfg.Complexity,
@@ -30,6 +31,7 @@ func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
 }
 
 type Config struct {
+	Schema     *ast.Schema
 	Resolvers  ResolverRoot
 	Directives DirectiveRoot
 	Complexity ComplexityRoot
@@ -63,12 +65,16 @@ type QueryResolver interface {
 }
 
 type executableSchema struct {
+	schema     *ast.Schema
 	resolvers  ResolverRoot
 	directives DirectiveRoot
 	complexity ComplexityRoot
 }
 
 func (e *executableSchema) Schema() *ast.Schema {
+	if e.schema != nil {
+		return e.schema
+	}
 	return parsedSchema
 }
 
@@ -229,14 +235,14 @@ func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
 	if ec.DisableIntrospection {
 		return nil, errors.New("introspection disabled")
 	}
-	return introspection.WrapSchema(parsedSchema), nil
+	return introspection.WrapSchema(ec.Schema()), nil
 }
 
 func (ec *executionContext) introspectType(name string) (*introspection.Type, error) {
 	if ec.DisableIntrospection {
 		return nil, errors.New("introspection disabled")
 	}
-	return introspection.WrapTypeFromDef(parsedSchema, parsedSchema.Types[name]), nil
+	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
 var sources = []*ast.Source{
@@ -800,6 +806,12 @@ input ContainerRun {
   Go name: "X11".
   """
   x11: Boolean @goTag(key: "yaml", value: "x11,omitempty")
+  """
+  Mount the home directories.
+
+  Go name: "MountHome".
+  """
+  mountHome: Boolean @goTag(key: "yaml", value: "mountHome,omitempty")
 }
 
 """
@@ -1384,7 +1396,7 @@ func (ec *executionContext) field_Mutation_submit_args(ctx context.Context, rawA
 	var arg0 model.Job
 	if tmp, ok := rawArgs["job"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("job"))
-		arg0, err = ec.unmarshalNJob2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJob(ctx, tmp)
+		arg0, err = ec.unmarshalNJob2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJob(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1399,7 +1411,7 @@ func (ec *executionContext) field_Mutation_validate_args(ctx context.Context, ra
 	var arg0 model.Module
 	if tmp, ok := rawArgs["module"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("module"))
-		arg0, err = ec.unmarshalNModule2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModule(ctx, tmp)
+		arg0, err = ec.unmarshalNModule2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModule(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3597,7 +3609,7 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"image", "mounts", "username", "password", "registry", "apptainer", "deepsquareHosted", "x11"}
+	fieldsInOrder := [...]string{"image", "mounts", "username", "password", "registry", "apptainer", "deepsquareHosted", "x11", "mountHome"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3617,7 +3629,7 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mounts"))
-			data, err := ec.unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx, v)
+			data, err := ec.unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3676,6 +3688,15 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 				return it, err
 			}
 			it.X11 = data
+		case "mountHome":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mountHome"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MountHome = data
 		}
 	}
 
@@ -3814,7 +3835,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
-			data, err := ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
+			data, err := ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3823,7 +3844,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("env"))
-			data, err := ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
+			data, err := ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3841,7 +3862,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-			data, err := ec.unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx, v)
+			data, err := ec.unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3859,7 +3880,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
-			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3868,7 +3889,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("output"))
-			data, err := ec.unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx, v)
+			data, err := ec.unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3980,7 +4001,7 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minimumResources"))
-			data, err := ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
+			data, err := ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3989,7 +4010,7 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inputs"))
-			data, err := ec.unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInputᚄ(ctx, v)
+			data, err := ec.unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3998,7 +4019,7 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("outputs"))
-			data, err := ec.unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutputᚄ(ctx, v)
+			data, err := ec.unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4007,7 +4028,7 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
-			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4168,7 +4189,7 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wireguard"))
-			data, err := ec.unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx, v)
+			data, err := ec.unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4177,7 +4198,7 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bore"))
-			data, err := ec.unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐBore(ctx, v)
+			data, err := ec.unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐBore(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4316,7 +4337,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
-			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4325,7 +4346,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("run"))
-			data, err := ec.unmarshalOStepRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRun(ctx, v)
+			data, err := ec.unmarshalOStepRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRun(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4334,7 +4355,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("for"))
-			data, err := ec.unmarshalOStepFor2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepFor(ctx, v)
+			data, err := ec.unmarshalOStepFor2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepFor(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4343,7 +4364,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("launch"))
-			data, err := ec.unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx, v)
+			data, err := ec.unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4352,7 +4373,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("use"))
-			data, err := ec.unmarshalOStepUse2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepUse(ctx, v)
+			data, err := ec.unmarshalOStepUse2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepUse(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4361,7 +4382,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("catch"))
-			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4370,7 +4391,7 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("finally"))
-			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4417,7 +4438,7 @@ func (ec *executionContext) unmarshalInputStepAsyncLaunch(ctx context.Context, o
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
-			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4464,7 +4485,7 @@ func (ec *executionContext) unmarshalInputStepFor(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("range"))
-			data, err := ec.unmarshalOForRange2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐForRange(ctx, v)
+			data, err := ec.unmarshalOForRange2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐForRange(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4473,7 +4494,7 @@ func (ec *executionContext) unmarshalInputStepFor(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
-			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4520,7 +4541,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
-			data, err := ec.unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
+			data, err := ec.unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4529,7 +4550,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("container"))
-			data, err := ec.unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx, v)
+			data, err := ec.unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4556,7 +4577,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customNetworkInterfaces"))
-			data, err := ec.unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterfaceᚄ(ctx, v)
+			data, err := ec.unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterfaceᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4565,7 +4586,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("env"))
-			data, err := ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
+			data, err := ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4695,7 +4716,7 @@ func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("args"))
-			data, err := ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
+			data, err := ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4713,7 +4734,7 @@ func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj inter
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
-			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
+			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4742,7 +4763,7 @@ func (ec *executionContext) unmarshalInputTransportData(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("http"))
-			data, err := ec.unmarshalOHTTPData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐHTTPData(ctx, v)
+			data, err := ec.unmarshalOHTTPData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐHTTPData(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4751,7 +4772,7 @@ func (ec *executionContext) unmarshalInputTransportData(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("s3"))
-			data, err := ec.unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx, v)
+			data, err := ec.unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4798,7 +4819,7 @@ func (ec *executionContext) unmarshalInputWireguard(ctx context.Context, obj int
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("peers"))
-			data, err := ec.unmarshalOWireguardPeer2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeerᚄ(ctx, v)
+			data, err := ec.unmarshalOWireguardPeer2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeerᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5351,7 +5372,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNEnvVar2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVar(ctx context.Context, v interface{}) (*model.EnvVar, error) {
+func (ec *executionContext) unmarshalNEnvVar2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVar(ctx context.Context, v interface{}) (*model.EnvVar, error) {
 	res, err := ec.unmarshalInputEnvVar(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
@@ -5371,42 +5392,42 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) unmarshalNJob2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJob(ctx context.Context, v interface{}) (model.Job, error) {
+func (ec *executionContext) unmarshalNJob2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJob(ctx context.Context, v interface{}) (model.Job, error) {
 	res, err := ec.unmarshalInputJob(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx context.Context, v interface{}) (*model.JobResources, error) {
+func (ec *executionContext) unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx context.Context, v interface{}) (*model.JobResources, error) {
 	res, err := ec.unmarshalInputJobResources(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNModule2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModule(ctx context.Context, v interface{}) (model.Module, error) {
+func (ec *executionContext) unmarshalNModule2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModule(ctx context.Context, v interface{}) (model.Module, error) {
 	res, err := ec.unmarshalInputModule(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNModuleInput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInput(ctx context.Context, v interface{}) (*model.ModuleInput, error) {
+func (ec *executionContext) unmarshalNModuleInput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInput(ctx context.Context, v interface{}) (*model.ModuleInput, error) {
 	res, err := ec.unmarshalInputModuleInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNModuleOutput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutput(ctx context.Context, v interface{}) (*model.ModuleOutput, error) {
+func (ec *executionContext) unmarshalNModuleOutput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutput(ctx context.Context, v interface{}) (*model.ModuleOutput, error) {
 	res, err := ec.unmarshalInputModuleOutput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx context.Context, v interface{}) (*model.Mount, error) {
+func (ec *executionContext) unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx context.Context, v interface{}) (*model.Mount, error) {
 	res, err := ec.unmarshalInputMount(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNetworkInterface2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterface(ctx context.Context, v interface{}) (*model.NetworkInterface, error) {
+func (ec *executionContext) unmarshalNNetworkInterface2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterface(ctx context.Context, v interface{}) (*model.NetworkInterface, error) {
 	res, err := ec.unmarshalInputNetworkInterface(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx context.Context, v interface{}) ([]*model.Step, error) {
+func (ec *executionContext) unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx context.Context, v interface{}) ([]*model.Step, error) {
 	var vSlice []interface{}
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -5415,7 +5436,7 @@ func (ec *executionContext) unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑio�
 	res := make([]*model.Step, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStep(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStep(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5423,7 +5444,7 @@ func (ec *executionContext) unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑio�
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStep(ctx context.Context, v interface{}) (*model.Step, error) {
+func (ec *executionContext) unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStep(ctx context.Context, v interface{}) (*model.Step, error) {
 	res, err := ec.unmarshalInputStep(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
@@ -5443,7 +5464,7 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNWireguardPeer2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeer(ctx context.Context, v interface{}) (*model.WireguardPeer, error) {
+func (ec *executionContext) unmarshalNWireguardPeer2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeer(ctx context.Context, v interface{}) (*model.WireguardPeer, error) {
 	res, err := ec.unmarshalInputWireguardPeer(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
@@ -5727,7 +5748,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐBore(ctx context.Context, v interface{}) (*model.Bore, error) {
+func (ec *executionContext) unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐBore(ctx context.Context, v interface{}) (*model.Bore, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5735,7 +5756,7 @@ func (ec *executionContext) unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋt
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx context.Context, v interface{}) (*model.ContainerRun, error) {
+func (ec *executionContext) unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx context.Context, v interface{}) (*model.ContainerRun, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5743,7 +5764,7 @@ func (ec *executionContext) unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquare�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx context.Context, v interface{}) ([]*model.EnvVar, error) {
+func (ec *executionContext) unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx context.Context, v interface{}) ([]*model.EnvVar, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5755,7 +5776,7 @@ func (ec *executionContext) unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑi
 	res := make([]*model.EnvVar, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNEnvVar2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVar(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNEnvVar2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVar(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5763,7 +5784,7 @@ func (ec *executionContext) unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑi
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOForRange2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐForRange(ctx context.Context, v interface{}) (*model.ForRange, error) {
+func (ec *executionContext) unmarshalOForRange2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐForRange(ctx context.Context, v interface{}) (*model.ForRange, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5771,7 +5792,7 @@ func (ec *executionContext) unmarshalOForRange2ᚖgithubᚗcomᚋdeepsquareᚑio
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOHTTPData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐHTTPData(ctx context.Context, v interface{}) (*model.HTTPData, error) {
+func (ec *executionContext) unmarshalOHTTPData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐHTTPData(ctx context.Context, v interface{}) (*model.HTTPData, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5795,7 +5816,7 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInputᚄ(ctx context.Context, v interface{}) ([]*model.ModuleInput, error) {
+func (ec *executionContext) unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInputᚄ(ctx context.Context, v interface{}) ([]*model.ModuleInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5807,7 +5828,7 @@ func (ec *executionContext) unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquar
 	res := make([]*model.ModuleInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNModuleInput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNModuleInput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5815,7 +5836,7 @@ func (ec *executionContext) unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquar
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutputᚄ(ctx context.Context, v interface{}) ([]*model.ModuleOutput, error) {
+func (ec *executionContext) unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutputᚄ(ctx context.Context, v interface{}) ([]*model.ModuleOutput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5827,7 +5848,7 @@ func (ec *executionContext) unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsqua
 	res := make([]*model.ModuleOutput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNModuleOutput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNModuleOutput2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5835,7 +5856,7 @@ func (ec *executionContext) unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsqua
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx context.Context, v interface{}) ([]*model.Mount, error) {
+func (ec *executionContext) unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx context.Context, v interface{}) ([]*model.Mount, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5847,7 +5868,7 @@ func (ec *executionContext) unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑio
 	res := make([]*model.Mount, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNMount2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMount(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5855,7 +5876,7 @@ func (ec *executionContext) unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑio
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterfaceᚄ(ctx context.Context, v interface{}) ([]*model.NetworkInterface, error) {
+func (ec *executionContext) unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterfaceᚄ(ctx context.Context, v interface{}) ([]*model.NetworkInterface, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5867,7 +5888,7 @@ func (ec *executionContext) unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeep
 	res := make([]*model.NetworkInterface, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNNetworkInterface2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterface(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNNetworkInterface2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterface(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5875,7 +5896,7 @@ func (ec *executionContext) unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeep
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx context.Context, v interface{}) (*model.S3Data, error) {
+func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx context.Context, v interface{}) (*model.S3Data, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5883,7 +5904,7 @@ func (ec *executionContext) unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑio�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx context.Context, v interface{}) ([]*model.Step, error) {
+func (ec *executionContext) unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx context.Context, v interface{}) ([]*model.Step, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5895,7 +5916,7 @@ func (ec *executionContext) unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑio�
 	res := make([]*model.Step, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStep(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNStep2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStep(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -5903,7 +5924,7 @@ func (ec *executionContext) unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑio�
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx context.Context, v interface{}) (*model.StepAsyncLaunch, error) {
+func (ec *executionContext) unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx context.Context, v interface{}) (*model.StepAsyncLaunch, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5911,7 +5932,7 @@ func (ec *executionContext) unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsqua
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOStepFor2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepFor(ctx context.Context, v interface{}) (*model.StepFor, error) {
+func (ec *executionContext) unmarshalOStepFor2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepFor(ctx context.Context, v interface{}) (*model.StepFor, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5919,7 +5940,7 @@ func (ec *executionContext) unmarshalOStepFor2ᚖgithubᚗcomᚋdeepsquareᚑio�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOStepRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRun(ctx context.Context, v interface{}) (*model.StepRun, error) {
+func (ec *executionContext) unmarshalOStepRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRun(ctx context.Context, v interface{}) (*model.StepRun, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5927,7 +5948,7 @@ func (ec *executionContext) unmarshalOStepRun2ᚖgithubᚗcomᚋdeepsquareᚑio�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx context.Context, v interface{}) (*model.StepRunResources, error) {
+func (ec *executionContext) unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx context.Context, v interface{}) (*model.StepRunResources, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5935,7 +5956,7 @@ func (ec *executionContext) unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsqu
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOStepUse2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepUse(ctx context.Context, v interface{}) (*model.StepUse, error) {
+func (ec *executionContext) unmarshalOStepUse2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepUse(ctx context.Context, v interface{}) (*model.StepUse, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5997,7 +6018,7 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx context.Context, v interface{}) (*model.TransportData, error) {
+func (ec *executionContext) unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx context.Context, v interface{}) (*model.TransportData, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -6005,7 +6026,7 @@ func (ec *executionContext) unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquare
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx context.Context, v interface{}) (*model.Wireguard, error) {
+func (ec *executionContext) unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx context.Context, v interface{}) (*model.Wireguard, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -6013,7 +6034,7 @@ func (ec *executionContext) unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑi
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOWireguardPeer2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeerᚄ(ctx context.Context, v interface{}) ([]*model.WireguardPeer, error) {
+func (ec *executionContext) unmarshalOWireguardPeer2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeerᚄ(ctx context.Context, v interface{}) ([]*model.WireguardPeer, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -6025,7 +6046,7 @@ func (ec *executionContext) unmarshalOWireguardPeer2ᚕᚖgithubᚗcomᚋdeepsqu
 	res := make([]*model.WireguardPeer, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNWireguardPeer2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeer(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNWireguardPeer2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeer(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}

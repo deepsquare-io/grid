@@ -177,7 +177,11 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
 {{- else }}
   --no-container-remap-root \
 {{- end }}
+{{- if and .Step.Run.Container.MountHome (derefBool .Step.Run.Container.MountHome) }}
+  --container-mount-home \
+{{- else }}
   --no-container-mount-home \
+{{- end }}
   --container-mounts="${MOUNTS}" \
 {{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) }}
   --container-workdir={{ derefStr .Step.Run.WorkDir | squote }} \

@@ -162,6 +162,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --writable-tmpfs \
   --no-home \
   --nv \
   --pwd "/deepsquare" \
@@ -326,6 +327,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --writable-tmpfs \
   --no-home \
   --nv \
   --pwd "/deepsquare" \
@@ -365,6 +367,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --writable-tmpfs \
   --no-home \
   --nv \
   --pwd "/deepsquare" \
@@ -740,6 +743,7 @@ wg-quick up "$(pwd)/net0.conf"
 
 '"'"''"'"'/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --writable-tmpfs \
   --no-home \
   --nv \
   --pwd "/deepsquare" \

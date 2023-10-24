@@ -80,6 +80,10 @@ type ContainerRun struct {
 	//
 	// Go name: "X11".
 	X11 *bool `json:"x11,omitempty" yaml:"x11,omitempty"`
+	// Mount the home directories.
+	//
+	// Go name: "MountHome".
+	MountHome *bool `json:"mountHome,omitempty" yaml:"mountHome,omitempty"`
 }
 
 // An environment variable.

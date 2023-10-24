@@ -135,6 +135,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --writable-tmpfs \
   --no-home \
   --nv \
   --pwd "/deepsquare" \
@@ -200,6 +201,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --writable-tmpfs \
   --no-home \
   --nv \
   --pwd "/deepsquare" \
