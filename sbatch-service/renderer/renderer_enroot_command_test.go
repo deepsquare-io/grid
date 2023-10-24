@@ -65,7 +65,7 @@ func TestRenderEnrootCommand(t *testing.T) {
 			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
-#ENROOT_MOUNT_HOME=y
+#ENROOT_MOUNT_HOME=n
 
 environ() {
   # Keep all the environment from the host
@@ -117,7 +117,7 @@ EOFenroot
 			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=y
 #ENROOT_ROOTFS_WRITABLE=y
-#ENROOT_MOUNT_HOME=y
+#ENROOT_MOUNT_HOME=n
 
 environ() {
   # Keep all the environment from the host
@@ -169,7 +169,7 @@ EOFenroot
 			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
-#ENROOT_MOUNT_HOME=y
+#ENROOT_MOUNT_HOME=n
 
 environ() {
   # Keep all the environment from the host
@@ -221,7 +221,7 @@ EOFenroot
 			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
-#ENROOT_MOUNT_HOME=y
+#ENROOT_MOUNT_HOME=n
 
 environ() {
   # Keep all the environment from the host

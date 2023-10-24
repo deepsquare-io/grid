@@ -927,7 +927,7 @@ wg-quick up "$(pwd)/net0.conf"
 '"'"''"'"'/usr/bin/cat <<'"'"'"'"'"'"'"'"'EOFenroot'"'"'"'"'"'"'"'"' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
-#ENROOT_MOUNT_HOME=y
+#ENROOT_MOUNT_HOME=n
 
 environ() {
   # Keep all the environment from the host

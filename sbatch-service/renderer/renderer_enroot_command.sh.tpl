@@ -5,7 +5,11 @@
 #ENROOT_REMAP_ROOT=n
 {{- end }}
 #ENROOT_ROOTFS_WRITABLE=y
+{{- if and .Run.Container.MountHome (derefBool .Run.Container.MountHome) }}
 #ENROOT_MOUNT_HOME=y
+{{- else }}
+#ENROOT_MOUNT_HOME=n
+{{- end }}
 
 environ() {
   # Keep all the environment from the host
