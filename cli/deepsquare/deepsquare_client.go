@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/deepsquare-io/grid/cli/logger"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
@@ -34,6 +35,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 )
 
 // Default values for the client.
@@ -138,6 +140,10 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 	jobScheduler := rpcClientSet.JobScheduler(sbatch)
 	dialOptions := []grpc.DialOption{
 		grpc.WithTransportCredentials(credentials.NewTLS(c.TLSConfig)),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:    20 * time.Second,
+			Timeout: 30 * time.Second,
+		}),
 	}
 	u, err := url.Parse(c.LoggerEndpoint)
 	if err != nil {
