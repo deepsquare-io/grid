@@ -1408,6 +1408,18 @@ Go name: "X11".
 
 </td>
 </tr>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>mountHome</strong></td>
+<td valign="top"><a href="#boolean">Boolean</a></td>
+<td>
+
+Mount the home directories.
+
+Go name: "MountHome".
+
+</td>
+</tr>
 </tbody>
 </table>
 
