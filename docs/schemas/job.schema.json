@@ -968,6 +968,18 @@
             "defaultValue": null,
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "readOnlyRootFS",
+            "description": "Disable write permissions on the container root file system. Does not applies to mounts.\n\nGo name: \"ReadOnlyRootFS\"",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "interfaces": null,

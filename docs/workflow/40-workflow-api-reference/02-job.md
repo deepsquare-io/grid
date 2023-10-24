@@ -1419,6 +1419,17 @@ Go name: "MountHome".
 
 </td>
 </tr>
+<tr>
+<td colspan="2" valign="top"><strong>readOnlyRootFS</strong></td>
+<td valign="top"><a href="#boolean">Boolean</a></td>
+<td>
+
+Disable write permissions on the container root file system. Does not applies to mounts.
+
+Go name: "ReadOnlyRootFS".
+
+</td>
+</tr>
 </tbody>
 </table>
 
