@@ -53,7 +53,10 @@
           "description": "Value of the environment variable.\n\nGo name: \"Value\"."
         }
       },
-      "required": ["key", "value"],
+      "required": [
+        "key",
+        "value"
+      ],
       "description": "An environment variable.\n\nAccessible via: \"$key\". \"Key\" name must follows the POSIX specifications (alphanumeric with underscore)."
     },
     "String": {
@@ -69,7 +72,9 @@
           "description": "HTTP or HTTPS URL to a file.\n\nGo name: \"URL\"."
         }
       },
-      "required": ["url"],
+      "required": [
+        "url"
+      ],
       "description": "HTTPData describes the necessary variables to connect to a HTTP storage."
     },
     "S3Data": {
@@ -104,7 +109,14 @@
           "description": "DeleteSync removes destination files that doesn't correspond to the source.\n\nThis applies to any type of source to any type of destination (s3 or filesystem).\n\nSee: s5cmd sync --delete.\n\nIf null, defaults to false.\n\nGo name: \"DeleteSync\"."
         }
       },
-      "required": ["region", "bucketUrl", "path", "accessKeyId", "secretAccessKey", "endpointUrl"],
+      "required": [
+        "region",
+        "bucketUrl",
+        "path",
+        "accessKeyId",
+        "secretAccessKey",
+        "endpointUrl"
+      ],
       "description": "S3Data describes the necessary variables to connect to a S3 storage."
     },
     "Boolean": {
@@ -146,7 +158,12 @@
           "description": "Allocated GPUs per task.\n\nCan be greater or equal to 0.\n\nGo name: \"GpusPerTask\"."
         }
       },
-      "required": ["tasks", "cpusPerTask", "memPerCpu", "gpusPerTask"],
+      "required": [
+        "tasks",
+        "cpusPerTask",
+        "memPerCpu",
+        "gpusPerTask"
+      ],
       "description": "JobResources are the allocated resources for a job in a cluster."
     },
     "Int": {
@@ -196,7 +213,10 @@
           "description": "ContinuousOutputSync will push data during the whole job.\n\nThis is useful when it is not desired to lose data when the job is suddenly stopped.\n\nContinousOutputSync is not available with HTTP.\n\nGo name: \"ContinuousOutputSync\"."
         }
       },
-      "required": ["resources", "steps"],
+      "required": [
+        "resources",
+        "steps"
+      ],
       "description": "A Job is a finite sequence of instructions."
     },
     "Step": {
@@ -213,21 +233,46 @@
           },
           "description": "Depends on wait for async tasks to end before launching this step.\n\nDependsOn uses the `handleName` property of a `StepAsyncLaunch`.\n\nOnly steps at the same level can be awaited.\n\nBE WARNED: Uncontrolled `dependsOn` may results in dead locks.\n\nGo name: \"DependsOn\"."
         },
+        "if": {
+          "$ref": "#/definitions/String",
+          "description": "\"If\" is a boolean test that skips the step if the test is false.\n\nThe test format is bash and variables such as $PATH or $(pwd) can be expanded.\n\nNote that \"If\" will be run after the \"DependsOn\".\n\nExample: '3 -eq 3 && \"${TEST}\" = \"test\"'.\n\nGo name: \"If\"."
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "description": "Group of steps that will be run sequentially.\n\nIs exclusive with \"for\", \"launch\", \"use\", \"run\".\n\nGo name: \"Steps\"."
+        },
         "run": {
           "$ref": "#/definitions/StepRun",
-          "description": "Run a command if not null.\n\nIs exclusive with \"for\", \"launch\", \"use\".\n\nGo name: \"Run\"."
+          "description": "Run a command if not null.\n\nIs exclusive with \"for\", \"launch\", \"use\", \"steps\".\n\nGo name: \"Run\"."
         },
         "for": {
           "$ref": "#/definitions/StepFor",
-          "description": "Run a for loop if not null.\n\nIs exclusive with \"run\", \"launch\", \"use\".\n\nGo name: \"For\"."
+          "description": "Run a for loop if not null.\n\nIs exclusive with \"run\", \"launch\", \"use\", \"steps\".\n\nGo name: \"For\"."
         },
         "launch": {
           "$ref": "#/definitions/StepAsyncLaunch",
-          "description": "Launch a background process to run a group of commands if not null.\n\nIs exclusive with \"run\", \"for\", \"use\".\n\nGo name: \"Launch\"."
+          "description": "Launch a background process to run a group of commands if not null.\n\nIs exclusive with \"run\", \"for\", \"use\", \"steps\".\n\nGo name: \"Launch\"."
         },
         "use": {
           "$ref": "#/definitions/StepUse",
-          "description": "Use a third-party group of steps.\n\nIs exclusive with \"run\", \"for\", \"launch\".\n\nGo name: \"Use\"."
+          "description": "Use a third-party group of steps.\n\nIs exclusive with \"run\", \"for\", \"launch\", \"steps\".\n\nGo name: \"Use\"."
+        },
+        "catch": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "description": "Group of steps that will be run sequentially on error.\n\nGo name: \"Catch\"."
+        },
+        "finally": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "description": "Group of steps that will be run sequentially after the group of steps or command finishes.\n\nGo name: \"Finally\"."
         }
       },
       "required": [],
@@ -238,7 +283,7 @@
       "properties": {
         "source": {
           "$ref": "#/definitions/String",
-          "description": "Source of the group of steps.\n\nSyntax: <url>@<tag/hash>\n\nExample: github.com/example/my-module@v1\n\nGo name: \"Source\"."
+          "description": "Source of the group of steps.\n\nSyntax: <url>@<tag/hash>\n\nExample: github.com/example/my-module@v1\nExample: github.com/example/module-monorepo/my-module@v1\n\nThe host must be a git repository accessible via HTTPS.\nThe path must indicates a directory. For example, `/my-module` indicates the root directory of the repository `my-module`.\n`module-monorepo/my-module` indicates the subdirectory `my-module` of the repository `module-monorepo`.\n\nGo name: \"Source\"."
         },
         "args": {
           "type": "array",
@@ -250,9 +295,18 @@
         "exportEnvAs": {
           "$ref": "#/definitions/String",
           "description": "Environment variables exported with be prefixed with the value of this field.\n\nExemple: If exportEnvAs=MY_MODULE, and KEY is exported. Then you can invoke ${MY_MODULE_KEY} environment variable.\n\nGo name: \"ExportEnvAs\"."
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Step"
+          },
+          "description": "Additional children steps to the module.\n\nIf the module allow children steps, these steps will be passed to the module to replace {{ .Step.Run.Steps }}.\n\nGo name: \"Steps\"."
         }
       },
-      "required": ["source"]
+      "required": [
+        "source"
+      ]
     },
     "StepRunResources": {
       "type": "object",
@@ -293,7 +347,11 @@
           "description": "Options modifies the mount options.\n\nAccepted: ro, rw\n\nGo name: \"Options\"."
         }
       },
-      "required": ["hostDir", "containerDir", "options"],
+      "required": [
+        "hostDir",
+        "containerDir",
+        "options"
+      ],
       "description": "DEPRECATED: Mount decribes a Bind Mount.\n\nMount is now deprecated. Please use predefined mounts like $STORAGE_PATH, $DEEPSQUARE_TMP, ..."
     },
     "ContainerRun": {
@@ -333,9 +391,15 @@
         "x11": {
           "$ref": "#/definitions/Boolean",
           "description": "X11 mounts /tmp/.X11-unix in the container.\n\nGo name: \"X11\"."
+        },
+        "mountHome": {
+          "$ref": "#/definitions/Boolean",
+          "description": "Mount the home directories.\n\nGo name: \"MountHome\"."
         }
       },
-      "required": ["image"]
+      "required": [
+        "image"
+      ]
     },
     "WireguardPeer": {
       "type": "object",
@@ -364,7 +428,9 @@
           "description": "Initiate the handshake and re-initiate regularly.\n\nTakes seconds as parameter. 25 seconds is recommended.\n\nYou MUST set the persistent keepalive to enables UDP hole-punching.\n\nGo name: \"PersistentKeepalive\"."
         }
       },
-      "required": ["publicKey"],
+      "required": [
+        "publicKey"
+      ],
       "description": "A Wireguard Peer."
     },
     "Wireguard": {
@@ -389,7 +455,9 @@
           "description": "The peers connected to the wireguard interface.\n\nGo name: \"Peers\"."
         }
       },
-      "required": ["privateKey"],
+      "required": [
+        "privateKey"
+      ],
       "description": "Wireguard VPN Transport for StepRun.\n\nThe Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.\n\nWireguard transport uses UDP hole punching to connect to the VPN Server.\n\nDisabled settings: PreUp, PostUp, PreDown, PostDown, ListenPort, Table, MTU, SaveConfig.\n\nIf these features are necessary, please do contact DeepSquare developpers!"
     },
     "Bore": {
@@ -408,7 +476,11 @@
           "description": "Target port.\n\nGo name: \"TargetPort\"."
         }
       },
-      "required": ["address", "port", "targetPort"],
+      "required": [
+        "address",
+        "port",
+        "targetPort"
+      ],
       "description": "jkuri/bore tunnel Transport for StepRun.\n\nBore is a proxy to expose TCP sockets."
     },
     "NetworkInterface": {
@@ -487,8 +559,10 @@
           "description": "MPI selection.\n\nMust be one of: none, pmix_v4, pmi2.\n\nIf null, will default to infrastructure provider settings (which may not be what you want).\n\nGo name: \"Mpi\"."
         }
       },
-      "required": ["command"],
-      "description": "StepRun is one script executed with the shell.\n\nA temporary shared storage is accessible through the $STORAGE_PATH environment variable.\n\nA shared cache per site is accessible via the $DEEPSQUARE_TMP environment variable. The $DEEPSQUARE_TMP directory is cleared periodically.\n\necho \"KEY=value\" >> \"$DEEPSQUARE_ENV\" can be used to share environment variables between steps.\n\n$DEEPSQUARE_INPUT is the path that contains imported files.\n\n$DEEPSQUARE_OUTPUT is the staging directory for uploading files."
+      "required": [
+        "command"
+      ],
+      "description": "StepRun is one script executed with the shell.\n\nA temporary shared storage is accessible through the $STORAGE_PATH environment variable.\n\nAvailables caches can be used by invoking one of the following environment variable:\n\n| Environment variables                   | Lifecycle                        |\n| --------------------------------------- | -------------------------------- |\n| STORAGE_PATH                            | job duration                     |\n| DEEPSQUARE_TMP or DEEPSQUARE_SHARED_TMP | provider's policy                |\n| DEEPSQUARE_SHARED_WORLD_TMP             | provider's policy                |\n| DEEPSQUARE_DISK_TMP                     | node reboot or provider's policy |\n| DEEPSQUARE_DISK_WORLD_TMP               | node reboot or provider's policy |\n\necho \"KEY=value\" >> \"$DEEPSQUARE_ENV\" can be used to share environment variables between steps.\n\n$DEEPSQUARE_INPUT is the path that contains imported files.\n\n$DEEPSQUARE_OUTPUT is the staging directory for uploading files."
     },
     "StepFor": {
       "type": "object",
@@ -516,7 +590,10 @@
           "description": "Steps are run sequentially in one iteration.\n\nGo name: \"Steps\"."
         }
       },
-      "required": ["parallel", "steps"],
+      "required": [
+        "parallel",
+        "steps"
+      ],
       "description": "StepFor describes a for loop."
     },
     "ForRange": {
@@ -535,7 +612,10 @@
           "description": "Increment counter by x count. If null, defaults to 1.\n\nGo name: \"Increment\"."
         }
       },
-      "required": ["begin", "end"],
+      "required": [
+        "begin",
+        "end"
+      ],
       "description": "ForRange describes the parameter for a range loop."
     },
     "StepAsyncLaunch": {
@@ -557,7 +637,9 @@
           "description": "Steps are run sequentially.\n\nGo name: \"Steps\"."
         }
       },
-      "required": ["steps"],
+      "required": [
+        "steps"
+      ],
       "description": "StepAsyncLaunch describes launching a background process.\n\nStepAsyncLaunch will be awaited at the end of the job."
     },
     "ModuleInput": {
@@ -576,7 +658,10 @@
           "description": "Default value.\n\nIf not set, will default to empty string.\n\nGo name: \"Default\"."
         }
       },
-      "required": ["key", "description"]
+      "required": [
+        "key",
+        "description"
+      ]
     },
     "ModuleOutput": {
       "type": "object",
@@ -590,7 +675,10 @@
           "description": "Description of the output.\n\nGo name: \"Description\"."
         }
       },
-      "required": ["key", "description"]
+      "required": [
+        "key",
+        "description"
+      ]
     },
     "Module": {
       "type": "object",
@@ -629,8 +717,13 @@
           "description": "Steps of the module.\n\nGo name: \"Steps\"."
         }
       },
-      "required": ["name", "description", "minimumResources", "steps"],
-      "description": "A module is basically a group of steps.\n\nThe module.yaml file goes through a templating engine first before getting parsed. So some variables are available:\n\n- {{ .Job }} and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.\n- {{ .Step }} and its childs, which represent the Step object using the module. Can be useful if you want the step name.\n\nNotice that the templating follows the Go format. You can also apply sprig templating functions.\n\nTo outputs environment variables, just append KEY=value to the \"${DEEPSQUARE_ENV}\" file."
+      "required": [
+        "name",
+        "description",
+        "minimumResources",
+        "steps"
+      ],
+      "description": "A module is basically a group of steps.\n\nThe module.yaml file goes through a templating engine first before getting parsed. So some variables are available:\n\n- `{{ .Job }}` and its childs, which represent the Job object using the module. Can be useful if you want to dynamically set an value based on the job.\n- `{{ .Step }}` and its childs, which represent the Step object using the module. Can be useful if you want the step name.\n\nIf you want your user to pass custom steps, you can use `{{- .Step.Use.Steps | toYaml | nindent <n> }}` which is the group of steps.\n\nExample:\n\n```yaml\n# module.yaml\nsteps:\n  - name: my step\n  {{- .Step.Use.Steps | toYaml | nindent 2 }}\n  - name: my other step\n```\n\n```yaml\n# job.yaml\nsteps:\n  - name: module\n    use:\n      source: git/my-module\n      steps:\n        - name: step by user\n        - name: another step by user\n```\n\nWill render:\n\n```yaml\n# module.yaml\nsteps:\n  - name: my step\n  - name: step by user\n  - name: another step by user\n  - name: my other step\n```\n\nNotice that the templating follows the Go format. You can also apply [sprig](http://masterminds.github.io/sprig/) templating functions.\n\nTo outputs environment variables, just append KEY=value to the \"${DEEPSQUARE_ENV}\" file, like this:\n\n```\necho \"KEY=value\" >> \"${DEEPSQUARE_ENV}\"\n```"
     }
   }
 }
