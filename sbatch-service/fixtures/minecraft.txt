@@ -220,6 +220,7 @@ wg-quick up "$(pwd)/net0.conf"
 
 '"'"''"'"'/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --contain \
   --writable-tmpfs \
   --no-home \
   --nv \

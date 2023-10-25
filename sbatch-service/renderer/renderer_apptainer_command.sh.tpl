@@ -1,6 +1,7 @@
 {{- $image := formatImageURL .Run.Container.Registry .Run.Container.Image .Run.Container.Apptainer .Run.Container.DeepsquareHosted -}}
 /usr/bin/apptainer --silent exec \
   --disable-cache \
+  --contain \
 {{- if not (and .Run.Container.ReadOnlyRootFS (derefBool .Run.Container.ReadOnlyRootFS)) }}
   --writable-tmpfs \
 {{- end }}

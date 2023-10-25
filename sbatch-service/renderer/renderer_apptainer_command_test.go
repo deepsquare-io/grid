@@ -65,6 +65,7 @@ func TestRenderApptainer(t *testing.T) {
 			input: *cleanApptainerStepRun("hostname"),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --contain \
   --writable-tmpfs \
   --no-home \
   --nv \
@@ -81,6 +82,7 @@ func TestRenderApptainer(t *testing.T) {
 			}(),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --contain \
   --writable-tmpfs \
   --no-home \
   --nv \
@@ -98,6 +100,7 @@ func TestRenderApptainer(t *testing.T) {
 			}(),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --contain \
   --writable-tmpfs \
   --no-home \
   --nv \
@@ -114,6 +117,7 @@ func TestRenderApptainer(t *testing.T) {
 			}(),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --contain \
   --writable-tmpfs \
   --no-home \
   --nv \
@@ -130,6 +134,7 @@ func TestRenderApptainer(t *testing.T) {
 			}(),
 			expected: `/usr/bin/apptainer --silent exec \
   --disable-cache \
+  --contain \
   --writable-tmpfs \
   --no-home \
   --nv \
