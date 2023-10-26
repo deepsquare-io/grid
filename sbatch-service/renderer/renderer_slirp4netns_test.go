@@ -95,6 +95,7 @@ wait_for_network_namespace() {
     if echo "$flags" | grep -qvw -- -n; then
       flags="$flags -n"
     fi
+    # shellcheck disable=SC2086
     if nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
@@ -229,6 +230,7 @@ wait_for_network_namespace() {
     if echo "$flags" | grep -qvw -- -n; then
       flags="$flags -n"
     fi
+    # shellcheck disable=SC2086
     if nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else

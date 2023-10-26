@@ -1,3 +1,4 @@
+{{- /* In this file contains 4 launch modes: Apptainer, Enroot, Pyxis and none. */ -}}
 {{- if .Step.Run.Container -}}
 {{- if .Step.Run.Container.Mounts -}}
 /usr/bin/cat << 'EOFmounterror'
@@ -8,6 +9,7 @@ EOFmounterror
 {{ end -}}
 {{- $image := formatImageURL .Step.Run.Container.Registry .Step.Run.Container.Image .Step.Run.Container.Apptainer .Step.Run.Container.DeepsquareHosted -}}
 {{- if or (and .Step.Run.Container.Apptainer (derefBool .Step.Run.Container.Apptainer)) (and .Step.Run.Container.DeepsquareHosted (derefBool .Step.Run.Container.DeepsquareHosted)) -}}
+{{- /* Apptainer */ -}}
 {{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password -}}
 export APPTAINER_DOCKER_USERNAME={{ derefStr .Step.Run.Container.Username | squote }}
 export APPTAINER_DOCKER_PASSWORD={{ derefStr .Step.Run.Container.Password | squote }}
@@ -60,6 +62,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
   --gpu-bind=none \
   {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}/bin/sh -c {{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS (renderApptainerCommand .Step.Run) .Step.Run.Shell | squote -}}{{ else }}{{ renderApptainerCommand .Step.Run }}{{ end }}
 {{- else -}}
+{{- /* Enroot or Pyxis, which use the same import method */ -}}
 {{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password -}}
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -90,6 +93,7 @@ if [ "$tries" -ge 10 ]; then
 fi
 /usr/bin/echo "Image successfully imported!"
 {{- end }}
+{{- /* Raw enroot is used when using slirp4netns */ -}}
 {{- if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}
 # shellcheck disable=SC2097,SC2098,SC1078
 /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
@@ -132,7 +136,8 @@ enrootClean() {
 }
 trap enrootClean EXIT INT TERM
 '{{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS (renderEnrootCommand .Step.Run) .Step.Run.Shell | squote -}}
-{{- else }}
+{{- else -}}
+{{/* Pyxis or none. */}}
 MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
 # shellcheck disable=SC2097,SC2098,SC1078
 STORAGE_PATH='/deepsquare' \
