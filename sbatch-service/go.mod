@@ -3,7 +3,7 @@ module github.com/deepsquare-io/grid/sbatch-service
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.39
+	github.com/99designs/gqlgen v0.17.40
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/go-chi/chi/v5 v5.0.10
