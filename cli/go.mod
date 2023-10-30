@@ -3,14 +3,14 @@ module github.com/deepsquare-io/grid/cli
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.39
+	github.com/99designs/gqlgen v0.17.40
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/erikgeiser/promptkit v0.9.0
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/go-git/go-billy/v5 v5.5.0
-	github.com/go-git/go-git/v5 v5.9.0
+	github.com/go-git/go-git/v5 v5.10.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/mistakenelf/teacup v0.4.1
