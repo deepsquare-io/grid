@@ -16,7 +16,7 @@ set(ABSL_ENABLE_INSTALL ON)
 FetchContent_Declare(
   grpc
   GIT_REPOSITORY https://github.com/grpc/grpc
-  GIT_TAG v1.59.2)
+  GIT_TAG v1.57.0)
 FetchContent_GetProperties(grpc)
 if(NOT grpc_POPULATED)
   FetchContent_Populate(grpc)
