@@ -1,7 +1,7 @@
 #include "job_api.h"
 
 extern "C" {
-#include "src/common/slurm_jobcomp.h"
+#include "src/interfaces/jobcomp.h"
 }
 
 using supervisor::v1alpha1::JobStatus;

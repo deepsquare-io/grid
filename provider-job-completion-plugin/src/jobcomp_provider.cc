@@ -8,7 +8,7 @@
 
 extern "C" {
 
-#include "src/common/slurm_jobcomp.h"
+#include "src/interfaces/jobcomp.h"
 
 /*
  * These variables are required by the generic plugin interface.  If they
