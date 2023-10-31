@@ -4,7 +4,7 @@ set(FETCHCONTENT_QUIET OFF)
 FetchContent_Declare(
   slurm
   GIT_REPOSITORY https://github.com/SchedMD/slurm
-  GIT_TAG slurm-23.02.6-1)
+  GIT_TAG slurm-23-02-6-1)
 FetchContent_GetProperties(slurm)
 if(NOT slurm_POPULATED)
   FetchContent_Populate(slurm)
