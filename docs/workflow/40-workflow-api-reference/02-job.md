@@ -654,7 +654,7 @@ The test format is bash and variables such as $PATH or $(pwd) can be expanded.
 
 Note that "If" will be run after the "DependsOn".
 
-Example: '3 -eq 3 && "${TEST}" = "test"'.
+Example: '3 -eq 3 && "$&#123;TEST}" = "test"'.
 
 Go name: "If".
 
@@ -2291,7 +2291,7 @@ Go name: "Args".
 
 Environment variables exported with be prefixed with the value of this field.
 
-Exemple: If exportEnvAs=MY_MODULE, and KEY is exported. Then you can invoke ${MY_MODULE_KEY} environment variable.
+Exemple: If exportEnvAs=MY_MODULE, and KEY is exported. Then you can invoke $&#123;MY_MODULE_KEY} environment variable.
 
 Go name: "ExportEnvAs".
 

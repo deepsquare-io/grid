@@ -51,7 +51,7 @@ steps:
 
 Notice that the templating follows the Go format. You can also apply [sprig](http://masterminds.github.io/sprig/) templating functions.
 
-To outputs environment variables, just append KEY=value to the "${DEEPSQUARE_ENV}" file, like this:
+To outputs environment variables, just append KEY=value to the "$&#123;DEEPSQUARE_ENV}" file, like this:
 
 ```shell
 echo "KEY=value" >> "${DEEPSQUARE_ENV}"
