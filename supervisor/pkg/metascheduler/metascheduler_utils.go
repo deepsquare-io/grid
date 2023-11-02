@@ -35,13 +35,11 @@ func ProviderHardwareEqual(
 		a.Nodes == b.Nodes
 }
 
-func LabelsEqual(
+// LabelsContains returns true if a is included in b
+func LabelsContains(
 	a []metaschedulerabi.Label,
 	b []metaschedulerabi.Label,
 ) bool {
-	if len(a) != len(b) {
-		return false
-	}
 	for i := range a {
 		if a[i] != b[i] {
 			return false
