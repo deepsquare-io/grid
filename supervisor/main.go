@@ -856,8 +856,8 @@ See the GNU General Public License for more details.`,
 					CpuPricePerMin: cpuPricePerMin,
 					MemPricePerMin: memPricePerMin,
 				}
-				if metascheduler.ProviderHardwareEqual(oldInfo.ProviderHardware, hardware) &&
-					oldInfo.ProviderPrices == prices &&
+				if metascheduler.ProviderHardwareEqual(hardware, oldInfo.ProviderHardware) &&
+					metascheduler.ProviderPricesEqual(prices, oldInfo.ProviderPrices) &&
 					metascheduler.LabelsContains(labels, oldInfo.Labels) {
 					logger.I.Info(
 						"hardware, prices and labels are the same, no need to run a benchmark",

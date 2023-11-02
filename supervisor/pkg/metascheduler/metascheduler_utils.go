@@ -35,6 +35,15 @@ func ProviderHardwareEqual(
 		a.Nodes == b.Nodes
 }
 
+func ProviderPricesEqual(
+	a metaschedulerabi.ProviderPrices,
+	b metaschedulerabi.ProviderPrices,
+) bool {
+	return a.CpuPricePerMin.Cmp(b.CpuPricePerMin) == 0 &&
+		a.GpuPricePerMin.Cmp(b.GpuPricePerMin) == 0 &&
+		a.MemPricePerMin.Cmp(b.MemPricePerMin) == 0
+}
+
 // LabelsContains returns true if a is included in b
 func LabelsContains(a, b []metaschedulerabi.Label) bool {
 	for _, labelA := range a {
