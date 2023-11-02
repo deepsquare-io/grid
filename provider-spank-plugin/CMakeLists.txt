@@ -40,9 +40,12 @@ add_compile_options(
 file(GLOB_RECURSE sources src/*.cc src/*.c src/*.h)
 file(GLOB_RECURSE grpc_sources gen/cpp/*.cc gen/cpp/*.h)
 
-add_library(spank_provider SHARED ${sources} ${grpc_sources})
+add_library(spank_provider MODULE ${sources} ${grpc_sources})
 
-set_target_properties(spank_provider PROPERTIES PREFIX "")
+set_target_properties(
+  spank_provider PROPERTIES
+  PREFIX ""
+  ENABLE_EXPORTS TRUE)
 
 target_include_directories(
   spank_provider
