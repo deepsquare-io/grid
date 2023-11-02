@@ -1933,7 +1933,7 @@ Go name: "Parallel".
 <td valign="top">[<a href="#string">String</a>!]</td>
 <td>
 
-Item accessible via the {{ .Item }} variable. Index accessible via the $item variable.
+Item accessible via the &#123;&#123; .Item }} variable. Index accessible via the $item variable.
 
 Exclusive with "range".
 
@@ -2304,7 +2304,7 @@ Go name: "ExportEnvAs".
 
 Additional children steps to the module.
 
-If the module allow children steps, these steps will be passed to the module to replace {{ .Step.Run.Steps }}.
+If the module allow children steps, these steps will be passed to the module to replace &#123;&#123; .Step.Run.Steps }}.
 
 Go name: "Steps".
 

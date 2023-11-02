@@ -206,7 +206,7 @@ sudo dnf install wireguard-tools
 
    Also, if you want to disable the load balancing, just remove the `-m statistic --mode random --probability 0.5` parameters and remove the extras port forwarding rules.
 
-   :::caution
+   :::warning
 
    Make sure that iptables does not conflict with other firewall software (like FirewallD or UFW)!
 

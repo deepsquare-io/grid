@@ -46,7 +46,7 @@ We recommend:
 - [cfctl.yaml API reference](https://docs.clusterfactory.io/docs/reference/cfctl.yaml)
 - [Argo CD declarative setup](https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/)
 
-:::caution
+:::warning
 
 Before using ClusterFactory, it is strongly advised to have a comprehensive understanding of how Kubernetes operates, specifically with regard to storage and network management using features such as PersistentVolume, StorageClass, Service, Ingresses, LoadBalancer, and more.
 

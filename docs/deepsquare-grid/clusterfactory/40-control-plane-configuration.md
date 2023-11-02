@@ -32,7 +32,7 @@ stringData:
    kubectl apply -f argo/default/secrets/my-repository-sealed-secret.yaml
    ```
 
-:::caution
+:::warning
 
 Never commit a plaintext Secret. Always seal the secret!
 
@@ -1042,7 +1042,7 @@ kubectl apply -f argo/slurm-cluster/volumes/example-1/ldap-users-storage.yaml
        NodeName=cn1 File=/dev/nvidia[0-1] AutoDetect=nvml
    ```
 
-   :::caution
+   :::warning
 
    **You would normally use `slurmd -C` on the compute nodes to get the real configuration. We recommend subtracting `RealMemory` by 1G.**
 

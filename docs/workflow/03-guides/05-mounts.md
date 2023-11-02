@@ -1,6 +1,6 @@
 # Mounting volumes from the host to the container
 
-:::caution
+:::warning
 
 The bind mounts feature is deprecated and will be removed in the future.
 

@@ -85,7 +85,7 @@ You can checkout to a stable version:
 git checkout -b configs <CF version>
 ```
 
-:::caution
+:::warning
 
 Please note that ClusterFactory is under heavy development, it is strongly recommended to follow the latest version of ClusterFactory.
 

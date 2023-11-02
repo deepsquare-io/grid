@@ -61,7 +61,7 @@ Example of usage:
 
 You can check the [module `github.com/deepsquare-io/workflow-module-example@v1` git repository](https://github.com/deepsquare-io/workflow-module-example/tree/v1).
 
-:::caution
+:::warning
 
 Be careful, when using a tag like `v1` or `v1.0.0`, make sure the author is trustworthy, otherwise you may fall victim to a supply chain attack.
 
