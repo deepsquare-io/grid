@@ -44,9 +44,11 @@ endif()
 file(GLOB_RECURSE sources src/*.cc src/*.h)
 file(GLOB_RECURSE grpc_sources gen/cpp/*.cc gen/cpp/*.h)
 
-add_library(jobcomp_provider SHARED ${sources} ${grpc_sources})
+add_library(jobcomp_provider MODULE ${sources} ${grpc_sources})
 
-set_target_properties(jobcomp_provider PROPERTIES PREFIX "")
+set_target_properties(jobcomp_provider PROPERTIES
+  PREFIX ""
+  ENABLE_EXPORTS TRUE)
 
 target_include_directories(
   jobcomp_provider
