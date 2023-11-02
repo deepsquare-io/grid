@@ -38,7 +38,7 @@ Now, we'll scale up and run parallelize the "hello world" command on **16 CPUs**
 
 Instead of echoing "Hello World" directly from the command entry, we're going to use MPI and run this command:
 
-```
+```shell
 mpirun -np 16 echo 'Hello World'
 ```
 

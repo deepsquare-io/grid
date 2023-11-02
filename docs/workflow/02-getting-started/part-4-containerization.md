@@ -165,7 +165,7 @@ podman run --rm localhost/mpi-circle:latest mpirun -np 4 main
 
 The output from this test should resemble:
 
-```log
+```shell
 rank 0 sending 10 to 1, tag 201 (4 processes in ring)
 rank 0 sent to 1
 rank 1: received the message 10 and is passing to the next: 2

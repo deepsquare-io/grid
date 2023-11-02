@@ -23,9 +23,10 @@ Here are the steps you need to follow to get your node set up:
    ```
 
 2. Add the following content to the file:
-   ```
+
+   ```json
    {
-      "allow-missing-tries": true
+     "allow-missing-tries": true
    }
    ```
 
@@ -39,9 +40,9 @@ The current virtual machine used is `subnet-EVM`. To get the binary, visit our G
 
 3.  Make executable:
 
-```
-   chmod +x ~/.avalanchego/plugins/mDV28Yo1kHR1XAXo29LJsVh38vyKUdsvcdAZXYakdQd3LMwBY
-```
+    ```shell
+    chmod +x ~/.avalanchego/plugins/mDV28Yo1kHR1XAXo29LJsVh38vyKUdsvcdAZXYakdQd3LMwBY
+    ```
 
 Once you've done all these, your node will be ready to join the subnet and start validating when slots become available in the future.
 
@@ -51,7 +52,7 @@ You are now ready to launch the node and start validating the subnet.
 
 Assuming you followed the step before and your node has been whitelisted you can start your avalanchego process with the following options:
 
-```
-   --network-id=fuji
-   --track-subnets=8dRakstCMfHV8CXRhdtq9Wbxo75535Pfran1yDX5x4TYJq22A
+```shell
+--network-id=fuji
+--track-subnets=8dRakstCMfHV8CXRhdtq9Wbxo75535Pfran1yDX5x4TYJq22A
 ```
