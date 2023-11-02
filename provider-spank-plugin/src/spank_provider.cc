@@ -29,26 +29,34 @@ extern const unsigned int spank_plugin_version = SLURM_VERSION_NUMBER;
  * @return int Error code
  */
 int slurm_spank_job_prolog(spank_t spank, int ac, char *argv[]) {
+  // Init slurm API
+  slurm_init(NULL);
+
   // Fetch the job
-  unsigned int jobid = 0;
+  uint32_t jobid = 0;
   job_info_msg_t *job_info = NULL;
+
   if (spank_get_item(spank, S_JOB_ID, &jobid) != 0) {
-    slurm_error("%s: couldn't find the job ID", plugin_type);
+    slurm_error("%s/%s: couldn't find the job ID", plugin_type, plugin_name);
     return SLURM_SUCCESS;
   }
-  slurm_debug("%s: start %s %d", plugin_type, __func__, jobid);
-  if (slurm_load_job(&job_info, jobid, SHOW_ALL) != 0) {
-    slurm_error("%s: couldn't load the job %u", plugin_type, jobid);
+  slurm_debug("%s/%s: start %s %d", plugin_type, plugin_name, __func__, jobid);
+  if (slurm_load_job(&job_info, jobid, SHOW_LOCAL) != 0) {
+    slurm_error("%s/%s: couldn't load the job %u", plugin_type, plugin_name,
+                jobid);
     return SLURM_SUCCESS;
   }
 
+  slurm_debug("%s/%s: parsing %s %d", plugin_type, plugin_name, __func__,
+              jobid);
   slurm_job_info_t job = job_info->job_array[0];
   report_t report;
   parse_slurm_job_info(job, report);
 
   // Filter
   if (report.comment.find("supervisor") != 0) {
-    slurm_debug("%s: won't report job %d", plugin_type, report.job_id);
+    slurm_debug("%s/%s: won't report job %d", plugin_type, plugin_name,
+                report.job_id);
     return SLURM_SUCCESS;
   }
 
@@ -56,6 +64,8 @@ int slurm_spank_job_prolog(spank_t spank, int ac, char *argv[]) {
   auto endpoint = report.comment.substr(11);
 
   // Output
+  slurm_debug("%s/%s: submitting %s %d", plugin_type, plugin_name, __func__,
+              jobid);
   grpc::experimental::TlsChannelCredentialsOptions options;
   options.set_verify_server_certs(false);
   JobAPIClient job_api(grpc::CreateChannel(
@@ -63,7 +73,7 @@ int slurm_spank_job_prolog(spank_t spank, int ac, char *argv[]) {
 
   auto req = MakeSetJobRunning(report);
   if (!job_api.SetJobStatus(req)) {
-    slurm_error("%s: SetJobStatus failed", plugin_type);
+    slurm_error("%s/%s: SetJobStatus failed", plugin_type, plugin_name);
   }
 
   return SLURM_SUCCESS;

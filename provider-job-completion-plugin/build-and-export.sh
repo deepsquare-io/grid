@@ -2,6 +2,7 @@
 
 set -e
 
+rm -rf artifacts/8.6/ artifacts/9.2/
 mkdir -p cache/8.6 cache/9.2
 
 podman build \
