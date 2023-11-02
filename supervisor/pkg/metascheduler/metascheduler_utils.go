@@ -36,15 +36,20 @@ func ProviderHardwareEqual(
 }
 
 // LabelsContains returns true if a is included in b
-func LabelsContains(
-	a []metaschedulerabi.Label,
-	b []metaschedulerabi.Label,
-) bool {
-	for i := range a {
-		if a[i] != b[i] {
+func LabelsContains(a, b []metaschedulerabi.Label) bool {
+	for _, labelA := range a {
+		found := false
+		for _, labelB := range b {
+			if labelA == labelB {
+				found = true
+				break
+			}
+		}
+		if !found {
 			return false
 		}
 	}
+
 	return true
 }
 

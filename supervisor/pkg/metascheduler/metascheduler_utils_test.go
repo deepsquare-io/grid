@@ -43,3 +43,49 @@ func TestProcessLabels(t *testing.T) {
 		})
 	}
 }
+
+func TestLabelsContains(t *testing.T) {
+	// Define some test cases
+	testCases := []struct {
+		name     string
+		sliceA   []metaschedulerabi.Label
+		sliceB   []metaschedulerabi.Label
+		expected bool
+	}{
+		{
+			name: "Included case",
+			sliceA: []metaschedulerabi.Label{
+				{Key: "key1", Value: "value1"},
+				{Key: "key2", Value: "value2"},
+			},
+			sliceB: []metaschedulerabi.Label{
+				{Key: "key1", Value: "value1"},
+				{Key: "key3", Value: "value3"},
+				{Key: "key2", Value: "value2"},
+			},
+			expected: true,
+		},
+		{
+			name: "Not included case",
+			sliceA: []metaschedulerabi.Label{
+				{Key: "key1", Value: "value1"},
+				{Key: "key2", Value: "value2"},
+				{Key: "key4", Value: "value4"},
+			},
+			sliceB: []metaschedulerabi.Label{
+				{Key: "key1", Value: "value1"},
+				{Key: "key2", Value: "value2"},
+				{Key: "key3", Value: "value3"},
+			},
+			expected: false,
+		},
+	}
+
+	// Iterate over the test cases and run the tests
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := metascheduler.LabelsContains(tc.sliceA, tc.sliceB)
+			require.Equal(t, tc.expected, result)
+		})
+	}
+}
