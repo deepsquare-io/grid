@@ -866,6 +866,13 @@ See the GNU General Public License for more details.`,
 					// Add old benchmark labels
 					labels = oldInfo.Labels
 				} else {
+					logger.I.Info(
+						"need to run a new benchmark",
+						zap.Any("oldInfo", oldInfo),
+						zap.Any("expectedHardware", hardware),
+						zap.Any("expectedPrices", prices),
+						zap.Any("expectedLabels", labels),
+					)
 					launchBenchmarks(
 						ctx,
 						container.benchmarkLauncher,
