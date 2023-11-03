@@ -116,6 +116,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV,test \
   --gpu-bind=none \
   --no-container-remap-root \
   --container-writable \
@@ -225,6 +226,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV,test \
   --gpu-bind=none \
   --container-remap-root \
   --container-writable \
@@ -288,6 +290,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
+  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV,test \
   --gpu-bind=none \
   --no-container-remap-root \
   --container-writable \

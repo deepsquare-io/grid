@@ -93,6 +93,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --mem-per-cpu=4096M \
   --gpus-per-task=1 \
   --ntasks=1 \
+  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV \
   --gpu-bind=none \
   --no-container-remap-root \
   --container-writable \

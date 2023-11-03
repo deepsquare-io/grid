@@ -173,6 +173,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
 {{- if and .Step.Run.Mpi (derefStr .Step.Run.Mpi) }}
   --mpi={{ derefStr .Step.Run.Mpi }} \
 {{- end }}
+  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV{{ range $index, $env := .Step.Run.Env }},{{ $env.Key }}{{ end }} \
 {{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
   --cpu-bind=none \
 {{- end }}
