@@ -7,7 +7,7 @@ require (
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/cors v1.2.1
-	github.com/gorilla/websocket v1.5.0
+	github.com/gorilla/websocket v1.5.1
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/client_model v0.5.0
 	github.com/prometheus/common v0.45.0
@@ -71,6 +71,7 @@ require (
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/mod v0.13.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.13.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
