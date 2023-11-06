@@ -59,51 +59,51 @@ Basically, the application runs in one step: "Run the application".
 
 ## Implementation
 
-For the sake of readability, we use YAML. You can use an online YAML to JSON converter if you wish to execute the workflow on the [dev environment](https://app.deepsquare.run/sandbox).
-
 The implementation is quite immediate:
 
 ```yaml
-job:
-  enableLogging: true
-  env:
-    - key: DISPLAY
-      value: ':99'
-    - key: XDG_RUNTIME_DIR
-      value: '/tmp'
-  resources:
-    tasks: 1
-    cpusPerTask: 4
-    memPerCpu: 4096
-    gpusPerTask: 1
-  steps:
-    - name: tdp
-      run:
-        container:
-          x11: true
-          deepsquareHosted: true
-          apptainer: true
-          registry: registry-1.deepsquare.run
-          image: 'library/tdp:latest'
-        resources:
-          tasks: 1
-          cpusPerTask: 4
-          memPerCpu: 4096
-          gpusPerTask: 1
-        command: |-
-          /unityapp/DeepSquareURSSample.x86_64 \
-            -maxplayers 8 \
-            -webserverurl 'wss://tdp.deepsquare.run' \
-            -renderfps 60 \
-            -streamfps 30 \
-            -sessionpin 123 \
-            -minbitrate 10000 \
-            -maxbitrate 50000 \
-            -adaptativeupscaling \
-            -minimumrenderscale 0.5 \
-            -renderscalestepcount 0.1 \
-            -displayfpscounter \
-            --logFile -
+enableLogging: true
+
+resources:
+  tasks: 1
+  cpusPerTask: 4
+  memPerCpu: 4096
+  gpusPerTask: 1
+
+env:
+  - key: DISPLAY
+    value: ':99'
+  - key: XDG_RUNTIME_DIR
+    value: '/tmp'
+
+steps:
+  - name: tdp
+    run:
+      container:
+        x11: true
+        deepsquareHosted: true
+        apptainer: true
+        registry: registry-1.deepsquare.run
+        image: 'library/tdp:latest'
+      resources:
+        tasks: 1
+        cpusPerTask: 4
+        memPerCpu: 4096
+        gpusPerTask: 1
+      command: |-
+        /unityapp/DeepSquareURSSample.x86_64 \
+          -maxplayers 8 \
+          -webserverurl 'wss://tdp.deepsquare.run' \
+          -renderfps 60 \
+          -streamfps 30 \
+          -sessionpin 123 \
+          -minbitrate 10000 \
+          -maxbitrate 50000 \
+          -adaptativeupscaling \
+          -minimumrenderscale 0.5 \
+          -renderscalestepcount 0.1 \
+          -displayfpscounter \
+          --logFile -
 ```
 
 However, most of the settings depends on how you have configured your Unity application and web server.

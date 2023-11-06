@@ -141,97 +141,67 @@ Go name: "ContinuousOutputSync".
 <details>
   <summary>Examples</summary>
 
-```json title="Job (minimal)"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "steps": [
-    {
-      "name": "hello world",
-      "run": {
-        "command": "echo \"Hello World\""
-      }
-    }
-  ]
-}
+```yaml title="Job (minimal)"
+resources:
+  tasks: 1
+  gpusPerTask: 0
+  cpusPerTask: 1
+  memPerCpu: 1024
+enableLogging: true
+steps:
+  - name: hello world
+    run:
+      command: echo "Hello World"
 ```
 
-```json title="Job (full)"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "input": {
-    "http": {
-      "url": "https://my-server/my-file"
-    }
-  },
-  "inputMode": 493,
-  "output": {
-    "http": {
-      "url": "https://transfer.sh"
-    }
-  },
-  "env": [
-    {
-      "key": "MY_ENV",
-      "value": "my_value"
-    }
-  ],
-  "continuousOutputSync": true,
-  "steps": [
-    {
-      "command": "ping 10.0.0.1",
-      "resources": {
-        "tasks": 1,
-        "cpusPerTask": 1,
-        "memPerCpu": 500,
-        "gpusPerTask": 0
-      },
-      "network": "slirp4netns",
-      "dns": "1.1.1.1",
-      "container": {
-        "image": "library/ubuntu:latest",
-        "registry": "registry-1.docker.io"
-      },
-      "customNetworkInterfaces": [
-        {
-          "wireguard": {
-            "address": ["10.0.0.2/24"],
-            "privateKey": "<TO FILL: Client PK>",
-            "peers": [
-              {
-                "publicKey": "<TO FILL: Serv Pub>",
-                "preSharedKey": "<TO FILL: SharedKey>",
-                "allowedIPs": ["10.0.0.1/32"],
-                "persistentKeepalive": 10,
-                "endpoint": "192.168.0.0:51820"
-              }
-            ]
-          }
-        }
-      ],
-      "env": [
-        {
-          "key": "MY_VAR",
-          "value": "myvalue"
-        }
-      ],
-      "mapRoot": false,
-      "workDir": "/app",
-      "disableCpuBinding": false
-    }
-  ]
-}
+```yaml title="Job (full)"
+resources:
+  tasks: 1
+  gpusPerTask: 0
+  cpusPerTask: 1
+  memPerCpu: 1024
+enableLogging: true
+input:
+  http:
+    url: https://my-server/my-file
+inputMode: 493
+output:
+  http:
+    url: https://transfer.sh
+env:
+  - key: MY_ENV
+    value: my_value
+continuousOutputSync: true
+steps:
+  - command: ping 10.0.0.1
+    resources:
+      tasks: 1
+      cpusPerTask: 1
+      memPerCpu: 500
+      gpusPerTask: 0
+    network: slirp4netns
+    dns: 1.1.1.1
+    container:
+      image: library/ubuntu:latest
+      registry: registry-1.docker.io
+    customNetworkInterfaces:
+      - wireguard:
+          address:
+            - 10.0.0.2/24
+          privateKey: '<TO FILL: Client PK>'
+          peers:
+            - publicKey: '<TO FILL: Serv Pub>'
+              preSharedKey: '<TO FILL: SharedKey>'
+              allowedIPs:
+                - 10.0.0.1/32
+              persistentKeepalive: 10
+              endpoint: 192.168.0.0:51820
+    env:
+      - key: MY_VAR
+        value: myvalue
+    mapRoot: false
+    workDir: '/app'
+    disableCpuBinding: false
 ```
 
 </details>
@@ -307,13 +277,12 @@ Go name: "GpusPerTask".
 <details>
   <summary>Example</summary>
 
-```json title="JobResources"
-{
-  "tasks": 1,
-  "cpusPerTask": 1,
-  "memPerCpu": 1000,
-  "gpusPerTask": 2
-}
+```yaml title="JobResources"
+resources:
+  tasks: 1
+  cpusPerTask: 1
+  memPerCpu: 1000
+  gpusPerTask: 2
 ```
 
 </details>
@@ -361,11 +330,10 @@ Go name: "Value".
 <details>
   <summary>Example</summary>
 
-```json title="EnvVar"
-{
-  "key": "MY_ENV",
-  "value": "my value"
-}
+```yaml title="EnvVar"
+env:
+  - key: MY_ENV
+    value: my value
 ```
 
 </details>
@@ -409,26 +377,22 @@ Go name: "S3".
 <details>
   <summary>Examples</summary>
 
-```json title="TransportData (http)"
-{
-  "http": {
-    "url": "https://my-server/my-file"
-  }
-}
+```yaml title="TransportData (http)"
+input:
+  http:
+    url: https://my-server/my-file
 ```
 
-```json title="TransportData (s3)"
-{
-  "s3": {
-    "region": "us‑east‑2",
-    "bucketUrl": "s3://my-bucket",
-    "path": "/",
-    "accessKeyId": "accessKeyId",
-    "secretAccessKey": "secretAccessKey",
-    "endpointUrl": "https://s3.us‑east‑2.amazonaws.com",
-    "deleteSync": true
-  }
-}
+```yaml title="TransportData (s3)"
+input:
+  s3:
+    region: us‑east‑2
+    bucketUrl: s3://my-bucket
+    path: '/'
+    accessKeyId: accessKeyId
+    secretAccessKey: secretAccessKey
+    endpointUrl: https://s3.us‑east‑2.amazonaws.com
+    deleteSync: true
 ```
 
 </details>
@@ -463,10 +427,9 @@ Go name: "URL".
 <details>
   <summary>Example</summary>
 
-```json title="HTTPData"
-{
-  "url": "https://my-server/my-file"
-}
+```yaml title="HTTPData"
+http:
+  url: https://my-server/my-file
 ```
 
 </details>
@@ -575,27 +538,25 @@ Go name: "DeleteSync".
 <details>
   <summary>Examples</summary>
 
-```json title="S3Data"
-{
-  "region": "us‑east‑2",
-  "bucketUrl": "s3://my-bucket",
-  "path": "/",
-  "accessKeyId": "accessKeyId",
-  "secretAccessKey": "secretAccessKey",
-  "endpointUrl": "https://s3.us‑east‑2.amazonaws.com"
-}
+```yaml title="S3Data"
+s3:
+  region: us‑east‑2
+  bucketUrl: s3://my-bucket
+  path: '/'
+  accessKeyId: accessKeyId
+  secretAccessKey: secretAccessKey
+  endpointUrl: https://s3.us‑east‑2.amazonaws.com
 ```
 
-```json title="S3Data (remove non original data)"
-{
-  "region": "us‑east‑2",
-  "bucketUrl": "s3://my-bucket",
-  "path": "/",
-  "accessKeyId": "accessKeyId",
-  "secretAccessKey": "secretAccessKey",
-  "endpointUrl": "https://s3.us‑east‑2.amazonaws.com",
-  "deleteSync": true
-}
+```yaml title="S3Data (remove non original data)"
+s3:
+  region: us‑east‑2
+  bucketUrl: s3://my-bucket
+  path: '/'
+  accessKeyId: accessKeyId
+  secretAccessKey: secretAccessKey
+  endpointUrl: https://s3.us‑east‑2.amazonaws.com
+  deleteSync: true
 ```
 
 </details>
@@ -753,106 +714,69 @@ Go name: "Finally".
 <details>
   <summary>Examples</summary>
 
-```json title="Step (run)"
-{
-  "name": "print hello world",
-  "run": {
-    "command": "echo 'hello world'"
-  }
-}
+```yaml title="Step (run)"
+steps:
+  - name: print hello world
+    run:
+      command: echo 'hello world'
 ```
 
-```json title="Step (for)"
-{
-  "name": "print 1 2 3",
-  "for": {
-    "range": {
-      "begin": 1,
-      "end": 3
-    },
-    "steps": [
-      {
-        "name": "print variable",
-        "run": {
-          "command": "echo \"$index\""
-        }
-      }
-    ]
-  }
-}
+```yaml title="Step (for)"
+steps:
+  - name: print 1 2 3
+    for:
+      range:
+        begin: 1
+        end: 3
+      steps:
+        - name: print variable
+          run:
+            command: echo "$index"
 ```
 
-```json title="Step (if)"
-{
-  "name": "if example",
-  "if": "-f /tmp/lock",
-  "run": {
-    "command": "echo 'show only if /tmp/lock exists'"
-  }
-}
+```yaml title="Step (if)"
+steps:
+  - name: if example
+    if: '-f /tmp/lock'
+    run:
+      command: echo 'show only if /tmp/lock exists'
 ```
 
-```json title="Step (try-catch)"
-{
-  "name": "catch block",
-  "catch": [
-    {
-      "name": "run only on non-zero error code",
-      "run": {
-        "command": "echo $DEEPSQUARE_ERROR_CODE"
-      }
-    }
-  ],
-  "run": {
-    "command": "exit 1"
-  }
-}
+```yaml title="Step (try-catch)"
+steps:
+  - name: catch block
+    catch:
+      - name: run only on non-zero error code
+        run:
+          command: echo $DEEPSQUARE_ERROR_CODE
+    run:
+      command: exit 1
 ```
 
-```json title="Step (defer)"
-{
-  "name": "defer block",
-  "finally": [
-    {
-      "name": "run at the end of the scope"
-    }
-  ],
-  "steps": [
-    {
-      "name": "run",
-      "run": {
-        "command": "echo 'do'"
-      }
-    }
-  ]
-}
+```yaml title="Step (defer)"
+steps:
+  - name: defer block
+    finally:
+      - name: run at the end of the scope
+    steps:
+      - name: run
+        run:
+          command: echo 'do'
 ```
 
-```json title="Step (try-catch-finally)"
-{
-  "name": "catch-finally block",
-  "catch": [
-    {
-      "name": "run only on non-zero error code",
-      "run": {
-        "command": "echo $DEEPSQUARE_ERROR_CODE"
-      }
-    }
-  ],
-  "finally": [
-    {
-      "name": "run anyway"
-    }
-  ],
-  "steps": [
-    {
-      "name": "run",
-      "run": {
-        "command": "exit 1"
-      }
-    }
-  ]
-}
+```yaml title="Step (try-catch-finally)"
+steps:
+  - name: catch-finally block
+    catch:
+      - name: run only on non-zero error code
+        run:
+          command: echo $DEEPSQUARE_ERROR_CODE
+    finally:
+      - name: run anyway
+    steps:
+      - name: run
+        run:
+          command: exit 1
 ```
 
 </details>
@@ -1079,108 +1003,85 @@ Go name: "Mpi".
 <details>
   <summary>Examples</summary>
 
-```json title="StepRun (minimal)"
-{
-  "command": "echo 'hello world'"
-}
+```yaml title="StepRun (minimal)"
+run:
+  command: echo 'hello world'
 ```
 
-```json title="StepRun (with resource limitation)"
-{
-  "command": "echo 'hello world'",
-  "resources": {
-    "tasks": 1,
-    "cpusPerTask": 1,
-    "memPerCpu": 500,
-    "gpusPerTask": 0
-  }
-}
+```yaml title="StepRun (with resource limitation)"
+run:
+  command: echo 'hello world'
+  resources:
+    tasks: 1
+    cpusPerTask: 1
+    memPerCpu: 500
+    gpusPerTask: 0
 ```
 
-```json title="StepRun (with container)"
-{
-  "command": "echo 'hello world'",
-  "container": {
-    "image": "library/ubuntu:latest",
-    "registry": "registry-1.docker.io"
-  }
-}
+```yaml title="StepRun (with container)"
+run:
+  command: echo 'hello world'
+  container:
+    image: library/ubuntu:latest
+    registry: registry-1.docker.io
 ```
 
-```json title="StepRun (with rootless network namespace)"
-{
-  "command": "echo 'hello world'",
-  "network": "slirp4netns"
-}
+```yaml title="StepRun (with rootless network namespace)"
+run:
+  command: echo 'hello world'
+  network: slirp4netns
 ```
 
-```json title="StepRun (with a Wireguard tunnel)"
-{
-  "command": "ping 10.0.0.1",
-  "network": "slirp4netns",
-  "dns": "1.1.1.1",
-  "customNetworkInterfaces": [
-    {
-      "wireguard": {
-        "address": ["10.0.0.2/24"],
-        "privateKey": "<TO FILL: Client PK>",
-        "peers": [
-          {
-            "publicKey": "<TO FILL: Serv Pub>",
-            "preSharedKey": "<TO FILL: SharedKey>",
-            "allowedIPs": ["10.0.0.1/32"],
-            "persistentKeepalive": 10,
-            "endpoint": "192.168.0.0:51820"
-          }
-        ]
-      }
-    }
-  ]
-}
+```yaml title="StepRun (with a Wireguard tunnel)"
+run:
+  command: ping 10.0.0.1
+  network: slirp4netns
+  dns: 1.1.1.1
+  customNetworkInterfaces:
+    - wireguard:
+        address:
+          - 10.0.0.2/24
+        privateKey: '<TO FILL: Client PK>'
+        peers:
+          - publicKey: '<TO FILL: Serv Pub>'
+            preSharedKey: '<TO FILL: SharedKey>'
+            allowedIPs:
+              - 10.0.0.1/32
+            persistentKeepalive: 10
+            endpoint: 192.168.0.0:51820
 ```
 
-```json title="StepRun (full)"
-{
-  "command": "ping 10.0.0.1",
-  "resources": {
-    "tasks": 1,
-    "cpusPerTask": 1,
-    "memPerCpu": 500,
-    "gpusPerTask": 0
-  },
-  "network": "slirp4netns",
-  "dns": "1.1.1.1",
-  "container": {
-    "image": "library/ubuntu:latest",
-    "registry": "registry-1.docker.io"
-  },
-  "customNetworkInterfaces": [
-    {
-      "wireguard": {
-        "address": ["10.0.0.2/24"],
-        "privateKey": "<TO FILL: Client PK>",
-        "peers": [
-          {
-            "publicKey": "<TO FILL: Serv Pub>",
-            "preSharedKey": "<TO FILL: SharedKey>",
-            "allowedIPs": ["10.0.0.1/32"],
-            "persistentKeepalive": 10,
-            "endpoint": "192.168.0.0:51820"
-          }
-        ]
-      }
-    }
-  ],
-  "env": [
-    {
-      "key": "MY_VAR",
-      "value": "myvalue"
-    }
-  ],
-  "mapRoot": false,
-  "workDir": "/app",
-  "disableCpuBinding": false
-}
+```yaml title="StepRun (full)"
+run:
+  command: ping 10.0.0.1
+  resources:
+    tasks: 1
+    cpusPerTask: 1
+    memPerCpu: 500
+    gpusPerTask: 0
+  network: slirp4netns
+  dns: 1.1.1.1
+  container:
+    image: library/ubuntu:latest
+    registry: registry-1.docker.io
+  customNetworkInterfaces:
+    - wireguard:
+        address:
+          - 10.0.0.2/24
+        privateKey: '<TO FILL: Client PK>'
+        peers:
+          - publicKey: '<TO FILL: Serv Pub>'
+            preSharedKey: '<TO FILL: SharedKey>'
+            allowedIPs:
+              - 10.0.0.1/32
+            persistentKeepalive: 10
+            endpoint: 192.168.0.0:51820
+  env:
+    - key: MY_VAR
+      value: myvalue
+  mapRoot: false
+  workDir: '/app'
+  disableCpuBinding: false
 ```
 
 </details>
@@ -1264,20 +1165,20 @@ Go name: "GpusPerTask".
 <details>
   <summary>Examples</summary>
 
-```json title="StepRunResources (partial)"
-{
-  "tasks": 1,
-  "gpusPerTask": 0
-}
+```yaml title="StepRunResources (partial)"
+run:
+  tasks: 1
+  gpusPerTask: 0
+  # cpusPerTask: inherit from job
+  # memPerCpu: inherit from job
 ```
 
-```json title="StepRunResources (full)"
-{
-  "tasks": 1,
-  "cpusPerTask": 1,
-  "memPerCpu": 1000,
-  "gpusPerTask": 0
-}
+```yaml title="StepRunResources (full)"
+run:
+  tasks: 1
+  cpusPerTask: 1
+  memPerCpu: 1000
+  gpusPerTask: 0
 ```
 
 </details>
@@ -1436,64 +1337,55 @@ Go name: "ReadOnlyRootFS".
 <details>
   <summary>Example</summary>
 
-```json title="ContainerRun (public registry)"
-{
-  "image": "library/ubuntu:latest",
-  "registry": "registry-1.docker.io"
-}
+```yaml title="ContainerRun (public registry)"
+container:
+  image: library/ubuntu:latest
+  registry: registry-1.docker.io
 ```
 
-```json title="ContainerRun (private registry)"
-{
-  "image": "library/ubuntu:latest",
-  "registry": "registry-1.docker.io",
-  "username": "john",
-  "password": "password"
-}
+```yaml title="ContainerRun (private registry)"
+container:
+  image: library/ubuntu:latest
+  registry: registry-1.docker.io
+  username: john
+  password: password
 ```
 
-```json title="ContainerRun (Apptainer runtime, public registry)"
-{
-  "image": "library/ubuntu:latest",
-  "registry": "registry-1.docker.io",
-  "apptainer": true
-}
+```yaml title="ContainerRun (Apptainer runtime, public registry)"
+container:
+  image: library/ubuntu:latest
+  registry: registry-1.docker.io
+  apptainer: true
 ```
 
-```json title="ContainerRun (Apptainer runtime, Deepsquare-Hosted images)"
-{
-  "image": "library/stable-diffusion:latest",
-  "registry": "registry-1.deepsquare.run",
-  "apptainer": true,
-  "deepsquareHosted": true
-}
+```yaml title="ContainerRun (Apptainer runtime, Deepsquare-Hosted images)"
+container:
+  image: library/stable-diffusion:latest
+  registry: registry-1.deepsquare.run
+  apptainer: true
+  deepsquareHosted: true
 ```
 
-```json title="ContainerRun (x11 mount)"
-{
-  "image": "library/stable-diffusion:latest",
-  "registry": "registry-1.deepsquare.run",
-  "x11": true
-}
+```yaml title="ContainerRun (x11 mount)"
+container:
+  image: library/stable-diffusion:latest
+  registry: registry-1.deepsquare.run
+  x11: true
 ```
 
-```json title="ContainerRun (full example)"
-{
-  "image": "ubuntu:latest",
-  "registry": "registry-1.docker.io",
-  "mounts": [
-    {
-      "hostDir": "/host",
-      "containerDir": "/container",
-      "options": "ro"
-    }
-  ],
-  "username": "john",
-  "password": "password",
-  "apptainer": true,
-  "deepsquareHosted": false,
-  "x11": false
-}
+```yaml title="ContainerRun (full example)"
+container:
+  image: ubuntu:latest
+  registry: registry-1.docker.io
+  mounts:
+    - hostDir: '/host'
+      containerDir: '/container'
+      options: ro
+  username: john
+  password: password
+  apptainer: true
+  deepsquareHosted: false
+  x11: false
 ```
 
 </details>
@@ -1554,20 +1446,18 @@ Go name: "Options".
 <details>
   <summary>Example</summary>
 
-```json title="Mount"
-{
-  "hostDir": "/host",
-  "containerDir": "/container",
-  "options": "ro"
-}
+```yaml title="Mount"
+mounts:
+  - hostDir: '/host'
+    containerDir: '/container'
+    options: ro
 ```
 
-```json title="Mount-bind tmp (can be used to pass data between steps)"
-{
-  "hostDir": "/tmp",
-  "containerDir": "/tmp",
-  "options": "rw"
-}
+```yaml title="Mount-bind tmp (can be used to pass data between steps)"
+mounts:
+  hostDir: '/tmp'
+  containerDir: '/tmp'
+  options: rw
 ```
 
 </details>
@@ -1615,22 +1505,19 @@ Go name: "Bore".
 <details>
   <summary>Example</summary>
 
-```json title="NetworkInterface (wireguard)"
-{
-  "wireguard": {
-    "address": ["10.0.0.2/24"],
-    "privateKey": "<TO FILL: Client PK>",
-    "peers": [
-      {
-        "publicKey": "<TO FILL: Serv Pub>",
-        "preSharedKey": "<TO FILL: SharedKey>",
-        "allowedIPs": ["10.0.0.1/32"],
-        "persistentKeepalive": 10,
-        "endpoint": "192.168.0.0:51820"
-      }
-    ]
-  }
-}
+```yaml title="NetworkInterface (wireguard)"
+customNetworkInterfaces:
+  - wireguard:
+    address:
+      - 10.0.0.2/24
+    privateKey: '<TO FILL: Client PK>'
+    peers:
+      - publicKey: '<TO FILL: Serv Pub>'
+        preSharedKey: '<TO FILL: SharedKey>'
+        allowedIPs:
+          - 10.0.0.1/32
+        persistentKeepalive: 10
+        endpoint: 192.168.0.0:51820
 ```
 
 You can generate a keypair and a shared key with:
@@ -1706,20 +1593,18 @@ Go name: "Peers".
 <details>
   <summary>Example</summary>
 
-```json title="Wireguard"
-{
-  "address": ["10.0.0.2/24"],
-  "privateKey": "<TO FILL: Client PK>",
-  "peers": [
-    {
-      "publicKey": "<TO FILL: Serv Pub>",
-      "preSharedKey": "<TO FILL: SharedKey>",
-      "allowedIPs": ["10.0.0.1/32"],
-      "persistentKeepalive": 10,
-      "endpoint": "192.168.0.0:51820"
-    }
-  ]
-}
+```yaml title="Wireguard"
+wireguard:
+  address:
+    - 10.0.0.2/24
+  privateKey: '<TO FILL: Client PK>'
+  peers:
+    - publicKey: '<TO FILL: Serv Pub>'
+      preSharedKey: '<TO FILL: SharedKey>'
+      allowedIPs:
+        - 10.0.0.1/32
+      persistentKeepalive: 10
+      endpoint: 192.168.0.0:51820
 ```
 
 You can generate a keypair and a shared key with:
@@ -1821,14 +1706,14 @@ Go name: "PersistentKeepalive".
 <details>
   <summary>Example</summary>
 
-```json title="WireguardPeer"
-{
-  "publicKey": "<TO FILL: Serv Pub>",
-  "preSharedKey": "<TO FILL: SharedKey>",
-  "allowedIPs": ["10.0.0.1/32"],
-  "persistentKeepalive": 10,
-  "endpoint": "192.168.0.0:51820"
-}
+```yaml title="WireguardPeer"
+peers:
+  - publicKey: '<TO FILL: Serv Pub>'
+    preSharedKey: '<TO FILL: SharedKey>'
+    allowedIPs:
+      - 10.0.0.1/32
+    persistentKeepalive: 10
+    endpoint: 192.168.0.0:51820
 ```
 
 You can generate a keypair and a shared key with:
@@ -1894,12 +1779,11 @@ Go name: "TargetPort".
 <details>
   <summary>Example</summary>
 
-```json title="Bore"
-{
-  "address": "bore.deepsquare.run",
-  "port": 2200,
-  "targetPort": 8080
-}
+```yaml title="Bore"
+bore:
+  address: bore.deepsquare.run
+  port: 2200
+  targetPort: 8080
 ```
 
 </details>
@@ -1971,39 +1855,28 @@ Go name: "Steps".
 <details>
   <summary>Example</summary>
 
-```json title="StepFor (items)"
-{
-  "parallel": true,
-  "items": ["a", "b", "c"],
-  "steps": [
-    {
-      "name": "print variable",
-      "run": {
-        "command": "echo \"$item\""
-      }
-    }
-  ]
-}
+```yaml title="StepFor (items)"
+for:
+  parallel: true
+  items: [a, b, c]
+  steps:
+    - name: print variable
+      run:
+        command: echo "$item"
 ```
 
 Will prints "a", "b", "c".
 
-```json title="StepFor (range)"
-{
-  "parallel": true,
-  "range": {
-    "begin": 1,
-    "end": 3
-  },
-  "steps": [
-    {
-      "name": "print variable",
-      "run": {
-        "command": "echo \"$index\""
-      }
-    }
-  ]
-}
+```yaml title="StepFor (range)"
+for:
+  parallel: true
+  range:
+    begin: 1
+    end: 3
+  steps:
+    - name: print variable
+      run:
+        command: echo "$index"
 ```
 
 Will prints "1", "2", "3".
@@ -2062,11 +1935,10 @@ Go name: "Increment".
 <details>
   <summary>Example</summary>
 
-```json title="ForRange"
-{
-  "begin": 1,
-  "end": 3
-}
+```yaml title="ForRange"
+range:
+  begin: 1
+  end: 3
 ```
 
 Will results in 3 steps.
@@ -2149,95 +2021,66 @@ Go name: "Steps".
 <details>
   <summary>Examples</summary>
 
-```json title="Async-await"
-{
-  "resources": {
-    "tasks": 2,
-    "cpusPerTask": 4,
-    "memPerCpu": 4096,
-    "gpusPerTask": 0
-  },
-  "steps": [
-    {
-      "launch": {
-        "handleName": "task1",
-        "steps": [
-          {
-            "name": "work",
-            "run": {
-              "command": "echo \"Working\"; sleep 15; echo \"Working done\""
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "do-stuff-in-foreground",
-      "run": {
-        "command": "echo I work fast"
-      }
-    },
-    {
-      "name": "wait for task1",
-      "dependsOn": ["task1"],
-      "run": {
-        "command": "echo Task 1 is done!"
-      }
-    }
-  ]
-}
+```yaml title="Async-await"
+resources:
+  tasks: 2
+  cpusPerTask: 4
+  memPerCpu: 4096
+  gpusPerTask: 0
+
+steps:
+  ## Launch async
+  - launch:
+      handleName: task1
+      steps:
+        - name: work
+          run:
+            command: echo "Working"; sleep 15; echo "Working done"
+  - name: do-stuff-in-foreground
+    run:
+      command: echo I work fast
+  - name: wait for task1
+    ## Await for task1
+    dependsOn:
+      - task1
+    run:
+      command: echo Task 1 is done!
 ```
 
-```json title="Fire-and-forget (explicit safe)"
-{
-  "resources": {
-    "tasks": 2,
-    "cpusPerTask": 4,
-    "memPerCpu": 4096,
-    "gpusPerTask": 0
-  },
-  "steps": [
-    {
-      "launch": {
-        "signalOnParentStepExit": 15,
-        "steps": [
-          {
-            "name": "work",
-            "run": {
-              "command": "echo \"Working\"; sleep 15; echo \"Working done\""
-            }
-          }
-        ]
-      }
-    }
-  ]
-}
+```yaml title="Fire-and-forget (explicit safe)"
+resources:
+  tasks: 2
+  cpusPerTask: 4
+  memPerCpu: 4096
+  gpusPerTask: 0
+
+steps:
+  ## Launch async
+  - launch:
+      ## If the parent dies, async tasks will receive the "15" (SIGTERM) signal
+      signalOnParentStepExit: 15
+      steps:
+        - name: work
+          run:
+            command: echo "Working"; sleep 15; echo "Working done"
 ```
 
-```json title="Fire-and-forget (explicit unsafe)"
-{
-  "resources": {
-    "tasks": 2,
-    "cpusPerTask": 4,
-    "memPerCpu": 4096,
-    "gpusPerTask": 0
-  },
-  "steps": [
-    {
-      "launch": {
-        "signalOnParentStepExit": 0,
-        "steps": [
-          {
-            "name": "work",
-            "run": {
-              "command": "echo \"Working\"; sleep 15; echo \"Working done\""
-            }
-          }
-        ]
-      }
-    }
-  ]
-}
+```yaml title="Fire-and-forget (explicit unsafe)"
+resources:
+  tasks: 2
+  cpusPerTask: 4
+  memPerCpu: 4096
+  gpusPerTask: 0
+
+steps:
+  ## Launch async
+  - launch:
+      ## If the parent dies, async tasks will receive no signal
+      signalOnParentStepExit: 0
+      steps:
+        - name: work
+          run:
+            command: echo "Working"; sleep 15; echo "Working done"
 ```
 
 </details>
@@ -2316,30 +2159,18 @@ Go name: "Steps".
 <details>
   <summary>Example</summary>
 
-```json title="StepUse"
-{
-  "steps": [
-    {
-      "name": "use external module",
-      "use": {
-        "source": "github.com/deepsquare-io/workflow-module-example@5ca6163",
-        "args": [
-          {
-            "key": "WHO",
-            "value": "me"
-          }
-        ],
-        "exportEnvAs": "HELLO_WORLD"
-      }
-    },
-    {
-      "name": "repeat",
-      "run": {
-        "command": "echo ${HELLO_WORLD_RESULT}"
-      }
-    }
-  ]
-}
+```yaml title="StepUse"
+steps:
+  - name: use external module
+    use:
+      source: github.com/deepsquare-io/workflow-module-example@5ca6163
+      args:
+        - key: WHO
+          value: me
+      exportEnvAs: HELLO_WORLD
+  - name: repeat
+    run:
+      command: echo ${HELLO_WORLD_RESULT}
 ```
 
 </details>

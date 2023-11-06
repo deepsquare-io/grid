@@ -8,7 +8,7 @@ Dev allows you to harness the full potential of DeepSquare's HPC capabilities. U
 
 - Streamlined workflow creation and editing
 - Develop custom applications with ease
-- Intuitive JSON-based interface for resource allocation and task management
+- Intuitive user interface for resource allocation and task management
 
 ## Upscaling
 

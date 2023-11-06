@@ -8,26 +8,29 @@ Before getting started, ensure you have access to the DeepSquare portal and the 
 
 ## Writing a Workflow File
 
-A workflow file is a JSON-formatted file that defines resource allocation and execution instructions for your tasks. Here's a basic structure of a workflow file:
+A workflow file is a YAML-formatted file that defines resource allocation and execution instructions for your tasks. Here's a basic structure of a workflow file:
 
-```json
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "steps": [
-    {
-      "name": "hello world",
-      "run": {
-        "command": "echo \"Hello World\""
-      }
-    }
-  ]
-}
+```yaml
+## Allow DeepSquare logging
+enableLogging: true
+
+## Allocate resources
+resources:
+  ## A task is one process. Multiple task will allocate multiple processes.
+  tasks: 1
+  ## Number of cpu physical thread per process.
+  cpusPerTask: 1
+  ## Memory (MB) per cpu physical thread.
+  memPerCpu: 1024
+  ## GPU (graphical process unit) per process.
+  gpusPerTask: 0
+
+## The job content
+steps:
+  ## The steps of the jobs which are run sequentially.
+  - name: 'hello-world'
+    run:
+      command: echo "hello world"
 ```
 
 To learn more about Workflow files, check out the [Getting Started](/workflow/getting-started/introduction).

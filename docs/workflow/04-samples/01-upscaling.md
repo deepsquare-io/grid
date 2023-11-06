@@ -62,19 +62,21 @@ flowchart LR
 
 ## Implementation
 
-Let's start with the input, output and resources. For the sake of readability, we use YAML. You can use an online YAML to JSON converter if you wish to execute the workflow on the [dev environment](https://app.deepsquare.run/sandbox).
+Let's start with the input, output and resources.
 
 ### Resource allocation, environment variable and input/output
 
-We will use 4 parallel tasks. Each task has 8 CPUS, 8 GB of RAM, 1 GPU.
+We will use 4 parallel tasks. Each task has 8 CPUs, 8 GB of RAM, 1 GPU.
 
 ```yaml
 enableLogging: true
+
 resources:
   tasks: 4
   cpusPerTask: 8
   memPerCpu: 8000
   gpusPerTask: 1
+
 input:
   s3:
     region: region
@@ -83,6 +85,7 @@ input:
     accessKeyId: accessKeyId
     secretAccessKey: secretAccessKey
     endpointUrl: https://example
+
 output:
   s3:
     region: region
@@ -92,6 +95,7 @@ output:
     secretAccessKey: secretAccessKey
     endpointUrl: https://example
 continuousOutputSync: true
+
 env:
   - key: IS_VIDEO
     value: 'false' # Change this value if you want to render a video or an image

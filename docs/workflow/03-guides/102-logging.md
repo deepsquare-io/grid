@@ -6,24 +6,21 @@ The [portal](https://app.deepsquare.run) can access to that logging server. The 
 
 ## Usage
 
-```json title="Workflow"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "steps": [
-    {
-      "name": "hello world",
-      "run": {
-        "command": "echo \"Hello World\""
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+resources:
+  tasks: 1
+  gpusPerTask: 0
+  cpusPerTask: 1
+  memPerCpu: 1024
+
+## Logs are forwarded to https://grid-logger.deepsquare.run which is secured
+## with asymmetric encryption via ECDSA and the wallet public key of the user.
+enableLogging: true
+
+steps:
+  - name: hello world
+    run:
+      command: echo "Hello World"
 ```
 
 ## Can I use my own logging service?

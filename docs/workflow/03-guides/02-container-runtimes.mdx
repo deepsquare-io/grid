@@ -128,24 +128,18 @@ You can also use S3 to host your squashfs/SIF file and use the Workflow `input` 
 <details open>
 <summary>Example: Public registry</summary>
 
-```json title="Workflow"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "steps": [
-    {
-      "command": "echo 'hello world'",
-      "container": {
-        "image": "my-user/hello-world:latest",
-        "registry": "registry-1.docker.io"
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+resources:
+  tasks: 1
+  gpusPerTask: 0
+  cpusPerTask: 1
+  memPerCpu: 1024
+
+steps:
+  - command: echo 'hello world'
+    container:
+      image: my-user/hello-world:latest
+      registry: registry-1.docker.io
 ```
 
 </details>
@@ -153,26 +147,21 @@ You can also use S3 to host your squashfs/SIF file and use the Workflow `input` 
 <details>
 <summary>Example: Private registry</summary>
 
-```json title="Workflow"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "steps": [
-    {
-      "command": "echo 'hello world'",
-      "container": {
-        "image": "my-user/hello-world:latest",
-        "registry": "registry-1.docker.io",
-        "username": "my-user",
-        "password": "my-password"
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+resources:
+  tasks: 1
+  gpusPerTask: 0
+  cpusPerTask: 1
+  memPerCpu: 1024
+
+steps:
+  - command: echo 'hello world'
+    container:
+      image: my-user/hello-world:latest
+      registry: registry-1.docker.io
+      # Specify credentials here.
+      username: my-user
+      password: my-password
 ```
 
 </details>
@@ -180,25 +169,19 @@ You can also use S3 to host your squashfs/SIF file and use the Workflow `input` 
 <details>
 <summary>Example: Using the apptainer container runtime</summary>
 
-```json title="Workflow"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "steps": [
-    {
-      "command": "echo 'hello world'",
-      "container": {
-        "image": "my-user/hello-world:latest",
-        "registry": "registry-1.docker.io",
-        "apptainer": true
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+resources:
+  tasks: 1
+  gpusPerTask: 0
+  cpusPerTask: 1
+  memPerCpu: 1024
+
+steps:
+  - command: echo 'hello world'
+    container:
+      image: my-user/hello-world:latest
+      registry: registry-1.docker.io
+      apptainer: true
 ```
 
 </details>

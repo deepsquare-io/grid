@@ -130,58 +130,51 @@ Now, let's look at how to incorporate these changes in different types of workfl
 <Tabs groupId="workflow-type">
   <TabItem value="new" label="Workflow">
 
-```json title="Workflow with 2 tasks and 1 GPU per task"
-{
-  "resources": {
-    "tasks": 4,
-    "gpusPerTask": 1,
-    "cpusPerTask": 8,
-    "memPerCpu": 2048
-  },
-  "enableLogging": true,
-  "env": [
-    {
-      "key": "OMPI_MCA_pml",
-      "value": "ucx"
-    },
-    {
-      "key": "OMPI_MCA_btl",
-      "value": "^vader,tcp,openib,uct"
-    }
-  ],
-  "input": {
-    "http": {
-      "url": "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
-    }
-  },
-  "output": {
-    "s3": {
-      "region": "at-vie-1",
-      "bucketUrl": "s3://cifar10",
-      "path": "/",
-      "accessKeyId": "EXO***",
-      "secretAccessKey": "***",
-      "endpointUrl": "https://sos-at-vie-1.exo.io"
-    }
-  },
-  "continuousOutputSync": true,
-  "steps": [
-    {
-      "name": "train",
-      "run": {
-        "command": "/.venv/bin/python3 main.py --horovod --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$DEEPSQUARE_INPUT/",
-        "resources": {
-          "tasks": 4
-        },
-        "container": {
-          "image": "deepsquare-io/cifar-10-example:latest",
-          "registry": "ghcr.io"
-        },
-        "workDir": "/app"
-      }
-    }
-  ]
-}
+```yaml title="Workflow with 2 tasks and 1 GPU per task"
+resources:
+  tasks: 4
+  gpusPerTask: 1
+  cpusPerTask: 8
+  memPerCpu: 2048
+
+enableLogging: true
+
+## Load environment variables
+env:
+  ## Configure point-to-point messaging layer to use UCX.
+  - key: "OMPI_MCA_pml",
+    value: "ucx"
+  ## Configure the byte transfer layer. The "^" prefix means "to exclude". vader, tcp, openib and uct have been excluded.
+  ## vader being the shared-memory transport. It is recommended to not use any of the BTL when using UCX.
+  ## UCX already uses its own transports (see ucx_info -d).
+  - key: "OMPI_MCA_btl",
+    value: "^vader,tcp,openib,uct"
+
+input:
+  http:
+    url: https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+
+output:
+  s3:
+    region: at-vie-1
+    bucketUrl: s3://cifar10
+    path: "/"
+    accessKeyId: EXO***
+    secretAccessKey: "***"
+    endpointUrl: https://sos-at-vie-1.exo.io
+continuousOutputSync: true
+
+steps:
+  - name: train
+    run:
+      command: /.venv/bin/python3 main.py --horovod --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$DEEPSQUARE_INPUT/
+      resources:
+        tasks: 4
+      container:
+        image: deepsquare-io/cifar-10-example:latest
+        registry: ghcr.io
+      workDir: "/app"
+
 ```
 
   </TabItem>
@@ -189,73 +182,70 @@ Now, let's look at how to incorporate these changes in different types of workfl
 
 If you're resuming from a checkpoint, here's the workflow configuration:
 
-```json title="Workflow with 2 tasks and 1 GPU per task (from checkpoint)"
-{
-  "resources": {
-    "tasks": 4,
-    "gpusPerTask": 1,
-    "cpusPerTask": 8,
-    "memPerCpu": 2048
-  },
-  "enableLogging": true,
-  "env": [
-    {
-      "key": "OMPI_MCA_pml",
-      "value": "ucx"
-    },
-    {
-      "key": "OMPI_MCA_btl",
-      "value": "^vader,tcp,openib,uct"
-    }
-  ],
-  "input": {
-    "s3": {
-      "region": "at-vie-1",
-      "bucketUrl": "s3://cifar10",
-      "path": "/",
-      "accessKeyId": "EXO***",
-      "secretAccessKey": "***",
-      "endpointUrl": "https://sos-at-vie-1.exo.io"
-    }
-  },
-  "output": {
-    "s3": {
-      "region": "at-vie-1",
-      "bucketUrl": "s3://cifar10",
-      "path": "/",
-      "accessKeyId": "EXO***",
-      "secretAccessKey": "***",
-      "endpointUrl": "https://sos-at-vie-1.exo.io"
-    }
-  },
-  "continuousOutputSync": true,
-  "steps": [
-    {
-      "name": "download dataset",
-      "run": {
-        "command": "curl -fsSL https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz -o $STORAGE_PATH/cifar-10-python.tar.gz; tar -C $STORAGE_PATH -xvzf $STORAGE_PATH/cifar-10-python.tar.gz; ls -lah $STORAGE_PATH",
-        "container": {
-          "image": "curlimages/curl:latest",
-          "registry": "registry-1.docker.io"
-        }
-      }
-    },
-    {
-      "name": "train",
-      "run": {
-        "command": "/.venv/bin/python3 main.py --horovod --checkpoint_in=$DEEPSQUARE_INPUT/ckpt.pth --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$STORAGE_PATH/",
-        "resources": {
-          "tasks": 4
-        },
-        "container": {
-          "image": "deepsquare-io/cifar-10-example:latest",
-          "registry": "ghcr.io"
-        },
-        "workDir": "/app"
-      }
-    }
-  ]
-}
+```yaml title="Workflow with 2 tasks and 1 GPU per task (from checkpoint)"
+resources:
+  tasks: 4
+  gpusPerTask: 1
+  cpusPerTask: 8
+  memPerCpu: 2048
+
+enableLogging: true
+
+## Load environment variables
+env:
+  ## Configure point-to-point messaging layer to use UCX.
+  - key: "OMPI_MCA_pml",
+    value: "ucx"
+  ## Configure the byte transfer layer. The "^" prefix means "to exclude". vader, tcp, openib and uct have been excluded.
+  ## vader being the shared-memory transport. It is recommended to not use any of the BTL when using UCX.
+  ## UCX already uses its own transports (see ucx_info -d).
+  - key: "OMPI_MCA_btl",
+    value: "^vader,tcp,openib,uct"
+
+input:
+  s3:
+    region: at-vie-1
+    bucketUrl: s3://cifar10
+    path: "/"
+    accessKeyId: EXO***
+    secretAccessKey: "***"
+    endpointUrl: https://sos-at-vie-1.exo.io
+
+output:
+  s3:
+    region: at-vie-1
+    bucketUrl: s3://cifar10
+    path: "/"
+    accessKeyId: EXO***
+    secretAccessKey: "***"
+    endpointUrl: https://sos-at-vie-1.exo.io
+continuousOutputSync: true
+
+steps:
+  - name: download dataset
+    run:
+      command: |
+        curl -fsSL https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz -o $STORAGE_PATH/cifar-10-python.tar.gz;
+        tar -C $STORAGE_PATH -xvzf $STORAGE_PATH/cifar-10-python.tar.gz;
+        ls -lah $STORAGE_PATH
+      container:
+        image: curlimages/curl:latest
+        registry: registry-1.docker.io
+  - name: train
+    run:
+      command: |
+        /.venv/bin/python3 main.py \
+          --horovod \
+          --checkpoint_in=$DEEPSQUARE_INPUT/ckpt.pth \
+          --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth \
+          --dataset=$STORAGE_PATH/
+      resources:
+        tasks: 4
+      container:
+        image: deepsquare-io/cifar-10-example:latest
+        registry: ghcr.io
+      workDir: "/app"
+
 ```
 
   </TabItem>

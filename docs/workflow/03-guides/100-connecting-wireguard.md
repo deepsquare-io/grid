@@ -3,7 +3,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Exposing a workload is quite complicated. You can use `ngrok` to expose your service on a ngrok proxy. We offer a way to connect a wireguard tunnel to the jobs.
+Exposing a workload is quite complicated. You can use `ngrok` to expose your service on a ngrok proxy. We offer a way to connect a WireGuard tunnel to the jobs.
 
 This solution is well adapted when you need to forward UDP traffic too.
 
@@ -36,14 +36,14 @@ If you can deploy a [VyOS](https://vyos.io) as an OS image, it will be a lot sim
 
 Alternatively, you can just use a Linux OS Image with iptables/nftables.
 
-**If your cloud uses a firewall, make sure to open ports 22/tcp and the wireguard port (often 51820/udp).**
+**If your cloud uses a firewall, make sure to open ports 22/tcp and the WireGuard port (often 51820/udp).**
 
-#### 1.b. Setup wireguard
+#### 1.b. Setup WireGuard
 
 <Tabs groupId="os">
 <TabItem label="Linux with iptables" value="iptable">
 
-1. Start by [installing Wireguard](https://www.wireguard.com/install/)
+1. Start by [installing WireGuard](https://www.wireguard.com/install/)
 
 ```shell title="root@~/"
 sudo dnf install wireguard-tools
@@ -90,7 +90,7 @@ sudo dnf install wireguard-tools
    ServerPublicKey  = uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=
    ```
 
-   To set up the wireguard virtual interface, create a file `/etc/wireguard/wg0.conf`. The file name indicates the name of the network interface. In this file add:
+   To set up the WireGuard virtual interface, create a file `/etc/wireguard/wg0.conf`. The file name indicates the name of the network interface. In this file add:
 
    ```shell title="root@/etc/wireguard/wg0.conf"
    [Interface]
@@ -123,7 +123,7 @@ sudo dnf install wireguard-tools
    AllowedIPs = 10.0.0.3/32
    ```
 
-6. Use iptables to loadbalance and port forward. You can add `PostUp` and `PostDown` rules to add your iptables rules safely:
+6. Use iptables to load-balance and port forward. You can add `PostUp` and `PostDown` rules to add your iptables rules safely:
 
    ```shell title="root@/etc/wireguard/wg0.conf"
    [Interface]
@@ -155,7 +155,7 @@ sudo dnf install wireguard-tools
 
    Depending on the OS that you are using, eth0 could be renamed with `en*`.
 
-   Note that this load balancing doesn't healthcheck the servers. You better use a [HAProxy](https://www.haproxy.org) as a Ingress for this.
+   Note that this load balancing doesn't health-check the servers. You better use a [HAProxy](https://www.haproxy.org) as an Ingress for this.
 
    <details>
    <summary>HAProxy configuration example</summary>
@@ -232,7 +232,7 @@ sudo dnf install wireguard-tools
 
    </details>
 
-   You can also use IPVS for load balancing, which offer better performance than iptables (but doesn't offer healthchecks):
+   You can also use IPVS for load balancing, which offer better performance than iptables (but doesn't offer health-checks):
 
    <details>
    <summary>IPVS configuration</summary>
@@ -392,98 +392,96 @@ Your cloud router is now configured!
 </TabItem>
 </Tabs>
 
-### 2. Sending jobs and connect them Wireguard VPN
+### 2. Sending jobs and connect them WireGuard VPN
 
-To connect your job to the wireguard server, you can specify the client configuration in the workflow. Like this:
+To connect your job to the WireGuard server, you can specify the client configuration in the workflow. Like this:
 
 <Tabs groupId="client">
   <TabItem label="Peer 1" value="peer1">
 
-```json title="Workflow"
-{
-  "enableLogging": true,
-  "resources": {
-    "tasks": 1,
-    "cpusPerTask": 1,
-    "memPerCpu": 1000,
-    "gpusPerTask": 0
-  },
-  "steps": [
-    {
-      "name": "start-nginx",
-      "run": {
-        "container": {
-          "registry": "registry-1.docker.io",
-          "image": "nginxinc/nginx-unprivileged"
-        },
-        "dns": ["8.8.8.8"],
-        "network": "slirp4netns",
-        "customNetworkInterfaces": [
-          {
-            "wireguard": {
-              "address": ["10.0.0.2/24"],
-              "privateKey": "iBSW/dma96OjnH098U5BEWzNcHIbsZqsCPiQ1DfP11c=",
-              "peers": [
-                {
-                  "publicKey": "uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=",
-                  "allowedIPs": ["10.0.0.1/32"],
-                  "persistentKeepalive": 10,
-                  "endpoint": "<public IP>:51820"
-                }
-              ]
-            }
-          }
-        ],
-        "command": "/docker-entrypoint.sh nginx -g \"daemon off;\""
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+enableLogging: true
+
+resources:
+  tasks: 1
+  cpusPerTask: 1
+  memPerCpu: 1000
+  gpusPerTask: 0
+
+steps:
+  - name: start-nginx
+    run:
+      container:
+        registry: registry-1.docker.io
+        image: nginxinc/nginx-unprivileged
+      dns:
+        - 8.8.8.8
+      ## Use the container network interface slirp4netns.
+      network: slirp4netns
+      customNetworkInterfaces:
+        - wireguard:
+            ## The container network interface configuration.
+            address:
+              - 10.0.0.2/24
+            ## The container's private key. (wg genkey to generate)
+            privateKey: iBSW/dma96OjnH098U5BEWzNcHIbsZqsCPiQ1DfP11c=
+            ## Peers configuration.
+            peers:
+              ## The peer ID, which is also the public key of the peer.
+              - publicKey: uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=
+                ## Allowed routes. Packets targeting these range will be forwarded to the peer.
+                allowedIPs:
+                  - 10.0.0.1/32
+                ## PersistentKeepalive (in seconds) is a settings to allow force the tunnel to stay up.
+                ## Often, it's the client that set this settings.
+                persistentKeepalive: 10
+                ## The peer endpoint.
+                endpoint: '<public IP>:51820'
+      command: /docker-entrypoint.sh nginx -g "daemon off;"
 ```
 
   </TabItem>
   <TabItem label="Peer 2" value="peer2">
 
-```json title="Workflow"
-{
-  "enableLogging": true,
-  "resources": {
-    "tasks": 1,
-    "cpusPerTask": 1,
-    "memPerCpu": 1000,
-    "gpusPerTask": 0
-  },
-  "steps": [
-    {
-      "name": "start-nginx",
-      "run": {
-        "container": {
-          "registry": "registry-1.docker.io",
-          "image": "nginxinc/nginx-unprivileged"
-        },
-        "dns": ["8.8.8.8"],
-        "network": "slirp4netns",
-        "customNetworkInterfaces": [
-          {
-            "wireguard": {
-              "address": ["10.0.0.3/24"],
-              "privateKey": "wIQkWhjPnIg9GUg1dhH6FmEIftKuxZdkvaD9VjOWH1Q=",
-              "peers": [
-                {
-                  "publicKey": "uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=",
-                  "allowedIPs": ["10.0.0.1/32"],
-                  "persistentKeepalive": 10,
-                  "endpoint": "<public IP>:51820"
-                }
-              ]
-            }
-          }
-        ],
-        "command": "/docker-entrypoint.sh nginx -g \"daemon off;\""
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+enableLogging: true
+
+resources:
+  tasks: 1
+  cpusPerTask: 1
+  memPerCpu: 1000
+  gpusPerTask: 0
+
+steps:
+  - name: start-nginx
+    run:
+      container:
+        registry: registry-1.docker.io
+        image: nginxinc/nginx-unprivileged
+      dns:
+        - 8.8.8.8
+      ## Use the container network interface slirp4netns.
+      network: slirp4netns
+      customNetworkInterfaces:
+        - wireguard:
+            ## The container network interface configuration.
+            address:
+              - 10.0.0.3/24
+            ## The container's private key. (wg genkey to generate)
+            privateKey: wIQkWhjPnIg9GUg1dhH6FmEIftKuxZdkvaD9VjOWH1Q=
+            ## Peers configuration.
+            peers:
+              ## The peer ID, which is also the public key of the peer.
+              - publicKey: uF7mD0B9CxMVBY+1tn+bBHu/QTBBYIjw5l/92vgF/yE=
+                ## Allowed routes. Packets targeting these range will be forwarded to the peer.
+                allowedIPs:
+                  - 10.0.0.1/32
+                ## PersistentKeepalive (in seconds) is a settings to allow force the tunnel to stay up.
+                ## Often, it's the client that set this settings.
+                persistentKeepalive: 10
+                ## The peer endpoint.
+                endpoint: '<public IP>:51820'
+      command: /docker-entrypoint.sh nginx -g "daemon off;"
 ```
 
   </TabItem>

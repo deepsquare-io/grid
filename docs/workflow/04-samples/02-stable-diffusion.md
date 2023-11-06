@@ -50,7 +50,7 @@ flowchart LR
 
 ## Implementation
 
-Let's start with the input, output and resources. For the sake of readability, we use YAML. You can use an online YAML to JSON converter if you wish to execute the workflow on the [dev environment](https://app.deepsquare.run/sandbox).
+Let's start with the input, output and resources.
 
 ### Resource allocation, environment variable and input/output
 

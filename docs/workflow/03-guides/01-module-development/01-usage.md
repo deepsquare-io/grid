@@ -26,37 +26,31 @@ To specify the source of a module inside a monorepo:
 
 Example of usage:
 
-```json title="Hello-world workflow"
-{
-  "enableLogging": false,
-  "resources": {
-    "tasks": 1,
-    "cpusPerTask": 8,
-    "memPerCpu": 8000,
-    "gpusPerTask": 0
-  },
-  "steps": [
-    {
-      "name": "hello-world",
-      "use": {
-        "source": "github.com/deepsquare-io/workflow-module-example@v1",
-        "args": [
-          {
-            "key": "WHO",
-            "value": "me"
-          }
-        ],
-        "exportEnvAs": "HELLO_WORLD"
-      }
-    },
-    {
-      "name": "repeat",
-      "run": {
-        "command": "echo ${HELLO_WORLD_RESULT}"
-      }
-    }
-  ]
-}
+```yaml title="Hello-world workflow"
+enableLogging: false
+
+resources:
+  tasks: 1
+  cpusPerTask: 8
+  memPerCpu: 8000
+  gpusPerTask: 0
+
+steps:
+  - name: hello-world
+    ## Use a module
+    use:
+      ## Address of the module.
+      source: github.com/deepsquare-io/workflow-module-example@v1
+      ## Pass environment variable.
+      args:
+        - key: WHO
+          value: me
+      ## Export the outputs of the module.
+      exportEnvAs: HELLO_WORLD
+  - name: repeat
+    run:
+      ## Use the outputs of the module.
+      command: echo ${HELLO_WORLD_RESULT}
 ```
 
 You can check the [module `github.com/deepsquare-io/workflow-module-example@v1` git repository](https://github.com/deepsquare-io/workflow-module-example/tree/v1).

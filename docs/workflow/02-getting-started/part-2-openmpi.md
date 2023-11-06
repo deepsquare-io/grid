@@ -12,24 +12,27 @@ We'll guide you through the process of adapting an existing application to use O
 
 Our previous "hello world" workflow was:
 
-```json
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "steps": [
-    {
-      "name": "hello world",
-      "run": {
-        "command": "echo \"Hello World\""
-      }
-    }
-  ]
-}
+```yaml
+## Allow DeepSquare logging
+enableLogging: true
+
+## Allocate resources
+resources:
+  ## A task is one process. Multiple task will allocate multiple processes.
+  tasks: 1
+  ## Number of cpu physical thread per process.
+  cpusPerTask: 1
+  ## Memory (MB) per cpu physical thread.
+  memPerCpu: 1024
+  ## GPU (graphical process unit) per process.
+  gpusPerTask: 0
+
+## The job content
+steps:
+  ## The steps of the jobs which are run sequentially.
+  - name: 'hello-world'
+    run:
+      command: echo "hello world"
 ```
 
 In that example, we only utilized a single task with one CPU and 1024 MB of memory.
@@ -50,24 +53,27 @@ mpirun -np 16 echo 'Hello World'
 
 Here is the updated workflow:
 
-```json title="Workflow (don't run it)"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 16,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "steps": [
-    {
-      "name": "Hello world ran on 16 processes",
-      "run": {
-        "command": "mpirun -np 16 echo 'Hello World'"
-      }
-    }
-  ]
-}
+```yaml title="Workflow (don't run it)"
+## Allow DeepSquare logging
+enableLogging: true
+
+## Allocate resources
+resources:
+  ## A task is one process. Multiple task will allocate multiple processes.
+  tasks: 1
+  ## Number of cpu physical thread per process.
+  cpusPerTask: 1
+  ## Memory (MB) per cpu physical thread.
+  memPerCpu: 1024
+  ## GPU (graphical process unit) per process.
+  gpusPerTask: 0
+
+## The job content
+steps:
+  ## The steps of the jobs which are run sequentially.
+  - name: Hello world ran on 16 processes
+    run:
+      command: mpirun -np 16 echo 'Hello World'
 ```
 
 However, this won't run because our infrastructure already integrates OpenMPI in the workflow API using [PMIx](https://pmix.github.io/standard):
@@ -77,28 +83,30 @@ However, this won't run because our infrastructure already integrates OpenMPI in
 
 So instead, the workflow becomes:
 
-```json title="Workflow"
-{
-  "resources": {
-    "tasks": 16,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "steps": [
-    {
-      "name": "Hello world ran on 16 processes",
-      "run": {
-        "command": "echo \"Hello World\""
-        "resources": {
-          "tasks": 16
-        },
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+## Allow DeepSquare logging
+enableLogging: true
 
+## Allocate resources
+resources:
+  ## A task is one process. Multiple task will allocate multiple processes.
+  tasks: 16
+  ## Number of cpu physical thread per process.
+  cpusPerTask: 1
+  ## Memory (MB) per cpu physical thread.
+  memPerCpu: 1024
+  ## GPU (graphical process unit) per process.
+  gpusPerTask: 0
+
+## The job content
+steps:
+  ## The steps of the jobs which are run sequentially.
+  - name: Hello world ran on 16 processes
+    run:
+      command: echo 'Hello World'
+      resources:
+        ## Launch 16 processes
+        tasks: 16
 ```
 
 Notice the `resources` block **within the steps block**. That one is different from the `resources allocation` block at the start of the workflow.
@@ -227,32 +235,35 @@ The application is containerized and publicly accessible by pulling the image at
 
 The associated workflow is:
 
-```json title="Workflow"
-{
-  "resources": {
-    "tasks": 16,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "steps": [
-    {
-      "name": "run the circle program",
-      "run": {
-        "command": "./main",
-        "workDir": "/app",
-        "resources": {
-          "tasks": 16
-        },
-        "container": {
-          "image": "deepsquare-io/mpi-example:latest",
-          "registry": "ghcr.io"
-        }
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+## Allow DeepSquare logging
+enableLogging: true
+
+## Allocate resources
+resources:
+  ## A task is one process. Multiple task will allocate multiple processes.
+  tasks: 16
+  ## Number of cpu physical thread per process.
+  cpusPerTask: 1
+  ## Memory (MB) per cpu physical thread.
+  memPerCpu: 1024
+  ## GPU (graphical process unit) per process.
+  gpusPerTask: 0
+
+## The job content
+steps:
+  ## The steps of the jobs which are run sequentially.
+  - name: Run the circle progra
+    run:
+      command: ./main
+      workDir: /app
+      resources:
+        ## Launch 16 processes
+        tasks: 16
+      ## Run in a container containing the example
+      container:
+        image: deepsquare-io/mpi-example:latest
+        registry: ghcr.io
 ```
 
 In the above workflow, you'll notice that we've added a few elements:
@@ -285,42 +296,47 @@ WARNING: There was an error initializing an OpenFabrics device.
 
 This is because we did not optimize the OpenMPI parameters. The `mlx*` devices are [Mellanox devices](https://www.nvidia.com/en-us/networking/) and prefer the [Unified Communication X (UCX)](https://openucx.org) point-to-point messaging layer (pml). We recommend this [tech talk](https://www.youtube.com/watch?v=C4XfxUoSYQs) for a better understanding. To tune OpenMPI, you can use environment variables like this:
 
-```json title="Workflow"
-{
-  "resources": {
-    "tasks": 16,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "enableLogging": true,
-  "env": [
-    {
-      "key": "OMPI_MCA_pml",
-      "value": "ucx"
-    },
-    {
-      "key": "OMPI_MCA_btl",
-      "value": "^vader,tcp,openib,uct"
-    }
-  ],
-  "steps": [
-    {
-      "name": "run the circle program",
-      "run": {
-        "command": "./main",
-        "workDir": "/app",
-        "resources": {
-          "tasks": 16
-        },
-        "container": {
-          "image": "deepsquare-io/mpi-example:latest",
-          "registry": "ghcr.io"
-        }
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+## Allow DeepSquare logging
+enableLogging: true
+
+## Allocate resources
+resources:
+  ## A task is one process. Multiple task will allocate multiple processes.
+  tasks: 16
+  ## Number of cpu physical thread per process.
+  cpusPerTask: 1
+  ## Memory (MB) per cpu physical thread.
+  memPerCpu: 1024
+  ## GPU (graphical process unit) per process.
+  gpusPerTask: 0
+
+## Load environment variables
+env:
+  ## Configure point-to-point messaging layer to use UCX.
+  - key: "OMPI_MCA_pml",
+    value: "ucx"
+  ## Configure the byte transfer layer. The "^" prefix means "to exclude". vader, tcp, openib and uct have been excluded.
+  ## vader being the shared-memory transport. It is recommended to not use any of the BTL when using UCX.
+  ## UCX already uses its own transports (see ucx_info -d).
+  - key: "OMPI_MCA_btl",
+    value: "^vader,tcp,openib,uct"
+
+## The job content
+steps:
+  ## The steps of the jobs which are run sequentially.
+  - name: Run the circle program
+    run:
+      command: ./main
+      workDir: /app
+      resources:
+        ## Launch 16 processes
+        tasks: 16
+      ## Run in a container containing the example
+      container:
+        image: deepsquare-io/mpi-example:latest
+        registry: ghcr.io
+
 ```
 
 :::

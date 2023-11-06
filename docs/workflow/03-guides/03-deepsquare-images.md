@@ -26,27 +26,20 @@ Thanks to the nature of CVMFS, unpacked container image files are loaded dynamic
 
 Apptainer is the only container runtime that can run a unpacked container image, so be sure to enable `container.apptainer=true`.
 
-```json title="Workflow"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 0,
-    "cpusPerTask": 1,
-    "memPerCpu": 1024
-  },
-  "steps": [
-    {
-      "name": "hello world",
-      "run": {
-        "command": "echo \"Hello World\"",
-        "container": {
-          "image": "library/tdp:latest",
-          "registry": "registry-1.deepsquare.run",
-          "deepsquareHosted": true,
-          "apptainer": true
-        }
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+resources:
+  tasks: 1
+  gpusPerTask: 0
+  cpusPerTask: 1
+  memPerCpu: 1024
+
+steps:
+  - name: hello world
+    run:
+      command: echo "Hello World"
+      container:
+        image: library/tdp:latest
+        registry: registry-1.deepsquare.run
+        deepsquareHosted: true
+        apptainer: true
 ```

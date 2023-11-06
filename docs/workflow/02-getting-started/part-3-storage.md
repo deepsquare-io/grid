@@ -185,105 +185,91 @@ Upon successful deployment of your S3 server and creation of your bucket, you sh
 
 ## Writing the workflow file
 
-```json title="Workflow"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 2,
-    "cpusPerTask": 8,
-    "memPerCpu": 2048
-  },
-  "enableLogging": true,
-  "input": {
-    "http": {
-      "url": "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
-    }
-  },
-  "output": {
-    "s3": {
-      "region": "at-vie-1",
-      "bucketUrl": "s3://cifar10",
-      "path": "/",
-      "accessKeyId": "EXO***",
-      "secretAccessKey": "***",
-      "endpointUrl": "https://sos-at-vie-1.exo.io"
-    }
-  },
-  "continuousOutputSync": true,
-  "steps": [
-    {
-      "name": "train",
-      "run": {
-        "command": "/.venv/bin/python3 main.py --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$DEEPSQUARE_INPUT/",
-        "container": {
-          "image": "deepsquare-io/cifar-10-example:latest",
-          "registry": "ghcr.io"
-        },
-        "workDir": "/app"
-      }
-    }
-  ]
-}
+```yaml title="Workflow"
+resources:
+  tasks: 1
+  gpusPerTask: 2
+  cpusPerTask: 8
+  memPerCpu: 2048
+
+enableLogging: true
+
+input:
+  http:
+    url: https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+
+output:
+  s3:
+    region: at-vie-1
+    bucketUrl: s3://cifar10
+    path: '/'
+    accessKeyId: EXO***
+    secretAccessKey: '***'
+    endpointUrl: https://sos-at-vie-1.exo.io
+
+## Enable periodinc sync with output.
+continuousOutputSync: true
+
+steps:
+  - name: train
+    run:
+      command: /.venv/bin/python3 main.py --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$DEEPSQUARE_INPUT/
+      container:
+        image: deepsquare-io/cifar-10-example:latest
+        registry: ghcr.io
+      workDir: '/app'
 ```
 
 The `input` option will automatically unpack the archive.
 
 The `main.py` script will produce a `ckpt.pth` checkpoint file every time. Using `continuousOutputSync`, the checkpoint will be uploaded each time the file is updated. You won't lose progress and can resume it later using `--checkpoint_in=$DEEPSQUARE_INPUT/ckpt.pth`, but you need to set up an S3 as input. One solution would be to use an `init` container:
 
-```json title="Workflow with resume checkpoint"
-{
-  "resources": {
-    "tasks": 1,
-    "gpusPerTask": 2,
-    "cpusPerTask": 8,
-    "memPerCpu": 2048
-  },
-  "enableLogging": true,
-  "input": {
-    "s3": {
-      "region": "at-vie-1",
-      "bucketUrl": "s3://cifar10",
-      "path": "/",
-      "accessKeyId": "EXO284cde16bdbe4195b8fc4763",
-      "secretAccessKey": "KYReUpY-8ipfAvO5wlYpd7Uq-IkadN9ac535H-C1mbI",
-      "endpointUrl": "https://sos-at-vie-1.exo.io"
-    }
-  },
-  "output": {
-    "s3": {
-      "region": "at-vie-1",
-      "bucketUrl": "s3://cifar10",
-      "path": "/",
-      "accessKeyId": "EXO284cde16bdbe4195b8fc4763",
-      "secretAccessKey": "KYReUpY-8ipfAvO5wlYpd7Uq-IkadN9ac535H-C1mbI",
-      "endpointUrl": "https://sos-at-vie-1.exo.io"
-    }
-  },
-  "continuousOutputSync": true,
-  "steps": [
-    {
-      "name": "download dataset",
-      "run": {
-        "command": "curl -fsSL https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz -o $STORAGE_PATH/cifar-10-python.tar.gz; tar -C $STORAGE_PATH -xvzf $STORAGE_PATH/cifar-10-python.tar.gz; ls -lah $STORAGE_PATH",
-        "container": {
-          "image": "curlimages/curl:latest",
-          "registry": "registry-1.docker.io"
-        }
-      }
-    },
-    {
-      "name": "train",
-      "run": {
-        "command": "/.venv/bin/python3 main.py --checkpoint_in=$DEEPSQUARE_INPUT/ckpt.pth --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$STORAGE_PATH/",
-        "container": {
-          "image": "deepsquare-io/cifar-10-example:latest",
-          "registry": "ghcr.io"
-        },
-        "workDir": "/app"
-      }
-    }
-  ]
-}
+```yaml title="Workflow with resume checkpoint"
+resources:
+  tasks: 1
+  gpusPerTask: 2
+  cpusPerTask: 8
+  memPerCpu: 2048
+
+enableLogging: true
+
+input:
+  s3:
+    region: at-vie-1
+    bucketUrl: s3://cifar10
+    path: '/'
+    accessKeyId: EXO284cde16bdbe4195b8fc4763
+    secretAccessKey: KYReUpY-8ipfAvO5wlYpd7Uq-IkadN9ac535H-C1mbI
+    endpointUrl: https://sos-at-vie-1.exo.io
+
+output:
+  s3:
+    region: at-vie-1
+    bucketUrl: s3://cifar10
+    path: '/'
+    accessKeyId: EXO284cde16bdbe4195b8fc4763
+    secretAccessKey: KYReUpY-8ipfAvO5wlYpd7Uq-IkadN9ac535H-C1mbI
+    endpointUrl: https://sos-at-vie-1.exo.io
+## Enable periodinc sync with output.
+continuousOutputSync: true
+
+steps:
+  - name: download dataset
+    run:
+      command: curl -fsSL https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz -o
+        $STORAGE_PATH/cifar-10-python.tar.gz; tar -C $STORAGE_PATH -xvzf $STORAGE_PATH/cifar-10-python.tar.gz;
+        ls -lah $STORAGE_PATH
+      container:
+        image: curlimages/curl:latest
+        registry: registry-1.docker.io
+  - name: train
+    run:
+      command: '/.venv/bin/python3 main.py --checkpoint_in=$DEEPSQUARE_INPUT/ckpt.pth
+        --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$STORAGE_PATH/'
+      container:
+        image: deepsquare-io/cifar-10-example:latest
+        registry: ghcr.io
+      workDir: '/app'
 ```
 
 _(Since we use PyTorch DataLoader, we could also have downloaded the dataset directly from the code)._
