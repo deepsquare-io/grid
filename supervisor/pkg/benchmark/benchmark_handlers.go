@@ -140,8 +140,11 @@ func NewHPLPhase1Handler(
 		reader := hpl.NewReader(r.Body)
 
 		optimal, err := hpl.FindMaxGflopsResult(reader)
-		if err != nil {
-			logger.I.Error("failed to find max Gflops", zap.Error(err))
+		if err != nil || optimal == nil {
+			logger.I.Panic(
+				"failed to find max Gflops, please check benchmarks logs at /tmp/benchmark<name>",
+				zap.Error(err),
+			)
 		}
 
 		if math.IsNaN(optimal.Gflops) || math.IsInf(optimal.Gflops, 0) {
