@@ -304,7 +304,7 @@ If you are using an another distributed file system, you can check the available
    stringData:
      AVAX_ENDPOINT_WS: wss://testnet.deepsquare.run/ws
      # DeepSquare MetaScheduler smart contract, check [`grid` releases](https://github.com/deepsquare-io/grid/releases)
-     JOBMANAGER_SMART_CONTRACT: '0x3707aB457CF457275b7ec32e203c54df80C299d5'
+     JOBMANAGER_SMART_CONTRACT: '0x7524fBB0c1e099A4A472C5A7b0B1E1E3aBd3fE97'
 
      LDAP_URL: ldaps://dirsrv-389ds.ldap.svc.cluster.local:3636 # Kubernetes LDAP service domain name, change it if needed
      LDAP_CA_PATH: /tls/ca.crt
@@ -1438,12 +1438,12 @@ The supervisor is configured in the `slurm-cluster` AppProject.
    name: supervisor-subchart
    description: supervisor subchart
    type: application
-   version: 0.2.0
-   appVersion: '0.2.0'
+   version: 0.10.1
+   appVersion: '0.10.1'
 
    dependencies:
      - name: supervisor
-       version: 0.2.0
+       version: 0.10.1
        repository: https://deepsquare-io.github.io/helm-charts/
    ```
 
@@ -1471,16 +1471,33 @@ The supervisor is configured in the `slurm-cluster` AppProject.
            rpc: 'https://testnet.deepsquare.run/rpc'
            ws: 'wss://testnet.deepsquare.run/ws'
          # DeepSquare MetaScheduler smart contract, check [`grid` releases](https://github.com/deepsquare-io/grid/releases)
-         smartContract: '0x3707aB457CF457275b7ec32e203c54df80C299d5'
+         smartContract: '0x7524fBB0c1e099A4A472C5A7b0B1E1E3aBd3fE97'
+
+         ## Prices of your infrastructure
+         ##
+         ## Divide by 1e18 to get the normalized value.
+         prices:
+           ## CPU physical threads per min.
+           cpuPerMin: '950000000000000000'
+           ## GPU per min.
+           gpuPerMin: '8500000000000000000'
+           ## RAM (MB) per min.
+           memPerMin: '80000000000000'
+
+         ## Additional labels
+         labels:
+           {}
+           # name: my-cluster
+           # zone: ch-sion-1
+           # region: ch-sion
 
        sbatchService:
-         # DeepSquare SBatch service, use `sbatch.dev.deepsquare.run` (dev) or `sbatch.deepsquare.run` (prod).
-         endpoint: 'sbatch.dev.deepsquare.run:443'
+         endpoint: 'sbatch.deepsquare.run:443'
          tls:
            enable: true
            insecure: false
            ca: /etc/ssl/certs/ca-certificates.crt
-           serverHostOverride: 'sbatch.dev.deepsquare.run'
+           serverHostOverride: 'sbatch.deepsquare.run'
 
        slurm:
          ssh:
@@ -1491,12 +1508,46 @@ The supervisor is configured in the `slurm-cluster` AppProject.
              secretName: supervisor-ssh-key-secret
              key: ssh-private-key
 
-       # This is useless for now. You don't have to fill it.
-       spec:
-         nodes: 4
-         cpus: 64
-         gpus: 8
-         memory: 513840
+         ## Launch a benchmark when booting.
+         ##
+         ## By launching a benchmark, the results will be registered to the blockchain.
+         ## Result are stored on the compute nodes in the /tmp directory for debug purposes.
+         benchmark:
+           ## GFLOPS benchmark options
+           hpl:
+             singleNode: false
+           ## Storage benchmark options
+           ior:
+             singleNode: false
+           disable: false
+           runAs: 'root'
+           timeLimit: '24h'
+
+           ## Submit the benchmark on unresponsive nodes
+           unresponsive: false
+
+           ## Enable benchmark trace (very verbose)
+           trace: false
+
+           ## Use UCX transport for benchmarking
+           ##
+           ## UCX can be used for RDMA and TCP.
+           ## If set to false, default to OpenMPI transport, which is "shared memory, self, tcp".
+           ucx:
+             enable: false
+             ## Affinity is the NIC selector for each node.
+             ##
+             ## Syntax is:
+             ##  RDMA: mlx5_0:1|mlx5_0:1 which means node 1 will use device mlx5_0 port 1 and node 2 will use device mlx5_0 port 1.
+             ##  TCP: eth0|eth0
+             ##
+             ## See `ucx_info -db`
+             affinity: ''
+             ## Specify the transport.
+             ##
+             ## An empty value will set automatically the transport.
+             ## Transport may look like: "sm,self,rc" or "sm,self,tcp".
+             transport: ''
 
      nodeSelector:
        topology.kubernetes.io/region: ch-sion
