@@ -32,7 +32,7 @@ If you are using a stable version, the smart-contract address will be the one us
 
 **To update the compute plane:**
 
-If you are using `root=live:https://sos-ch-dk-2.exo.io/osimages/squareos-8.6/squareos-8.6.squashfs` in your kernel command line parameters, rebooting the nodes will always update the OS image.
+If you are using `root=live:https://sos-ch-dk-2.exo.io/osimages/squareos-9.2/squareos-9.2.squashfs` in your kernel command line parameters, rebooting the nodes will always update the OS image.
 
 **To update the postscripts:**
 
@@ -44,7 +44,7 @@ Make sure the SLURM version matches (`slurmd --version`) between the SLURM contr
 
 **To customize the OS image:**
 
-ClusterFactory provides the [Packer recipe for building the SquareOS image](https://github.com/deepsquare-io/ClusterFactory/tree/main/packer-recipes/rocky8.6). Edit and use it to add your software.
+ClusterFactory provides the [Packer recipe for building the SquareOS image](https://github.com/deepsquare-io/ClusterFactory/tree/main/packer-recipes/rocky9.2). Edit and use it to add your software.
 
 ## Monitoring
 

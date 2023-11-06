@@ -17,12 +17,12 @@ This is the typical procedure of network booting a linux kernel and initrd:
    We use this set on kernel command line parameters:
 
    ```shell
-   console=ttyS0 console=tty0 root=live:https://sos-ch-dk-2.exo.io/osimages/squareos-8.6/squareos-8.6.squashfs BOOTIF=01-{{ $.nic.MAC | toString | replace ":" "-" }} grendel.hostname={{ $.host.Name }} grendel.address=http://grendel.example.com rd.live.overlay.readonly=1 rd.live.overlay.overlayfs=1 rd.neednet=1
+   console=ttyS0 console=tty0 root=live:http://sos-ch-dk-2.exo.io/osimages/squareos-9.2/squareos-9.2.squashfs BOOTIF=01-{{ $.nic.MAC | toString | replace ":" "-" }} grendel.hostname={{ $.host.Name }} grendel.address=http://grendel.example.com rd.live.overlay.readonly=1 rd.live.overlay.overlayfs=1 rd.neednet=1
    ```
 
    - `console=ttyS0`: This parameter specifies that the system should output the console messages to the serial port ttyS0. It allows for console access and debugging through a serial connection.
    - `console=tty0`: This parameter indicates that the system should also output console messages to the first virtual terminal (tty0). It provides a text-based interface for interacting with the system.
-   - `root=live:https://sos-ch-dk-2.exo.io/osimages/squareos-8.6/squareos-8.6.squashfs`: This parameter sets the root file system to be loaded from a live HTTP source. It specifies the URL `https://sos-ch-dk-2.exo.io/osimages/squareos-8.6/squareos-8.6.squashfs` as the location from which the root file system should be retrieved.
+   - `root=live:http://sos-ch-dk-2.exo.io/osimages/squareos-9.2/squareos-9.2.squashfs`: This parameter sets the root file system to be loaded from a live HTTP source. It specifies the URL `http://sos-ch-dk-2.exo.io/osimages/squareos-9.2/squareos-9.2.squashfs` as the location from which the root file system should be retrieved.
    - `BOOTIF=01-{{ $.nic.MAC | toString | replace ":" "-" }}`: This parameter sets the BOOTIF (Boot Interface) variable to a value generated based on the network interface MAC address. The value follows the Go templating format. Grendel will fill the field.
    - `grendel.hostname={{ $.host.Name }}`: This parameter sets the hostname of the system. Grendel will also fill the field.
    - `grendel.address=http://grendel.example.com`: This parameter specifies the address of Grendel. It is used to fetch the postscripts and private keys.
@@ -175,15 +175,15 @@ If your servers are equipped with a Baseboard Management Controller (BMC), Grend
 
    These are the required storage layout:
 
-   | Path                                         | Description                                                  |
-   | -------------------------------------------- | ------------------------------------------------------------ |
-   | /home/ldap-users                             | A **network-shared** **cache** volume hosting the home of the users. |
-   | (optional but recommended) /opt/cache/enroot | A **network-shared** **cache** volume for Enroot, which is storing container layers. |
-   | /opt/cache/shared                            | A **network-shared** **scratch** volume for jobs. Must be a fast shared/distributed storage. Contains the jobs working directories. |
-   | /opt/cache/persistent                        | A **network-shared** **cache** volume for jobs. Users can use this volume to temporarily host large data such as ML models or datasets. |
-   | /opt/cache/world-tmp                         | A **network-shared** **cache** volume for anything. Users can use this volume to temporarily host large data such as ML models or datasets. |
-   | /opt/cache/disk/tmp                          | A **cache** volume on **disk**. Users can use this volume to temporarily host large data such as ML models or datasets. |
-   | /opt/cache/disk/world-tmp                    | A **cache** volume on **disk**. Users can use this volume to temporarily host large data such as ML models or datasets. |
+   | Path                                         | Description                                                                                                                                                |
+   | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | /home/ldap-users                             | A **network-shared** **cache** volume hosting the home of the users.                                                                                       |
+   | (optional but recommended) /opt/cache/enroot | A **network-shared** **cache** volume for Enroot, which is storing container layers.                                                                       |
+   | /opt/cache/shared                            | A **network-shared** **scratch** volume for jobs. Must be a fast shared/distributed storage. Contains the jobs working directories.                        |
+   | /opt/cache/persistent                        | A **network-shared** **cache** volume for jobs. Users can use this volume to temporarily host large data such as ML models or datasets.                    |
+   | /opt/cache/world-tmp                         | A **network-shared** **cache** volume for anything. Users can use this volume to temporarily host large data such as ML models or datasets.                |
+   | /opt/cache/disk/tmp                          | A **cache** volume on **disk**. Users can use this volume to temporarily host large data such as ML models or datasets.                                    |
+   | /opt/cache/disk/world-tmp                    | A **cache** volume on **disk**. Users can use this volume to temporarily host large data such as ML models or datasets.                                    |
    | /mnt/scratch                                 | A persistent volume on disk. It should be fast. It will be used by the container runtimes Apptainer and Enroot to create the runtime container filesystem. |
 
    To help you get organized, we recommend creating directories inside `/mnt` like `/mnt/nfs` or `/mnt/disk`, and then making a symbolic link from the required path like `/opt/cache/shared` to your storage provisioner, like `/mnt/nfs/cache/shared`.
@@ -317,7 +317,7 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
         hosts:
           - name: cn1
             provision: true
-            boot_image: squareos-8.6
+            boot_image: squareos-9.2
             firmware: snponly-x86_64.efi
             interfaces:
               - ip: 192.168.0.51/24
@@ -328,11 +328,11 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
                 bmc: true
 
         images:
-          - name: squareos-8.6
-            kernel: '/var/lib/grendel/vmlinuz-4.18.0-372.19.1.el8_6.x86_64'
+          - name: squareos-9.2
+            kernel: '/var/lib/grendel/vmlinuz-5.14.0-284.30.1.el9_2.x86_64'
             initrd:
-              - '/var/lib/grendel/initramfs-4.18.0-372.19.1.el8_6.x86_64.img'
-            cmdline: console=ttyS0 console=tty0 root=live:https://sos-ch-dk-2.exo.io/osimages/squareos-8.6/squareos-8.6.squashfs BOOTIF=01-{{ $.nic.MAC | toString | replace ":" "-" }} grendel.hostname={{ $.host.Name }} grendel.address=http://grendel.example.com rd.live.overlay.readonly=1 rd.live.overlay.overlayfs=1 rd.neednet=1
+              - '/var/lib/grendel/initramfs-5.14.0-284.30.1.el9_2.x86_64.img'
+            cmdline: console=ttyS0 console=tty0 root=live:https://sos-ch-dk-2.exo.io/osimages/squareos-9.2/squareos-9.2.squashfs BOOTIF=01-{{ $.nic.MAC | toString | replace ":" "-" }} grendel.hostname={{ $.host.Name }} grendel.address=http://grendel.example.com rd.live.overlay.readonly=1 rd.live.overlay.overlayfs=1 rd.neednet=1
 
         postscript: |
           #!/bin/sh
@@ -418,17 +418,17 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
         ingress:
           enabled: true
           ingressClass: 'traefik'
-   
+
           annotations:
             cert-manager.io/cluster-issuer: private-cluster-issuer
             traefik.ingress.kubernetes.io/router.entrypoints: websecure
             traefik.ingress.kubernetes.io/router.tls: 'true'
-   
+
           hosts:
             - ipmi.example.com
-   
+
           path: /
-   
+
           tls:
             - secretName: ipmi.example.com-secret
               hosts:
