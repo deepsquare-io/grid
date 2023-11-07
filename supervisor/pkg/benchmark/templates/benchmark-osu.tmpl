@@ -36,6 +36,10 @@ export OMPI_MCA_btl=vader,self,tcp
 export NCCL_IB_DISABLE=1
 {{- end }}
 
+{{- range $key, $value := .Env }}
+export {{ $key }}={{ $value | squote }}
+{{- end }}
+
 export SHARED_WORLD_TMP_VOLUME=/opt/cache/world-tmp
 umask 077
 

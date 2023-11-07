@@ -23,7 +23,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/deepsquare-io/grid/supervisor/logger"
 	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/secret"
 	"github.com/deepsquare-io/grid/supervisor/pkg/utils"
@@ -46,6 +45,7 @@ func applyHPLOptions(opts []Option) *options {
 		nodes:                   1,
 		secret:                  base64.StdEncoding.EncodeToString(secret.Get()),
 		supervisorPublicAddress: "localhost:3000",
+		additionalEnv:           make(map[string]string),
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -100,14 +100,9 @@ func prepareHPLJobDefinition(
 	}
 
 	sbatchTmpl := template.Must(
-		template.New("benchmark").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{
-			"div": func(a uint64, b uint64) uint64 {
-				return a / b
-			},
-			"mul": func(a uint64, b uint64) uint64 {
-				return a * b
-			},
-		}).ParseFS(templates, "templates/benchmark-hpl.tmpl", "templates/dat.tmpl"),
+		template.New("benchmark").
+			Funcs(funcMap()).
+			ParseFS(templates, "templates/benchmark-hpl.tmpl", "templates/dat.tmpl"),
 	)
 	sbatchBuilder := new(strings.Builder)
 	if err := sbatchTmpl.ExecuteTemplate(sbatchBuilder, "benchmark", struct {
@@ -122,6 +117,7 @@ func prepareHPLJobDefinition(
 		UCXTransport            string
 		Trace                   bool
 		MemPerNode              uint64
+		Env                     map[string]string
 	}{
 		Image:                   o.image,
 		BenchmarkParams:         *params,
@@ -134,6 +130,7 @@ func prepareHPLJobDefinition(
 		UCXTransport:            o.ucxTransport,
 		Trace:                   o.trace,
 		MemPerNode:              o.memPerNode,
+		Env:                     o.additionalEnv,
 	}); err != nil {
 		logger.I.Error("sbatch templating failed", zap.Error(err))
 		return nil, err

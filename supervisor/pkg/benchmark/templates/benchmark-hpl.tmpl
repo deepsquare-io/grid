@@ -70,6 +70,10 @@ done
 CPU_AFFINITY="${CPU_AFFINITY%|}"
 export CPU_AFFINITY
 
+{{- range $key, $value := .Env }}
+export {{ $key }}={{ $value | squote }}
+{{- end }}
+
 set +e
 
 srun \

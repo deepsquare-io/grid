@@ -104,6 +104,7 @@ var (
 	benchmarkUnresponsive   bool
 	benchmarkTimeLimit      time.Duration
 	benchmarkTrace          bool
+	benchmarkEnv            cli.StringSlice
 
 	benchmarkUCX          bool
 	benchmarkUCXAffinity  string
@@ -448,6 +449,13 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		Destination: &benchmarkUCX,
 		Value:       false,
 		EnvVars:     []string{"BENCHMARK_UCX"},
+		Category:    "Benchmark:",
+	},
+	&cli.StringSliceFlag{
+		Name:        "benchmark.env",
+		Usage:       "Add additional environment variable. Format is a=b. Do no quote 'b'.",
+		Destination: &benchmarkEnv,
+		EnvVars:     []string{"BENCHMARK_ENV"},
 		Category:    "Benchmark:",
 	},
 	&cli.StringFlag{
@@ -796,6 +804,17 @@ See the GNU General Public License for more details.`,
 					minMemPerNode = slices.Min(memPerNode)
 				}
 
+				// Parse additional env
+				var envOpts []benchmark.Option
+				for _, env := range benchmarkEnv.Value() {
+					k, v, ok := strings.Cut(env, "=")
+					if !ok {
+						logger.I.Error("invalid env format", zap.String("env", env))
+						continue
+					}
+					envOpts = append(envOpts, benchmark.WithAdditionalEnv(k, v))
+				}
+
 				hplOpts := append(
 					commonBenchmarkOpts,
 					benchmark.WithClusterSpecs(
@@ -806,6 +825,7 @@ See the GNU General Public License for more details.`,
 					),
 					benchmark.WithImage(benchmarkHPLImage),
 				)
+				hplOpts = append(hplOpts, envOpts...)
 
 				osuOpts := append(
 					commonBenchmarkOpts,
@@ -817,6 +837,7 @@ See the GNU General Public License for more details.`,
 					),
 					benchmark.WithImage(benchmarkOSUImage),
 				)
+				osuOpts = append(osuOpts, envOpts...)
 
 				iorOpts := append(
 					commonBenchmarkOpts,
@@ -828,6 +849,7 @@ See the GNU General Public License for more details.`,
 					),
 					benchmark.WithImage(benchmarkIORImage),
 				)
+				iorOpts = append(iorOpts, envOpts...)
 
 				speedtestOpts := append(
 					commonBenchmarkOpts,
@@ -839,6 +861,7 @@ See the GNU General Public License for more details.`,
 					),
 					benchmark.WithImage(benchmarkSpeedTestImage),
 				)
+				speedtestOpts = append(speedtestOpts, envOpts...)
 
 				logger.I.Info("checking if it is necessary to re-run the benchmark")
 				oldInfo, err := container.metascheduler.GetOldInfo(ctx)

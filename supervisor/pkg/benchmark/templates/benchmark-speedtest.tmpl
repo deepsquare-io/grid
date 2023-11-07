@@ -3,6 +3,10 @@
 
 set -ex
 
+{{- range $key, $value := .Env }}
+export {{ $key }}={{ $value | squote }}
+{{- end }}
+
 file="$(mktemp -t benchmark.XXXXXX)"
 dir="$(dirname "$file")"
 

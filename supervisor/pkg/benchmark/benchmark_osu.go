@@ -20,7 +20,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/deepsquare-io/grid/supervisor/logger"
 	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/secret"
 	"github.com/deepsquare-io/grid/supervisor/pkg/utils"
@@ -35,6 +34,7 @@ func applyOSUOptions(opts []Option) *options {
 		nodes:                   1,
 		secret:                  base64.StdEncoding.EncodeToString(secret.Get()),
 		supervisorPublicAddress: "localhost:3000",
+		additionalEnv:           make(map[string]string),
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -57,7 +57,7 @@ func GenerateOSUBenchmark(
 	}
 	sbatchTmpl := template.Must(
 		template.New("benchmark").
-			Funcs(sprig.TxtFuncMap()).
+			Funcs(funcMap()).
 			ParseFS(templates, "templates/benchmark-osu.tmpl"),
 	)
 	sbatchBuilder := new(strings.Builder)
@@ -70,6 +70,7 @@ func GenerateOSUBenchmark(
 		UCXAffinity             string
 		UCXTransport            string
 		Trace                   bool
+		Env                     map[string]string
 	}{
 		Benchmark:               *benchmark,
 		Image:                   o.image,
@@ -79,6 +80,7 @@ func GenerateOSUBenchmark(
 		UCXAffinity:             o.ucxAffinity,
 		UCXTransport:            o.ucxTransport,
 		Trace:                   o.trace,
+		Env:                     o.additionalEnv,
 	}); err != nil {
 		logger.I.Error("sbatch templating failed", zap.Error(err))
 		return nil, err

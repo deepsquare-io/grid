@@ -24,6 +24,7 @@ import (
 	"github.com/deepsquare-io/grid/supervisor/logger"
 	"github.com/deepsquare-io/grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/grid/supervisor/pkg/utils/hash"
+	"github.com/deepsquare-io/grid/supervisor/pkg/utils/validate"
 	"go.uber.org/zap"
 )
 
@@ -52,6 +53,9 @@ type options struct {
 	ucx          bool
 	ucxAffinity  string
 	ucxTransport string
+
+	additionalEnv map[string]string
+
 	// trace enables benchmark trace logging.
 	trace bool
 }
@@ -97,6 +101,23 @@ func WithUCX(affinity string, transport string) Option {
 		o.ucx = true
 		o.ucxTransport = transport
 		o.ucxAffinity = affinity
+	}
+}
+
+func WithAdditionalEnv(key string, value string) Option {
+	return func(o *options) {
+		if o.additionalEnv == nil {
+			o.additionalEnv = make(map[string]string)
+		}
+		if !validate.EnvVarNameValidator(key) {
+			logger.I.Error(
+				"environment variable key is not valid",
+				zap.String("key", key),
+				zap.String("value", value),
+			)
+			return
+		}
+		o.additionalEnv[key] = value
 	}
 }
 

@@ -112,6 +112,8 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1() {
 			slices.Min(memPerNode),
 		),
 		benchmark.WithSupervisorPublicAddress(suite.publicAddress),
+		benchmark.WithUCX("mlx5_2:1|mlx5_2:1|mlx5_2:1", ""),
+		benchmark.WithTrace(),
 	)
 	suite.Require().NoError(err)
 

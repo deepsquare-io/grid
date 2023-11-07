@@ -26,6 +26,10 @@ export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=vader,self,tcp
 {{- end }}
 
+{{- range $key, $value := .Env }}
+export {{ $key }}={{ $value | squote }}
+{{- end }}
+
 export SCRATCH_VOLUME=/opt/cache/shared
 export SHARED_TMP_VOLUME=/opt/cache/persistent
 export SHARED_WORLD_TMP_VOLUME=/opt/cache/world-tmp

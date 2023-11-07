@@ -20,7 +20,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/deepsquare-io/grid/supervisor/logger"
 	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/secret"
 	"github.com/deepsquare-io/grid/supervisor/pkg/utils"
@@ -31,8 +30,9 @@ const DefaultSpeedTestImage = "registry-1.docker.io#gists/speedtest-cli:1.2.0"
 
 func applySpeedTestOptions(opts []Option) *options {
 	o := &options{
-		image:  DefaultSpeedTestImage,
-		secret: base64.StdEncoding.EncodeToString(secret.Get()),
+		image:         DefaultSpeedTestImage,
+		secret:        base64.StdEncoding.EncodeToString(secret.Get()),
+		additionalEnv: make(map[string]string),
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -51,7 +51,7 @@ func GenerateSpeedTestBenchmark(
 	}
 	sbatchTmpl := template.Must(
 		template.New("benchmark").
-			Funcs(sprig.TxtFuncMap()).
+			Funcs(funcMap()).
 			ParseFS(templates, "templates/benchmark-speedtest.tmpl"),
 	)
 	sbatchBuilder := new(strings.Builder)
@@ -59,10 +59,12 @@ func GenerateSpeedTestBenchmark(
 		Image                   string
 		SupervisorPublicAddress string
 		Secret                  string
+		Env                     map[string]string
 	}{
 		Image:                   o.image,
 		SupervisorPublicAddress: o.supervisorPublicAddress,
 		Secret:                  o.secret,
+		Env:                     o.additionalEnv,
 	}); err != nil {
 		logger.I.Error("sbatch templating failed", zap.Error(err))
 		return nil, err
