@@ -33,16 +33,11 @@ import (
 const DefaultHPLImage = "registry-1.deepsquare.run#library/hpc-benchmarks:23.5"
 
 var benchmarkMemoryUsePercentage = []float64{
+	0.50, // 50% is a sure hit. We do this for healthchecking the HPL health.
+	0.60,
 	0.75,
-	0.76,
-	0.77,
-	0.78,
-	0.79,
 	0.80,
-	0.81,
-	0.82,
-	0.83,
-	0.84,
+	0.85, // This the most unstable test, which may end in OOM.
 }
 
 func applyHPLOptions(opts []Option) *options {
