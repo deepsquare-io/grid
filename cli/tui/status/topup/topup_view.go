@@ -53,14 +53,14 @@ func (m model) View() string {
   CPU pricing: ... credits/(CPU.min)
   Memory pricing: ... credits/(MB.min)
   GPU pricing: ... credits/(GPU.min)
-`, style.Title2.Width(52).Render("Provider ..."))
+`, style.Title2().Width(52).Render("Provider ..."))
 	if m.provider != nil {
 		provider = fmt.Sprintf(`%s
   CPU pricing: %s credits/(CPU.min)
   Memory pricing: %s credits/(MB.min)
   GPU pricing: %s credits/(GPU.min)
 `,
-			style.Title2.Width(52).Render("Provider", m.provider.Addr.Hex()),
+			style.Title2().Width(52).Render("Provider", m.provider.Addr.Hex()),
 			ether.FromWei(m.provider.ProviderPrices.CpuPricePerMin).String(),
 			ether.FromWei(m.provider.ProviderPrices.MemPricePerMin).String(),
 			ether.FromWei(m.provider.ProviderPrices.GpuPricePerMin).String(),
@@ -114,7 +114,7 @@ Elapsed: %s
 			string(m.job.JobName[:]),
 			style.JobStatusStyle(metascheduler.JobStatus(m.job.Status).String()).
 				Render(metascheduler.JobStatus(m.job.Status).String()),
-			renderOnError(style.Error.Render(m.job.LastError), m.job.LastError),
+			renderOnError(style.Error().Render(m.job.LastError), m.job.LastError),
 			m.job.Definition.Ntasks,
 			m.job.Definition.CpusPerTask,
 			m.job.Definition.CpusPerTask*m.job.Definition.Ntasks,
@@ -162,16 +162,16 @@ Expected duration gain: %s
 %s
 %s
 %s`,
-		style.Title1.Width(20).Render("Topping up job"),
-		style.Title2.Width(80).
+		style.Title1().Width(20).Render("Topping up job"),
+		style.Title2().Width(80).
 			Render(fmt.Sprintf("Job %s", new(big.Int).SetBytes(m.jobID[:]).String())),
 		indent(2, definition),
 		provider,
-		style.Foreground.Render("Amount in credits (not in wei)"),
+		style.Foreground().Render("Amount in credits (not in wei)"),
 		m.inputs[amountInput].View(),
-		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[amountInput])),
+		style.Error().Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[amountInput])),
 		duration,
-		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("Error: %s", m.err)),
+		style.Error().Width(50).Render(utils.FormatErrorfOrEmpty("Error: %s", m.err)),
 		m.loading(),
 		help,
 	)

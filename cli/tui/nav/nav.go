@@ -284,7 +284,7 @@ func (m model) View() string {
 		ether.FromWei(m.allowance).String(),
 		m.allowance,
 	)
-	info := style.Box.Render(
+	info := style.Box().Render(
 		lipgloss.JoinHorizontal(
 			lipgloss.Top,
 			labels,
@@ -292,5 +292,5 @@ func (m model) View() string {
 		),
 	)
 
-	return style.Foreground.Render(titlePixelArt) + "\n" + info + "\n" + navView
+	return style.Foreground().Render(titlePixelArt) + "\n" + info + "\n" + navView
 }

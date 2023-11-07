@@ -26,7 +26,7 @@ import (
 )
 
 func (m model) headerView() string {
-	return style.LogTitle.Render(m.ProviderDetail.Addr.Hex())
+	return style.LogTitle().Render(m.ProviderDetail.Addr.Hex())
 }
 
 func (m model) View() string {
@@ -41,7 +41,7 @@ func (m model) View() string {
 			m.keyMap.Exit,
 		},
 	})
-	emptyLine := style.Foreground.Render(
+	emptyLine := style.Foreground().Render(
 		strings.Repeat(" ", max(0, m.viewport.Width/2)),
 	)
 	view := fmt.Sprintf(
@@ -59,51 +59,51 @@ func (m model) View() string {
 %s %s
 %s
 %s`,
-		style.LogTitle.Render("Duration Estimator"),
-		style.Foreground.Render("Tasks:"),
+		style.LogTitle().Render("Duration Estimator"),
+		style.Foreground().Render("Tasks:"),
 		m.inputs[tasksInput].View(),
 		utils.ErrorfOrEmpty(
-			"\n"+style.Error.Width(m.viewport.Width/2).
+			"\n"+style.Error().Width(m.viewport.Width/2).
 				Render(fmt.Sprintf("^^^%v", m.errors[tasksInput])),
 			m.errors[tasksInput],
 		),
-		style.Foreground.Render("CPUs per Task:"),
+		style.Foreground().Render("CPUs per Task:"),
 		m.inputs[cpusPerTaskInput].View(),
 		utils.ErrorfOrEmpty(
-			"\n"+style.Error.Width(m.viewport.Width/2).
+			"\n"+style.Error().Width(m.viewport.Width/2).
 				Render(fmt.Sprintf("^^^%v", m.errors[cpusPerTaskInput])),
 			m.errors[cpusPerTaskInput],
 		),
-		style.Foreground.Render("Memory (MB) per CPU:"),
+		style.Foreground().Render("Memory (MB) per CPU:"),
 		m.inputs[memPerCPUInput].View(),
 		utils.ErrorfOrEmpty(
-			"\n"+style.Error.Width(m.viewport.Width/2).
+			"\n"+style.Error().Width(m.viewport.Width/2).
 				Render(fmt.Sprintf("^^^%v", m.errors[memPerCPUInput])),
 			m.errors[memPerCPUInput],
 		),
-		style.Foreground.Render("GPUs Per Task:"),
+		style.Foreground().Render("GPUs Per Task:"),
 		m.inputs[gpusPerTaskInput].View(),
 		utils.ErrorfOrEmpty(
-			"\n"+style.Error.Width(m.viewport.Width/2).
+			"\n"+style.Error().Width(m.viewport.Width/2).
 				Render(fmt.Sprintf("^^^%v", m.errors[gpusPerTaskInput])),
 			m.errors[gpusPerTaskInput],
 		),
-		style.Foreground.Render("Allocated credits:"),
+		style.Foreground().Render("Allocated credits:"),
 		m.inputs[creditsInput].View(),
 		utils.ErrorfOrEmpty(
-			"\n"+style.Error.Width(m.viewport.Width/2).
+			"\n"+style.Error().Width(m.viewport.Width/2).
 				Render(fmt.Sprintf("^^^%v", m.errors[creditsInput])),
 			m.errors[creditsInput],
 		),
 		"Expected Max Duration: ",
 		m.duration,
-		style.Error.Width(m.viewport.Width/2).Render(utils.FormatErrorfOrEmpty("%s", m.err)),
+		style.Error().Width(m.viewport.Width/2).Render(utils.FormatErrorfOrEmpty("%s", m.err)),
 		emptyLine,
 	)
 	return lipgloss.JoinHorizontal(
 		lipgloss.Center,
-		style.Box.Render(view),
-		style.Box.Render(form),
+		style.Box().Render(view),
+		style.Box().Render(form),
 		help,
 	)
 }

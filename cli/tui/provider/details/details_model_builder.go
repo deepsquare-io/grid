@@ -33,7 +33,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var titleStyle = style.Title1.Width(10)
+var titleStyle = style.Title1().Width(10)
 
 func indent(spaces int, v string) string {
 	pad := strings.Repeat(" ", spaces)
@@ -99,35 +99,35 @@ Is banned: %s
 	inputs[tasksInput].Focus()
 	inputs[tasksInput].Placeholder = "example: 1"
 	inputs[tasksInput].Width = 10
-	inputs[tasksInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[tasksInput].Prompt = style.Foreground().Render("❱ ")
 	inputs[tasksInput].Validate = validator.AllowedNumberChar
 	inputs[tasksInput].SetValue("1")
 
 	inputs[cpusPerTaskInput] = textinput.New()
 	inputs[cpusPerTaskInput].Placeholder = "example: 1"
 	inputs[cpusPerTaskInput].Width = 10
-	inputs[cpusPerTaskInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[cpusPerTaskInput].Prompt = style.Foreground().Render("❱ ")
 	inputs[cpusPerTaskInput].Validate = validator.AllowedNumberChar
 	inputs[cpusPerTaskInput].SetValue("1")
 
 	inputs[memPerCPUInput] = textinput.New()
 	inputs[memPerCPUInput].Placeholder = "example: 200"
 	inputs[memPerCPUInput].Width = 10
-	inputs[memPerCPUInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[memPerCPUInput].Prompt = style.Foreground().Render("❱ ")
 	inputs[memPerCPUInput].Validate = validator.AllowedNumberChar
 	inputs[memPerCPUInput].SetValue("200")
 
 	inputs[gpusPerTaskInput] = textinput.New()
 	inputs[gpusPerTaskInput].Placeholder = "example: 1"
 	inputs[gpusPerTaskInput].Width = 10
-	inputs[gpusPerTaskInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[gpusPerTaskInput].Prompt = style.Foreground().Render("❱ ")
 	inputs[gpusPerTaskInput].Validate = validator.AllowedNumberChar
 	inputs[gpusPerTaskInput].SetValue("0")
 
 	inputs[creditsInput] = textinput.New()
 	inputs[creditsInput].Placeholder = "example: 100"
 	inputs[creditsInput].Width = 10
-	inputs[creditsInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[creditsInput].Prompt = style.Foreground().Render("❱ ")
 	inputs[creditsInput].Validate = validator.AllowedNumberChar
 	inputs[creditsInput].SetValue("100")
 

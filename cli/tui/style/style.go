@@ -38,65 +38,78 @@ var (
 	yellow               = lipgloss.Color("#FFFF00")
 	warning              = lipgloss.Color("#FFA500")
 	// Base is the box of the main window.
-	Base = Box.Copy()
+	Base = Box()
 	// Error is the style for errors.
-	Error = lipgloss.NewStyle().Foreground(errorColor)
+	Error = func() lipgloss.Style { return lipgloss.NewStyle().Foreground(errorColor) }
 	// Foreground is the main style.
-	Foreground = lipgloss.NewStyle().Foreground(primaryDarkestColor)
+	Foreground = func() lipgloss.Style { return lipgloss.NewStyle().Foreground(primaryDarkestColor) }
 	// NoError is the style for positive results.
-	NoError = lipgloss.NewStyle().Foreground(green)
+	NoError = func() lipgloss.Style { return lipgloss.NewStyle().Foreground(green) }
 	// AccentForeground is the secondary style.
-	AccentForeground = lipgloss.NewStyle().Foreground(primaryColor)
+	AccentForeground = func() lipgloss.Style { return lipgloss.NewStyle().Foreground(primaryColor) }
 
 	// Title1 is the most accentuated style for titles.
-	Title1 = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(white).
-		Background(primaryDarkestColor).
-		Align(lipgloss.Center).
-		Width(22)
+	Title1 = func() lipgloss.Style {
+		return lipgloss.NewStyle().
+			Bold(true).
+			Foreground(white).
+			Background(primaryDarkestColor).
+			Align(lipgloss.Center).
+			Width(22)
+	}
 
 	// Title2 is the second accent style for titles.
-	Title2 = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(primaryDarkestColor).
-		Width(22)
+	Title2 = func() lipgloss.Style {
+		return lipgloss.NewStyle().
+			Bold(true).
+			Foreground(primaryDarkestColor).
+			Width(22)
+	}
 
 	// LogTitle is the style for the log page title.
-	LogTitle = Box.Copy().
-			Padding(0, 1)
+	LogTitle = func() lipgloss.Style {
+		return Box().Padding(0, 1)
+	}
 
 	// LogInfo is the style for the log page info.
-	LogInfo = LogTitle.Copy()
+	LogInfo = func() lipgloss.Style {
+		return LogTitle().Copy()
+	}
 	// LeftVerticalSeparator is the style to make a vertical separator on the left.
-	LeftVerticalSeparator = lipgloss.NewStyle().
-				BorderStyle(lipgloss.NormalBorder()).
-				BorderLeft(true).
-				BorderForeground(primaryDarkestColor)
+	LeftVerticalSeparator = func() lipgloss.Style {
+		return lipgloss.NewStyle().
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderLeft(true).
+			BorderForeground(primaryDarkestColor)
+	}
 	// Box is the style for surrounding an area.
-	Box = lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(primaryDarkestColor)
+	Box = func() lipgloss.Style {
+		return lipgloss.NewStyle().
+			BorderStyle(lipgloss.RoundedBorder()).
+			BorderForeground(primaryDarkestColor)
+	}
 	// FocusBox is the style for surrounding an area with accent.
-	FocusBox = lipgloss.NewStyle().
+	FocusBox = func() lipgloss.Style {
+		return lipgloss.NewStyle().
 			BorderStyle(lipgloss.RoundedBorder()).
 			BorderForeground(primaryLightestColor)
+	}
 )
 
 // BoolToYN convert a boolean to a stylized yes/no. "yes" being positive.
 func BoolToYN(b bool) string {
 	if b {
-		return NoError.Render("yes")
+		return NoError().Render("yes")
 	}
-	return Error.Render("no")
+	return Error().Render("no")
 }
 
 // BoolToYNColorReverted convert a boolean to a stylized yes/no. "no" being positive.
 func BoolToYNColorReverted(b bool) string {
 	if b {
-		return Error.Render("yes")
+		return Error().Render("yes")
 	}
-	return NoError.Render("no")
+	return NoError().Render("no")
 }
 
 // OnError prints with the error style if the error is not nil.

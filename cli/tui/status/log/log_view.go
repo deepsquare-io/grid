@@ -25,7 +25,7 @@ import (
 )
 
 func (m model) headerView() string {
-	return style.LogTitle.Render(m.title)
+	return style.LogTitle().Render(m.title)
 }
 
 func max(a, b int) int {
@@ -36,8 +36,8 @@ func max(a, b int) int {
 }
 
 func (m model) footerView() string {
-	info := style.LogInfo.Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
-	line := style.Foreground.Render(
+	info := style.LogInfo().Render(fmt.Sprintf("%3.f%%", m.viewport.ScrollPercent()*100))
+	line := style.Foreground().Render(
 		strings.Repeat(" ", max(0, m.viewport.Width-lipgloss.Width(info))),
 	)
 	return lipgloss.JoinHorizontal(lipgloss.Bottom, line, info)
@@ -70,5 +70,5 @@ func (m model) View() string {
 			m.footerView(),
 		)
 	}
-	return style.Box.Render(view) + "\n" + help
+	return style.Box().Render(view) + "\n" + help
 }

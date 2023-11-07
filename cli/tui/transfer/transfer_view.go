@@ -50,14 +50,14 @@ func (m model) View() string {
 %s
 %s
 %s`,
-		style.Title1.Width(20).Render("Transfer credits"),
-		style.Foreground.Render("Send to"),
+		style.Title1().Width(20).Render("Transfer credits"),
+		style.Foreground().Render("Send to"),
 		m.inputs[toInput].View(),
-		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[toInput])),
-		style.Foreground.Render("Amount in credits (not in wei)"),
+		style.Error().Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[toInput])),
+		style.Foreground().Render("Amount in credits (not in wei)"),
 		m.inputs[amountInput].View(),
-		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[amountInput])),
-		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("Error: %s", m.err)),
+		style.Error().Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[amountInput])),
+		style.Error().Width(50).Render(utils.FormatErrorfOrEmpty("Error: %s", m.err)),
 		m.loading(),
 		help,
 	)

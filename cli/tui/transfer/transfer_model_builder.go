@@ -43,13 +43,13 @@ func (b *ModelBuilder) Build() tea.Model {
 	inputs[toInput].Focus()
 	inputs[toInput].Placeholder = "example: 0x0000000000000000000000000000000000000000"
 	inputs[toInput].Width = 64
-	inputs[toInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[toInput].Prompt = style.Foreground().Render("❱ ")
 	inputs[toInput].Validate = validator.AllowedHexChar
 
 	inputs[amountInput] = textinput.New()
 	inputs[amountInput].Placeholder = "example: 0.0"
 	inputs[amountInput].Width = 64
-	inputs[amountInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[amountInput].Prompt = style.Foreground().Render("❱ ")
 	inputs[amountInput].Validate = validator.AllowedNumberChar
 
 	return &model{

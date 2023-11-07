@@ -33,8 +33,8 @@ func max(a, b int) int {
 }
 
 func (m model) viewportFooterView() string {
-	info := style.LogInfo.Render(fmt.Sprintf("%3.f%%", m.code.Viewport.ScrollPercent()*100))
-	line := style.Foreground.Render(
+	info := style.LogInfo().Render(fmt.Sprintf("%3.f%%", m.code.Viewport.ScrollPercent()*100))
+	line := style.Foreground().Render(
 		strings.Repeat(" ", max(0, m.code.Viewport.Width-lipgloss.Width(info))),
 	)
 	return lipgloss.JoinHorizontal(lipgloss.Bottom, line, info)
@@ -56,18 +56,18 @@ func (m model) formView() string {
 %s
 %s
 `,
-		style.Title1.Width(20).Render("Submit a Job"),
-		style.Foreground.Render("Allocate Credits"),
+		style.Title1().Width(20).Render("Submit a Job"),
+		style.Foreground().Render("Allocate Credits"),
 		m.inputs[creditsLockingInput].View(),
-		style.Error.Width(50).
+		style.Error().Width(50).
 			Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[creditsLockingInput])),
-		style.Foreground.Render("Use flags"),
+		style.Foreground().Render("Use flags"),
 		m.inputs[usesInput].View(),
-		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[usesInput])),
-		style.Foreground.Render("Job Name"),
+		style.Error().Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[usesInput])),
+		style.Foreground().Render("Job Name"),
 		m.inputs[jobNameInput].View(),
-		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[jobNameInput])),
-		style.Error.Width(50).Render(utils.FormatErrorfOrEmpty("Error: %s", m.err)),
+		style.Error().Width(50).Render(utils.FormatErrorfOrEmpty("^^^%s", m.errors[jobNameInput])),
+		style.Error().Width(50).Render(utils.FormatErrorfOrEmpty("Error: %s", m.err)),
 	)
 }
 
@@ -96,7 +96,7 @@ func (m model) View() string {
 		m.code.View(), m.viewportFooterView(),
 	)
 	rightView := m.formView() + "\n" + m.loading() + "\n" + help
-	mainView := lipgloss.JoinHorizontal(lipgloss.Center, style.Box.Render(leftView), rightView)
+	mainView := lipgloss.JoinHorizontal(lipgloss.Center, style.Box().Render(leftView), rightView)
 
 	return mainView
 }

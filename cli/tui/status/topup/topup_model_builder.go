@@ -49,7 +49,7 @@ func (b *ModelBuilder) Build(jobID [32]byte) tea.Model {
 	inputs[amountInput].Focus()
 	inputs[amountInput].Placeholder = "example: 0.0"
 	inputs[amountInput].Width = 64
-	inputs[amountInput].Prompt = style.Foreground.Render("❱ ")
+	inputs[amountInput].Prompt = style.Foreground().Render("❱ ")
 	inputs[amountInput].Validate = validator.AllowedNumberChar
 
 	return &model{
