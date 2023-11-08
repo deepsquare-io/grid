@@ -35,10 +35,6 @@ export NCCL_DEBUG=TRACE
 export NCCL_DEBUG_SUBSYS=ALL
 {{- end }}
 
-{{- if le .Benchmark.MaxNodes 1 }}
-export NCCL_P2P_DISABLE=1
-{{- end }}
-
 {{- if .UCX }}
 # Select UCX as MPI P2P communications
 export PMIX_MCA_pml=ucx
