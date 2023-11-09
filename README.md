@@ -22,7 +22,7 @@ If you'd like to try running a job on DeepSquare, you should start by reading ou
 
 ## Join the Community
 
-- [Community Discord](https://discord.gg/zvFnqVHmJh) - Request for support and help from the DeepSquare community.
+- [Community Discord](https://discord.gg/8XXDR4MAzy) - Request for support and help from the DeepSquare community.
 - [Github Issues](https://github.com/deepsquare-io/grid/issues) - Submit your issues and feature requests via GitHub.
 
 We welcome your help in building DeepSquare! If you are interested, we invite you to check
