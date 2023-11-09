@@ -77,30 +77,59 @@ if [ "$tries" -ge 10 ]; then
   exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw"
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-name='Say hello World"' \
+/usr/bin/srun --job-name='Say hello World"' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \
   --gpus-per-task=1 \
   --ntasks=1 \
-  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV \
   --gpu-bind=none \
-  --no-container-remap-root \
-  --container-writable \
-  --no-container-mount-home \
-  --container-mounts="${MOUNTS}" \
-  --container-workdir=/deepsquare \
-  --container-image="$IMAGE_PATH" \
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID" -- "$IMAGE_PATH"
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID"
+}
+trap enrootClean EXIT INT TERM
+'/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=n
+
+environ() {
+  # Keep all the environment from the host
+  /usr/bin/env
+
+  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+
+  /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+}
+
+mounts() {
+  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+}
+
+hooks() {
+  /usr/bin/cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot.conf" \
+  "container-$SLURM_JOB_ID" \
   /bin/sh -c 'echo "Hello ${WHO}"
 echo "RESULT=Hello ${WHO}" >> ${DEEPSQUARE_ENV}
 '

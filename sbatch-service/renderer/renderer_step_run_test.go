@@ -100,30 +100,62 @@ if [ "$tries" -ge 10 ]; then
   exit 1
 fi
 /usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
 # shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+/usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
-  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV,test \
   --gpu-bind=none \
-  --no-container-remap-root \
-  --container-writable \
-  --no-container-mount-home \
-  --container-mounts="${MOUNTS}" \
-  --container-workdir=/deepsquare \
-  --container-image="$IMAGE_PATH" \
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID" -- "$IMAGE_PATH"
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID"
+}
+trap enrootClean EXIT INT TERM
+'/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=n
+
+environ() {
+  # Keep all the environment from the host
+  /usr/bin/env
+
+  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+
+  /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+  /usr/bin/echo "test='value'"
+}
+
+mounts() {
+  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
+  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
+}
+
+hooks() {
+  /usr/bin/cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot.conf" \
+  "container-$SLURM_JOB_ID" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with image",
 		},
@@ -172,134 +204,6 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   "$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer image",
-		},
-		{
-			input: func() model.StepRun {
-				r := *cleanStepRun("hostname")
-				r.MapRoot = utils.Ptr(true)
-				return r
-			}(),
-			expected: `/usr/bin/cat << 'EOFmounterror'
-WARNING: Mounts is now deprecated.
-If you need a cache (disk, shared, per-user or global), please read https://docs.deepsquare.run/workflow/guides/environment-variables.
-The cache is cleared periodically and only persists on the site.
-EOFmounterror
-/usr/bin/mkdir -p "$HOME/.config/enroot/"
-/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine registry login "username" password "password"
-EOFnetrc
-IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
-export IMAGE_PATH
-/usr/bin/echo "Importing image..."
-set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
-if [ $? -ne 0 ]; then
-  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
-fi
-set -e
-tries=1; while [ "$tries" -lt 10 ]; do
-  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
-    break
-  fi
-  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
-  /usr/bin/sleep 10
-  tries=$((tries+1))
-done
-if [ "$tries" -ge 10 ]; then
-  /usr/bin/echo "Image import failure (corrupted image). Please try again."
-  exit 1
-fi
-/usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-# shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)" \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1M \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV,test \
-  --gpu-bind=none \
-  --container-remap-root \
-  --container-writable \
-  --no-container-mount-home \
-  --container-mounts="${MOUNTS}" \
-  --container-workdir=/deepsquare \
-  --container-image="$IMAGE_PATH" \
-  /bin/sh -c 'hostname'`,
-			title: "Positive test with pyxis maproot",
-		},
-		{
-			input: func() model.StepRun {
-				r := *cleanStepRun("hostname")
-				r.WorkDir = utils.Ptr("/home")
-				return r
-			}(),
-			expected: `/usr/bin/cat << 'EOFmounterror'
-WARNING: Mounts is now deprecated.
-If you need a cache (disk, shared, per-user or global), please read https://docs.deepsquare.run/workflow/guides/environment-variables.
-The cache is cleared periodically and only persists on the site.
-EOFmounterror
-/usr/bin/mkdir -p "$HOME/.config/enroot/"
-/usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
-machine registry login "username" password "password"
-EOFnetrc
-IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
-export IMAGE_PATH
-/usr/bin/echo "Importing image..."
-set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry#image' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
-if [ $? -ne 0 ]; then
-  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
-fi
-set -e
-tries=1; while [ "$tries" -lt 10 ]; do
-  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
-    break
-  fi
-  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
-  /usr/bin/sleep 10
-  tries=$((tries+1))
-done
-if [ "$tries" -ge 10 ]; then
-  /usr/bin/echo "Image import failure (corrupted image). Please try again."
-  exit 1
-fi
-/usr/bin/echo "Image successfully imported!"
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-# shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)" \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1M \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV,test \
-  --gpu-bind=none \
-  --no-container-remap-root \
-  --container-writable \
-  --no-container-mount-home \
-  --container-mounts="${MOUNTS}" \
-  --container-workdir='/home' \
-  --container-image="$IMAGE_PATH" \
-  /bin/sh -c 'hostname'`,
-			title: "Positive test with pyxis workdir",
 		},
 		{
 			input: func() model.StepRun {

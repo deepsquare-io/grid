@@ -1,0 +1,30 @@
+job:
+  ## Allow DeepSquare logging
+  enableLogging: false
+
+  ## Allocate resources
+  resources:
+    tasks: 1
+    cpusPerTask: 2
+    memPerCpu: 4000
+    gpusPerTask: 1
+
+  ## The job content
+  steps:
+    ## The steps of the jobs which are run sequentially.
+    - name: neko
+      run:
+        container:
+          image: m1k1o/neko:firefox
+          registry: registry-1.docker.io
+          mountHome: true
+        command: |
+          cd $HOME
+
+          /usr/bin/supervisord -c /etc/neko/supervisord.conf
+        customNetworkInterfaces:
+          - bore:
+              address: bore.deepsquare.run
+              port: 2200
+              targetPort: 8080
+        network: slirp4netns

@@ -1,0 +1,50 @@
+job:
+  ## Allow DeepSquare logging
+  enableLogging: false
+
+  ## Allocate resources
+  resources:
+    tasks: 1
+    cpusPerTask: 2
+    memPerCpu: 4000
+    gpusPerTask: 1
+
+  ## The job content
+  steps:
+    ## The steps of the jobs which are run sequentially.
+    - name: kasmvnc
+      run:
+        container:
+          image: kasmweb/desktop:1.14.0-rolling
+          registry: registry-1.docker.io
+          mountHome: true
+        env:
+          - key: VNC_PW
+            value: password
+        command: |
+          mkdir -p $HOME/Desktop
+          cd $HOME
+          /dockerstartup/kasm_default_profile.sh
+          cp /dockerstartup/vnc_startup.sh /tmp/vnc_startup.sh
+          sed -Ei 's/start_audio_out_websocket$/#start_audio_out_websocket/g' /tmp/vnc_startup.sh
+          sed -Ei 's/start_audio_out$/#start_audio_out/g' /tmp/vnc_startup.sh
+          sed -Ei 's/start_audio_in$/#start_audio_in/g' /tmp/vnc_startup.sh
+          sed -Ei 's/start_upload$/#start_upload/g' /tmp/vnc_startup.sh
+          sed -Ei 's/start_webcam$/#start_webcam/g' /tmp/vnc_startup.sh
+          sed -Ei 's/start_printer$/#start_printer/g' /tmp/vnc_startup.sh
+          sed -Ei 's/start_gamepad$/#start_gamepad/g' /tmp/vnc_startup.sh
+          sed -Ei 's/ --ssl//g' /tmp/vnc_startup.sh
+          sed -Ei 's| --cert \$\{HOME\}/\.vnc/self\.pem --certkey \$\{HOME\}/\.vnc/self\.pem||g' /tmp/vnc_startup.sh
+          sed -Ei 's/ -sslOnly//g' /tmp/vnc_startup.sh
+          mkdir -p "$HOME/.vnc"
+          cp /usr/share/kasmvnc/kasmvnc_defaults.yaml "$HOME/.vnc/kasmvnc.yaml"
+          sed -Ei 's|require_ssl: true|require_ssl: false|g' "$HOME/.vnc/kasmvnc.yaml"
+          sed -Ei 's|pem_certificate: .*|pem_certificate: \$\{HOME\}/.vnc/self.pem|g' "$HOME/.vnc/kasmvnc.yaml"
+          sed -Ei 's|pem_key: .*|pem_key: \$\{HOME\}/.vnc/self.pem|g' "$HOME/.vnc/kasmvnc.yaml"
+          /tmp/vnc_startup.sh --wait
+        network: 'slirp4netns'
+        customNetworkInterfaces:
+          - bore:
+              address: bore.deepsquare.run
+              port: 2200
+              targetPort: 6901

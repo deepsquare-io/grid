@@ -1,4 +1,4 @@
-{{- /* In this file contains 4 launch modes: Apptainer, Enroot, Pyxis and none. */ -}}
+{{- /* In this file contains 3 launch modes: Apptainer, Enroot and none. */ -}}
 {{- if .Step.Run.Container -}}
 {{- if .Step.Run.Container.Mounts -}}
 /usr/bin/cat << 'EOFmounterror'
@@ -62,7 +62,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
   --gpu-bind=none \
   {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}/bin/sh -c {{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS (renderApptainerCommand .Step.Run) .Step.Run.Shell | squote -}}{{ else }}{{ renderApptainerCommand .Step.Run }}{{ end }}
 {{- else -}}
-{{- /* Enroot or Pyxis, which use the same import method */ -}}
+{{- /* Enroot */ -}}
 {{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password -}}
 /usr/bin/mkdir -p "$HOME/.config/enroot/"
 /usr/bin/cat << 'EOFnetrc' > "$HOME/.config/enroot/.credentials"
@@ -93,8 +93,6 @@ if [ "$tries" -ge 10 ]; then
 fi
 /usr/bin/echo "Image successfully imported!"
 {{- end }}
-{{- /* Raw enroot is used when using slirp4netns */ -}}
-{{- if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}
 # shellcheck disable=SC2097,SC2098,SC1078
 /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
   --export=ALL"$(loadDeepsquareEnv)" \
@@ -135,77 +133,7 @@ enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID"
 }
 trap enrootClean EXIT INT TERM
-'{{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS (renderEnrootCommand .Step.Run) .Step.Run.Shell | squote -}}
-{{- else -}}
-{{/* Pyxis or none. */}}
-MOUNTS="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
-# shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
-  --export=ALL"$(loadDeepsquareEnv)" \
-{{- if and .Step.Run.Resources .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) }}
-  --cpus-per-task={{ derefInt .Step.Run.Resources.CpusPerTask }} \
-{{- else }}
-  --cpus-per-task={{ .Job.Resources.CpusPerTask }} \
-{{- end }}
-{{- if and .Step.Run.Resources .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) }}
-  --mem-per-cpu={{ derefInt .Step.Run.Resources.MemPerCPU }}M \
-{{- else }}
-  --mem-per-cpu={{ .Job.Resources.MemPerCPU }}M \
-{{- end }}
-{{- if and .Step.Run.Resources .Step.Run.Resources.GpusPerTask }}
-  --gpus-per-task={{ derefInt .Step.Run.Resources.GpusPerTask }} \
-{{- else }}
-  --gpus-per-task={{ .Job.Resources.GpusPerTask }} \
-{{- end }}
-{{- if and .Step.Run.Resources .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) }}
-  --ntasks={{ derefInt .Step.Run.Resources.Tasks }} \
-{{- else }}
-  --ntasks=1 \
-{{- end }}
-{{- if and .Step.Run.Mpi (derefStr .Step.Run.Mpi) }}
-  --mpi={{ derefStr .Step.Run.Mpi }} \
-{{- end }}
-  --container-env=STORAGE_PATH,DEEPSQUARE_TMP,DEEPSQUARE_SHARED_TMP,DEEPSQUARE_SHARED_WORLD_TMP,DEEPSQUARE_DISK_TMP,DEEPSQUARE_DISK_WORLD_TMP,DEEPSQUARE_INPUT,DEEPSQUARE_OUTPUT,DEEPSQUARE_ENV{{ range $index, $env := .Step.Run.Env }},{{ $env.Key }}{{ end }} \
-{{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
-  --cpu-bind=none \
-{{- end }}
-  --gpu-bind=none \
-{{- if and .Step.Run.MapRoot (derefBool .Step.Run.MapRoot ) }}
-  --container-remap-root \
-{{- else }}
-  --no-container-remap-root \
-{{- end }}
-{{- if and .Step.Run.Container.ReadOnlyRootFS (derefBool .Step.Run.Container.ReadOnlyRootFS) }}
-  --container-readonly \
-{{- else }}
-  --container-writable \
-{{- end }}
-{{- if and .Step.Run.Container.MountHome (derefBool .Step.Run.Container.MountHome) }}
-  --container-mount-home \
-{{- else }}
-  --no-container-mount-home \
-{{- end }}
-  --container-mounts="${MOUNTS}" \
-{{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) }}
-  --container-workdir={{ derefStr .Step.Run.WorkDir | squote }} \
-{{- else }}
-  --container-workdir=/deepsquare \
-{{- end }}
-{{- if isAbs $image -}}
-  --container-image="$STORAGE_PATH"{{ $image | squote }} \
-{{- else }}
-  --container-image="$IMAGE_PATH" \
-{{- end }}
-  {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Step.Run.Command | squote -}}
-{{- end -}}
+'{{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS (renderEnrootCommand .Step.Run) .Step.Run.Shell | squote -}}{{ else }}{{ renderEnrootCommand .Step.Run }}{{ end }}
 {{- end }}
 {{- else -}}
 {{ range $env := .Step.Run.Env }}{{ $env.Key }}={{ $env.Value | squote }} {{ end }}/usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
