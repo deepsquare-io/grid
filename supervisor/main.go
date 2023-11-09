@@ -1035,17 +1035,15 @@ See the GNU General Public License for more details.`,
 					})
 				}
 
-				if (oldInfo.Addr == common.Address{}) {
-					labels = metascheduler.ProcessLabels(labels)
-					logger.I.Info("trying to register since we are not in the grid")
-					if err := container.metascheduler.Register(
-						ctx,
-						hardware,
-						prices,
-						labels,
-					); err != nil {
-						logger.I.Fatal("supervisor failed to register", zap.Error(err))
-					}
+				labels = metascheduler.ProcessLabels(labels)
+				logger.I.Info("asking for registration")
+				if err := container.metascheduler.Register(
+					ctx,
+					hardware,
+					prices,
+					labels,
+				); err != nil {
+					logger.I.Fatal("supervisor failed to register", zap.Error(err))
 				}
 			}()
 		} else {
