@@ -60,7 +60,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
   --cpu-bind=none \
 {{- end }}
   --gpu-bind=none \
-  {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}/bin/sh -c {{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS (renderApptainerCommand .Step.Run) .Step.Run.Shell | squote -}}{{ else }}{{ renderApptainerCommand .Step.Run }}{{ end }}
+  {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}/bin/sh -c {{ renderSlirp4NetNS .Step.Run (renderApptainerCommand .Step.Run) | squote -}}{{ else }}{{ renderApptainerCommand .Step.Run }}{{ end }}
 {{- else -}}
 {{- /* Enroot */ -}}
 {{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password -}}
@@ -133,7 +133,7 @@ enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID"
 }
 trap enrootClean EXIT INT TERM
-'{{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS (renderEnrootCommand .Step.Run) .Step.Run.Shell | squote -}}{{ else }}{{ renderEnrootCommand .Step.Run }}{{ end }}
+'{{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run (renderEnrootCommand .Step.Run) | squote -}}{{ else }}{{ renderEnrootCommand .Step.Run | squote }}{{ end }}
 {{- end }}
 {{- else -}}
 {{ range $env := .Step.Run.Env }}{{ $env.Key }}={{ $env.Value | squote }} {{ end }}/usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
@@ -164,10 +164,10 @@ trap enrootClean EXIT INT TERM
 {{- if and .Step.Run.DisableCPUBinding (derefBool .Step.Run.DisableCPUBinding ) }}
   --cpu-bind=none \
 {{- end }}
-{{- if and .Step.Run.MapRoot (derefBool .Step.Run.MapRoot ) }}
-  /usr/bin/unshare --user --map-root-user --mount \
+{{- if or .Step.Run.MapUID .Step.Run.MapGID }}
+  /usr/bin/unshare --map-current-user{{ if .Step.Run.MapUID }} --map-user={{ .Step.Run.MapUID }}{{ end }}{{ if .Step.Run.MapGID }} --map-group={{ .Step.Run.MapGID }}{{ end }} --mount \
 {{- end }}
-  {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run.CustomNetworkInterfaces .Step.Run.DNS .Step.Run.Command .Step.Run.Shell | squote -}}{{ else }}
+  {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run .Step.Run.Command | squote -}}{{ else }}
 {{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) -}}
   'cd {{ derefStr .Step.Run.WorkDir | squote | escapeSQuote }} || { echo "change dir to working directory failed"; exit 1; };'{{ end -}}
   {{ .Step.Run.Command | squote -}}{{ end }}

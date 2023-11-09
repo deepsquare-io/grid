@@ -111,58 +111,6 @@ EOFenroot
 		{
 			input: func() model.StepRun {
 				r := *cleanEnrootStepRun("hostname")
-				r.MapRoot = utils.Ptr(true)
-				return r
-			}(),
-			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
-#ENROOT_REMAP_ROOT=y
-#ENROOT_ROOTFS_WRITABLE=y
-#ENROOT_MOUNT_HOME=n
-
-environ() {
-  # Keep all the environment from the host
-  /usr/bin/env
-
-  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
-
-  /usr/bin/echo "STORAGE_PATH=/deepsquare"
-  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
-  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  /usr/bin/echo "test='value'"
-}
-
-mounts() {
-  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
-}
-
-hooks() {
-  /usr/bin/cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
-cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
-exec "$@"
-EOFrclocal
-}
-EOFenroot
-/usr/bin/enroot start \
-  --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID" \
-  /bin/sh -c 'hostname'`,
-			title: "Positive test with maproot",
-		},
-		{
-			input: func() model.StepRun {
-				r := *cleanEnrootStepRun("hostname")
 				r.Container.Image = "/test/my.sqshfs"
 				return r
 			}(),

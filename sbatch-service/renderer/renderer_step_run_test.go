@@ -113,7 +113,7 @@ enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID"
 }
 trap enrootClean EXIT INT TERM
-'/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
+''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=n
@@ -133,7 +133,7 @@ environ() {
   /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
   /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  /usr/bin/echo "test='value'"
+  /usr/bin/echo "test='"'"'value'"'"'"
 }
 
 mounts() {
@@ -143,11 +143,11 @@ mounts() {
   /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
   /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
   /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '/host /container none x-create=auto,bind,ro'
+  /usr/bin/echo '"'"'/host /container none x-create=auto,bind,ro'"'"'
 }
 
 hooks() {
-  /usr/bin/cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+  /usr/bin/cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
 cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
 exec "$@"
 EOFrclocal
@@ -156,7 +156,7 @@ EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
   "container-$SLURM_JOB_ID" \
-  /bin/sh -c 'hostname'`,
+  /bin/sh -c '"'"'hostname'"'"''`,
 			title: "Positive test with image",
 		},
 		{
@@ -343,23 +343,6 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
 				Env:       cleanStepRun("").Env,
 				Resources: &cleanStepRunResources,
 				Command:   "hostname",
-				MapRoot:   utils.Ptr(true),
-			},
-			expected: `test='value' /usr/bin/srun --job-name='test' \
-  --export=ALL"$(loadDeepsquareEnv)" \
-  --cpus-per-task=1 \
-  --mem-per-cpu=1M \
-  --gpus-per-task=0 \
-  --ntasks=1 \
-  /usr/bin/unshare --user --map-root-user --mount \
-  /bin/sh -c 'hostname'`,
-			title: "Positive test with map root",
-		},
-		{
-			input: model.StepRun{
-				Env:       cleanStepRun("").Env,
-				Resources: &cleanStepRunResources,
-				Command:   "hostname",
 				Mpi:       utils.Ptr("none"),
 			},
 			expected: `test='value' /usr/bin/srun --job-name='test' \
@@ -434,7 +417,7 @@ wait_for_network_namespace() {
 }
 
 # shellcheck disable=SC2016,SC1078,SC1079
-/usr/bin/unshare --user --net --mount --map-root-user /bin/sh -c '"'"'
+/usr/bin/unshare --map-current-user --net --mount /bin/sh -c '"'"'
 set -e
 
 nsenter_flags() {
@@ -596,7 +579,7 @@ wait_for_network_namespace() {
 }
 
 # shellcheck disable=SC2016,SC1078,SC1079
-/usr/bin/unshare --user --net --mount --map-root-user /bin/sh -c '"'"'
+/usr/bin/unshare --map-current-user --net --mount /bin/sh -c '"'"'
 set -e
 
 nsenter_flags() {
@@ -781,7 +764,7 @@ wait_for_network_namespace() {
 }
 
 # shellcheck disable=SC2016,SC1078,SC1079
-/usr/bin/unshare --user --net --mount --map-root-user /bin/sh -c '"'"'
+/usr/bin/unshare --map-current-user --net --mount /bin/sh -c '"'"'
 set -e
 
 nsenter_flags() {

@@ -90,7 +90,7 @@ enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID"
 }
 trap enrootClean EXIT INT TERM
-'/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
+''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=n
@@ -121,7 +121,7 @@ mounts() {
 }
 
 hooks() {
-  /usr/bin/cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+  /usr/bin/cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
 cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
 exec "$@"
 EOFrclocal
@@ -130,9 +130,9 @@ EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
   "container-$SLURM_JOB_ID" \
-  /bin/sh -c 'echo "Hello ${WHO}"
+  /bin/sh -c '"'"'echo "Hello ${WHO}"
 echo "RESULT=Hello ${WHO}" >> ${DEEPSQUARE_ENV}
-'
+'"'"''
 echo "HELLO_WORLD_$(/usr/bin/grep "^RESULT" "$DEEPSQUARE_ENV")" >> "${DEEPSQUARE_BhNwmz1fC9zVZ8im94bLbw_OLD_ENV}"
 export DEEPSQUARE_ENV="${DEEPSQUARE_BhNwmz1fC9zVZ8im94bLbw_OLD_ENV}"
 )

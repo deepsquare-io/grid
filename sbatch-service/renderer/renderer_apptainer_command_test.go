@@ -77,24 +77,6 @@ func TestRenderApptainer(t *testing.T) {
 		{
 			input: func() model.StepRun {
 				r := *cleanApptainerStepRun("hostname")
-				r.MapRoot = utils.Ptr(true)
-				return r
-			}(),
-			expected: `/usr/bin/apptainer --silent exec \
-  --disable-cache \
-  --contain \
-  --writable-tmpfs \
-  --no-home \
-  --nv \
-  --pwd "/deepsquare" \
-  --fakeroot \
-  "$IMAGE_PATH" \
-  /bin/sh -c 'hostname'`,
-			title: "Positive test with maproot",
-		},
-		{
-			input: func() model.StepRun {
-				r := *cleanApptainerStepRun("hostname")
 				r.Container.Image = "/test/my.sqshfs"
 				return r
 			}(),

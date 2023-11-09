@@ -51,6 +51,8 @@ job:
             value: 8G
         dns: ['1.1.1.1']
         network: 'slirp4netns'
+        mapUid: 0
+        mapGid: 0
         customNetworkInterfaces:
           - wireguard:
               # Server:

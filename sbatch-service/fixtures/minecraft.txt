@@ -159,7 +159,7 @@ wait_for_network_namespace() {
 }
 
 # shellcheck disable=SC2016,SC1078,SC1079
-/usr/bin/unshare --user --net --mount --map-root-user /bin/sh -c '"'"'
+/usr/bin/unshare --map-current-user --net --mount --map-user=0 --map-group=0 /bin/sh -c '"'"'
 set -e
 
 nsenter_flags() {

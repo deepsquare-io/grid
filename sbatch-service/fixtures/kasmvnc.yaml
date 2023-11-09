@@ -1,4 +1,6 @@
 job:
+  ## See: https://docs.deepsquare.run/workflow/workflow-api-reference/job
+
   ## Allow DeepSquare logging
   enableLogging: false
 
@@ -22,17 +24,12 @@ job:
           - key: VNC_PW
             value: password
         command: |
+          rm -rf "$HOME/.vnc"
           mkdir -p $HOME/Desktop
           cd $HOME
+
           /dockerstartup/kasm_default_profile.sh
           cp /dockerstartup/vnc_startup.sh /tmp/vnc_startup.sh
-          sed -Ei 's/start_audio_out_websocket$/#start_audio_out_websocket/g' /tmp/vnc_startup.sh
-          sed -Ei 's/start_audio_out$/#start_audio_out/g' /tmp/vnc_startup.sh
-          sed -Ei 's/start_audio_in$/#start_audio_in/g' /tmp/vnc_startup.sh
-          sed -Ei 's/start_upload$/#start_upload/g' /tmp/vnc_startup.sh
-          sed -Ei 's/start_webcam$/#start_webcam/g' /tmp/vnc_startup.sh
-          sed -Ei 's/start_printer$/#start_printer/g' /tmp/vnc_startup.sh
-          sed -Ei 's/start_gamepad$/#start_gamepad/g' /tmp/vnc_startup.sh
           sed -Ei 's/ --ssl//g' /tmp/vnc_startup.sh
           sed -Ei 's| --cert \$\{HOME\}/\.vnc/self\.pem --certkey \$\{HOME\}/\.vnc/self\.pem||g' /tmp/vnc_startup.sh
           sed -Ei 's/ -sslOnly//g' /tmp/vnc_startup.sh
@@ -41,6 +38,8 @@ job:
           sed -Ei 's|require_ssl: true|require_ssl: false|g' "$HOME/.vnc/kasmvnc.yaml"
           sed -Ei 's|pem_certificate: .*|pem_certificate: \$\{HOME\}/.vnc/self.pem|g' "$HOME/.vnc/kasmvnc.yaml"
           sed -Ei 's|pem_key: .*|pem_key: \$\{HOME\}/.vnc/self.pem|g' "$HOME/.vnc/kasmvnc.yaml"
+          sed -Ei "s|public_ip: .*|public_ip: auto|g" "$HOME/.vnc/kasmvnc.yaml"
+          #sed -Ei "s|hw3d: .*|hw3d: true|g" "$HOME/.vnc/kasmvnc.yaml"
           /tmp/vnc_startup.sh --wait
         network: 'slirp4netns'
         customNetworkInterfaces:

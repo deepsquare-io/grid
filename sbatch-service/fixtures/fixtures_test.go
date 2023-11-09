@@ -52,6 +52,10 @@ var (
 	fixtureMinecraft string
 	//go:embed minecraft.txt
 	expectedMinecraft string
+	//go:embed map-uid.yaml
+	fixtureMapUID string
+	//go:embed map-uid.txt
+	expectedMapUID string
 
 	r = renderer.NewJobRenderer(
 		"logger.example.com:443",
@@ -59,86 +63,62 @@ var (
 	)
 )
 
-func TestRenderTDP(t *testing.T) {
-	j := struct {
-		Job model.Job
-	}{}
-	err := yaml.Unmarshal([]byte(fixtureTDP), &j)
-	require.NoError(t, err)
+func TestFixtures(t *testing.T) {
+	tests := []struct {
+		name     string
+		fixture  string
+		expected string
+	}{
+		{
+			name:     "tdp",
+			fixture:  fixtureTDP,
+			expected: expectedTDP,
+		},
+		{
+			name:     "urs",
+			fixture:  fixtureURS,
+			expected: expectedURS,
+		},
+		{
+			name:     "blender",
+			fixture:  fixtureBlenderBatchJob,
+			expected: expectedBlenderBatchJob,
+		},
+		{
+			name:     "upscale",
+			fixture:  fixtureUpscale,
+			expected: expectedUpscale,
+		},
+		{
+			name:     "stable-diffusion",
+			fixture:  fixtureStableDiffusion,
+			expected: expectedStableDiffusion,
+		},
+		{
+			name:     "minecraft",
+			fixture:  fixtureMinecraft,
+			expected: expectedMinecraft,
+		},
+		{
+			name:     "MapUID",
+			fixture:  fixtureMapUID,
+			expected: expectedMapUID,
+		},
+	}
 
-	out, err := r.RenderJob(&j.Job)
-	require.NoError(t, err)
-	fmt.Println(out)
-	require.Equal(t, expectedTDP, out)
-	require.NoError(t, renderer.Shellcheck(out))
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			j := struct {
+				Job model.Job
+			}{}
+			err := yaml.Unmarshal([]byte(tt.fixture), &j)
+			require.NoError(t, err)
 
-func TestRenderURS(t *testing.T) {
-	j := struct {
-		Job model.Job
-	}{}
-	err := yaml.Unmarshal([]byte(fixtureURS), &j)
-	require.NoError(t, err)
-
-	out, err := r.RenderJob(&j.Job)
-	require.NoError(t, err)
-	fmt.Println(out)
-	require.Equal(t, expectedURS, out)
-	require.NoError(t, renderer.Shellcheck(out))
-}
-
-func TestRenderBlenderBatchJob(t *testing.T) {
-	j := struct {
-		Job model.Job
-	}{}
-	err := yaml.Unmarshal([]byte(fixtureBlenderBatchJob), &j)
-	require.NoError(t, err)
-
-	out, err := r.RenderJob(&j.Job)
-	require.NoError(t, err)
-	fmt.Println(out)
-	require.Equal(t, expectedBlenderBatchJob, out)
-	require.NoError(t, renderer.Shellcheck(out))
-}
-
-func TestUpscaleJob(t *testing.T) {
-	j := struct {
-		Job model.Job
-	}{}
-	err := yaml.Unmarshal([]byte(fixtureUpscale), &j)
-	require.NoError(t, err)
-
-	out, err := r.RenderJob(&j.Job)
-	require.NoError(t, err)
-	fmt.Println(out)
-	require.Equal(t, expectedUpscale, out)
-	require.NoError(t, renderer.Shellcheck(out))
-}
-
-func TestStableDiffusionJob(t *testing.T) {
-	j := struct {
-		Job model.Job
-	}{}
-	err := yaml.Unmarshal([]byte(fixtureStableDiffusion), &j)
-	require.NoError(t, err)
-
-	out, err := r.RenderJob(&j.Job)
-	require.NoError(t, err)
-	fmt.Println(out)
-	require.Equal(t, expectedStableDiffusion, out)
-	require.NoError(t, renderer.Shellcheck(out))
-}
-
-func TestMinecraftJob(t *testing.T) {
-	j := struct {
-		Job model.Job
-	}{}
-	err := yaml.Unmarshal([]byte(fixtureMinecraft), &j)
-	require.NoError(t, err)
-
-	out, err := r.RenderJob(&j.Job)
-	require.NoError(t, err)
-	fmt.Println(out)
-	require.Equal(t, expectedMinecraft, out)
-	require.NoError(t, renderer.Shellcheck(out))
+			out, err := r.RenderJob(&j.Job)
+			require.NoError(t, err)
+			fmt.Println(out)
+			require.Equal(t, tt.expected, out)
+			require.NoError(t, renderer.Shellcheck(out))
+		})
+	}
 }

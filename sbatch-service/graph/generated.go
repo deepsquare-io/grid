@@ -949,6 +949,8 @@ input Bore {
 Connect a network interface on a StepRun.
 
 The network interface is connected via slirp4netns.
+
+If using wireguard, please mapUid to root (mapUid=0).
 """
 input NetworkInterface {
   """
@@ -1029,8 +1031,6 @@ input StepRun {
 
   Either: "host" (default) or "slirp4netns" (rootless network namespace).
 
-  Using "slirp4netns" will automatically enables mapRoot.
-
   Go name: "Network".
   """
   network: String
@@ -1073,21 +1073,23 @@ input StepRun {
     @goTag(key: "yaml", value: "env,omitempty")
     @constraint(format: "omitempty,dive,required")
   """
-  Remap UID to root. Does not grant elevated system permissions, despite appearances.
+  Remap UID. Does not grant elevated system permissions, despite appearances.
 
-  If the "default" (Enroot) container runtime is used, it will use the ` + "`" + `--container-remap-root` + "`" + ` flags.
+  MapUID doesn't work very well with Apptainer. You can still map to root, but you cannot map to an unknown user.
 
-  If the "apptainer" container runtime is used, the ` + "`" + `--fakeroot` + "`" + ` flag will be passed.
-
-  If no container runtime is used, ` + "`" + `unshare --user --map-root-user --mount` + "`" + ` will be used and a user namespace will be created.
-
-  It is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).
-
-  If null, default to false.
-
-  Go name: "MapRoot".
+  Go name: "MapUID".
   """
-  mapRoot: Boolean @goTag(key: "yaml", value: "mapRoot,omitempty")
+  mapUid: Int
+    @goTag(key: "yaml", value: "mapUid,omitempty")
+    @goField(name: "MapUID")
+  """
+  Remap GID. Does not grant elevated system permissions, despite appearances.
+
+  Go name: "MapGID".
+  """
+  mapGid: Int
+    @goTag(key: "yaml", value: "mapGid,omitempty")
+    @goField(name: "MapGID")
   """
   Working directory.
 
@@ -4529,7 +4531,7 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"command", "shell", "resources", "container", "network", "dns", "customNetworkInterfaces", "env", "mapRoot", "workDir", "disableCpuBinding", "mpi"}
+	fieldsInOrder := [...]string{"command", "shell", "resources", "container", "network", "dns", "customNetworkInterfaces", "env", "mapUid", "mapGid", "workDir", "disableCpuBinding", "mpi"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4608,15 +4610,24 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 				return it, err
 			}
 			it.Env = data
-		case "mapRoot":
+		case "mapUid":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mapRoot"))
-			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mapUid"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.MapRoot = data
+			it.MapUID = data
+		case "mapGid":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mapGid"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MapGID = data
 		case "workDir":
 			var err error
 

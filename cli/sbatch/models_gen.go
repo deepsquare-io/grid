@@ -347,6 +347,8 @@ type Mount struct {
 // Connect a network interface on a StepRun.
 //
 // The network interface is connected via slirp4netns.
+//
+// If using wireguard, please mapUid to root (mapUid=0).
 type NetworkInterface struct {
 	// Use the wireguard transport.
 	//
@@ -581,8 +583,6 @@ type StepRun struct {
 	//
 	// Either: "host" (default) or "slirp4netns" (rootless network namespace).
 	//
-	// Using "slirp4netns" will automatically enables mapRoot.
-	//
 	// Go name: "Network".
 	Network *string `json:"network,omitempty" yaml:"network,omitempty" validate:"omitempty,oneof=host slirp4netns"`
 	// Configuration for the DNS in "slirp4netns" mode.
@@ -609,20 +609,16 @@ type StepRun struct {
 	//
 	// Go name: "Env".
 	Env []*EnvVar `json:"env,omitempty" yaml:"env,omitempty" validate:"omitempty,dive,required"`
-	// Remap UID to root. Does not grant elevated system permissions, despite appearances.
+	// Remap UID. Does not grant elevated system permissions, despite appearances.
 	//
-	// If the "default" (Enroot) container runtime is used, it will use the `--container-remap-root` flags.
+	// MapUID doesn't work very well with Apptainer. You can still map to root, but you cannot map to an unknown user.
 	//
-	// If the "apptainer" container runtime is used, the `--fakeroot` flag will be passed.
+	// Go name: "MapUID".
+	MapUID *int `json:"mapUid,omitempty" yaml:"mapUid,omitempty"`
+	// Remap GID. Does not grant elevated system permissions, despite appearances.
 	//
-	// If no container runtime is used, `unshare --user --map-root-user --mount` will be used and a user namespace will be created.
-	//
-	// It is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).
-	//
-	// If null, default to false.
-	//
-	// Go name: "MapRoot".
-	MapRoot *bool `json:"mapRoot,omitempty" yaml:"mapRoot,omitempty"`
+	// Go name: "MapGID".
+	MapGID *int `json:"mapGid,omitempty" yaml:"mapGid,omitempty"`
 	// Working directory.
 	//
 	// If the "default" (Enroot) container runtime is used, it will use the `--container-workdir` flag.

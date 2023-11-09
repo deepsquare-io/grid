@@ -500,7 +500,7 @@
         }
       },
       "required": [],
-      "description": "Connect a network interface on a StepRun.\n\nThe network interface is connected via slirp4netns."
+      "description": "Connect a network interface on a StepRun.\n\nThe network interface is connected via slirp4netns.\n\nIf using wireguard, please mapUid to root (mapUid=0)."
     },
     "StepRun": {
       "type": "object",
@@ -523,7 +523,7 @@
         },
         "network": {
           "$ref": "#/definitions/String",
-          "description": "Type of core networking functionality.\n\nEither: \"host\" (default) or \"slirp4netns\" (rootless network namespace).\n\nUsing \"slirp4netns\" will automatically enables mapRoot.\n\nGo name: \"Network\"."
+          "description": "Type of core networking functionality.\n\nEither: \"host\" (default) or \"slirp4netns\" (rootless network namespace).\n\nGo name: \"Network\"."
         },
         "dns": {
           "type": "array",
@@ -546,9 +546,13 @@
           },
           "description": "Environment variables accessible over the command.\n\nGo name: \"Env\"."
         },
-        "mapRoot": {
-          "$ref": "#/definitions/Boolean",
-          "description": "Remap UID to root. Does not grant elevated system permissions, despite appearances.\n\nIf the \"default\" (Enroot) container runtime is used, it will use the `--container-remap-root` flags.\n\nIf the \"apptainer\" container runtime is used, the `--fakeroot` flag will be passed.\n\nIf no container runtime is used, `unshare --user --map-root-user --mount` will be used and a user namespace will be created.\n\nIt is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).\n\nIf null, default to false.\n\nGo name: \"MapRoot\"."
+        "mapUid": {
+          "$ref": "#/definitions/Int",
+          "description": "Remap UID. Does not grant elevated system permissions, despite appearances.\n\nMapUID doesn't work very well with Apptainer. You can still map to root, but you cannot map to an unknown user.\n\nGo name: \"MapUID\"."
+        },
+        "mapGid": {
+          "$ref": "#/definitions/Int",
+          "description": "Remap GID. Does not grant elevated system permissions, despite appearances.\n\nGo name: \"MapGID\"."
         },
         "workDir": {
           "$ref": "#/definitions/String",

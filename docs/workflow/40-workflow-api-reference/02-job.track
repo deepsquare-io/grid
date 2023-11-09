@@ -862,6 +862,8 @@ Connect a network interface on a StepRun.
 
 The network interface is connected via slirp4netns.
 
+If using wireguard, please mapUid to root (mapUid=0).
+
 <table>
 <thead>
 <tr>
@@ -1379,8 +1381,6 @@ Type of core networking functionality.
 
 Either: "host" (default) or "slirp4netns" (rootless network namespace).
 
-Using "slirp4netns" will automatically enables mapRoot.
-
 Go name: "Network".
 
 </td>
@@ -1431,23 +1431,26 @@ Go name: "Env".
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>mapRoot</strong></td>
-<td valign="top"><a href="#boolean">Boolean</a></td>
+<td colspan="2" valign="top"><strong>mapUid</strong></td>
+<td valign="top"><a href="#int">Int</a></td>
 <td>
 
-Remap UID to root. Does not grant elevated system permissions, despite appearances.
+Remap UID. Does not grant elevated system permissions, despite appearances.
 
-If the "default" (Enroot) container runtime is used, it will use the `--container-remap-root` flags.
+MapUID doesn't work very well with Apptainer. You can still map to root, but you cannot map to an unknown user.
 
-If the "apptainer" container runtime is used, the `--fakeroot` flag will be passed.
+Go name: "MapUID".
 
-If no container runtime is used, `unshare --user --map-root-user --mount` will be used and a user namespace will be created.
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>mapGid</strong></td>
+<td valign="top"><a href="#int">Int</a></td>
+<td>
 
-It is not recommended to use mapRoot with network=slirp4netns, as it will create 2 user namespaces (and therefore will be useless).
+Remap GID. Does not grant elevated system permissions, despite appearances.
 
-If null, default to false.
-
-Go name: "MapRoot".
+Go name: "MapGID".
 
 </td>
 </tr>

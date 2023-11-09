@@ -43,7 +43,7 @@ wait_for_network_namespace() {
 }
 
 # shellcheck disable=SC2016,SC1078,SC1079
-/usr/bin/unshare --user --net --mount --map-root-user {{ if .Shell }}{{ derefStr .Shell }}{{ else }}/bin/sh{{ end }} -c '
+/usr/bin/unshare --map-current-user --net --mount{{ if .Run.MapUID }} --map-user={{ .Run.MapUID }}{{ end }}{{ if .Run.MapGID }} --map-group={{ .Run.MapGID }}{{ end }} {{ if .Run.Shell }}{{ derefStr .Run.Shell }}{{ else }}/bin/sh{{ end }} -c '
 set -e
 
 nsenter_flags() {
@@ -85,17 +85,17 @@ wait_for_network_device() {
 
 wait_for_network_device $$ tap0
 
-{{ range $i, $nic := .NICs }}
+{{ range $i, $nic := .Run.CustomNetworkInterfaces }}
 {{- if $nic.Wireguard -}}
 {{ renderWireguard $nic.Wireguard (printf "net%d" $i) | escapeSQuote }}
 {{- else if $nic.Bore -}}
 /usr/bin/bore -s {{ $nic.Bore.Address }} -p {{ $nic.Bore.Port }} -ls localhost -lp {{ $nic.Bore.TargetPort }} -r &
 {{- end -}}
 {{- end -}}
-{{- range $dns := .DNS }}
+{{- range $dns := .Run.DNS }}
 /usr/bin/echo "nameserver {{ $dns }}" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
 {{- end }}
-{{- if gt (len .DNS) 0 }}
+{{- if gt (len .Run.DNS) 0 }}
 /usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
 {{- end }}
 

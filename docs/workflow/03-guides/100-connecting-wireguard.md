@@ -418,6 +418,9 @@ steps:
         - 8.8.8.8
       ## Use the container network interface slirp4netns.
       network: slirp4netns
+      ## Need to map to root to start wireguard
+      mapUid: 0
+      mapGid: 0
       customNetworkInterfaces:
         - wireguard:
             ## The container network interface configuration.
@@ -462,6 +465,9 @@ steps:
         - 8.8.8.8
       ## Use the container network interface slirp4netns.
       network: slirp4netns
+      ## Need to map to root to start wireguard
+      mapUid: 0
+      mapGid: 0
       customNetworkInterfaces:
         - wireguard:
             ## The container network interface configuration.
@@ -499,10 +505,4 @@ Overall, Wireguard is well-suited in our environment. It simplifies the process 
 
 ## Limitations
 
-If you enable the `slirp4netns` container networking will automatically **re-map the user as root**.
-
-Although you are remapped as root, this is still in an unprivileged container, which means that it is not possible to bind restricted ports (like 80).
-
-Unprivileged containers have some limitations in terms of capabilities and network access. Unprivileged containers are typically limited in their network access, as they are usually isolated from the host network and can only communicate with other containers or the outside world through specific network interfaces or bridges set up by the container runtime.
-
-These limitations are intended to provide better security and isolation for the container and its contents, but may pose challenges for certain types of applications or workloads that require more extensive system access or network connectivity.
+Manipulation with the network interfaces require to map the UID to root. See [Mapping the UID of the container](mapuid).

@@ -550,7 +550,6 @@ func cleanStepRunWith(
 		DisableCPUBinding: utils.Ptr(true),
 		Network:           utils.Ptr("slirp4netns"),
 		DNS:               []string{"1.1.1.1"},
-		MapRoot:           utils.Ptr(true),
 		WorkDir:           utils.Ptr("/dir"),
 		CustomNetworkInterfaces: []*model.NetworkInterface{
 			{

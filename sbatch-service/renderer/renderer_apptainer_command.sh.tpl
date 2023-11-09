@@ -1,5 +1,7 @@
 {{- $image := formatImageURL .Run.Container.Registry .Run.Container.Image .Run.Container.Apptainer .Run.Container.DeepsquareHosted -}}
-/usr/bin/apptainer --silent exec \
+{{- if and (not (and .Run.Network (eq (derefStr .Run.Network) "slirp4netns"))) (or .Run.MapUID .Run.MapGID) -}}
+/usr/bin/unshare --map-current-user{{ if .Run.MapUID }} --map-user={{ .Run.MapUID }}{{ end }}{{ if .Run.MapGID }} --map-group={{ .Run.MapGID }}{{ end }} --mount \
+{{- end }}/usr/bin/apptainer --silent exec \
   --disable-cache \
   --contain \
 {{- if not (and .Run.Container.ReadOnlyRootFS (derefBool .Run.Container.ReadOnlyRootFS)) }}
@@ -13,9 +15,6 @@
   --pwd {{ derefStr .Run.WorkDir | squote }} \
 {{- else }}
   --pwd "/deepsquare" \
-{{- end }}
-{{- if and .Run.MapRoot (derefBool .Run.MapRoot ) }}
-  --fakeroot \
 {{- end }}
 {{- if isAbs $image }}
   {{ if not (and .Run.Container.DeepsquareHosted (derefBool .Run.Container.DeepsquareHosted)) }}"$STORAGE_PATH"{{ end }}{{ $image | squote }} \

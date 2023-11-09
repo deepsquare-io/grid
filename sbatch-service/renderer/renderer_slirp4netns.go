@@ -28,12 +28,10 @@ import (
 var slirp4netnsTpl string
 
 func RenderSlirp4NetNS(
-	i []*model.NetworkInterface,
-	dns []string,
+	run *model.StepRun,
 	command string,
-	shell *string,
 ) (string, error) {
-	for _, nic := range i {
+	for _, nic := range run.CustomNetworkInterfaces {
 		if err := validate.I.Struct(nic); err != nil {
 			return "", err
 		}
@@ -46,15 +44,11 @@ func RenderSlirp4NetNS(
 
 	var out bytes.Buffer
 	if err = tmpl.Execute(&out, struct {
-		NICs    []*model.NetworkInterface
-		DNS     []string
+		Run     *model.StepRun
 		Command string
-		Shell   *string
 	}{
-		NICs:    i,
-		DNS:     dns,
+		Run:     run,
 		Command: command,
-		Shell:   shell,
 	}); err != nil {
 		return "", err
 	}

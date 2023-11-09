@@ -1,9 +1,5 @@
 /usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
-{{- if and .Run.MapRoot (derefBool .Run.MapRoot ) }}
-#ENROOT_REMAP_ROOT=y
-{{- else }}
 #ENROOT_REMAP_ROOT=n
-{{- end }}
 {{- if and .Run.Container.ReadOnlyRootFS (derefBool .Run.Container.ReadOnlyRootFS) }}
 #ENROOT_ROOTFS_WRITABLE=n
 {{- else }}
@@ -61,6 +57,9 @@ exec "$@"
 EOFrclocal
 }
 EOFenroot
+{{- if and (not (and .Run.Network (eq (derefStr .Run.Network) "slirp4netns"))) (or .Run.MapUID .Run.MapGID) }}
+/usr/bin/unshare --map-current-user{{ if .Run.MapUID }} --map-user={{ .Run.MapUID }}{{ end }}{{ if .Run.MapGID }} --map-group={{ .Run.MapGID }}{{ end }} --mount \
+{{- end }}
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
   "container-$SLURM_JOB_ID" \

@@ -107,7 +107,7 @@ wait_for_network_namespace() {
 }
 
 # shellcheck disable=SC2016,SC1078,SC1079
-/usr/bin/unshare --user --net --mount --map-root-user /bin/sh -c '
+/usr/bin/unshare --map-current-user --net --mount /bin/sh -c '
 set -e
 
 nsenter_flags() {
@@ -242,7 +242,7 @@ wait_for_network_namespace() {
 }
 
 # shellcheck disable=SC2016,SC1078,SC1079
-/usr/bin/unshare --user --net --mount --map-root-user /bin/sh -c '
+/usr/bin/unshare --map-current-user --net --mount /bin/sh -c '
 set -e
 
 nsenter_flags() {
@@ -311,10 +311,13 @@ wait $child
 		t.Run(tt.title, func(t *testing.T) {
 			// Act
 			actual, err := renderer.RenderSlirp4NetNS(
-				tt.input.NICs,
-				tt.input.DNS,
+				&model.StepRun{
+					CustomNetworkInterfaces: tt.input.NICs,
+					DNS:                     tt.input.DNS,
+					Command:                 tt.input.Command,
+					Shell:                   tt.input.Shell,
+				},
 				tt.input.Command,
-				tt.input.Shell,
 			)
 
 			// Assert
