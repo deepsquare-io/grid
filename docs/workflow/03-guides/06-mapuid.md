@@ -26,4 +26,4 @@ steps:
       mapGid: 0
 ```
 
-Note that there is some limitation with the Apptainer container runtime. You cannot run Apptainer with an unknown user, and therefore, you cannot `mapUid` to an unknown user (which only leaves you to map to `root`).
+Note that there is some limitation with the Apptainer container runtime. You cannot run Apptainer with an unknown user, and therefore, you cannot `mapUid` to an unknown user (which only leaves you to map to `root`). See [open issue](https://github.com/apptainer/apptainer/issues/1066).
