@@ -72,8 +72,8 @@ devDependencies:
     specifier: 2.0.0
     version: 2.0.0
   docusaurus-theme-search-typesense:
-    specifier: 0.14.0-0
-    version: 0.14.0-0(@algolia/client-search@4.20.0)(@babel/runtime@7.23.2)(@docusaurus/core@3.0.0)(@docusaurus/theme-common@3.0.0)(@docusaurus/types@3.0.0)(@types/react@18.2.37)(algoliasearch@4.20.0)(eslint@8.53.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)
+    specifier: 0.14.0
+    version: 0.14.0(@algolia/client-search@4.20.0)(@babel/runtime@7.23.2)(@docusaurus/core@3.0.0)(@docusaurus/theme-common@3.0.0)(@docusaurus/types@3.0.0)(@types/react@18.2.37)(algoliasearch@4.20.0)(eslint@8.53.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)
   eslint:
     specifier: 8.53.0
     version: 8.53.0
@@ -5521,8 +5521,8 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /docusaurus-theme-search-typesense@0.14.0-0(@algolia/client-search@4.20.0)(@babel/runtime@7.23.2)(@docusaurus/core@3.0.0)(@docusaurus/theme-common@3.0.0)(@docusaurus/types@3.0.0)(@types/react@18.2.37)(algoliasearch@4.20.0)(eslint@8.53.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2):
-    resolution: {integrity: sha512-X1sByYP1NPmmtUITX1JksIE7BuEvTHd4n27gZV1pUk6XwT0FZhiwN99cv6KfwqnB5d3Mhhd+AcTtJtSgFAisnQ==}
+  /docusaurus-theme-search-typesense@0.14.0(@algolia/client-search@4.20.0)(@babel/runtime@7.23.2)(@docusaurus/core@3.0.0)(@docusaurus/theme-common@3.0.0)(@docusaurus/types@3.0.0)(@types/react@18.2.37)(algoliasearch@4.20.0)(eslint@8.53.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-ShXZQQaa7h1FvmWvau1EjYqHOHXmHleAd2A3cMW8vHZh4CtiwOux5YbAYr84uvSeR+AshWVpnGZ23swKBep+bw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@docusaurus/core': 3.0.0

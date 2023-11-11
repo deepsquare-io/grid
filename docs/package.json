@@ -39,7 +39,7 @@
     "@tsconfig/docusaurus": "2.0.2",
     "@types/react": "18.2.37",
     "clsx": "2.0.0",
-    "docusaurus-theme-search-typesense": "0.14.0-0",
+    "docusaurus-theme-search-typesense": "0.14.0",
     "eslint": "8.53.0",
     "eslint-config-prettier": "9.0.0",
     "eslint-plugin-deprecation": "2.0.0",
