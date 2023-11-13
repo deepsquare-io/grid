@@ -79,6 +79,14 @@ func (m *model) topup(ctx context.Context) tea.Cmd {
 				}
 				amount := ether.ToWei(in)
 
+				curr, err := m.client.GetAllowance(ctx)
+				if err != nil {
+					return err
+				}
+				if err = m.client.SetAllowance(ctx, curr.Add(curr, amount)); err != nil {
+					return err
+				}
+
 				if err := m.client.TopUpJob(ctx, m.jobID, amount); err != nil {
 					return errorMsg(err)
 				}

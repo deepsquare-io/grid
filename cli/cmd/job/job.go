@@ -503,6 +503,15 @@ var Command = cli.Command{
 					}
 				}
 
+				// Add allowance
+				curr, err := clientset.AllowanceManager().GetAllowance(ctx)
+				if err != nil {
+					return err
+				}
+				if err = clientset.AllowanceManager().SetAllowance(ctx, curr.Add(curr, creditsWei)); err != nil {
+					return err
+				}
+
 				if err := clientset.JobScheduler(nil).TopUpJob(ctx, jobID, creditsWei); err != nil {
 					return err
 				}
