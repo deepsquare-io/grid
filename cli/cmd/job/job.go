@@ -317,7 +317,7 @@ var Command = cli.Command{
 		{
 			Name:      "cancel",
 			Usage:     "Cancel job.",
-			Flags:     flags,
+			Flags:     authFlags,
 			ArgsUsage: "<job ID>",
 			Action: func(cCtx *cli.Context) error {
 				if cCtx.NArg() < 1 {

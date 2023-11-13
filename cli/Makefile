@@ -16,7 +16,7 @@ pkgsite := $(shell go env GOPATH)/bin/pkgsite
 endif
 
 bin/deepsquaretui: $(GO_SRCS)
-	go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+	CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
 
 bin/checksums.txt: $(addprefix bin/,$(bins))
 	sha256sum -b $(addprefix bin/,$(bins)) | sed 's/bin\///' > $@
