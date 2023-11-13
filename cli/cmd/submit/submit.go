@@ -65,7 +65,6 @@ import (
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -357,7 +356,8 @@ var Command = cli.Command{
 				return err
 			}
 
-			fmt.Printf("job %s submitted\n", hexutil.Encode(jobID[:]))
+			jobIDBig := new(big.Int).SetBytes(jobID[:])
+			fmt.Printf("job %s submitted\n", jobIDBig.String())
 			return nil
 		}
 

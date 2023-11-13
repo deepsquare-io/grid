@@ -49,7 +49,6 @@ import (
 	"github.com/erikgeiser/promptkit/confirmation"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -486,11 +485,12 @@ var Command = cli.Command{
 				}
 
 				if !force {
+					jobIDBig := new(big.Int).SetBytes(jobID[:])
 					msg := fmt.Sprintf(
 						"Confirm topup of %s credits (%s wei) to job %s?",
 						credits.String(),
 						creditsWei.String(),
-						hexutil.Encode(jobID[:]),
+						jobIDBig.String(),
 					)
 					input := confirmation.New(msg, confirmation.No)
 					ok, err := input.RunPrompt()
