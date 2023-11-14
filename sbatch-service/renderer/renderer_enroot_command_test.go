@@ -104,7 +104,7 @@ EOFrclocal
 EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with enroot image",
 		},
@@ -156,7 +156,7 @@ EOFrclocal
 EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with enroot absolute path image",
 		},
@@ -208,7 +208,7 @@ EOFrclocal
 EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with workdir",
 		},

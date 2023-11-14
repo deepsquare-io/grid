@@ -85,9 +85,9 @@ fi
   --gpus-per-task=1 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID" -- "$IMAGE_PATH"
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID" -- "$IMAGE_PATH"
 enrootClean() {
-  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID"
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID"
 }
 trap enrootClean EXIT INT TERM
 ''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
@@ -129,7 +129,7 @@ EOFrclocal
 EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID" \
   /bin/sh -c '"'"'echo "Hello ${WHO}"
 echo "RESULT=Hello ${WHO}" >> ${DEEPSQUARE_ENV}
 '"'"''
