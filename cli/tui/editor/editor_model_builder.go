@@ -27,6 +27,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
+	"github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/internal/validator"
 	"github.com/deepsquare-io/grid/cli/internal/wordlists"
 	"github.com/deepsquare-io/grid/cli/tui/style"
@@ -39,9 +40,13 @@ type ModelBuilder struct {
 }
 
 func prepareFiles() (words string, jobSchemaPath string, jobPath string, err error) {
-	tempDir := os.TempDir()
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		log.I.Warn("couldn't fetch user cache dir, using tmp...")
+		dir = os.TempDir()
+	}
 	words = strings.Join(wordlists.GetRandomWords(3), "-")
-	jobSchemaPath = filepath.Join(tempDir, ".job.schema.json")
+	jobSchemaPath = filepath.Join(dir, ".job.schema.json")
 	jobPath = fmt.Sprintf("job.%s.yaml", words)
 
 	// Insert the yaml-language-server parameter

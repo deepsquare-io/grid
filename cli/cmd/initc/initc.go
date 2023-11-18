@@ -15,7 +15,7 @@
 
 /*
 Package initc provides subcommands to initialize templates to get started with DeepSquare.
-It will initialize a job.<generated name>.yaml with a JSON schema in the /tmp directory.
+It will initialize a job.<generated name>.yaml with a JSON schema in the cache or /tmp directory.
 
 USAGE:
 
@@ -35,6 +35,7 @@ import (
 
 	_ "embed"
 
+	"github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/internal/wordlists"
 	"github.com/urfave/cli/v2"
 )
@@ -61,9 +62,13 @@ var flags = []cli.Flag{
 }
 
 func prepareFiles() (jerr error) {
-	tempDir := os.TempDir()
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		log.I.Warn("couldn't fetch user cache dir, using tmp...")
+		dir = os.TempDir()
+	}
 	words := strings.Join(wordlists.GetRandomWords(3), "-")
-	jobSchemaPath := filepath.Join(tempDir, ".job.schema.json")
+	jobSchemaPath := filepath.Join(dir, ".job.schema.json")
 	jobPath := filepath.Join(output, fmt.Sprintf("job.%s.yaml", words))
 
 	// Insert the yaml-language-server parameter
