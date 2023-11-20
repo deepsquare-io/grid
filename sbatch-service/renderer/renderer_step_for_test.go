@@ -112,9 +112,9 @@ fi
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID" -- "$IMAGE_PATH"
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH"
 enrootClean() {
-  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID"
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
 }
 trap enrootClean EXIT INT TERM
 ''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
@@ -159,7 +159,7 @@ EOFrclocal
 EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID.$SLURM_STEP_ID" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c '"'"'/usr/bin/echo $item'"'"''
 /usr/bin/echo 'Running: ''test'
 /usr/bin/cat << 'EOFmounterror'
@@ -201,9 +201,9 @@ fi
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID" -- "$IMAGE_PATH"
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH"
 enrootClean() {
-  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID"
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
 }
 trap enrootClean EXIT INT TERM
 ''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
@@ -248,7 +248,7 @@ EOFrclocal
 EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID.$SLURM_STEP_ID" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c '"'"'/usr/bin/echo $item'"'"''
 }
 pids=()
@@ -306,9 +306,9 @@ fi
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID" -- "$IMAGE_PATH"
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH"
 enrootClean() {
-  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID"
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
 }
 trap enrootClean EXIT INT TERM
 ''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
@@ -353,7 +353,7 @@ EOFrclocal
 EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID.$SLURM_STEP_ID" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c '"'"'/usr/bin/echo $index'"'"''
 /usr/bin/echo 'Running: ''test'
 /usr/bin/cat << 'EOFmounterror'
@@ -395,9 +395,9 @@ fi
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID" -- "$IMAGE_PATH"
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH"
 enrootClean() {
-  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID"
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
 }
 trap enrootClean EXIT INT TERM
 ''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
@@ -442,7 +442,7 @@ EOFrclocal
 EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID.$SLURM_STEP_ID" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c '"'"'/usr/bin/echo $index'"'"''
 }
 pids=()

@@ -1,0 +1,42 @@
+job:
+  ## See: https://docs.deepsquare.run/workflow/workflow-api-reference/job
+
+  ## Allow DeepSquare logging
+  enableLogging: true
+
+  ## Allocate resources
+  resources:
+    tasks: 1
+    cpusPerTask: 2
+    memPerCpu: 4000
+    gpusPerTask: 0
+
+  ## The job content
+  steps:
+    - name: holepunch-async
+      launch:
+        steps:
+          - name: holepunch
+            run:
+              resources:
+                gpusPerTask: 0
+              container:
+                image: node:20-alpine
+              command: |
+                apk add --no-cache git
+                npm install -g hypertele
+                hypertele-server --seed f6d8b5ea589ddc876d34cbe2971d6d9f25bfd5daca7e5d28b645edd5d297085a -l 8080
+
+    ## The steps of the jobs which are run sequentially.
+    - name: neko
+      run:
+        container:
+          image: m1k1o/neko:firefox
+          registry: registry-1.docker.io
+          mountHome: true
+        command: |
+          cd $HOME
+
+          /usr/bin/supervisord -c /etc/neko/supervisord.conf
+        mapUid: 0
+        mapGid: 0

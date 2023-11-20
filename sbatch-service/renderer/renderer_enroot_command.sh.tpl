@@ -62,5 +62,5 @@ EOFenroot
 {{- end }}
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot.conf" \
-  "container-$SLURM_JOB_ID.$SLURM_STEP_ID" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   {{ if .Run.Shell }}{{ derefStr .Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Run.Command | squote -}}

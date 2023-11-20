@@ -125,12 +125,12 @@ fi
   --gpu-bind=none \
   /bin/sh -c '
 {{- if isAbs $image -}}
-/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID" -- "$STORAGE_PATH"{{ $image | squote }}
+/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$STORAGE_PATH"{{ $image | squote }}
 {{- else -}}
-/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID" -- "$IMAGE_PATH"
+/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH"
 {{- end }}
 enrootClean() {
-  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID"
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
 }
 trap enrootClean EXIT INT TERM
 '{{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run (renderEnrootCommand .Step.Run) | squote -}}{{ else }}{{ renderEnrootCommand .Step.Run | squote }}{{ end }}
