@@ -17,6 +17,7 @@ package status
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"strconv"
 	"time"
@@ -55,12 +56,13 @@ type model struct {
 	idToRow map[[32]byte]table.Row
 	idToJob map[[32]byte]types.Job
 	// Index jobID to running job
-	runningIDs map[[32]byte]bool
-	it         types.JobLazyIterator
-	help       help.Model
-	watchJobs  channel.Model[transitionMsg]
-	scheduler  types.JobScheduler
-	keyMap     keyMap
+	runningIDs    map[[32]byte]bool
+	it            types.JobLazyIterator
+	help          help.Model
+	watchJobs     channel.Model[transitionMsg]
+	client        deepsquare.Client
+	keyMap        keyMap
+	cacheProvider map[[32]byte]types.ProviderDetail
 
 	ticker ticker.Model
 
@@ -127,18 +129,24 @@ func jobToRow(job types.Job) table.Row {
 		startDate = (time.UnixMilli(job.Time.Start.Int64() * 1000)).Format("15:04 _2 Jan 2006")
 	}
 	duration := "---"
+	cost := "---"
+	exitCode := "---"
 	if job.Time.End.Cmp(zero) > 0 && job.Time.End.Cmp(job.Time.Start) >= 0 {
 		durationB := new(big.Int).Sub(job.Time.End, job.Time.Start)
 		duration = (time.Duration(durationB.Int64()) * time.Second).String()
+
+		cost = ether.FromWei(job.Cost.FinalCost).String()
+		exitCode = strconv.Itoa(int(job.ExitCode / 256))
 	}
+
 	return table.Row{
 		new(big.Int).SetBytes(job.JobId[:]).String(),
 		string(job.JobName[:]),
 		metascheduler.JobStatus(job.Status).String(),
 		startDate,
 		duration,
-		ether.FromWei(job.Cost.FinalCost).String(),
-		strconv.Itoa(int(job.ExitCode / 256)),
+		cost,
+		exitCode,
 	}
 }
 
@@ -222,7 +230,7 @@ func (m *model) addMoreRows(ctx context.Context) {
 
 func (m model) CancelJob(ctx context.Context, jobID [32]byte) tea.Cmd {
 	return tea.Batch(tea.Sequence(func() tea.Msg {
-		if err := m.scheduler.CancelJob(ctx, jobID); err != nil {
+		if err := m.client.CancelJob(ctx, jobID); err != nil {
 			return errorMsg(err)
 		}
 		return nil
@@ -251,7 +259,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.ticker, tCmd = m.ticker.Update(msg)
 	if tCmd != nil {
-		// Update duration column
+		// Update duration and cost column
 		var needRefresh bool
 		for id := range m.runningIDs {
 			job := m.idToJob[id]
@@ -259,6 +267,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Duration column
 			elapsed := time.Since(time.Unix(job.Time.Start.Int64(), 0)).Truncate(time.Second)
 			row[4] = elapsed.String()
+			provider, ok := m.cacheProvider[m.it.Current().JobId]
+			if !ok {
+				p, err := m.client.GetProvider(context.Background(), job.ProviderAddr)
+				if err != nil {
+					m.err = err
+				} else {
+					provider = p
+					m.cacheProvider[m.it.Current().JobId] = provider
+				}
+			}
+			costB := metascheduler.DurationToCredit(
+				provider.ProviderPrices,
+				job.Definition,
+				new(big.Int).SetUint64(uint64(elapsed.Minutes())),
+			)
+			row[5] = fmt.Sprintf("~%s", ether.FromWei(costB).String())
 			needRefresh = true
 		}
 		if needRefresh {
@@ -422,7 +446,8 @@ func Model(
 				key.WithHelp("esc/q", "exit"),
 			),
 		},
-		scheduler: client,
+		client:        client,
+		cacheProvider: make(map[[32]byte]types.ProviderDetail),
 		watchJobs: makeWatchJobsModel(
 			ctx,
 			userAddress,
