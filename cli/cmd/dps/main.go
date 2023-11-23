@@ -24,11 +24,11 @@ USAGE:
 
 To run the TUI:
 
-	deepsquaretui
+	dps
 
 To run the CLI commands:
 
-	deepsquaretui [global options] command [command options] [arguments...]
+	dps [global options] command [command options] [arguments...]
 
 COMMANDS:
 
@@ -159,13 +159,13 @@ var flags = []cli.Flag{
 }
 
 var app = &cli.App{
-	Name:                 "deepsquaretui",
+	Name:                 "dps",
 	Version:              version,
 	Usage:                "Overwatch the job scheduling and register the compute to the Deepsquare Grid.",
 	Flags:                flags,
 	Suggest:              true,
 	EnableBashCompletion: true,
-	Copyright: `deepsquaretui  Copyright (C) 2023 DeepSquare Association
+	Copyright: `dps  Copyright (C) 2023 DeepSquare Association
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
 under certain conditions.

@@ -9,7 +9,7 @@ You can download static binaries in the [Releases tab of the Grid git repository
 With Go, it is possible to install from source directly by running:
 
 ```shell
-go install github.com/deepsquare-io/grid/cli/cmd/deepsquaretui@latest
+go install github.com/deepsquare-io/grid/cli/cmd/dps@latest
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ go install github.com/deepsquare-io/grid/cli/cmd/deepsquaretui@latest
 2. You can run CLI commands by executing:
 
    ```shell
-   deepsquaretui command [command options] [arguments...]
+   dps command [command options] [arguments...]
    ```
 
    The available commands are:
@@ -41,6 +41,6 @@ go install github.com/deepsquare-io/grid/cli/cmd/deepsquaretui@latest
    help, h    Shows a list of commands or help for one command
    ```
 
-3. You can run the TUI by simply running `deepsquaretui`.
+3. You can run the TUI by simply running `dps`.
 
 The next pages will explain the commands and their usages.

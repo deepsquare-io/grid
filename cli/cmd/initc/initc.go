@@ -19,7 +19,7 @@ It will initialize a job.<generated name>.yaml with a JSON schema in the cache o
 
 USAGE:
 
-	deepsquaretui init [command options] [arguments...]
+	dps init [command options] [arguments...]
 
 OPTIONS:
 

@@ -18,7 +18,7 @@ Package job provides subcommands to manage the jobs of an user.
 
 USAGE:
 
-	deepsquaretui job command [command options] [arguments...]
+	dps job command [command options] [arguments...]
 
 COMMANDS:
 

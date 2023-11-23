@@ -15,8 +15,8 @@ ifeq ($(pkgsite),)
 pkgsite := $(shell go env GOPATH)/bin/pkgsite
 endif
 
-bin/deepsquaretui: $(GO_SRCS)
-	CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps: $(GO_SRCS)
+	CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/checksums.txt: $(addprefix bin/,$(bins))
 	sha256sum -b $(addprefix bin/,$(bins)) | sed 's/bin\///' > $@
@@ -28,46 +28,46 @@ bin/checksums.md: bin/checksums.txt
 	@cat $< >> $@
 	@echo "\`\`\`" >> $@
 
-bin/deepsquaretui-darwin-amd64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-darwin-amd64: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-darwin-arm64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-darwin-arm64: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-freebsd-amd64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-freebsd-amd64: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-freebsd-arm64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=freebsd GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-freebsd-arm64: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=freebsd GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-linux-amd64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-linux-amd64: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-linux-arm64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-linux-arm64: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-linux-mips64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-linux-mips64: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-linux-mips64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-linux-mips64le: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-linux-ppc64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-linux-ppc64: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-linux-ppc64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-linux-ppc64le: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-linux-riscv64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-linux-riscv64: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-linux-s390x: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-linux-s390x: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/deepsquaretui-windows-amd64.exe: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/deepsquaretui/main.go
+bin/dps-windows-amd64.exe: $(GO_SRCS)
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bins := deepsquaretui-darwin-amd64 deepsquaretui-darwin-arm64 deepsquaretui-freebsd-arm64 deepsquaretui-freebsd-arm64 deepsquaretui-linux-amd64 deepsquaretui-linux-arm64 deepsquaretui-linux-mips64 deepsquaretui-linux-mips64le deepsquaretui-linux-ppc64 deepsquaretui-linux-ppc64le deepsquaretui-linux-riscv64 deepsquaretui-linux-s390x deepsquaretui-windows-amd64.exe
+bins := dps-darwin-amd64 dps-darwin-arm64 dps-freebsd-arm64 dps-freebsd-arm64 dps-linux-amd64 dps-linux-arm64 dps-linux-mips64 dps-linux-mips64le dps-linux-ppc64 dps-linux-ppc64le dps-linux-riscv64 dps-linux-s390x dps-windows-amd64.exe
 
 .PHONY: build-all
 build-all: $(addprefix bin/,$(bins)) bin/checksums.md

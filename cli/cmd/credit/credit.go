@@ -18,7 +18,7 @@ Package credit provides subcommands to manage the credits of an user.
 
 USAGE:
 
-	deepsquaretui credit command [command options] [arguments...]
+	dps credit command [command options] [arguments...]
 
 COMMANDS:
 

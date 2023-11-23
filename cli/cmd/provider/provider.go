@@ -18,7 +18,7 @@ Package provider provides subcommands to manage the providers of the Grid.
 
 USAGE:
 
-	deepsquaretui provider command [command options] [arguments...]
+	dps provider command [command options] [arguments...]
 
 COMMANDS:
 

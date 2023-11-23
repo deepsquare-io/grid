@@ -6,10 +6,10 @@ After you've prepared your workflow, you can submit it to the DeepSquare Grid.
 
 **Submitting a job**
 
-If you have prepared your workflow file, you can submit the job using the `deepsquaretui submit` command, like so:
+If you have prepared your workflow file, you can submit the job using the `dps submit` command, like so:
 
 ```shell
-deepsquaretui submit -w -e --credits 100 --job-name test job.emotion-echo-climb.yaml
+dps submit -w -e --credits 100 --job-name test job.emotion-echo-climb.yaml
 # -w: Watch logs after submitting the job
 # -e: Exit the job after the job has finished and throw on error.
 # --credits value: Allocated a number of credits.
@@ -18,7 +18,7 @@ deepsquaretui submit -w -e --credits 100 --job-name test job.emotion-echo-climb.
 Usage:
 
 ```shell
-deepsquaretui submit [command options] <job.yaml>
+dps submit [command options] <job.yaml>
 
 OPTIONS:
    DeepSquare Settings:
@@ -49,10 +49,10 @@ If you have written you workflow file, you should already know that DeepSquare w
 To control the duration, we recommend to look for the appropriate infrastructure provider for your job:
 
 ```shell
-deepsquaretui provider list
+dps provider list
 ```
 
-Which returns a complex JSON object. If you want a better experience, you can use the `deepsquaretui` as a TUI (see next part).
+Which returns a complex JSON object. If you want a better experience, you can use the `dps` as a TUI (see next part).
 
 You can retrieve the `ProviderHardware`, which describes the cluster resources. Example:
 
@@ -129,7 +129,7 @@ As you can see, the equation is quite long. We recommend to use the TUI for this
 If you think you have under-allocated a job, you can top up jobs by running:
 
 ```shell
-deepsquaretui job topup <jobID> <amount (use --time to topup with a duration)>
+dps job topup <jobID> <amount (use --time to topup with a duration)>
 ```
 
 By default, amount is in credits. If you want to use wei, set the `--wei` flag. If you want to use a duration instead, you can use the `--time` flag.
@@ -139,7 +139,7 @@ By default, amount is in credits. If you want to use wei, set the `--wei` flag. 
 You can cancel a job by running:
 
 ```shell
-deepsquaretui job cancel <jobID>
+dps job cancel <jobID>
 ```
 
 ## Using as a TUI

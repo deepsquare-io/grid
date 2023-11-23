@@ -10,10 +10,10 @@ Submit directly jobs to the DeepSquare Grid!
 
 ```shell
 NAME:
-   deepsquaretui - Overwatch the job scheduling and register the compute to the Deepsquare Grid.
+   dps - Overwatch the job scheduling and register the compute to the Deepsquare Grid.
 
 USAGE:
-   deepsquaretui [global options] command [command options] [arguments...]
+   dps [global options] command [command options] [arguments...]
 
 COMMANDS:
    allowance  Manage allowance.
@@ -40,10 +40,10 @@ GLOBAL OPTIONS:
 
 ```shell
 NAME:
-   deepsquaretui submit - Quickly submit a job.
+   dps submit - Quickly submit a job.
 
 USAGE:
-   deepsquaretui submit [command options] <job.yaml>
+   dps submit [command options] <job.yaml>
 
 OPTIONS:
    DeepSquare Settings:
@@ -77,36 +77,36 @@ You can download static binaries in the [Releases tab](https://github.com/deepsq
 Install Go and run:
 
 ```shell
-go install github.com/deepsquare-io/grid/cli/cmd/deepsquaretui@latest
+go install github.com/deepsquare-io/grid/cli/cmd/dps@latest
 ```
 
 ## Build
 
-The `main` is stored in the `cmd/deepsquaretui` package. You can build the CLI using the following:
+The `main` is stored in the `cmd/dps` package. You can build the CLI using the following:
 
 ```sh
 make
-# Defaults to: make bin/deepsquaretui
+# Defaults to: make bin/dps
 ```
 
 Available `make` commands:
 
 ```shell
 # Build
-make bin/deepsquaretui
-make bin/deepsquaretui-darwin-amd64
-make bin/deepsquaretui-darwin-arm64
-make bin/deepsquaretui-freebsd-amd64
-make bin/deepsquaretui-freebsd-arm64
-make bin/deepsquaretui-linux-amd64
-make bin/deepsquaretui-linux-arm64
-make bin/deepsquaretui-linux-mips64
-make bin/deepsquaretui-linux-mips64le
-make bin/deepsquaretui-linux-ppc64
-make bin/deepsquaretui-linux-ppc64le
-make bin/deepsquaretui-linux-riscv64
-make bin/deepsquaretui-linux-s390x
-make bin/deepsquaretui-windows-amd64.exe
+make bin/dps
+make bin/dps-darwin-amd64
+make bin/dps-darwin-arm64
+make bin/dps-freebsd-amd64
+make bin/dps-freebsd-arm64
+make bin/dps-linux-amd64
+make bin/dps-linux-arm64
+make bin/dps-linux-mips64
+make bin/dps-linux-mips64le
+make bin/dps-linux-ppc64
+make bin/dps-linux-ppc64le
+make bin/dps-linux-riscv64
+make bin/dps-linux-s390x
+make bin/dps-windows-amd64.exe
 make build-all
 
 # Checksums

@@ -18,7 +18,7 @@ Package allowance provides subcommands to manage the allowance of an user.
 
 USAGE:
 
-	deepsquaretui allowance command [command options] [arguments...]
+	dps allowance command [command options] [arguments...]
 
 COMMANDS:
 

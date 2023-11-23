@@ -13,7 +13,7 @@ If one account wish to pull tokens from an other account, it must ask for an all
 Simply run:
 
 ```shell
-deepsquaretui credit transfer [command options] <0x recipient address> <amount>
+dps credit transfer [command options] <0x recipient address> <amount>
 ```
 
 The unit of the amount is credits. If you wish to use wei, set the `--wei` flag.
@@ -23,13 +23,13 @@ The unit of the amount is credits. If you wish to use wei, set the `--wei` flag.
 To fetch, simply run:
 
 ```shell
-deepsquaretui allowance get
+dps allowance get
 ```
 
 To set, simply run:
 
 ```shell
-deepsquaretui allowance set [command options] <amount>
+dps allowance set [command options] <amount>
 ```
 
 The unit of the amount is credits. If you wish to use wei, set the `--wei` flag.

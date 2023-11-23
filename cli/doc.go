@@ -18,7 +18,7 @@ Package cli is the root of the Go client for interacting with the DeepSquare Gri
 
 # The Terminal User Interface
 
-The TUI can be run by simply running the [github.com/deepsquare-io/grid/cli/cmd/deepsquaretui] package.
+The TUI can be run by simply running the [github.com/deepsquare-io/grid/cli/cmd/dps] package.
 Its implementation is in the [github.com/deepsquare-io/grid/cli/tui] package and uses the [bubbletea framework] to build the terminal application.
 
 # The Command Line Interface

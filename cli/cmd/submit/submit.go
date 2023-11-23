@@ -18,7 +18,7 @@ Package submit permits the submission of a job to the DeepSquare Grid.
 
 USAGE:
 
-	deepsquaretui submit [command options] <job.yaml>
+	dps submit [command options] <job.yaml>
 
 OPTIONS:
 

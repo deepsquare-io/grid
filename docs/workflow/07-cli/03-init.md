@@ -5,7 +5,7 @@
 1. You can initialize a basic YAML workflow by running:
 
    ```shell
-   deepsquaretui init
+   dps init
    ```
 
    ```yaml title="job.<random>.yaml"
@@ -52,7 +52,7 @@ To submit a job, follow the steps indicated in the [next page](submit).
 
 ## Using as a TUI
 
-1. Start the TUI by running `deepsquaretui`:
+1. Start the TUI by running `dps`:
 
    ![image-20231016202849709](./03-init.assets/image-20231016202849709.png)
 
