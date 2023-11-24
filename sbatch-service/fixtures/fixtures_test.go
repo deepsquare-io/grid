@@ -56,6 +56,10 @@ var (
 	fixtureMapUID string
 	//go:embed map-uid.txt
 	expectedMapUID string
+	//go:embed cs2.yaml
+	fixtureCS2 string
+	//go:embed cs2.txt
+	expectedCS2 string
 
 	r = renderer.NewJobRenderer(
 		"logger.example.com:443",
@@ -103,6 +107,11 @@ func TestFixtures(t *testing.T) {
 			name:     "MapUID",
 			fixture:  fixtureMapUID,
 			expected: expectedMapUID,
+		},
+		{
+			name:     "CS2",
+			fixture:  fixtureCS2,
+			expected: expectedCS2,
 		},
 	}
 

@@ -1,0 +1,778 @@
+#!/bin/bash -l
+
+set -e
+
+export NTASKS='1'
+export CPUS_PER_TASK='4'
+export MEM_PER_CPU='2000'
+export GPUS_PER_TASK='0'
+export GPUS='0'
+export CPUS='4'
+export MEM='8000'
+/usr/local/bin/grid-logger-writer \
+  --server.tls \
+  --server.tls.ca=/etc/ssl/certs/ca-certificates.crt \
+  --server.tls.server-host-override='logger.example.com' \
+  --server.endpoint='logger.example.com:443' \
+  --pipe.path="/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe" \
+  --log-name="$SLURM_JOB_NAME" \
+  --user="$USER" \
+  --uid-verify \
+  >/dev/stdout 2>/dev/stderr &
+LOGGER_PID="$!"
+/usr/bin/sleep 1
+exec 3>&1
+exec 4>&2
+exec 1>>"/tmp/$SLURM_JOB_NAME.$SLURM_JOB_ID-pipe"
+exec 2>&1
+
+/usr/bin/echo "--- Job has started ---"
+
+disposeLogs() {
+  echo ---
+  /usr/bin/sleep 15
+  exec 1>&3
+  exec 2>&4
+  echo killing logger
+  kill $LOGGER_PID || true
+  wait $LOGGER_PID || true
+  echo cleaned
+}
+trap disposeLogs EXIT INT TERM
+# SCOPE: LOGS
+(
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
+DEEPSQUARE_SHARED_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_SHARED_TMP
+DEEPSQUARE_SHARED_WORLD_TMP="/opt/cache/world-tmp"
+export DEEPSQUARE_SHARED_WORLD_TMP
+DEEPSQUARE_DISK_TMP="/opt/cache/disk/tmp/user-$(id -u)"
+export DEEPSQUARE_DISK_TMP
+DEEPSQUARE_DISK_WORLD_TMP="/opt/cache/disk/world-tmp"
+export DEEPSQUARE_DISK_WORLD_TMP
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
+/usr/bin/touch "$DEEPSQUARE_ENV"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
+loadDeepsquareEnv() {
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
+}
+
+declare -A EXIT_SIGNALS
+/usr/bin/echo 'Running: ''setup-tty2web'
+
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://curlimages/curl:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+if [ $? -ne 0 ]; then
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
+fi
+set -e
+tries=1; while [ "$tries" -lt 10 ]; do
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+# shellcheck disable=SC2097,SC2098,SC1078
+/usr/bin/srun --job-name='setup-tty2web' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=2000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
+}
+trap enrootClean EXIT INT TERM
+''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=n
+
+environ() {
+  # Keep all the environment from the host
+  /usr/bin/env
+
+  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+
+  /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+}
+
+mounts() {
+  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+}
+
+hooks() {
+  /usr/bin/cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c '"'"'curl -fsSL -o "$STORAGE_PATH/tty2web" https://github.com/kost/tty2web/releases/download/v3.0.3/tty2web_linux_amd64
+chmod +x "$STORAGE_PATH/tty2web"  ## The steps of the jobs which are run sequentially.
+'"'"''
+/usr/bin/echo 'Running: ''cs2-init'
+
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://cm2network/steamcmd:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+if [ $? -ne 0 ]; then
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
+fi
+set -e
+tries=1; while [ "$tries" -lt 10 ]; do
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+# shellcheck disable=SC2097,SC2098,SC1078
+/usr/bin/srun --job-name='cs2-init' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=2000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
+}
+trap enrootClean EXIT INT TERM
+''set -e
+
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# shellcheck disable=SC2016,SC1078,SC1079
+/usr/bin/unshare --map-current-user --net --mount /bin/sh -c '"'"'
+set -e
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ tap0
+
+
+/usr/bin/bore -s bore.deepsquare.run -p 2200 -ls localhost -lp 8080 -r &
+
+'"'"''"'"'/usr/bin/cat <<'"'"'"'"'"'"'"'"'EOFenroot'"'"'"'"'"'"'"'"' >"$STORAGE_PATH/enroot.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=y
+
+environ() {
+  # Keep all the environment from the host
+  /usr/bin/env
+
+  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+
+  /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+  /usr/bin/echo "STEAMUSER='"'"'"'"'"'"'"'"'<REDACTED>'"'"'"'"'"'"'"'"'"
+  /usr/bin/echo "TERM='"'"'"'"'"'"'"'"'xterm'"'"'"'"'"'"'"'"'"
+  /usr/bin/echo "STEAMPASSWORD='"'"'"'"'"'"'"'"'<REDACTED>'"'"'"'"'"'"'"'"'"
+}
+
+mounts() {
+  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+}
+
+hooks() {
+  /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c '"'"'"'"'"'"'"'"'unlink $HOME/Steam || true
+rm -rf $HOME/Steam || true
+mkdir -p $STORAGE_PATH/Steam
+ln -s $STORAGE_PATH/Steam $HOME/Steam
+
+$STORAGE_PATH/tty2web \
+  --permit-write \
+  --port 8080 \
+  --once \
+  sh -c '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'bash /home/steam/steamcmd/steamcmd.sh \
+  +login $STEAMUSER $STEAMPASSWORD \
+  +quit'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'
+
+ls -lah $HOME/Steam/
+'"'"'"'"'"'"'"'"''"'"' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/slirp4netns --configure --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
+slirp_pid=$!
+
+cleanup() {
+  kill -9 $child $slirp_pid || true
+}
+trap cleanup EXIT INT TERM
+
+wait $child
+'
+/usr/bin/echo 'Running: ''cs2'
+
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://cm2network/cs2:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+if [ $? -ne 0 ]; then
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
+fi
+set -e
+tries=1; while [ "$tries" -lt 10 ]; do
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+# shellcheck disable=SC2097,SC2098,SC1078
+/usr/bin/srun --job-name='cs2' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=4 \
+  --mem-per-cpu=2000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
+}
+trap enrootClean EXIT INT TERM
+''set -e
+
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# shellcheck disable=SC2016,SC1078,SC1079
+/usr/bin/unshare --map-current-user --net --mount --map-user=0 --map-group=0 /bin/sh -c '"'"'
+set -e
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ tap0
+
+
+/usr/bin/bore -s bore.deepsquare.run -p 2200 -ls localhost -lp 8080 -r &
+/usr/bin/cat << '"'"'"'"'"'"'"'"'EOFwireguard'"'"'"'"'"'"'"'"' > "$(pwd)/net1.conf"
+[Interface]
+Address = 10.0.0.4/24,fd00:1234:5678::4/128
+PrivateKey = <REDACTED>
+MTU = 1420
+[Peer]
+PublicKey = <REDACTED>
+AllowedIPs = 0.0.0.0/0
+Endpoint = 10.0.0.1:1
+PersistentKeepalive = 0
+EOFwireguard
+/usr/bin/chmod 600 "$(pwd)/net1.conf"
+wg-quick up "$(pwd)/net1.conf"
+
+/usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
+/usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
+
+'"'"''"'"'/usr/bin/cat <<'"'"'"'"'"'"'"'"'EOFenroot'"'"'"'"'"'"'"'"' >"$STORAGE_PATH/enroot.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=y
+
+environ() {
+  # Keep all the environment from the host
+  /usr/bin/env
+
+  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+
+  /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+  /usr/bin/echo "STEAMUSER='"'"'"'"'"'"'"'"'<REDACTED>'"'"'"'"'"'"'"'"'"
+  /usr/bin/echo "TERM='"'"'"'"'"'"'"'"'xterm'"'"'"'"'"'"'"'"'"
+  /usr/bin/echo "CS2_PW='"'"'"'"'"'"'"'"'changeme'"'"'"'"'"'"'"'"'"
+  /usr/bin/echo "CS2_RCONPW='"'"'"'"'"'"'"'"'changeme'"'"'"'"'"'"'"'"'"
+  /usr/bin/echo "CS2_PORT='"'"'"'"'"'"'"'"'27015'"'"'"'"'"'"'"'"'"
+  /usr/bin/echo "CS2_MAXPLAYERS='"'"'"'"'"'"'"'"'20'"'"'"'"'"'"'"'"'"
+}
+
+mounts() {
+  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+}
+
+hooks() {
+  /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c '"'"'"'"'"'"'"'"'apt update -y && apt install -y screen
+
+unlink $HOME/Steam || true
+rm -rf $HOME/Steam || true
+mkdir -p $STORAGE_PATH/Steam
+ln -s $STORAGE_PATH/Steam $HOME/Steam
+
+# Cache the game
+rm -rf /home/steam/cs2-dedicated || true
+ln -s $DEEPSQUARE_SHARED_TMP "${STEAMAPPDIR}"
+
+cat << EOF > "${STEAMAPPDIR}/game/csgo/cfg/gamemode_competitive.cfg"
+bot_autodifficulty_threshold_high					0.0	// Value between -20.0 and 20.0 (Amount above avg human contribution score, above which a bot should lower its difficulty)
+bot_autodifficulty_threshold_low					-2.0	// Value between -20.0 and 20.0 (Amount below avg human contribution score, below which a bot should raise its difficulty)
+bot_chatter											normal
+bot_defer_to_human_goals							1
+bot_defer_to_human_items							1
+bot_difficulty										2
+bot_quota											1
+bot_quota_mode										competitive
+cash_player_bomb_defused							300
+cash_player_bomb_planted							300
+cash_player_damage_hostage							-30
+cash_player_interact_with_hostage					300
+cash_player_killed_enemy_default					300
+cash_player_killed_enemy_factor						1
+cash_player_killed_hostage							-1000
+cash_player_killed_teammate							-300
+cash_player_rescued_hostage							1000
+cash_team_elimination_bomb_map						3250
+cash_team_elimination_hostage_map_t					3000
+cash_team_elimination_hostage_map_ct					3000
+cash_team_hostage_alive								0
+cash_team_hostage_interaction						600
+cash_team_loser_bonus								1400
+cash_team_bonus_shorthanded							1000
+mp_starting_losses									1
+cash_team_loser_bonus_consecutive_rounds			500
+cash_team_planted_bomb_but_defused					800
+cash_team_rescued_hostage						600
+cash_team_terrorist_win_bomb						3500
+cash_team_win_by_defusing_bomb						3500
+cash_team_win_by_hostage_rescue						2900
+cash_team_win_by_time_running_out_hostage			3250
+cash_team_win_by_time_running_out_bomb				3250
+ff_damage_reduction_bullets							0.33
+ff_damage_reduction_grenade							0.85
+ff_damage_reduction_grenade_self					1
+ff_damage_reduction_other							0.4
+mp_afterroundmoney									0
+mp_buytime											20
+mp_buy_anywhere										0
+mp_buy_during_immunity								0
+mp_death_drop_defuser								1
+mp_death_drop_grenade								2			// 0=none, 1=best, 2=current or best
+mp_death_drop_gun									1			// 0=none, 1=best, 2=current or best
+mp_fists_replace_melee								1
+mp_defuser_allocation								0
+mp_force_pick_time									15
+mp_forcecamera										1			// Set to 1 for team only spectating.
+mp_free_armor										0
+mp_freezetime										15
+mp_friendlyfire										1
+mp_win_panel_display_time							3
+mp_respawn_immunitytime							-1 // disabling immunity in warmup too for 1v1 fights
+mp_halftime											1
+mp_match_can_clinch									1			// 0=No mercy rule, 1=team can clinch match win early if they win > 1/2 total rounds
+mp_maxmoney											16000
+mp_maxrounds										24
+mp_molotovusedelay									0
+mp_playercashawards									1
+mp_roundtime										1.92
+mp_roundtime_hostage								1.92
+mp_roundtime_defuse									1.92
+mp_solid_teammates									1
+mp_startmoney										800
+mp_teamcashawards									1
+mp_timelimit										0
+mp_technical_timeout_per_team						1
+mp_technical_timeout_duration_s						120
+mp_warmuptime										120
+mp_warmuptime_all_players_connected					15
+mp_weapons_allow_zeus								5
+spec_freeze_panel_extended_time						0
+spec_freeze_time									2.0
+sv_allow_votes										1		// Voting allowed in this mode
+sv_talk_enemy_living								0
+sv_talk_enemy_dead									0
+sv_auto_full_alltalk_during_warmup_half_end			0
+sv_deadtalk											1
+sv_ignoregrenaderadio								0
+sv_grenade_trajectory_time_spectator				4
+tv_delay											105
+mp_warmup_pausetimer								0
+mp_halftime_pausetimer								0
+mp_randomspawn										0
+mp_randomspawn_los									0
+sv_infinite_ammo									0
+ammo_grenade_limit_flashbang						2
+ammo_grenade_limit_total							4
+//
+mp_weapons_allow_map_placed							1
+mp_weapons_glow_on_ground							0
+mp_display_kill_assists								1
+mp_respawn_on_death_t								0
+mp_respawn_on_death_ct								0
+mp_ct_default_melee									weapon_knife
+mp_ct_default_secondary								weapon_hkp2000
+mp_ct_default_primary								""
+mp_t_default_melee									weapon_knife
+mp_t_default_secondary								weapon_glock
+mp_t_default_primary								""
+mp_default_team_winner_no_objective					-1		// 2 == CTs, 3 == Ts
+
+sv_occlude_players								1
+occlusion_test_async								0
+
+spec_replay_enable								0
+
+sv_gameinstructor_enable							0
+EOF
+
+
+cat << EOF > "${STEAMAPPDIR}/game/csgo/cfg/server.cfg"
+hostname "CS2 server"
+
+sv_lan "0"
+
+sv_password "$CS2_PW"
+rcon_password "$CS2_RCONPW"
+
+exec gamemode_competitive.cfg
+
+// Practice
+bot_kick
+sv_cheats "true"
+mp_limitteams "0"
+mp_autoteambalance "0"
+mp_maxmoney "60000"
+mp_startmoney "60000"
+mp_buytime "9999"
+mp_buy_anywhere "1"
+mp_freezetime "0"
+mp_warmuptime "6000"
+mp_roundtime "60"
+mp_roundtime_defuse "60"
+mp_respawn_on_death_ct "1"
+mp_respawn_on_death_t "1"
+sv_infinite_ammo "1"
+sv_showimpacts "1"
+sv_showimpacts_time "10"
+ammo_grenade_limit_total "5"
+sv_grenade_trajectory_prac_pipreview "1"
+mp_restartgame "1"
+
+EOF
+
+# Fix symlinks
+unlink $HOME/.steam || true
+rm -rf $HOME/.steam || true
+ln -s /home/steam/.steam $HOME/.steam
+unlink $HOME/steamcmd || true
+rm -rf $HOME/steamcmd || true
+ln -s /home/steam/steamcmd $HOME/steamcmd
+
+rm -f $STORAGE_PATH/cs2.log
+mkdir -p "${STEAMAPPDIR}" || true
+
+# Download updates
+bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" \
+                        +login "${STEAMUSER}" \
+                        +app_update "${STEAMAPPID}" \
+                        +quit
+
+# Launch cs2 server
+screen -L -Logfile $STORAGE_PATH/cs2.log \
+  -dmS cs2 \
+  bash -c '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'cd "${STEAMAPPDIR}/game/bin/linuxsteamrt64"
+./cs2 -dedicated \
+  -port "${CS2_PORT}" \
+  -console \
+  -usercon \
+  -maxplayers "${CS2_MAXPLAYERS}" \
+  +exec server.cfg \
+  +map de_inferno \
+  +mapgroup mg_active
+
+'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'
+sh -c "$STORAGE_PATH/tty2web \
+  --credential admin:password \
+  --port 8080 \
+  --permit-write \
+  screen -x cs2" &
+while ! tail -f $STORAGE_PATH/cs2.log ; do sleep 1 ; done
+'"'"'"'"'"'"'"'"''"'"' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/slirp4netns --configure --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
+slirp_pid=$!
+
+cleanup() {
+  kill -9 $child $slirp_pid || true
+}
+trap cleanup EXIT INT TERM
+
+wait $child
+'
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
+)
+# END SCOPE: LOGS

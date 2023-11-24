@@ -149,6 +149,7 @@ wait_for_network_device() {
 
 wait_for_network_device $$ tap0
 
+
 /usr/bin/cat << '"'"'EOFwireguard'"'"' > "$(pwd)/net0.conf"
 [Interface]
 Address = 10.0.0.1/32
@@ -283,6 +284,7 @@ wait_for_network_device() {
 }
 
 wait_for_network_device $$ tap0
+
 
 /usr/bin/bore -s address.com -p 11 -ls localhost -lp 22 -r &
 /usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"

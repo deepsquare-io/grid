@@ -1,0 +1,288 @@
+job:
+  ## Allow DeepSquare logging
+  enableLogging: true
+
+  ## Allocate resources
+  resources:
+    tasks: 1
+    cpusPerTask: 4
+    memPerCpu: 2000
+    gpusPerTask: 0
+
+  ## The job content
+  steps:
+    - name: 'setup-tty2web'
+      run:
+        container:
+          image: curlimages/curl:latest
+        command: |
+          curl -fsSL -o "$STORAGE_PATH/tty2web" https://github.com/kost/tty2web/releases/download/v3.0.3/tty2web_linux_amd64
+          chmod +x "$STORAGE_PATH/tty2web"  ## The steps of the jobs which are run sequentially.
+
+    - name: 'cs2-init'
+      run:
+        container:
+          image: cm2network/steamcmd:latest
+          mountHome: true
+        env:
+          - key: STEAMUSER
+            value: <REDACTED>
+          - key: TERM
+            value: xterm
+          - key: STEAMPASSWORD
+            value: <REDACTED>
+        network: slirp4netns
+        customNetworkInterfaces:
+          - bore:
+              address: bore.deepsquare.run
+              port: 2200
+              targetPort: 8080
+        command: |
+          unlink $HOME/Steam || true
+          rm -rf $HOME/Steam || true
+          mkdir -p $STORAGE_PATH/Steam
+          ln -s $STORAGE_PATH/Steam $HOME/Steam
+
+          $STORAGE_PATH/tty2web \
+            --permit-write \
+            --port 8080 \
+            --once \
+            sh -c 'bash /home/steam/steamcmd/steamcmd.sh \
+            +login $STEAMUSER $STEAMPASSWORD \
+            +quit'
+
+          ls -lah $HOME/Steam/
+    - name: 'cs2'
+      run:
+        container:
+          image: cm2network/cs2:latest
+          mountHome: true
+        env:
+          - key: STEAMUSER
+            value: <REDACTED>
+          - key: TERM
+            value: xterm
+          - key: CS2_PW
+            value: changeme
+          - key: CS2_RCONPW
+            value: changeme
+          - key: CS2_PORT
+            value: '27015'
+          - key: CS2_MAXPLAYERS
+            value: '20'
+        network: slirp4netns
+        mapGid: 0
+        mapUid: 0
+        dns:
+          - 1.1.1.1
+        customNetworkInterfaces:
+          - bore:
+              address: bore.deepsquare.run
+              port: 2200
+              targetPort: 8080
+          - wireguard:
+              privateKey: <REDACTED>
+              address:
+                - 10.0.0.4/24
+                - fd00:1234:5678::4/128
+              peers:
+                - publicKey: <REDACTED>
+                  allowedIPs:
+                    - 0.0.0.0/0
+                  persistentKeepalive: 0
+                  endpoint: 10.0.0.1:1
+        command: |
+          apt update -y && apt install -y screen
+
+          unlink $HOME/Steam || true
+          rm -rf $HOME/Steam || true
+          mkdir -p $STORAGE_PATH/Steam
+          ln -s $STORAGE_PATH/Steam $HOME/Steam
+
+          # Cache the game
+          rm -rf /home/steam/cs2-dedicated || true
+          ln -s $DEEPSQUARE_SHARED_TMP "${STEAMAPPDIR}"
+
+          cat << EOF > "${STEAMAPPDIR}/game/csgo/cfg/gamemode_competitive.cfg"
+          bot_autodifficulty_threshold_high					0.0	// Value between -20.0 and 20.0 (Amount above avg human contribution score, above which a bot should lower its difficulty)
+          bot_autodifficulty_threshold_low					-2.0	// Value between -20.0 and 20.0 (Amount below avg human contribution score, below which a bot should raise its difficulty)
+          bot_chatter											normal
+          bot_defer_to_human_goals							1
+          bot_defer_to_human_items							1
+          bot_difficulty										2
+          bot_quota											1
+          bot_quota_mode										competitive
+          cash_player_bomb_defused							300
+          cash_player_bomb_planted							300
+          cash_player_damage_hostage							-30
+          cash_player_interact_with_hostage					300
+          cash_player_killed_enemy_default					300
+          cash_player_killed_enemy_factor						1
+          cash_player_killed_hostage							-1000
+          cash_player_killed_teammate							-300
+          cash_player_rescued_hostage							1000
+          cash_team_elimination_bomb_map						3250
+          cash_team_elimination_hostage_map_t					3000
+          cash_team_elimination_hostage_map_ct					3000
+          cash_team_hostage_alive								0
+          cash_team_hostage_interaction						600
+          cash_team_loser_bonus								1400
+          cash_team_bonus_shorthanded							1000
+          mp_starting_losses									1
+          cash_team_loser_bonus_consecutive_rounds			500
+          cash_team_planted_bomb_but_defused					800
+          cash_team_rescued_hostage						600
+          cash_team_terrorist_win_bomb						3500
+          cash_team_win_by_defusing_bomb						3500
+          cash_team_win_by_hostage_rescue						2900
+          cash_team_win_by_time_running_out_hostage			3250
+          cash_team_win_by_time_running_out_bomb				3250
+          ff_damage_reduction_bullets							0.33
+          ff_damage_reduction_grenade							0.85
+          ff_damage_reduction_grenade_self					1
+          ff_damage_reduction_other							0.4
+          mp_afterroundmoney									0
+          mp_buytime											20
+          mp_buy_anywhere										0
+          mp_buy_during_immunity								0
+          mp_death_drop_defuser								1
+          mp_death_drop_grenade								2			// 0=none, 1=best, 2=current or best
+          mp_death_drop_gun									1			// 0=none, 1=best, 2=current or best
+          mp_fists_replace_melee								1
+          mp_defuser_allocation								0
+          mp_force_pick_time									15
+          mp_forcecamera										1			// Set to 1 for team only spectating.
+          mp_free_armor										0
+          mp_freezetime										15
+          mp_friendlyfire										1
+          mp_win_panel_display_time							3
+          mp_respawn_immunitytime							-1 // disabling immunity in warmup too for 1v1 fights
+          mp_halftime											1
+          mp_match_can_clinch									1			// 0=No mercy rule, 1=team can clinch match win early if they win > 1/2 total rounds
+          mp_maxmoney											16000
+          mp_maxrounds										24
+          mp_molotovusedelay									0
+          mp_playercashawards									1
+          mp_roundtime										1.92
+          mp_roundtime_hostage								1.92
+          mp_roundtime_defuse									1.92
+          mp_solid_teammates									1
+          mp_startmoney										800
+          mp_teamcashawards									1
+          mp_timelimit										0
+          mp_technical_timeout_per_team						1
+          mp_technical_timeout_duration_s						120
+          mp_warmuptime										120
+          mp_warmuptime_all_players_connected					15
+          mp_weapons_allow_zeus								5
+          spec_freeze_panel_extended_time						0
+          spec_freeze_time									2.0
+          sv_allow_votes										1		// Voting allowed in this mode
+          sv_talk_enemy_living								0
+          sv_talk_enemy_dead									0
+          sv_auto_full_alltalk_during_warmup_half_end			0
+          sv_deadtalk											1
+          sv_ignoregrenaderadio								0
+          sv_grenade_trajectory_time_spectator				4
+          tv_delay											105
+          mp_warmup_pausetimer								0
+          mp_halftime_pausetimer								0
+          mp_randomspawn										0
+          mp_randomspawn_los									0
+          sv_infinite_ammo									0
+          ammo_grenade_limit_flashbang						2
+          ammo_grenade_limit_total							4
+          //
+          mp_weapons_allow_map_placed							1
+          mp_weapons_glow_on_ground							0
+          mp_display_kill_assists								1
+          mp_respawn_on_death_t								0
+          mp_respawn_on_death_ct								0
+          mp_ct_default_melee									weapon_knife
+          mp_ct_default_secondary								weapon_hkp2000
+          mp_ct_default_primary								""
+          mp_t_default_melee									weapon_knife
+          mp_t_default_secondary								weapon_glock
+          mp_t_default_primary								""
+          mp_default_team_winner_no_objective					-1		// 2 == CTs, 3 == Ts
+
+          sv_occlude_players								1
+          occlusion_test_async								0
+
+          spec_replay_enable								0
+
+          sv_gameinstructor_enable							0
+          EOF
+
+
+          cat << EOF > "${STEAMAPPDIR}/game/csgo/cfg/server.cfg"
+          hostname "CS2 server"
+
+          sv_lan "0"
+
+          sv_password "$CS2_PW"
+          rcon_password "$CS2_RCONPW"
+
+          exec gamemode_competitive.cfg
+
+          // Practice
+          bot_kick
+          sv_cheats "true"
+          mp_limitteams "0"
+          mp_autoteambalance "0"
+          mp_maxmoney "60000"
+          mp_startmoney "60000"
+          mp_buytime "9999"
+          mp_buy_anywhere "1"
+          mp_freezetime "0"
+          mp_warmuptime "6000"
+          mp_roundtime "60"
+          mp_roundtime_defuse "60"
+          mp_respawn_on_death_ct "1"
+          mp_respawn_on_death_t "1"
+          sv_infinite_ammo "1"
+          sv_showimpacts "1"
+          sv_showimpacts_time "10"
+          ammo_grenade_limit_total "5"
+          sv_grenade_trajectory_prac_pipreview "1"
+          mp_restartgame "1"
+
+          EOF
+
+          # Fix symlinks
+          unlink $HOME/.steam || true
+          rm -rf $HOME/.steam || true
+          ln -s /home/steam/.steam $HOME/.steam
+          unlink $HOME/steamcmd || true
+          rm -rf $HOME/steamcmd || true
+          ln -s /home/steam/steamcmd $HOME/steamcmd
+
+          rm -f $STORAGE_PATH/cs2.log
+          mkdir -p "${STEAMAPPDIR}" || true
+
+          # Download updates
+          bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" \
+                                  +login "${STEAMUSER}" \
+                                  +app_update "${STEAMAPPID}" \
+                                  +quit
+
+          # Launch cs2 server
+          screen -L -Logfile $STORAGE_PATH/cs2.log \
+            -dmS cs2 \
+            bash -c 'cd "${STEAMAPPDIR}/game/bin/linuxsteamrt64"
+          ./cs2 -dedicated \
+            -port "${CS2_PORT}" \
+            -console \
+            -usercon \
+            -maxplayers "${CS2_MAXPLAYERS}" \
+            +exec server.cfg \
+            +map de_inferno \
+            +mapgroup mg_active
+
+          '
+          sh -c "$STORAGE_PATH/tty2web \
+            --credential admin:password \
+            --port 8080 \
+            --permit-write \
+            screen -x cs2" &
+          while ! tail -f $STORAGE_PATH/cs2.log ; do sleep 1 ; done

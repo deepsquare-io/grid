@@ -459,6 +459,7 @@ wait_for_network_device() {
 
 wait_for_network_device $$ tap0
 
+
 /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFwireguard'"'"'"'"'"'"'"'"' > "$(pwd)/net0.conf"
 [Interface]
 Address = 10.0.0.1/32
@@ -620,6 +621,7 @@ wait_for_network_device() {
 }
 
 wait_for_network_device $$ tap0
+
 
 /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFwireguard'"'"'"'"'"'"'"'"' > "$(pwd)/net0.conf"
 [Interface]
@@ -805,6 +807,7 @@ wait_for_network_device() {
 }
 
 wait_for_network_device $$ tap0
+
 
 /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFwireguard'"'"'"'"'"'"'"'"' > "$(pwd)/net0.conf"
 [Interface]
