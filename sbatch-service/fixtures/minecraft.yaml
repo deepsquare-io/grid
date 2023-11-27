@@ -4,7 +4,7 @@ job:
     tasks: 1
     cpusPerTask: 8
     memPerCpu: 8000
-    gpusPerTask: 0
+    gpus: 0
   input:
     s3:
       region: ch-dk-2
@@ -30,7 +30,6 @@ job:
           tasks: 1
           cpusPerTask: 8
           memPerCpu: 8000
-          gpusPerTask: 0
         command: |-
           mv $DEEPSQUARE_INPUT/* $DEEPSQUARE_OUTPUT/
     - name: start-minecraft
@@ -43,7 +42,6 @@ job:
           tasks: 1
           cpusPerTask: 8
           memPerCpu: 8000
-          gpusPerTask: 0
         env:
           - key: EULA
             value: 'true'

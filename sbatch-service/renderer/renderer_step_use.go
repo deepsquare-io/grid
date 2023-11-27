@@ -122,12 +122,12 @@ func assertRequirements(j *model.Job, u *model.StepUse, m *model.Module) error {
 			j.Resources.MemPerCPU,
 		)
 	}
-	if j.Resources.GpusPerTask < m.MinimumResources.GpusPerTask {
+	if j.Resources.Gpus < m.MinimumResources.Gpus {
 		return fmt.Errorf(
-			"not enough gpu per task to use the module %s, minimum=%d, actual=%d",
+			"not enough gpus to use the module %s, minimum=%d, actual=%d",
 			u.Source,
-			m.MinimumResources.GpusPerTask,
-			j.Resources.GpusPerTask,
+			m.MinimumResources.Gpus,
+			j.Resources.Gpus,
 		)
 	}
 	if j.Resources.Tasks < m.MinimumResources.Tasks {

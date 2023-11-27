@@ -210,12 +210,14 @@ type JobResources struct {
 	//
 	// Go name: "MemPerCPU".
 	MemPerCPU int `json:"memPerCpu" yaml:"memPerCpu" validate:"gte=1"`
-	// Allocated GPUs per task.
+	// Allocated GPUs for the whole job.
+	//
+	// Tasks can consume the GPUs by setting `GPUsPerTask` at step level.
 	//
 	// Can be greater or equal to 0.
 	//
-	// Go name: "GpusPerTask".
-	GpusPerTask int `json:"gpusPerTask" yaml:"gpusPerTask" validate:"gte=0"`
+	// Go name: "Gpus".
+	Gpus int `json:"gpus" yaml:"gpus" validate:"gte=0"`
 }
 
 // A module is basically a group of steps.
@@ -679,7 +681,7 @@ type StepRunResources struct {
 	//
 	// Can be greater or equal to 0.
 	//
-	// If null, defaults to the job resources.
+	// If null, defaults to 0.
 	//
 	// Go name: "GpusPerTask".
 	GpusPerTask *int `json:"gpusPerTask,omitempty" yaml:"gpusPerTask,omitempty" validate:"omitempty,gte=0"`

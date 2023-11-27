@@ -832,7 +832,7 @@ var cleanJobResources = model.JobResources{
 	Tasks:       1,
 	CpusPerTask: 4,
 	MemPerCPU:   4096,
-	GpusPerTask: 1,
+	Gpus:        1,
 }
 
 func TestValidateJobResources(t *testing.T) {
@@ -859,11 +859,11 @@ func TestValidateJobResources(t *testing.T) {
 		{
 			input: func() model.JobResources {
 				r := cleanJobResources
-				r.GpusPerTask = -1
+				r.Gpus = -1
 				return r
 			}(),
 			isError:       true,
-			errorContains: []string{"GpusPerTask", "gt"},
+			errorContains: []string{"Gpus", "gt"},
 			title:         "Negative test: invalid gpu count",
 		},
 		{

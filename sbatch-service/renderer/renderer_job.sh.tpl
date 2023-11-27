@@ -9,8 +9,7 @@ set -e
 export NTASKS='{{ .Job.Resources.Tasks }}'
 export CPUS_PER_TASK='{{ .Job.Resources.CpusPerTask }}'
 export MEM_PER_CPU='{{ .Job.Resources.MemPerCPU }}'
-export GPUS_PER_TASK='{{ .Job.Resources.GpusPerTask }}'
-export GPUS='{{ mul .Job.Resources.GpusPerTask .Job.Resources.Tasks }}'
+export GPUS='{{ mul .Job.Resources.Gpus }}'
 export CPUS='{{ mul .Job.Resources.CpusPerTask .Job.Resources.Tasks }}'
 export MEM='{{ mul .Job.Resources.MemPerCPU .Job.Resources.CpusPerTask .Job.Resources.Tasks }}'
 

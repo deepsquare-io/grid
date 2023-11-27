@@ -4,7 +4,7 @@ job:
     tasks: 4 # TO TEMPLATE: NTASKS, 1 NTASKS if not $IS_VIDEO, else 4 NTASKS
     cpusPerTask: 8 # TO TEMPLATE
     memPerCpu: 8000 # TO TEMPLATE
-    gpusPerTask: 1 # TO TEMPLATE
+    gpus: 4 # TO TEMPLATE
   env:
     - key: IS_VIDEO
       value: 'false' # TO TEMPLATE
@@ -41,7 +41,6 @@ job:
           tasks: 1
           cpusPerTask: 8 # TO TEMPLATE
           memPerCpu: 8000 # TO TEMPLATE
-          gpusPerTask: 0 # TO TEMPLATE
         shell: /bin/bash
         command: |-
           set -ex
@@ -123,7 +122,6 @@ job:
           tasks: 1
           cpusPerTask: 8 # TO TEMPLATE
           memPerCpu: 8000 # TO TEMPLATE
-          gpusPerTask: 0 # TO TEMPLATE
         command: |-
           set -ex
 

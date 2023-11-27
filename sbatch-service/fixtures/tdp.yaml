@@ -10,7 +10,7 @@ job:
     tasks: 1
     cpusPerTask: 4
     memPerCpu: 4096
-    gpusPerTask: 1
+    gpus: 1
   steps:
     - name: tdp
       run:

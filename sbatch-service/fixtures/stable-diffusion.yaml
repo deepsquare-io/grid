@@ -4,7 +4,7 @@ job:
     tasks: 1 # TO TEMPLATE: NTASKS
     cpusPerTask: 8
     memPerCpu: 8000
-    gpusPerTask: 1
+    gpus: 1
   env:
     - key: STEPS
       value: '150' # TO TEMPLATE: default 150
@@ -43,7 +43,7 @@ job:
           tasks: 1
           cpusPerTask: 8 # TO TEMPLATE
           memPerCpu: 8000 # TO TEMPLATE
-          gpusPerTask: 1 # TO TEMPLATE
+          gpus: 1 # TO TEMPLATE
         env:
           - key: HF_HOME
             value: /cache

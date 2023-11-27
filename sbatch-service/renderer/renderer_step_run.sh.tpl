@@ -46,7 +46,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
 {{- if and .Step.Run.Resources .Step.Run.Resources.GpusPerTask }}
   --gpus-per-task={{ derefInt .Step.Run.Resources.GpusPerTask }} \
 {{- else }}
-  --gpus-per-task={{ .Job.Resources.GpusPerTask }} \
+  --gpus-per-task=0 \
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) }}
   --ntasks={{ derefInt .Step.Run.Resources.Tasks }} \
@@ -109,7 +109,7 @@ fi
 {{- if and .Step.Run.Resources .Step.Run.Resources.GpusPerTask }}
   --gpus-per-task={{ derefInt .Step.Run.Resources.GpusPerTask }} \
 {{- else }}
-  --gpus-per-task={{ .Job.Resources.GpusPerTask }} \
+  --gpus-per-task=0 \
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) }}
   --ntasks={{ derefInt .Step.Run.Resources.Tasks }} \
@@ -151,7 +151,7 @@ trap enrootClean EXIT INT TERM
 {{- if and .Step.Run.Resources .Step.Run.Resources.GpusPerTask }}
   --gpus-per-task={{ derefInt .Step.Run.Resources.GpusPerTask }} \
 {{- else }}
-  --gpus-per-task={{ .Job.Resources.GpusPerTask }} \
+  --gpus-per-task=0 \
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) }}
   --ntasks={{ derefInt .Step.Run.Resources.Tasks }} \

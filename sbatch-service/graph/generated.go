@@ -401,13 +401,15 @@ input JobResources {
   """
   memPerCpu: Int! @goTag(key: "yaml") @constraint(format: "gte=1")
   """
-  Allocated GPUs per task.
+  Allocated GPUs for the whole job.
+
+  Tasks can consume the GPUs by setting ` + "`" + `GPUsPerTask` + "`" + ` at step level.
 
   Can be greater or equal to 0.
 
-  Go name: "GpusPerTask".
+  Go name: "Gpus".
   """
-  gpusPerTask: Int! @goTag(key: "yaml") @constraint(format: "gte=0")
+  gpus: Int! @goTag(key: "yaml") @constraint(format: "gte=0")
 }
 
 """
@@ -684,7 +686,7 @@ input StepRunResources {
 
   Can be greater or equal to 0.
 
-  If null, defaults to the job resources.
+  If null, defaults to 0.
 
   Go name: "GpusPerTask".
   """
@@ -3935,7 +3937,7 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"tasks", "cpusPerTask", "memPerCpu", "gpusPerTask"}
+	fieldsInOrder := [...]string{"tasks", "cpusPerTask", "memPerCpu", "gpus"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3969,15 +3971,15 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 				return it, err
 			}
 			it.MemPerCPU = data
-		case "gpusPerTask":
+		case "gpus":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gpusPerTask"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gpus"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.GpusPerTask = data
+			it.Gpus = data
 		}
 	}
 

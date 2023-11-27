@@ -5,7 +5,7 @@ job:
     tasks: 2
     cpusPerTask: 4
     memPerCpu: 4096
-    gpusPerTask: 0
+    gpus: 0
   steps:
     - name: do-async
       launch:

@@ -9,7 +9,7 @@ job:
     tasks: 1
     cpusPerTask: 2
     memPerCpu: 4000
-    gpusPerTask: 0
+    gpus: 0
 
   ## The job content
   steps:
@@ -18,8 +18,6 @@ job:
         steps:
           - name: holepunch
             run:
-              resources:
-                gpusPerTask: 0
               container:
                 image: node:20-alpine
               command: |
