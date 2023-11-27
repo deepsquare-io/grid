@@ -24,8 +24,8 @@ resources:
   cpusPerTask: 1
   ## Memory (MB) per cpu physical thread.
   memPerCpu: 1024
-  ## GPU (graphical process unit) per process.
-  gpusPerTask: 0
+  ## GPU (graphical process unit) for the whole job.
+  gpus: 0
 
 ## The job content
 steps:
@@ -65,8 +65,8 @@ resources:
   cpusPerTask: 1
   ## Memory (MB) per cpu physical thread.
   memPerCpu: 1024
-  ## GPU (graphical process unit) per process.
-  gpusPerTask: 0
+  ## GPU (graphical process unit) for the whole job.
+  gpus: 0
 
 ## The job content
 steps:
@@ -95,8 +95,8 @@ resources:
   cpusPerTask: 1
   ## Memory (MB) per cpu physical thread.
   memPerCpu: 1024
-  ## GPU (graphical process unit) per process.
-  gpusPerTask: 0
+  ## GPU (graphical process unit) for the whole job.
+  gpus: 0
 
 ## The job content
 steps:
@@ -113,14 +113,15 @@ Notice the `resources` block **within the steps block**. That one is different f
 
 Hereafter are the default behavior of the `resources` block in the `steps` block:
 
-- gpusPerTask, cpusPerTask, memPerCpu are inherited from the `resources allocation` block.
+- `cpusPerTask`, `memPerCpu` are inherited from the `resources allocation` block.
 - `tasks`, if not specified, set to 1 by default.
+- `gpusPerTask` (which is not `gpus`!), if not specified, set to 0 by default.
 
 If we don't set `tasks` within the `steps` block to 16, then we would allocate 16 tasks but only use one!
 
 More infos about default values are specified in the [API references](/workflow/workflow-api-reference/job#stepsrunresources-steprunresources).
 
-In our case, the execution of the step **implicitly uses** 1 CPU per task, 1024 MB of memory per CPU, and no GPUs per task and **explicitly uses** 16 tasks.
+In our case, the execution of the step **implicitly uses** 1 CPU per task, 1024 MB of memory per CPU, and no GPUs and **explicitly uses** 16 tasks.
 
 You can launch it on [DeepSquare Dev app](https://app.deepsquare.run/sandbox) to see the results!
 
@@ -247,8 +248,8 @@ resources:
   cpusPerTask: 1
   ## Memory (MB) per cpu physical thread.
   memPerCpu: 1024
-  ## GPU (graphical process unit) per process.
-  gpusPerTask: 0
+  ## GPU (graphical process unit) for the whole job.
+  gpus: 0
 
 ## The job content
 steps:
@@ -308,8 +309,8 @@ resources:
   cpusPerTask: 1
   ## Memory (MB) per cpu physical thread.
   memPerCpu: 1024
-  ## GPU (graphical process unit) per process.
-  gpusPerTask: 0
+  ## GPU (graphical process unit) for the whole job.
+  gpus: 0
 
 ## Load environment variables
 env:

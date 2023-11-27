@@ -68,7 +68,7 @@ resources:
   tasks: 1
   cpusPerTask: 4
   memPerCpu: 4096
-  gpusPerTask: 1
+  gpus: 1
 
 env:
   - key: DISPLAY

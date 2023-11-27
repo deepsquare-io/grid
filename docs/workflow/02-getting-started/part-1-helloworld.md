@@ -26,8 +26,8 @@ resources:
   cpusPerTask: 1
   ## Memory (MB) per cpu physical thread.
   memPerCpu: 1024
-  ## GPU (graphical process unit) per process.
-  gpusPerTask: 0
+  ## GPU (graphical process unit) for the whole job.
+  gpus: 0
 
 ## The job content
 steps:
@@ -39,9 +39,9 @@ steps:
 
 1. **`resources`**: This initial block in the workflow file dictates the resource allocation for the entire job. It represents a high-level request for computational resources you'll need for all your tasks.
 2. **`tasks`**: Within the **`resources`** block, the tasks field specifies the number of independent units of work, or tasks, your application needs to run. Each task runs in parallel, and the scheduler assigns it to the available computational resources.
-3. **`gpusPerTask`**: This field designates the number of GPU resources each task can utilize. If your tasks don't require GPU processing power, this can be set to 0.
-4. **`cpusPerTask`**: Similar to `gpusPerTask`, this field determines the number of CPU resources each task will have access to.
-5. **`memPerCpu`**: This represents the amount of memory (in MB) allocated for each CPU.
+3. **`cpusPerTask`**: This field determines the number of CPU resources each task will have access to.
+4. **`memPerCpu`**: This represents the amount of memory (in MB) allocated for each CPU.
+5. **`gpus`**: This field designates the number of GPU resources for the whole job. If your tasks don't require GPU processing power, this can be set to 0.
 6. **`steps`**: This block is where you outline the specific actions your tasks will take. Steps can be thought of as individual instructions that will be executed by your tasks, utilizing the resources defined above.
 7. **`command`**: Within each step, you specify a command. This is the exact operation that should be performed during the step. It could be a script to run, a function to call, or any other operation your application requires.
 

@@ -130,10 +130,10 @@ Now, let's look at how to incorporate these changes in different types of workfl
 <Tabs groupId="workflow-type">
   <TabItem value="new" label="Workflow">
 
-```yaml title="Workflow with 2 tasks and 1 GPU per task"
+```yaml title="Workflow with 4 tasks and 1 GPU per task"
 resources:
   tasks: 4
-  gpusPerTask: 1
+  gpus: 4
   cpusPerTask: 8
   memPerCpu: 2048
 
@@ -170,6 +170,7 @@ steps:
       command: /.venv/bin/python3 main.py --horovod --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$DEEPSQUARE_INPUT/
       resources:
         tasks: 4
+        gpusPerTask: 1
       container:
         image: deepsquare-io/cifar-10-example:latest
         registry: ghcr.io
@@ -182,10 +183,10 @@ steps:
 
 If you're resuming from a checkpoint, here's the workflow configuration:
 
-```yaml title="Workflow with 2 tasks and 1 GPU per task (from checkpoint)"
+```yaml title="Workflow with 4 tasks and 1 GPU per task (from checkpoint)"
 resources:
   tasks: 4
-  gpusPerTask: 1
+  gpus: 4
   cpusPerTask: 8
   memPerCpu: 2048
 
@@ -241,6 +242,7 @@ steps:
           --dataset=$STORAGE_PATH/
       resources:
         tasks: 4
+        gpusPerTask: 1
       container:
         image: deepsquare-io/cifar-10-example:latest
         registry: ghcr.io

@@ -33,7 +33,7 @@ resources:
   tasks: 1
   cpusPerTask: 8
   memPerCpu: 8000
-  gpusPerTask: 0
+  gpus: 0
 
 steps:
   - name: hello-world

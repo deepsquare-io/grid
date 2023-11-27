@@ -65,7 +65,7 @@ resources:
   tasks: 4
   cpusPerTask: 8
   memPerCpu: 8000
-  gpusPerTask: 1
+  gpus: 4
 input:
   s3:
     region: region
@@ -146,6 +146,8 @@ steps:
       steps:
         - name: render
           run:
+            resources:
+              gpusPerTask: 1
             container:
               deepsquareHosted: true
               apptainer: true

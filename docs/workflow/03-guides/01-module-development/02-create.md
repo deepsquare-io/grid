@@ -28,7 +28,7 @@ Creating a module is quite easy:
      tasks: 1
      cpusPerTask: 1
      memPerCpu: 100
-     gpusPerTask: 0
+     gpus: 0
    steps:
      - name: 'Say hello World'
        run:

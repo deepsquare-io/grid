@@ -556,7 +556,7 @@ Allocated CPUs per task.
 
 Can be greater or equal to 1.
 
-Go name: "CpusPerTask".
+Go name: "CPUsPerTask".
 
 </td>
 </tr>
@@ -574,15 +574,17 @@ Go name: "MemPerCPU".
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>gpusPerTask</strong></td>
+<td colspan="2" valign="top"><strong>gpus</strong></td>
 <td valign="top"><a href="#int">Int</a>!</td>
 <td>
 
-Allocated GPUs per task.
+Allocated GPUs for the whole job.
+
+Tasks can consume the GPUs by setting `GPUsPerTask` at step level.
 
 Can be greater or equal to 0.
 
-Go name: "GpusPerTask".
+Go name: "GPUs".
 
 </td>
 </tr>
@@ -1545,7 +1547,7 @@ Can be greater or equal to 1.
 
 If null, defaults to the job resources.
 
-Go name: "CpusPerTask".
+Go name: "CPUsPerTask".
 
 </td>
 </tr>
@@ -1573,9 +1575,9 @@ Allocated GPUs per task.
 
 Can be greater or equal to 0.
 
-If null, defaults to the job resources.
+If null, defaults to 0.
 
-Go name: "GpusPerTask".
+Go name: "GPUsPerTask".
 
 </td>
 </tr>

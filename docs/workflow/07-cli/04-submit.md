@@ -119,7 +119,7 @@ The prices are in wei, therefore, to convert them in credits, you need to divide
 To compute the credits to be allocated, you need to compute this equation:
 
 ```shell
-AllocatedCredits = MaxDuration * Tasks * (GpuPricePerMin * GpusPerTask + CpuPricePerMin * CpusPerTask + MemPricePerMin * MemPerCpu * CpuPerTask)
+AllocatedCredits = MaxDuration * (Tasks * (CpuPricePerMin * CpusPerTask + MemPricePerMin * MemPerCpu * CpuPerTask) + GpuPricePerMin * GpusPerTask)
 ```
 
 As you can see, the equation is quite long. We recommend to use the TUI for this.

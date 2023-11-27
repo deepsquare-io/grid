@@ -22,8 +22,8 @@ resources:
   cpusPerTask: 1
   ## Memory (MB) per cpu physical thread.
   memPerCpu: 1024
-  ## GPU (graphical process unit) per process.
-  gpusPerTask: 0
+  ## GPU (graphical process unit) for the whole job.
+  gpus: 0
 
 ## The job content
 steps:

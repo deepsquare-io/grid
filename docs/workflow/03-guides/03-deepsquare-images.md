@@ -29,7 +29,7 @@ Apptainer is the only container runtime that can run a unpacked container image,
 ```yaml title="Workflow"
 resources:
   tasks: 1
-  gpusPerTask: 0
+  gpus: 0
   cpusPerTask: 1
   memPerCpu: 1024
 

@@ -9,7 +9,7 @@ The [portal](https://app.deepsquare.run) can access to that logging server. The 
 ```yaml title="Workflow"
 resources:
   tasks: 1
-  gpusPerTask: 0
+  gpus: 0
   cpusPerTask: 1
   memPerCpu: 1024
 

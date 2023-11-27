@@ -406,7 +406,7 @@ resources:
   tasks: 1
   cpusPerTask: 1
   memPerCpu: 1000
-  gpusPerTask: 0
+  gpus: 0
 
 steps:
   - name: start-nginx
@@ -453,7 +453,7 @@ resources:
   tasks: 1
   cpusPerTask: 1
   memPerCpu: 1000
-  gpusPerTask: 0
+  gpus: 0
 
 steps:
   - name: start-nginx

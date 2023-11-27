@@ -62,7 +62,7 @@ resources:
   tasks: 4
   cpusPerTask: 8
   memPerCpu: 8000
-  gpusPerTask: 1
+  gpus: 4
 output:
   http:
     url: https://transfer.deepsquare.run/
@@ -99,6 +99,8 @@ steps:
       steps:
         - name: generate image
           run:
+            resources:
+              gpusPerTask: 1
             container:
               deepsquareHosted: true,
               apptainer: true,
@@ -203,7 +205,7 @@ resources:
   tasks: 4
   cpusPerTask: 8
   memPerCpu: 8000
-  gpusPerTask: 1
+  gpus: 1
 output:
   http:
     url: https://transfer.deepsquare.run/
@@ -233,6 +235,8 @@ steps:
       steps:
         - name: generate image
           run:
+            resources:
+              gpusPerTask: 1
             container:
               deepsquareHosted: true,
               apptainer: true,

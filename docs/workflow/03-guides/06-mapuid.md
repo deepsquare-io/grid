@@ -11,7 +11,7 @@ It is possible to enable remap the UID using the `step.mapUid` and `step.mapGid`
 ```yaml title="Workflow"
 resources:
   tasks: 1
-  gpusPerTask: 0
+  gpus: 0
   cpusPerTask: 1
   memPerCpu: 1024
 

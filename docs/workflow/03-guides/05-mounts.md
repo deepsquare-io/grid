@@ -15,7 +15,7 @@ If you are using a container, you can mount some directories using the `mounts` 
 ```yaml title="Workflow"
 resources:
   tasks: 1
-  gpusPerTask: 0
+  gpus: 0
   cpusPerTask: 1
   memPerCpu: 1024
 

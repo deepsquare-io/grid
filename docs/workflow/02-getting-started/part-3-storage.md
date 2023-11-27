@@ -188,7 +188,7 @@ Upon successful deployment of your S3 server and creation of your bucket, you sh
 ```yaml title="Workflow"
 resources:
   tasks: 1
-  gpusPerTask: 2
+  gpus: 2
   cpusPerTask: 8
   memPerCpu: 2048
 
@@ -212,6 +212,8 @@ continuousOutputSync: true
 
 steps:
   - name: train
+    resources:
+      gpusPerTask: 2
     run:
       command: /.venv/bin/python3 main.py --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$DEEPSQUARE_INPUT/
       container:
@@ -227,7 +229,7 @@ The `main.py` script will produce a `ckpt.pth` checkpoint file every time. Using
 ```yaml title="Workflow with resume checkpoint"
 resources:
   tasks: 1
-  gpusPerTask: 2
+  gpus: 2
   cpusPerTask: 8
   memPerCpu: 2048
 
@@ -263,6 +265,8 @@ steps:
         image: curlimages/curl:latest
         registry: registry-1.docker.io
   - name: train
+    resources:
+      gpusPerTask: 2
     run:
       command: '/.venv/bin/python3 main.py --checkpoint_in=$DEEPSQUARE_INPUT/ckpt.pth
         --checkpoint_out=$DEEPSQUARE_OUTPUT/ckpt.pth --dataset=$STORAGE_PATH/'

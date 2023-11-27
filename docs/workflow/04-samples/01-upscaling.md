@@ -75,7 +75,7 @@ resources:
   tasks: 4
   cpusPerTask: 8
   memPerCpu: 8000
-  gpusPerTask: 1
+  gpus: 4
 
 input:
   s3:
@@ -190,6 +190,8 @@ steps:
       steps:
         - name: upscale
           run:
+            resources:
+              gpusPerTask: 1
             container:
               deepsquareHosted: true
               apptainer: true
@@ -211,36 +213,7 @@ Using `ffmpeg`, we can determine the FPS of the original video and reassemble al
 
 ```yaml
 steps:
-enableLogging: true
-resources:
-  tasks: 4
-  cpusPerTask: 8
-  memPerCpu: 8000
-  gpusPerTask: 1
-input:
-  s3:
-    region: region
-    bucketUrl: s3://test
-    path: '/test'
-    accessKeyId: accessKeyId
-    secretAccessKey: secretAccessKey
-    endpointUrl: https://example
-output:
-  s3:
-    region: region
-    bucketUrl: s3://test
-    path: '/test'
-    accessKeyId: accessKeyId
-    secretAccessKey: secretAccessKey
-    endpointUrl: https://example
-continuousOutputSync: true
-env:
-  - key: IS_VIDEO
-    value: 'false' # Change this value if you want to render a video or an image
-  - key: IS_FACE
-    value: 'false'
-  - key: IS_ANIME
-    value: 'false'
+  # ...
   - name: re-encode-video
     run:
       container:
@@ -252,7 +225,6 @@ env:
         tasks: 1
         cpusPerTask: 8 # TO TEMPLATE
         memPerCpu: 8000 # TO TEMPLATE
-        gpusPerTask: 0 # TO TEMPLATE
       command: |-
         set -e
 
@@ -282,7 +254,7 @@ resources:
   tasks: 4
   cpusPerTask: 8
   memPerCpu: 8000
-  gpusPerTask: 1
+  gpus: 4
 input:
   s3:
     region: region
@@ -379,6 +351,8 @@ steps:
               apptainer: true
               registry: registry-1.deepsquare.run
               image: library/upscaling:latest
+            resources:
+              gpusPerTask: 1
             shell: /bin/bash
             command: |-
               set -e
@@ -396,7 +370,6 @@ steps:
         tasks: 1
         cpusPerTask: 8 # TO TEMPLATE
         memPerCpu: 8000 # TO TEMPLATE
-        gpusPerTask: 0 # TO TEMPLATE
       command: |-
         set -e
 

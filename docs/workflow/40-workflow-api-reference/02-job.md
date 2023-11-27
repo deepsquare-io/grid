@@ -31,7 +31,6 @@ Each resource is available as environment variables:
 - $NTASKS: number of allowed parallel tasks
 - $CPUS_PER_TASK: number of CPUs per task
 - $MEM_PER_CPU: MB of memory per CPU
-- $GPUS_PER_TASK: number of GPUs per task
 - $GPUS: total number of GPUS
 - $CPUS: total number of CPUS
 - $MEM: total number of memory in MB
@@ -144,7 +143,7 @@ Go name: "ContinuousOutputSync".
 ```yaml title="Job (minimal)"
 resources:
   tasks: 1
-  gpusPerTask: 0
+  gpus: 0
   cpusPerTask: 1
   memPerCpu: 1024
 enableLogging: true
@@ -157,7 +156,7 @@ steps:
 ```yaml title="Job (full)"
 resources:
   tasks: 1
-  gpusPerTask: 0
+  gpus: 0
   cpusPerTask: 1
   memPerCpu: 1024
 enableLogging: true
@@ -178,7 +177,6 @@ steps:
       tasks: 1
       cpusPerTask: 1
       memPerCpu: 500
-      gpusPerTask: 0
     network: slirp4netns
     dns: 1.1.1.1
     container:
@@ -240,7 +238,7 @@ Allocated CPUs per task.
 
 Can be greater or equal to 1.
 
-Go name: "CpusPerTask".
+Go name: "CPUsPerTask".
 
 </td>
 </tr>
@@ -258,15 +256,17 @@ Go name: "MemPerCPU".
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>gpusPerTask</strong></td>
+<td colspan="2" valign="top"><strong>gpus</strong></td>
 <td valign="top"><a href="#int">Int</a>!</td>
 <td>
 
-Allocated GPUs per task.
+Allocated GPUs for the whole job.
+
+Tasks can consume the GPUs by setting `GPUsPerTask` at step level.
 
 Can be greater or equal to 0.
 
-Go name: "GpusPerTask".
+Go name: "GPUs".
 
 </td>
 </tr>
@@ -1015,7 +1015,6 @@ run:
     tasks: 1
     cpusPerTask: 1
     memPerCpu: 500
-    gpusPerTask: 0
 ```
 
 ```yaml title="StepRun (with container)"
@@ -1058,7 +1057,6 @@ run:
     tasks: 1
     cpusPerTask: 1
     memPerCpu: 500
-    gpusPerTask: 0
   network: slirp4netns
   dns: 1.1.1.1
   container:
@@ -1124,7 +1122,7 @@ Can be greater or equal to 1.
 
 If null, defaults to the job resources.
 
-Go name: "CpusPerTask".
+Go name: "CPUsPerTask".
 
 </td>
 </tr>
@@ -1152,9 +1150,9 @@ Allocated GPUs per task.
 
 Can be greater or equal to 0.
 
-If null, defaults to the job resources.
+If null, defaults to 0.
 
-Go name: "GpusPerTask".
+Go name: "GPUsPerTask".
 
 </td>
 </tr>
@@ -1166,18 +1164,20 @@ Go name: "GpusPerTask".
 
 ```yaml title="StepRunResources (partial)"
 run:
-  tasks: 1
-  gpusPerTask: 0
-  # cpusPerTask: inherit from job
-  # memPerCpu: inherit from job
+  resources:
+    tasks: 1
+    # gpusPerTask: 0
+    # cpusPerTask: inherit from job
+    # memPerCpu: inherit from job
 ```
 
 ```yaml title="StepRunResources (full)"
 run:
-  tasks: 1
-  cpusPerTask: 1
-  memPerCpu: 1000
-  gpusPerTask: 0
+  resources:
+    tasks: 1
+    cpusPerTask: 1
+    memPerCpu: 1000
+    gpusPerTask: 0
 ```
 
 </details>
@@ -2027,7 +2027,7 @@ resources:
   tasks: 2
   cpusPerTask: 4
   memPerCpu: 4096
-  gpusPerTask: 0
+  gpus: 0
 
 steps:
   ## Launch async
@@ -2053,7 +2053,7 @@ resources:
   tasks: 2
   cpusPerTask: 4
   memPerCpu: 4096
-  gpusPerTask: 0
+  gpus: 0
 
 steps:
   ## Launch async
@@ -2071,7 +2071,7 @@ resources:
   tasks: 2
   cpusPerTask: 4
   memPerCpu: 4096
-  gpusPerTask: 0
+  gpus: 0
 
 steps:
   ## Launch async

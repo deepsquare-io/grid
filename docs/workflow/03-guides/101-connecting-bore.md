@@ -24,7 +24,7 @@ resources:
   tasks: 1
   cpusPerTask: 1
   memPerCpu: 512
-  gpusPerTask: 0
+  gpus: 0
 
 steps:
   - name: start-nginx
