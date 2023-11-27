@@ -106,7 +106,7 @@ LastError: %s
 Tasks: %d
 CPU/task: %d (Total CPU: %d)
 Mem(MB)/CPU: %d MB (Total Mem: %d MB)
-GPU/task: %d (Total GPU: %d)
+GPUs: %d
 Credits Allocated: %s credits
 Max Duration: %s
 Elapsed: %s
@@ -120,8 +120,7 @@ Elapsed: %s
 			m.job.Definition.CpusPerTask*m.job.Definition.Ntasks,
 			m.job.Definition.MemPerCpu,
 			m.job.Definition.MemPerCpu*m.job.Definition.CpusPerTask*m.job.Definition.Ntasks,
-			m.job.Definition.GpusPerTask,
-			m.job.Definition.GpusPerTask*m.job.Definition.Ntasks,
+			m.job.Definition.Gpus,
 			ether.FromWei(m.job.Cost.MaxCost).String(),
 			maxDuration,
 			elapsed,

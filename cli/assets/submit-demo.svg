@@ -189,7 +189,7 @@
           <text x="13.026" y="1.67" class="w">200</text>
         </symbol>
         <symbol id="24">
-          <text x="2.004" y="1.67" class="u">gpusPerTask</text>
+          <text x="2.004" y="1.67" class="u">gpus</text>
           <text x="13.026" y="1.67" class="v">:</text>
           <text x="15.03" y="1.67" class="w">0</text>
         </symbol>

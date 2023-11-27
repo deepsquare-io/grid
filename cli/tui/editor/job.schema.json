@@ -147,22 +147,22 @@
         },
         "cpusPerTask": {
           "$ref": "#/definitions/Int",
-          "description": "Allocated CPUs per task.\n\nCan be greater or equal to 1.\n\nGo name: \"CpusPerTask\"."
+          "description": "Allocated CPUs per task.\n\nCan be greater or equal to 1.\n\nGo name: \"CPUsPerTask\"."
         },
         "memPerCpu": {
           "$ref": "#/definitions/Int",
           "description": "Allocated memory (MB) per task.\n\nCan be greater or equal to 1.\n\nGo name: \"MemPerCPU\"."
         },
-        "gpusPerTask": {
+        "gpus": {
           "$ref": "#/definitions/Int",
-          "description": "Allocated GPUs per task.\n\nCan be greater or equal to 0.\n\nGo name: \"GpusPerTask\"."
+          "description": "Allocated GPUs for the whole job.\n\nTasks can consume the GPUs by setting `GPUsPerTask` at step level.\n\nCan be greater or equal to 0.\n\nGo name: \"GPUs\"."
         }
       },
       "required": [
         "tasks",
         "cpusPerTask",
         "memPerCpu",
-        "gpusPerTask"
+        "gpus"
       ],
       "description": "JobResources are the allocated resources for a job in a cluster."
     },
@@ -317,7 +317,7 @@
         },
         "cpusPerTask": {
           "$ref": "#/definitions/Int",
-          "description": "Allocated CPUs per task.\n\nCan be greater or equal to 1.\n\nIf null, defaults to the job resources.\n\nGo name: \"CpusPerTask\"."
+          "description": "Allocated CPUs per task.\n\nCan be greater or equal to 1.\n\nIf null, defaults to the job resources.\n\nGo name: \"CPUsPerTask\"."
         },
         "memPerCpu": {
           "$ref": "#/definitions/Int",
@@ -325,7 +325,7 @@
         },
         "gpusPerTask": {
           "$ref": "#/definitions/Int",
-          "description": "Allocated GPUs per task.\n\nCan be greater or equal to 0.\n\nIf null, defaults to the job resources.\n\nGo name: \"GpusPerTask\"."
+          "description": "Allocated GPUs per task.\n\nCan be greater or equal to 0.\n\nIf null, defaults to 0.\n\nGo name: \"GPUsPerTask\"."
         }
       },
       "required": [],

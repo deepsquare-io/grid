@@ -64,9 +64,9 @@ func main() {
 		&sbatch.Job{
 			Resources: &sbatch.JobResources{
 				Tasks:       1,
-				CpusPerTask: 1,
+				CPUsPerTask: 1,
 				MemPerCPU:   100,
-				GpusPerTask: 0,
+				GPUs:        0,
 			},
 			Steps: []*sbatch.Step{
 				{

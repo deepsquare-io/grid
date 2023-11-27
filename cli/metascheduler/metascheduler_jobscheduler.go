@@ -107,9 +107,9 @@ func (c *jobScheduler) SubmitJob(
 
 	definition := metaschedulerabi.JobDefinition{
 		Ntasks:            uint64(job.Resources.Tasks),
-		GpusPerTask:       uint64(job.Resources.GpusPerTask),
+		Gpus:              uint64(job.Resources.GPUs),
 		MemPerCpu:         uint64(job.Resources.MemPerCPU),
-		CpusPerTask:       uint64(job.Resources.CpusPerTask),
+		CpusPerTask:       uint64(job.Resources.CPUsPerTask),
 		StorageType:       0,
 		BatchLocationHash: hash,
 		Uses:              msUses,

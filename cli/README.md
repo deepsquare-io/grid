@@ -171,7 +171,7 @@ jobID, err = client.SubmitJob(
          Tasks:       1,
          CpusPerTask: 1,
          MemPerCPU:   100,
-         GpusPerTask: 0,
+         Gpus: 0,
       },
       Steps: []*sbatch.Step{
          {

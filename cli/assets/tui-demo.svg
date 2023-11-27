@@ -552,7 +552,7 @@
         <symbol id="60">
           <text x="3.006" y="1.67" class="A">11</text>
           <text x="7.014" y="1.67" class="z">··</text>
-          <text x="9.018" y="1.67" class="B">gpusPerTask</text>
+          <text x="9.018" y="1.67" class="B">gpus</text>
           <text x="20.04" y="1.67" class="x">:</text>
           <text x="21.042" y="1.67" class="z">·</text>
           <text x="22.044" y="1.67" class="C">0</text>
@@ -1681,7 +1681,7 @@
             <use xlink:href="#59" y="21.71" />
             <text x="3.006" y="25.551" class="A">11</text>
             <text x="7.014" y="25.551" class="z">··</text>
-            <text x="9.018" y="25.551" class="B">gpusPerTask</text>
+            <text x="9.018" y="25.551" class="B">gpus</text>
             <text x="20.04" y="25.551" class="x">:</text>
             <text x="21.042" y="25.551" class="z">·</text>
             <text x="22.044" y="25.551" class="C">0</text>

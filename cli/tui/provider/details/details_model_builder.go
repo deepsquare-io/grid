@@ -117,12 +117,12 @@ Is banned: %s
 	inputs[memPerCPUInput].Validate = validator.AllowedNumberChar
 	inputs[memPerCPUInput].SetValue("200")
 
-	inputs[gpusPerTaskInput] = textinput.New()
-	inputs[gpusPerTaskInput].Placeholder = "example: 1"
-	inputs[gpusPerTaskInput].Width = 10
-	inputs[gpusPerTaskInput].Prompt = style.Foreground().Render("❱ ")
-	inputs[gpusPerTaskInput].Validate = validator.AllowedNumberChar
-	inputs[gpusPerTaskInput].SetValue("0")
+	inputs[gpusInput] = textinput.New()
+	inputs[gpusInput].Placeholder = "example: 1"
+	inputs[gpusInput].Width = 10
+	inputs[gpusInput].Prompt = style.Foreground().Render("❱ ")
+	inputs[gpusInput].Validate = validator.AllowedNumberChar
+	inputs[gpusInput].SetValue("0")
 
 	inputs[creditsInput] = textinput.New()
 	inputs[creditsInput].Placeholder = "example: 100"
