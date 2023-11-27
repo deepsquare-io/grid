@@ -31,9 +31,9 @@ func creditsPerMin(
 	prices metaschedulerabi.ProviderPrices,
 	definition metaschedulerabi.JobDefinition,
 ) *big.Int {
-	// GpuPricePerMin * GpusPerTask
-	gpusCostPerMinPerTask := new(big.Int).
-		Mul(prices.GpuPricePerMin, new(big.Int).SetUint64(definition.GpusPerTask))
+	// GpuPricePerMin * Gpus
+	gpusCostPerMin := new(big.Int).
+		Mul(prices.GpuPricePerMin, new(big.Int).SetUint64(definition.Gpus))
 
 	// CpuPricePerMin * CpusPerTask
 	cpusCostPerMinPerTask := new(big.Int).
@@ -44,11 +44,11 @@ func creditsPerMin(
 		Mul(prices.MemPricePerMin, new(big.Int).SetUint64(definition.MemPerCpu))
 	memCostPerMinPerTask.Mul(memCostPerMinPerTask, new(big.Int).SetUint64(definition.CpusPerTask))
 
-	// creditsPerMin = Ntasks * (cpusPricePerMinPerTask + memPricePerMinPerTask + gpusPricePerMinPerTask)
-	creditsPerMin := new(big.Int).Set(gpusCostPerMinPerTask)
-	creditsPerMin.Add(creditsPerMin, cpusCostPerMinPerTask)
+	// creditsPerMin = Ntasks * (cpusPricePerMinPerTask + memPricePerMinPerTask) + gpusPricePerMinPerTask
+	creditsPerMin := new(big.Int).Set(cpusCostPerMinPerTask)
 	creditsPerMin.Add(creditsPerMin, memCostPerMinPerTask)
 	creditsPerMin.Mul(creditsPerMin, new(big.Int).SetUint64(definition.Ntasks))
+	creditsPerMin.Add(creditsPerMin, gpusCostPerMin)
 
 	return creditsPerMin
 }

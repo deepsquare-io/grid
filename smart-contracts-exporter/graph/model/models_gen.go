@@ -46,10 +46,10 @@ type JobCost struct {
 }
 
 type JobDefinition struct {
-	GpuPerTask int `json:"gpuPerTask"`
-	MemPerCPU  int `json:"memPerCpu"`
-	CPUPerTask int `json:"cpuPerTask"`
-	Ntasks     int `json:"ntasks"`
+	GPUs        int `json:"gpus"`
+	MemPerCPU   int `json:"memPerCpu"`
+	CPUsPerTask int `json:"cpusPerTask"`
+	Ntasks      int `json:"ntasks"`
 }
 
 type JobDurationMetrics struct {

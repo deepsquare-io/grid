@@ -26,6 +26,7 @@ import (
 // NewExecutableSchema creates an ExecutableSchema from the ResolverRoot interface.
 func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
 	return &executableSchema{
+		schema:     cfg.Schema,
 		resolvers:  cfg.Resolvers,
 		directives: cfg.Directives,
 		complexity: cfg.Complexity,
@@ -33,6 +34,7 @@ func NewExecutableSchema(cfg Config) graphql.ExecutableSchema {
 }
 
 type Config struct {
+	Schema     *ast.Schema
 	Resolvers  ResolverRoot
 	Directives DirectiveRoot
 	Complexity ComplexityRoot
@@ -83,10 +85,10 @@ type ComplexityRoot struct {
 	}
 
 	JobDefinition struct {
-		CPUPerTask func(childComplexity int) int
-		GpuPerTask func(childComplexity int) int
-		MemPerCPU  func(childComplexity int) int
-		Ntasks     func(childComplexity int) int
+		CPUsPerTask func(childComplexity int) int
+		GPUs        func(childComplexity int) int
+		MemPerCPU   func(childComplexity int) int
+		Ntasks      func(childComplexity int) int
 	}
 
 	JobDurationMetrics struct {
@@ -158,12 +160,16 @@ type WalletMetricsResolver interface {
 }
 
 type executableSchema struct {
+	schema     *ast.Schema
 	resolvers  ResolverRoot
 	directives DirectiveRoot
 	complexity ComplexityRoot
 }
 
 func (e *executableSchema) Schema() *ast.Schema {
+	if e.schema != nil {
+		return e.schema
+	}
 	return parsedSchema
 }
 
@@ -291,19 +297,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.JobCost.PendingTopUp(childComplexity), true
 
-	case "JobDefinition.cpuPerTask":
-		if e.complexity.JobDefinition.CPUPerTask == nil {
+	case "JobDefinition.cpusPerTask":
+		if e.complexity.JobDefinition.CPUsPerTask == nil {
 			break
 		}
 
-		return e.complexity.JobDefinition.CPUPerTask(childComplexity), true
+		return e.complexity.JobDefinition.CPUsPerTask(childComplexity), true
 
-	case "JobDefinition.gpuPerTask":
-		if e.complexity.JobDefinition.GpuPerTask == nil {
+	case "JobDefinition.gpus":
+		if e.complexity.JobDefinition.GPUs == nil {
 			break
 		}
 
-		return e.complexity.JobDefinition.GpuPerTask(childComplexity), true
+		return e.complexity.JobDefinition.GPUs(childComplexity), true
 
 	case "JobDefinition.memPerCpu":
 		if e.complexity.JobDefinition.MemPerCPU == nil {
@@ -581,14 +587,14 @@ func (ec *executionContext) introspectSchema() (*introspection.Schema, error) {
 	if ec.DisableIntrospection {
 		return nil, errors.New("introspection disabled")
 	}
-	return introspection.WrapSchema(parsedSchema), nil
+	return introspection.WrapSchema(ec.Schema()), nil
 }
 
 func (ec *executionContext) introspectType(name string) (*introspection.Type, error) {
 	if ec.DisableIntrospection {
 		return nil, errors.New("introspection disabled")
 	}
-	return introspection.WrapTypeFromDef(parsedSchema, parsedSchema.Types[name]), nil
+	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
 var sources = []*ast.Source{
@@ -628,9 +634,9 @@ type JobCost {
 }
 
 type JobDefinition {
-  gpuPerTask: Int!
+  gpus: Int! @goField(name: "GPUs")
   memPerCpu: Int!
-  cpuPerTask: Int!
+  cpusPerTask: Int! @goField(name: "CPUsPerTask")
   ntasks: Int!
 }
 
@@ -828,7 +834,7 @@ func (ec *executionContext) field_WalletMetrics_top10_args(ctx context.Context, 
 	var arg0 model.WalletOrderBy
 	if tmp, ok := rawArgs["orderBy"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderBy"))
-		arg0, err = ec.unmarshalNWalletOrderBy2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletOrderBy(ctx, tmp)
+		arg0, err = ec.unmarshalNWalletOrderBy2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletOrderBy(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1211,7 +1217,7 @@ func (ec *executionContext) _Job_definition(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.JobDefinition)
 	fc.Result = res
-	return ec.marshalNJobDefinition2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobDefinition(ctx, field.Selections, res)
+	return ec.marshalNJobDefinition2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobDefinition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Job_definition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1222,12 +1228,12 @@ func (ec *executionContext) fieldContext_Job_definition(ctx context.Context, fie
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "gpuPerTask":
-				return ec.fieldContext_JobDefinition_gpuPerTask(ctx, field)
+			case "gpus":
+				return ec.fieldContext_JobDefinition_gpus(ctx, field)
 			case "memPerCpu":
 				return ec.fieldContext_JobDefinition_memPerCpu(ctx, field)
-			case "cpuPerTask":
-				return ec.fieldContext_JobDefinition_cpuPerTask(ctx, field)
+			case "cpusPerTask":
+				return ec.fieldContext_JobDefinition_cpusPerTask(ctx, field)
 			case "ntasks":
 				return ec.fieldContext_JobDefinition_ntasks(ctx, field)
 			}
@@ -1309,7 +1315,7 @@ func (ec *executionContext) _Job_cost(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.(*model.JobCost)
 	fc.Result = res
-	return ec.marshalNJobCost2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobCost(ctx, field.Selections, res)
+	return ec.marshalNJobCost2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobCost(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Job_cost(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1363,7 +1369,7 @@ func (ec *executionContext) _Job_time(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.(*model.JobTime)
 	fc.Result = res
-	return ec.marshalNJobTime2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobTime(ctx, field.Selections, res)
+	return ec.marshalNJobTime2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Job_time(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1505,7 +1511,7 @@ func (ec *executionContext) _JobCost_maxCost(ctx context.Context, field graphql.
 	}
 	res := resTmp.(scalar.BigInt)
 	fc.Result = res
-	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
+	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobCost_maxCost(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1549,7 +1555,7 @@ func (ec *executionContext) _JobCost_finalCost(ctx context.Context, field graphq
 	}
 	res := resTmp.(scalar.BigInt)
 	fc.Result = res
-	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
+	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobCost_finalCost(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1593,7 +1599,7 @@ func (ec *executionContext) _JobCost_pendingTopUp(ctx context.Context, field gra
 	}
 	res := resTmp.(scalar.BigInt)
 	fc.Result = res
-	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
+	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobCost_pendingTopUp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1653,8 +1659,8 @@ func (ec *executionContext) fieldContext_JobCost_delegateSpendingAuthority(ctx c
 	return fc, nil
 }
 
-func (ec *executionContext) _JobDefinition_gpuPerTask(ctx context.Context, field graphql.CollectedField, obj *model.JobDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_JobDefinition_gpuPerTask(ctx, field)
+func (ec *executionContext) _JobDefinition_gpus(ctx context.Context, field graphql.CollectedField, obj *model.JobDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JobDefinition_gpus(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1667,7 +1673,7 @@ func (ec *executionContext) _JobDefinition_gpuPerTask(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.GpuPerTask, nil
+		return obj.GPUs, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1684,7 +1690,7 @@ func (ec *executionContext) _JobDefinition_gpuPerTask(ctx context.Context, field
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_JobDefinition_gpuPerTask(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_JobDefinition_gpus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "JobDefinition",
 		Field:      field,
@@ -1741,8 +1747,8 @@ func (ec *executionContext) fieldContext_JobDefinition_memPerCpu(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _JobDefinition_cpuPerTask(ctx context.Context, field graphql.CollectedField, obj *model.JobDefinition) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_JobDefinition_cpuPerTask(ctx, field)
+func (ec *executionContext) _JobDefinition_cpusPerTask(ctx context.Context, field graphql.CollectedField, obj *model.JobDefinition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_JobDefinition_cpusPerTask(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1755,7 +1761,7 @@ func (ec *executionContext) _JobDefinition_cpuPerTask(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CPUPerTask, nil
+		return obj.CPUsPerTask, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1772,7 +1778,7 @@ func (ec *executionContext) _JobDefinition_cpuPerTask(ctx context.Context, field
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_JobDefinition_cpuPerTask(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_JobDefinition_cpusPerTask(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "JobDefinition",
 		Field:      field,
@@ -1879,7 +1885,7 @@ func (ec *executionContext) fieldContext_JobDurationMetrics_max(ctx context.Cont
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_JobDurationMetrics_max_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1934,7 +1940,7 @@ func (ec *executionContext) fieldContext_JobDurationMetrics_average(ctx context.
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_JobDurationMetrics_average_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1964,7 +1970,7 @@ func (ec *executionContext) _JobMetrics_duration(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.JobDurationMetrics)
 	fc.Result = res
-	return ec.marshalOJobDurationMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobDurationMetrics(ctx, field.Selections, res)
+	return ec.marshalOJobDurationMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobDurationMetrics(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobMetrics_duration(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2058,7 +2064,7 @@ func (ec *executionContext) _JobMetrics_rateRange(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.TimestampValue)
 	fc.Result = res
-	return ec.marshalNTimestampValue2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐTimestampValueᚄ(ctx, field.Selections, res)
+	return ec.marshalNTimestampValue2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐTimestampValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobMetrics_rateRange(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2086,7 +2092,7 @@ func (ec *executionContext) fieldContext_JobMetrics_rateRange(ctx context.Contex
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_JobMetrics_rateRange_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -2119,7 +2125,7 @@ func (ec *executionContext) _JobTime_start(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(scalar.BigInt)
 	fc.Result = res
-	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
+	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobTime_start(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2163,7 +2169,7 @@ func (ec *executionContext) _JobTime_end(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(scalar.BigInt)
 	fc.Result = res
-	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
+	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobTime_end(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2207,7 +2213,7 @@ func (ec *executionContext) _JobTime_cancelRequestTimestamp(ctx context.Context,
 	}
 	res := resTmp.(scalar.BigInt)
 	fc.Result = res
-	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
+	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobTime_cancelRequestTimestamp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2251,7 +2257,7 @@ func (ec *executionContext) _JobTime_blockNumberStateChange(ctx context.Context,
 	}
 	res := resTmp.(scalar.BigInt)
 	fc.Result = res
-	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
+	return ec.marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobTime_blockNumberStateChange(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2383,7 +2389,7 @@ func (ec *executionContext) _Query_creditsMetrics(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.CreditsMetrics)
 	fc.Result = res
-	return ec.marshalNCreditsMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCreditsMetrics(ctx, field.Selections, res)
+	return ec.marshalNCreditsMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCreditsMetrics(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_creditsMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2431,7 +2437,7 @@ func (ec *executionContext) _Query_gpuTimeMetrics(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.GpuTimeMetrics)
 	fc.Result = res
-	return ec.marshalNGpuTimeMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐGpuTimeMetrics(ctx, field.Selections, res)
+	return ec.marshalNGpuTimeMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐGpuTimeMetrics(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_gpuTimeMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2479,7 +2485,7 @@ func (ec *executionContext) _Query_cpuTimeMetrics(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.CPUTimeMetrics)
 	fc.Result = res
-	return ec.marshalNCpuTimeMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCPUTimeMetrics(ctx, field.Selections, res)
+	return ec.marshalNCpuTimeMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCPUTimeMetrics(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_cpuTimeMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2527,7 +2533,7 @@ func (ec *executionContext) _Query_jobMetrics(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.JobMetrics)
 	fc.Result = res
-	return ec.marshalNJobMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobMetrics(ctx, field.Selections, res)
+	return ec.marshalNJobMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobMetrics(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_jobMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2579,7 +2585,7 @@ func (ec *executionContext) _Query_walletMetrics(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.WalletMetrics)
 	fc.Result = res
-	return ec.marshalNWalletMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletMetrics(ctx, field.Selections, res)
+	return ec.marshalNWalletMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletMetrics(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_walletMetrics(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2670,7 +2676,7 @@ func (ec *executionContext) fieldContext_Query___type(ctx context.Context, field
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query___type_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -2766,7 +2772,7 @@ func (ec *executionContext) _Subscription_job(ctx context.Context, field graphql
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNJob2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJob(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalNJob2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJob(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -2926,7 +2932,7 @@ func (ec *executionContext) _WalletMetrics_top10(ctx context.Context, field grap
 	}
 	res := resTmp.([]*model.Metric)
 	fc.Result = res
-	return ec.marshalNMetric2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐMetricᚄ(ctx, field.Selections, res)
+	return ec.marshalNMetric2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐMetricᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_WalletMetrics_top10(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2954,7 +2960,7 @@ func (ec *executionContext) fieldContext_WalletMetrics_top10(ctx context.Context
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_WalletMetrics_top10_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -4424,7 +4430,7 @@ func (ec *executionContext) fieldContext___Type_fields(ctx context.Context, fiel
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field___Type_fields_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -4612,7 +4618,7 @@ func (ec *executionContext) fieldContext___Type_enumValues(ctx context.Context, 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field___Type_enumValues_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
-		return
+		return fc, err
 	}
 	return fc, nil
 }
@@ -5050,8 +5056,8 @@ func (ec *executionContext) _JobDefinition(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("JobDefinition")
-		case "gpuPerTask":
-			out.Values[i] = ec._JobDefinition_gpuPerTask(ctx, field, obj)
+		case "gpus":
+			out.Values[i] = ec._JobDefinition_gpus(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5060,8 +5066,8 @@ func (ec *executionContext) _JobDefinition(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "cpuPerTask":
-			out.Values[i] = ec._JobDefinition_cpuPerTask(ctx, field, obj)
+		case "cpusPerTask":
+			out.Values[i] = ec._JobDefinition_cpusPerTask(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6030,13 +6036,13 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx context.Context, v interface{}) (scalar.BigInt, error) {
+func (ec *executionContext) unmarshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx context.Context, v interface{}) (scalar.BigInt, error) {
 	var res scalar.BigInt
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx context.Context, sel ast.SelectionSet, v scalar.BigInt) graphql.Marshaler {
+func (ec *executionContext) marshalNBigInt2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋscalarᚐBigInt(ctx context.Context, sel ast.SelectionSet, v scalar.BigInt) graphql.Marshaler {
 	return v
 }
 
@@ -6055,11 +6061,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCpuTimeMetrics2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCPUTimeMetrics(ctx context.Context, sel ast.SelectionSet, v model.CPUTimeMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNCpuTimeMetrics2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCPUTimeMetrics(ctx context.Context, sel ast.SelectionSet, v model.CPUTimeMetrics) graphql.Marshaler {
 	return ec._CpuTimeMetrics(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCpuTimeMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCPUTimeMetrics(ctx context.Context, sel ast.SelectionSet, v *model.CPUTimeMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNCpuTimeMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCPUTimeMetrics(ctx context.Context, sel ast.SelectionSet, v *model.CPUTimeMetrics) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6069,11 +6075,11 @@ func (ec *executionContext) marshalNCpuTimeMetrics2ᚖgithubᚗcomᚋdeepsquare�
 	return ec._CpuTimeMetrics(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCreditsMetrics2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCreditsMetrics(ctx context.Context, sel ast.SelectionSet, v model.CreditsMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNCreditsMetrics2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCreditsMetrics(ctx context.Context, sel ast.SelectionSet, v model.CreditsMetrics) graphql.Marshaler {
 	return ec._CreditsMetrics(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCreditsMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCreditsMetrics(ctx context.Context, sel ast.SelectionSet, v *model.CreditsMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNCreditsMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐCreditsMetrics(ctx context.Context, sel ast.SelectionSet, v *model.CreditsMetrics) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6098,11 +6104,11 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
-func (ec *executionContext) marshalNGpuTimeMetrics2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐGpuTimeMetrics(ctx context.Context, sel ast.SelectionSet, v model.GpuTimeMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNGpuTimeMetrics2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐGpuTimeMetrics(ctx context.Context, sel ast.SelectionSet, v model.GpuTimeMetrics) graphql.Marshaler {
 	return ec._GpuTimeMetrics(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGpuTimeMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐGpuTimeMetrics(ctx context.Context, sel ast.SelectionSet, v *model.GpuTimeMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNGpuTimeMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐGpuTimeMetrics(ctx context.Context, sel ast.SelectionSet, v *model.GpuTimeMetrics) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6127,11 +6133,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNJob2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v model.Job) graphql.Marshaler {
+func (ec *executionContext) marshalNJob2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v model.Job) graphql.Marshaler {
 	return ec._Job(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNJob2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v *model.Job) graphql.Marshaler {
+func (ec *executionContext) marshalNJob2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJob(ctx context.Context, sel ast.SelectionSet, v *model.Job) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6141,7 +6147,7 @@ func (ec *executionContext) marshalNJob2ᚖgithubᚗcomᚋdeepsquareᚑioᚋthe�
 	return ec._Job(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNJobCost2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobCost(ctx context.Context, sel ast.SelectionSet, v *model.JobCost) graphql.Marshaler {
+func (ec *executionContext) marshalNJobCost2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobCost(ctx context.Context, sel ast.SelectionSet, v *model.JobCost) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6151,7 +6157,7 @@ func (ec *executionContext) marshalNJobCost2ᚖgithubᚗcomᚋdeepsquareᚑioᚋ
 	return ec._JobCost(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNJobDefinition2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobDefinition(ctx context.Context, sel ast.SelectionSet, v *model.JobDefinition) graphql.Marshaler {
+func (ec *executionContext) marshalNJobDefinition2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobDefinition(ctx context.Context, sel ast.SelectionSet, v *model.JobDefinition) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6161,11 +6167,11 @@ func (ec *executionContext) marshalNJobDefinition2ᚖgithubᚗcomᚋdeepsquare�
 	return ec._JobDefinition(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNJobMetrics2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobMetrics(ctx context.Context, sel ast.SelectionSet, v model.JobMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNJobMetrics2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobMetrics(ctx context.Context, sel ast.SelectionSet, v model.JobMetrics) graphql.Marshaler {
 	return ec._JobMetrics(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNJobMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobMetrics(ctx context.Context, sel ast.SelectionSet, v *model.JobMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNJobMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobMetrics(ctx context.Context, sel ast.SelectionSet, v *model.JobMetrics) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6175,7 +6181,7 @@ func (ec *executionContext) marshalNJobMetrics2ᚖgithubᚗcomᚋdeepsquareᚑio
 	return ec._JobMetrics(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNJobTime2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobTime(ctx context.Context, sel ast.SelectionSet, v *model.JobTime) graphql.Marshaler {
+func (ec *executionContext) marshalNJobTime2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobTime(ctx context.Context, sel ast.SelectionSet, v *model.JobTime) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6185,7 +6191,7 @@ func (ec *executionContext) marshalNJobTime2ᚖgithubᚗcomᚋdeepsquareᚑioᚋ
 	return ec._JobTime(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMetric2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐMetricᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Metric) graphql.Marshaler {
+func (ec *executionContext) marshalNMetric2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐMetricᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Metric) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -6209,7 +6215,7 @@ func (ec *executionContext) marshalNMetric2ᚕᚖgithubᚗcomᚋdeepsquareᚑio�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMetric2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐMetric(ctx, sel, v[i])
+			ret[i] = ec.marshalNMetric2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐMetric(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -6229,7 +6235,7 @@ func (ec *executionContext) marshalNMetric2ᚕᚖgithubᚗcomᚋdeepsquareᚑio�
 	return ret
 }
 
-func (ec *executionContext) marshalNMetric2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐMetric(ctx context.Context, sel ast.SelectionSet, v *model.Metric) graphql.Marshaler {
+func (ec *executionContext) marshalNMetric2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐMetric(ctx context.Context, sel ast.SelectionSet, v *model.Metric) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6269,7 +6275,7 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalNTimestampValue2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐTimestampValueᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TimestampValue) graphql.Marshaler {
+func (ec *executionContext) marshalNTimestampValue2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐTimestampValueᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TimestampValue) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -6293,7 +6299,7 @@ func (ec *executionContext) marshalNTimestampValue2ᚕᚖgithubᚗcomᚋdeepsqua
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTimestampValue2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐTimestampValue(ctx, sel, v[i])
+			ret[i] = ec.marshalNTimestampValue2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐTimestampValue(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -6313,7 +6319,7 @@ func (ec *executionContext) marshalNTimestampValue2ᚕᚖgithubᚗcomᚋdeepsqua
 	return ret
 }
 
-func (ec *executionContext) marshalNTimestampValue2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐTimestampValue(ctx context.Context, sel ast.SelectionSet, v *model.TimestampValue) graphql.Marshaler {
+func (ec *executionContext) marshalNTimestampValue2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐTimestampValue(ctx context.Context, sel ast.SelectionSet, v *model.TimestampValue) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6323,11 +6329,11 @@ func (ec *executionContext) marshalNTimestampValue2ᚖgithubᚗcomᚋdeepsquare�
 	return ec._TimestampValue(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNWalletMetrics2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletMetrics(ctx context.Context, sel ast.SelectionSet, v model.WalletMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNWalletMetrics2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletMetrics(ctx context.Context, sel ast.SelectionSet, v model.WalletMetrics) graphql.Marshaler {
 	return ec._WalletMetrics(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNWalletMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletMetrics(ctx context.Context, sel ast.SelectionSet, v *model.WalletMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalNWalletMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletMetrics(ctx context.Context, sel ast.SelectionSet, v *model.WalletMetrics) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -6337,13 +6343,13 @@ func (ec *executionContext) marshalNWalletMetrics2ᚖgithubᚗcomᚋdeepsquare�
 	return ec._WalletMetrics(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNWalletOrderBy2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletOrderBy(ctx context.Context, v interface{}) (model.WalletOrderBy, error) {
+func (ec *executionContext) unmarshalNWalletOrderBy2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletOrderBy(ctx context.Context, v interface{}) (model.WalletOrderBy, error) {
 	var res model.WalletOrderBy
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNWalletOrderBy2githubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletOrderBy(ctx context.Context, sel ast.SelectionSet, v model.WalletOrderBy) graphql.Marshaler {
+func (ec *executionContext) marshalNWalletOrderBy2githubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐWalletOrderBy(ctx context.Context, sel ast.SelectionSet, v model.WalletOrderBy) graphql.Marshaler {
 	return v
 }
 
@@ -6626,7 +6632,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOJobDurationMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋtheᚑgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobDurationMetrics(ctx context.Context, sel ast.SelectionSet, v *model.JobDurationMetrics) graphql.Marshaler {
+func (ec *executionContext) marshalOJobDurationMetrics2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsmartᚑcontractsᚑexporterᚋgraphᚋmodelᚐJobDurationMetrics(ctx context.Context, sel ast.SelectionSet, v *model.JobDurationMetrics) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

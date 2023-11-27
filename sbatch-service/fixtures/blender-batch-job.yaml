@@ -5,7 +5,7 @@ job:
     tasks: 2
     cpusPerTask: 4
     memPerCpu: 4096
-    gpusPerTask: 1
+    gpus: 4
   input:
     s3:
       region: region
@@ -30,7 +30,6 @@ job:
           tasks: 1
           cpusPerTask: 4
           memPerCpu: 4096
-          gpusPerTask: 0
         container:
           deepsquareHosted: true
           apptainer: true
@@ -68,7 +67,6 @@ job:
           tasks: 1
           cpusPerTask: 4
           memPerCpu: 4096
-          gpusPerTask: 0
         command: |-
           set -e
           if [ "$FRAMES_PER_TASK" -lt "$NTASKS" ]; then

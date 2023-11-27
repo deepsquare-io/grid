@@ -7,7 +7,7 @@ job:
     tasks: 1
     cpusPerTask: 4
     memPerCpu: 2000
-    gpusPerTask: 0
+    gpus: 0
 
   ## The job content
   steps:

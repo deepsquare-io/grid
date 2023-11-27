@@ -36,7 +36,7 @@ const (
 	tasksInput = iota
 	cpusPerTaskInput
 	memPerCPUInput
-	gpusPerTaskInput
+	gpusInput
 	creditsInput
 
 	inputsSize
@@ -71,7 +71,7 @@ type model struct {
 	tasks       uint64
 	cpusPerTask uint64
 	memPerCPU   uint64
-	gpusPerTask uint64
+	gpus        uint64
 	credits     *big.Float
 
 	// Form result
@@ -129,8 +129,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.memPerCPU <= 0 && m.errors[memPerCPUInput] == nil {
 		m.errors[memPerCPUInput] = errors.New("must be greater than 0")
 	}
-	m.gpusPerTask, err = strconv.ParseUint(m.inputs[gpusPerTaskInput].Value(), 10, 64)
-	m.errors[gpusPerTaskInput] = err
+	m.gpus, err = strconv.ParseUint(m.inputs[gpusInput].Value(), 10, 64)
+	m.errors[gpusInput] = err
 	m.tasks, err = strconv.ParseUint(m.inputs[tasksInput].Value(), 10, 64)
 	m.errors[tasksInput] = err
 	if m.tasks <= 0 && m.errors[tasksInput] == nil {
@@ -146,7 +146,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	durationB, err := metascheduler.CreditToDuration(
 		m.ProviderPrices,
 		metaschedulerabi.JobDefinition{
-			GpusPerTask: m.gpusPerTask,
+			Gpus:        m.gpus,
 			MemPerCpu:   m.memPerCPU,
 			CpusPerTask: m.cpusPerTask,
 			Ntasks:      m.tasks,

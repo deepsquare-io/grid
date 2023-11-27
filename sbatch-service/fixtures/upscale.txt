@@ -5,7 +5,6 @@ set -e
 export NTASKS='4'
 export CPUS_PER_TASK='8'
 export MEM_PER_CPU='8000'
-export GPUS_PER_TASK='1'
 export GPUS='4'
 export CPUS='32'
 export MEM='256000'

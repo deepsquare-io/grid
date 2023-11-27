@@ -5,7 +5,7 @@ job:
     tasks: 4
     cpusPerTask: 16
     memPerCpu: 4096
-    gpusPerTask: 0
+    gpus: 0
   steps:
     - name: do-stuff-in-foreground
       resources:
@@ -14,13 +14,14 @@ job:
           apptainer: true
           registry: registry-1.docker.io
           image: library/alpine:latest
-          mounts: [
-            {
-              hostDir: '/opt/models/stable-diffusion',
-              containerDir: '/models',
-              options: 'ro',
-            },
-          ]
+          mounts:
+            [
+              {
+                hostDir: '/opt/models/stable-diffusion',
+                containerDir: '/models',
+                options: 'ro',
+              },
+            ]
         resources:
           tasks: 4
         command: |-

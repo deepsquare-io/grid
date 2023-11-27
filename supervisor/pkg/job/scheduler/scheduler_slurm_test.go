@@ -86,7 +86,7 @@ func (suite *ServiceTestSuite) TestSubmit() {
 		JobDefinition: &scheduler.JobDefinition{
 			TimeLimit:    uint64(5),
 			NTasks:       1,
-			GPUsPerTask:  utils.Ptr(uint64(0)),
+			GPUs:         utils.Ptr(uint64(0)),
 			CPUsPerTask:  1,
 			MemoryPerCPU: 512,
 			Body: `#!/bin/sh
@@ -100,11 +100,11 @@ srun sleep infinity
 		user,
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "sbatch") &&
-				strings.Contains(cmd, strconv.FormatUint(req.CPUsPerTask, 10)) &&
-				strings.Contains(cmd, strconv.FormatUint(*req.GPUsPerTask, 10)) &&
-				strings.Contains(cmd, strconv.FormatUint(req.MemoryPerCPU, 10)) &&
-				strings.Contains(cmd, strconv.FormatUint(req.NTasks, 10)) &&
-				strings.Contains(cmd, strconv.FormatUint(req.TimeLimit, 10)) &&
+				strings.Contains(cmd, "--cpus-per-task="+strconv.FormatUint(req.CPUsPerTask, 10)) &&
+				strings.Contains(cmd, "--gpus="+strconv.FormatUint(*req.GPUs, 10)) &&
+				strings.Contains(cmd, "--mem-per-cpu="+strconv.FormatUint(req.MemoryPerCPU, 10)) &&
+				strings.Contains(cmd, "--ntasks="+strconv.FormatUint(req.NTasks, 10)) &&
+				strings.Contains(cmd, "--time="+strconv.FormatUint(req.TimeLimit, 10)) &&
 				strings.Contains(cmd, req.Name) &&
 				strings.Contains(cmd, req.Prefix) &&
 				strings.Contains(cmd, req.Body)

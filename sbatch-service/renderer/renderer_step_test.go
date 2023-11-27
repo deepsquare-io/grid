@@ -437,7 +437,7 @@ set -e
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \
-  --gpus-per-task=1 \
+  --gpus-per-task=0 \
   --ntasks=1 \
   /bin/sh -c 'exit 1'
 ) # CATCH
@@ -450,7 +450,7 @@ set -e
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \
-  --gpus-per-task=1 \
+  --gpus-per-task=0 \
   --ntasks=1 \
   /bin/sh -c 'echo $DEEPSQUARE_ERROR_CODE'
 fi
@@ -480,7 +480,7 @@ set -e
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \
-  --gpus-per-task=1 \
+  --gpus-per-task=0 \
   --ntasks=1 \
   /bin/sh -c 'cleaning up'
 }
@@ -490,7 +490,7 @@ trap finally EXIT INT TERM
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \
-  --gpus-per-task=1 \
+  --gpus-per-task=0 \
   --ntasks=1 \
   /bin/sh -c 'exit 1'
 ) # CATCH FINALLY`,
@@ -528,7 +528,7 @@ set -e
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \
-  --gpus-per-task=1 \
+  --gpus-per-task=0 \
   --ntasks=1 \
   /bin/sh -c 'cleaning up'
 }
@@ -540,7 +540,7 @@ set -e
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \
-  --gpus-per-task=1 \
+  --gpus-per-task=0 \
   --ntasks=1 \
   /bin/sh -c 'exit 1'
 ) # CATCH
@@ -553,7 +553,7 @@ set -e
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=4 \
   --mem-per-cpu=4096M \
-  --gpus-per-task=1 \
+  --gpus-per-task=0 \
   --ntasks=1 \
   /bin/sh -c 'echo $DEEPSQUARE_ERROR_CODE'
 fi

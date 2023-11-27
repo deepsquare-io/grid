@@ -9,13 +9,15 @@ job:
     tasks: 1
     cpusPerTask: 2
     memPerCpu: 4000
-    gpusPerTask: 1
+    gpus: 1
 
   ## The job content
   steps:
     ## The steps of the jobs which are run sequentially.
     - name: kasmvnc
       run:
+        resources:
+          gpusPerTask: 1
         container:
           image: kasmweb/desktop:1.14.0-rolling
           registry: registry-1.docker.io

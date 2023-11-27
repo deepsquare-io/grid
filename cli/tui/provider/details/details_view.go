@@ -81,12 +81,12 @@ func (m model) View() string {
 				Render(fmt.Sprintf("^^^%v", m.errors[memPerCPUInput])),
 			m.errors[memPerCPUInput],
 		),
-		style.Foreground().Render("GPUs Per Task:"),
-		m.inputs[gpusPerTaskInput].View(),
+		style.Foreground().Render("GPUs:"),
+		m.inputs[gpusInput].View(),
 		utils.ErrorfOrEmpty(
 			"\n"+style.Error().Width(m.viewport.Width/2).
-				Render(fmt.Sprintf("^^^%v", m.errors[gpusPerTaskInput])),
-			m.errors[gpusPerTaskInput],
+				Render(fmt.Sprintf("^^^%v", m.errors[gpusInput])),
+			m.errors[gpusInput],
 		),
 		style.Foreground().Render("Allocated credits:"),
 		m.inputs[creditsInput].View(),

@@ -5,8 +5,7 @@ set -e
 export NTASKS='2'
 export CPUS_PER_TASK='4'
 export MEM_PER_CPU='4096'
-export GPUS_PER_TASK='1'
-export GPUS='2'
+export GPUS='4'
 export CPUS='8'
 export MEM='32768'
 /usr/local/bin/grid-logger-writer \

@@ -337,9 +337,9 @@ func TestValidateForRange(t *testing.T) {
 
 var cleanStepRunResources = model.StepRunResources{
 	Tasks:       utils.Ptr(1),
-	CpusPerTask: utils.Ptr(4),
+	CPUsPerTask: utils.Ptr(4),
 	MemPerCPU:   utils.Ptr(4096),
-	GpusPerTask: utils.Ptr(1),
+	GPUsPerTask: utils.Ptr(1),
 }
 
 func TestValidateStepRunResources(t *testing.T) {
@@ -360,21 +360,21 @@ func TestValidateStepRunResources(t *testing.T) {
 		{
 			input: func() model.StepRunResources {
 				r := cleanStepRunResources
-				r.CpusPerTask = utils.Ptr(0)
+				r.CPUsPerTask = utils.Ptr(0)
 				return r
 			}(),
 			isError:       true,
-			errorContains: []string{"CpusPerTask", "gt"},
+			errorContains: []string{"CPUsPerTask", "gt"},
 			title:         "Negative test: invalid cpu count",
 		},
 		{
 			input: func() model.StepRunResources {
 				r := cleanStepRunResources
-				r.GpusPerTask = utils.Ptr(-1)
+				r.GPUsPerTask = utils.Ptr(-1)
 				return r
 			}(),
 			isError:       true,
-			errorContains: []string{"GpusPerTask", "gt"},
+			errorContains: []string{"GPUsPerTask", "gt"},
 			title:         "Negative test: invalid gpu count",
 		},
 		{
@@ -613,7 +613,7 @@ func TestValidateStepRun(t *testing.T) {
 			input: func() model.StepRun {
 				r := cleanStepRunWith(&cleanStepRunResources, &cleanEnvVar)
 				r.Resources = &model.StepRunResources{
-					CpusPerTask: utils.Ptr(-1),
+					CPUsPerTask: utils.Ptr(-1),
 				}
 				return *r
 			}(),
@@ -830,9 +830,9 @@ func TestValidateStepFor(t *testing.T) {
 
 var cleanJobResources = model.JobResources{
 	Tasks:       1,
-	CpusPerTask: 4,
+	CPUsPerTask: 4,
 	MemPerCPU:   4096,
-	GpusPerTask: 1,
+	GPUs:        1,
 }
 
 func TestValidateJobResources(t *testing.T) {
@@ -849,21 +849,21 @@ func TestValidateJobResources(t *testing.T) {
 		{
 			input: func() model.JobResources {
 				r := cleanJobResources
-				r.CpusPerTask = 0
+				r.CPUsPerTask = 0
 				return r
 			}(),
 			isError:       true,
-			errorContains: []string{"CpusPerTask", "gt"},
+			errorContains: []string{"CPUsPerTask", "gt"},
 			title:         "Negative test: invalid cpu count",
 		},
 		{
 			input: func() model.JobResources {
 				r := cleanJobResources
-				r.GpusPerTask = -1
+				r.GPUs = -1
 				return r
 			}(),
 			isError:       true,
-			errorContains: []string{"GpusPerTask", "gt"},
+			errorContains: []string{"GPUs", "gt"},
 			title:         "Negative test: invalid gpu count",
 		},
 		{

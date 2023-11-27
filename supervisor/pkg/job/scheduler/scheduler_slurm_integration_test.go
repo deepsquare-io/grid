@@ -52,7 +52,7 @@ func (suite *ServiceIntegrationTestSuite) submitJob() *scheduler.SubmitRequest {
 		JobDefinition: &scheduler.JobDefinition{
 			TimeLimit:    uint64(5),
 			NTasks:       1,
-			GPUsPerTask:  utils.Ptr(uint64(0)),
+			GPUs:         utils.Ptr(uint64(0)),
 			CPUsPerTask:  1,
 			MemoryPerCPU: 512,
 			Body: `#!/bin/sh

@@ -14,7 +14,7 @@ func MetaToProtoJob(msJob *metascheduler.Job) *Job {
 		CustomerAddr: msJob.CustomerAddr.Hex(),
 		ProviderAddr: msJob.ProviderAddr.Hex(),
 		Definition: &JobDefinition{
-			GpusPerTask: uint64(msJob.Definition.GpusPerTask),
+			Gpus:        uint64(msJob.Definition.Gpus),
 			MemPerCpu:   uint64(msJob.Definition.MemPerCpu),
 			CpusPerTask: uint64(msJob.Definition.CpusPerTask),
 			Ntasks:      uint64(msJob.Definition.Ntasks),
@@ -39,7 +39,7 @@ func ProtoToMetaJob(protoJob *Job) *metascheduler.Job {
 		CustomerAddr: common.HexToAddress(protoJob.CustomerAddr),
 		ProviderAddr: common.HexToAddress(protoJob.ProviderAddr),
 		Definition: metascheduler.JobDefinition{
-			GpusPerTask: protoJob.Definition.GpusPerTask,
+			Gpus:        protoJob.Definition.Gpus,
 			MemPerCpu:   protoJob.Definition.MemPerCpu,
 			CpusPerTask: protoJob.Definition.CpusPerTask,
 			Ntasks:      protoJob.Definition.Ntasks,

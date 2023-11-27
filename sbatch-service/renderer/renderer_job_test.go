@@ -31,9 +31,9 @@ var cleanJob = model.Job{
 	InputMode:     utils.Ptr(493),
 	Resources: &model.JobResources{
 		Tasks:       1,
-		CpusPerTask: 4,
+		CPUsPerTask: 4,
 		MemPerCPU:   4096,
-		GpusPerTask: 1,
+		GPUs:        1,
 	},
 	Env: []*model.EnvVar{
 		{
@@ -66,7 +66,6 @@ set -e
 export NTASKS='1'
 export CPUS_PER_TASK='4'
 export MEM_PER_CPU='4096'
-export GPUS_PER_TASK='1'
 export GPUS='1'
 export CPUS='4'
 export MEM='16384'
@@ -292,7 +291,6 @@ set -e
 export NTASKS='1'
 export CPUS_PER_TASK='4'
 export MEM_PER_CPU='4096'
-export GPUS_PER_TASK='1'
 export GPUS='1'
 export CPUS='4'
 export MEM='16384'
@@ -548,7 +546,6 @@ set -e
 export NTASKS='1'
 export CPUS_PER_TASK='4'
 export MEM_PER_CPU='4096'
-export GPUS_PER_TASK='1'
 export GPUS='1'
 export CPUS='4'
 export MEM='16384'
@@ -776,7 +773,6 @@ set -e
 export NTASKS='1'
 export CPUS_PER_TASK='4'
 export MEM_PER_CPU='4096'
-export GPUS_PER_TASK='1'
 export GPUS='1'
 export CPUS='4'
 export MEM='16384'
@@ -1014,7 +1010,6 @@ set -e
 export NTASKS='1'
 export CPUS_PER_TASK='4'
 export MEM_PER_CPU='4096'
-export GPUS_PER_TASK='1'
 export GPUS='1'
 export CPUS='4'
 export MEM='16384'
@@ -1243,7 +1238,6 @@ set -e
 export NTASKS='1'
 export CPUS_PER_TASK='4'
 export MEM_PER_CPU='4096'
-export GPUS_PER_TASK='1'
 export GPUS='1'
 export CPUS='4'
 export MEM='16384'
@@ -1317,7 +1311,6 @@ test
 export NTASKS='1'
 export CPUS_PER_TASK='4'
 export MEM_PER_CPU='4096'
-export GPUS_PER_TASK='1'
 export GPUS='1'
 export CPUS='4'
 export MEM='16384'

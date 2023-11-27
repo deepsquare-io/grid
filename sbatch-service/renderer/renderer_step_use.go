@@ -106,12 +106,12 @@ func (r *StepUseRenderer) Render(
 }
 
 func assertRequirements(j *model.Job, u *model.StepUse, m *model.Module) error {
-	if j.Resources.CpusPerTask < m.MinimumResources.CpusPerTask {
+	if j.Resources.CPUsPerTask < m.MinimumResources.CPUsPerTask {
 		return fmt.Errorf(
 			"not enough cpu per task to use the module %s, minimum=%d, actual=%d",
 			u.Source,
-			m.MinimumResources.CpusPerTask,
-			j.Resources.CpusPerTask,
+			m.MinimumResources.CPUsPerTask,
+			j.Resources.CPUsPerTask,
 		)
 	}
 	if j.Resources.MemPerCPU < m.MinimumResources.MemPerCPU {
@@ -122,12 +122,12 @@ func assertRequirements(j *model.Job, u *model.StepUse, m *model.Module) error {
 			j.Resources.MemPerCPU,
 		)
 	}
-	if j.Resources.GpusPerTask < m.MinimumResources.GpusPerTask {
+	if j.Resources.GPUs < m.MinimumResources.GPUs {
 		return fmt.Errorf(
-			"not enough gpu per task to use the module %s, minimum=%d, actual=%d",
+			"not enough gPUs to use the module %s, minimum=%d, actual=%d",
 			u.Source,
-			m.MinimumResources.GpusPerTask,
-			j.Resources.GpusPerTask,
+			m.MinimumResources.GPUs,
+			j.Resources.GPUs,
 		)
 	}
 	if j.Resources.Tasks < m.MinimumResources.Tasks {

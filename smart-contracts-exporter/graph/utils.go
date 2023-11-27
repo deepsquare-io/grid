@@ -9,10 +9,10 @@ import (
 
 func mapMetaschedulerJobToGraphJob(j *metascheduler.Job) model.Job {
 	jobDefinition := &model.JobDefinition{
-		GpuPerTask: int(j.Definition.GpusPerTask),
-		MemPerCPU:  int(j.Definition.MemPerCpu),
-		CPUPerTask: int(j.Definition.CpusPerTask),
-		Ntasks:     int(j.Definition.Ntasks),
+		GPUs:        int(j.Definition.Gpus),
+		MemPerCPU:   int(j.Definition.MemPerCpu),
+		CPUsPerTask: int(j.Definition.CpusPerTask),
+		Ntasks:      int(j.Definition.Ntasks),
 	}
 
 	jobCost := &model.JobCost{

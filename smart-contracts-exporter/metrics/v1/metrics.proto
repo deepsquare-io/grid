@@ -60,7 +60,7 @@ message JobCost {
 }
 
 message JobDefinition {
-  uint64 gpus_per_task = 1;
+  uint64 gpus = 1;
   uint64 mem_per_cpu = 2;
   uint64 cpus_per_task = 3;
   uint64 ntasks = 4;

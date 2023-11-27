@@ -385,7 +385,7 @@ func MapJobDefinitionToScheduler(
 ) scheduler.JobDefinition {
 	return scheduler.JobDefinition{
 		NTasks:       j.Ntasks,
-		GPUsPerTask:  &j.GpusPerTask,
+		GPUs:         &j.Gpus,
 		CPUsPerTask:  j.CpusPerTask,
 		TimeLimit:    t,
 		MemoryPerCPU: j.MemPerCpu,
