@@ -33,18 +33,18 @@ DEEPSQUARE_INPUT='/deepsquare/input' \
 DEEPSQUARE_OUTPUT='/deepsquare/output' \
 DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
   --export=ALL"$(loadDeepsquareEnv)" \
-{{- if and .Step.Run.Resources .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) }}
-  --cpus-per-task={{ derefInt .Step.Run.Resources.CpusPerTask }} \
+{{- if and .Step.Run.Resources .Step.Run.Resources.CPUsPerTask (derefInt .Step.Run.Resources.CPUsPerTask) }}
+  --cpus-per-task={{ derefInt .Step.Run.Resources.CPUsPerTask }} \
 {{- else }}
-  --cpus-per-task={{ .Job.Resources.CpusPerTask }} \
+  --cpus-per-task={{ .Job.Resources.CPUsPerTask }} \
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) }}
   --mem-per-cpu={{ derefInt .Step.Run.Resources.MemPerCPU }}M \
 {{- else }}
   --mem-per-cpu={{ .Job.Resources.MemPerCPU }}M \
 {{- end }}
-{{- if and .Step.Run.Resources .Step.Run.Resources.GpusPerTask }}
-  --gpus-per-task={{ derefInt .Step.Run.Resources.GpusPerTask }} \
+{{- if and .Step.Run.Resources .Step.Run.Resources.GPUsPerTask }}
+  --gpus-per-task={{ derefInt .Step.Run.Resources.GPUsPerTask }} \
 {{- else }}
   --gpus-per-task=0 \
 {{- end }}
@@ -96,18 +96,18 @@ fi
 # shellcheck disable=SC2097,SC2098,SC1078
 /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
   --export=ALL"$(loadDeepsquareEnv)" \
-{{- if and .Step.Run.Resources .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) }}
-  --cpus-per-task={{ derefInt .Step.Run.Resources.CpusPerTask }} \
+{{- if and .Step.Run.Resources .Step.Run.Resources.CPUsPerTask (derefInt .Step.Run.Resources.CPUsPerTask) }}
+  --cpus-per-task={{ derefInt .Step.Run.Resources.CPUsPerTask }} \
 {{- else }}
-  --cpus-per-task={{ .Job.Resources.CpusPerTask }} \
+  --cpus-per-task={{ .Job.Resources.CPUsPerTask }} \
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) }}
   --mem-per-cpu={{ derefInt .Step.Run.Resources.MemPerCPU }}M \
 {{- else }}
   --mem-per-cpu={{ .Job.Resources.MemPerCPU }}M \
 {{- end }}
-{{- if and .Step.Run.Resources .Step.Run.Resources.GpusPerTask }}
-  --gpus-per-task={{ derefInt .Step.Run.Resources.GpusPerTask }} \
+{{- if and .Step.Run.Resources .Step.Run.Resources.GPUsPerTask }}
+  --gpus-per-task={{ derefInt .Step.Run.Resources.GPUsPerTask }} \
 {{- else }}
   --gpus-per-task=0 \
 {{- end }}
@@ -138,18 +138,18 @@ trap enrootClean EXIT INT TERM
 {{- else -}}
 {{ range $env := .Step.Run.Env }}{{ $env.Key }}={{ $env.Value | squote }} {{ end }}/usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
   --export=ALL"$(loadDeepsquareEnv)" \
-{{- if and .Step.Run.Resources .Step.Run.Resources.CpusPerTask (derefInt .Step.Run.Resources.CpusPerTask) }}
-  --cpus-per-task={{ derefInt .Step.Run.Resources.CpusPerTask }} \
+{{- if and .Step.Run.Resources .Step.Run.Resources.CPUsPerTask (derefInt .Step.Run.Resources.CPUsPerTask) }}
+  --cpus-per-task={{ derefInt .Step.Run.Resources.CPUsPerTask }} \
 {{- else }}
-  --cpus-per-task={{ .Job.Resources.CpusPerTask }} \
+  --cpus-per-task={{ .Job.Resources.CPUsPerTask }} \
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.MemPerCPU (derefInt .Step.Run.Resources.MemPerCPU) }}
   --mem-per-cpu={{ derefInt .Step.Run.Resources.MemPerCPU }}M \
 {{- else }}
   --mem-per-cpu={{ .Job.Resources.MemPerCPU }}M \
 {{- end }}
-{{- if and .Step.Run.Resources .Step.Run.Resources.GpusPerTask }}
-  --gpus-per-task={{ derefInt .Step.Run.Resources.GpusPerTask }} \
+{{- if and .Step.Run.Resources .Step.Run.Resources.GPUsPerTask }}
+  --gpus-per-task={{ derefInt .Step.Run.Resources.GPUsPerTask }} \
 {{- else }}
   --gpus-per-task=0 \
 {{- end }}

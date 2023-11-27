@@ -7,11 +7,11 @@ set -e
 {{- end }}
 
 export NTASKS='{{ .Job.Resources.Tasks }}'
-export CPUS_PER_TASK='{{ .Job.Resources.CpusPerTask }}'
+export CPUS_PER_TASK='{{ .Job.Resources.CPUsPerTask }}'
 export MEM_PER_CPU='{{ .Job.Resources.MemPerCPU }}'
-export GPUS='{{ mul .Job.Resources.Gpus }}'
-export CPUS='{{ mul .Job.Resources.CpusPerTask .Job.Resources.Tasks }}'
-export MEM='{{ mul .Job.Resources.MemPerCPU .Job.Resources.CpusPerTask .Job.Resources.Tasks }}'
+export GPUS='{{ mul .Job.Resources.GPUs }}'
+export CPUS='{{ mul .Job.Resources.CPUsPerTask .Job.Resources.Tasks }}'
+export MEM='{{ mul .Job.Resources.MemPerCPU .Job.Resources.CPUsPerTask .Job.Resources.Tasks }}'
 
 {{- if and .Job.EnableLogging (derefBool .Job.EnableLogging ) }}
 {{ .Logger.Path }} \

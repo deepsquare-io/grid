@@ -31,9 +31,9 @@ var cleanJob = model.Job{
 	InputMode:     utils.Ptr(493),
 	Resources: &model.JobResources{
 		Tasks:       1,
-		CpusPerTask: 4,
+		CPUsPerTask: 4,
 		MemPerCPU:   4096,
-		Gpus:        1,
+		GPUs:        1,
 	},
 	Env: []*model.EnvVar{
 		{

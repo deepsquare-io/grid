@@ -27,9 +27,9 @@ import (
 
 var cleanStepRunResources = model.StepRunResources{
 	Tasks:       utils.Ptr(1),
-	CpusPerTask: utils.Ptr(1),
+	CPUsPerTask: utils.Ptr(1),
 	MemPerCPU:   utils.Ptr(1),
-	GpusPerTask: utils.Ptr(0),
+	GPUsPerTask: utils.Ptr(0),
 }
 
 func cleanStepRun(command string) *model.StepRun {

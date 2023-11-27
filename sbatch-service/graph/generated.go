@@ -389,9 +389,12 @@ input JobResources {
 
   Can be greater or equal to 1.
 
-  Go name: "CpusPerTask".
+  Go name: "CPUsPerTask".
   """
-  cpusPerTask: Int! @goTag(key: "yaml") @constraint(format: "gte=1")
+  cpusPerTask: Int!
+    @goTag(key: "yaml")
+    @goField(name: "CPUsPerTask")
+    @constraint(format: "gte=1")
   """
   Allocated memory (MB) per task.
 
@@ -399,7 +402,10 @@ input JobResources {
 
   Go name: "MemPerCPU".
   """
-  memPerCpu: Int! @goTag(key: "yaml") @constraint(format: "gte=1")
+  memPerCpu: Int!
+    @goTag(key: "yaml")
+    @goField(name: "MemPerCPU")
+    @constraint(format: "gte=1")
   """
   Allocated GPUs for the whole job.
 
@@ -407,9 +413,12 @@ input JobResources {
 
   Can be greater or equal to 0.
 
-  Go name: "Gpus".
+  Go name: "GPUs".
   """
-  gpus: Int! @goTag(key: "yaml") @constraint(format: "gte=0")
+  gpus: Int!
+    @goTag(key: "yaml")
+    @goField(name: "GPUs")
+    @constraint(format: "gte=0")
 }
 
 """
@@ -664,10 +673,11 @@ input StepRunResources {
 
   If null, defaults to the job resources.
 
-  Go name: "CpusPerTask".
+  Go name: "CPUsPerTask".
   """
   cpusPerTask: Int
     @goTag(key: "yaml", value: "cpusPerTask,omitempty")
+    @goField(name: "CPUsPerTask")
     @constraint(format: "omitempty,gte=1")
   """
   Allocated memory (MB) per task.
@@ -680,6 +690,7 @@ input StepRunResources {
   """
   memPerCpu: Int
     @goTag(key: "yaml", value: "memPerCpu,omitempty")
+    @goField(name: "MemPerCPU")
     @constraint(format: "omitempty,gte=1")
   """
   Allocated GPUs per task.
@@ -688,10 +699,11 @@ input StepRunResources {
 
   If null, defaults to 0.
 
-  Go name: "GpusPerTask".
+  Go name: "GPUsPerTask".
   """
   gpusPerTask: Int
     @goTag(key: "yaml", value: "gpusPerTask,omitempty")
+    @goField(name: "GPUsPerTask")
     @constraint(format: "omitempty,gte=0")
 }
 
@@ -3961,7 +3973,7 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
-			it.CpusPerTask = data
+			it.CPUsPerTask = data
 		case "memPerCpu":
 			var err error
 
@@ -3979,7 +3991,7 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
-			it.Gpus = data
+			it.GPUs = data
 		}
 	}
 
@@ -4694,7 +4706,7 @@ func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
-			it.CpusPerTask = data
+			it.CPUsPerTask = data
 		case "memPerCpu":
 			var err error
 
@@ -4712,7 +4724,7 @@ func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
-			it.GpusPerTask = data
+			it.GPUsPerTask = data
 		}
 	}
 
