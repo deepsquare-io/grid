@@ -211,6 +211,14 @@ func (s *Slurm) Submit(ctx context.Context, req *SubmitRequest) (string, error) 
 		)
 	}
 
+	if req.GPUs != nil {
+		cmd = fmt.Sprintf(`%s \
+  --gpus=%d`,
+			cmd,
+			*req.GPUs,
+		)
+	}
+
 	if req.GPUsPerTask != nil {
 		cmd = fmt.Sprintf(`%s \
   --gpus-per-task=%d`,

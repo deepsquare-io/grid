@@ -35,7 +35,9 @@ type JobDefinition struct {
 	// MaxNodes indicates the maximum number of allocated node.
 	// MinNodes is required.
 	MaxNodes uint64
-	// GPUsPerTask indicates the number of requested GPU.
+	// GPUs indicates the number of requested GPU per job.
+	GPUs *uint64
+	// GPUsPerTask indicates the number of requested GPU per task.
 	GPUsPerTask *uint64
 	// GPUsPerNode indicates the number of requested GPUs per node.
 	GPUsPerNode uint64
