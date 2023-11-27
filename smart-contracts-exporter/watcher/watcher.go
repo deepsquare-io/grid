@@ -381,6 +381,42 @@ func (w *Watcher) handleJobCreated(
 	metricsv1.TotalNumberOfJobs(job.CustomerAddr.Hex()).Inc()
 	metricsv1.AddJob(&job)
 
+	// If the job was created cold (due to import), consider adding durations
+	switch JobStatus(job.Status) {
+	case JobStatusCancelled, JobStatusFinished, JobStatusFailed, JobStatusOutOfCredits:
+		// If the final cost is zero, it means the job may be a zombie.
+		if job.Cost.FinalCost.Cmp(big.NewInt(0)) == 0 {
+			return nil
+		}
+		bf := new(big.Float).SetInt(job.Cost.FinalCost)
+		f, _ := bf.Float64()
+		metricsv1.TotalCreditSpent(job.CustomerAddr.Hex()).Add(f)
+
+		bduration := new(
+			big.Int,
+		).Div(new(big.Int).Sub(job.Time.End, job.Time.Start), big.NewInt(60))
+		if bduration.Sign() == -1 {
+			logger.I.Error(
+				"job duration is negative",
+				zap.String("duration", bduration.String()),
+				zap.Any("job", job),
+			)
+			return nil
+		}
+		f, _ = new(big.Float).SetInt(bduration).Float64()
+		metricsv1.TotalJobDuration(job.CustomerAddr.Hex()).Add(f)
+
+		cpus := new(big.Int).SetUint64(job.Definition.CpusPerTask * job.Definition.Ntasks)
+		cpuTime := new(big.Int).Mul(bduration, cpus)
+		f, _ = new(big.Float).SetInt(cpuTime).Float64()
+		metricsv1.TotalCPUTime(job.CustomerAddr.Hex()).Add(f)
+
+		gpus := new(big.Int).SetUint64(job.Definition.Gpus)
+		gpuTime := new(big.Int).Mul(bduration, gpus)
+		f, _ = new(big.Float).SetInt(gpuTime).Float64()
+		metricsv1.TotalGPUTime(job.CustomerAddr.Hex()).Add(f)
+	}
+
 	return nil
 }
 
