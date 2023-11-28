@@ -411,7 +411,7 @@ func (w *Watcher) handleJobCreated(
 		f, _ = new(big.Float).SetInt(cpuTime).Float64()
 		metricsv1.TotalCPUTime(job.CustomerAddr.Hex()).Add(f)
 
-		gpus := new(big.Int).SetUint64(job.Definition.Gpus)
+		gpus := new(big.Int).SetUint64(job.Definition.GpusPerTask * job.Definition.Ntasks)
 		gpuTime := new(big.Int).Mul(bduration, gpus)
 		f, _ = new(big.Float).SetInt(gpuTime).Float64()
 		metricsv1.TotalGPUTime(job.CustomerAddr.Hex()).Add(f)
