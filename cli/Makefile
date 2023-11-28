@@ -46,28 +46,13 @@ bin/dps-linux-amd64: $(GO_SRCS)
 bin/dps-linux-arm64: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bin/dps-linux-mips64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
-
-bin/dps-linux-mips64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
-
-bin/dps-linux-ppc64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
-
-bin/dps-linux-ppc64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
-
 bin/dps-linux-riscv64: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
-
-bin/dps-linux-s390x: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/dps-windows-amd64.exe: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
-bins := dps-darwin-amd64 dps-darwin-arm64 dps-freebsd-arm64 dps-freebsd-arm64 dps-linux-amd64 dps-linux-arm64 dps-linux-mips64 dps-linux-mips64le dps-linux-ppc64 dps-linux-ppc64le dps-linux-riscv64 dps-linux-s390x dps-windows-amd64.exe
+bins := dps-darwin-amd64 dps-darwin-arm64 dps-freebsd-arm64 dps-freebsd-arm64 dps-linux-amd64 dps-linux-arm64 dps-linux-riscv64 dps-windows-amd64.exe
 
 .PHONY: build-all
 build-all: $(addprefix bin/,$(bins)) bin/checksums.md
