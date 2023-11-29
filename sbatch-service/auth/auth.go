@@ -59,7 +59,7 @@ type challengeMessage struct {
 }
 
 // Challenge returns a message with a nonce.
-func (a *Auth) Challenge(ctx context.Context, message string) string {
+func (a *Auth) Challenge(ctx context.Context, message string) []byte {
 	nonce, err := generateNonce()
 	if err != nil {
 		panic(err)
@@ -74,7 +74,7 @@ func (a *Auth) Challenge(ctx context.Context, message string) string {
 	if err != nil {
 		panic(err)
 	}
-	return string(dat)
+	return dat
 }
 
 // Verify checks the signature and nonce.
