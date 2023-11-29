@@ -24,14 +24,20 @@ import (
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	metaschedulerabi "github.com/deepsquare-io/grid/sbatch-service/abi/metascheduler"
+	internalauth "github.com/deepsquare-io/grid/sbatch-service/auth"
 	"github.com/deepsquare-io/grid/sbatch-service/cmd"
 	sbatchapiv1alpha1 "github.com/deepsquare-io/grid/sbatch-service/gen/go/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/grid/sbatch-service/graph"
 	"github.com/deepsquare-io/grid/sbatch-service/graph/playground"
+	"github.com/deepsquare-io/grid/sbatch-service/grpc/auth"
 	"github.com/deepsquare-io/grid/sbatch-service/grpc/sbatch"
 	"github.com/deepsquare-io/grid/sbatch-service/logger"
 	"github.com/deepsquare-io/grid/sbatch-service/renderer"
 	"github.com/deepsquare-io/grid/sbatch-service/storage"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
@@ -58,6 +64,9 @@ var (
 
 	preJobScript  string
 	postJobScript string
+
+	metaschedulerEndpointRPC   string
+	metaschedulerSmartContract string
 
 	version string = "dev"
 )
@@ -139,6 +148,20 @@ var flags = []cli.Flag{
 		Required:    false,
 		Destination: &postJobScript,
 		EnvVars:     []string{"HOOK_POST_PATH"},
+	},
+	&cli.StringFlag{
+		Name:        "metascheduler.endpoint.rpc",
+		Value:       "https://testnet.deepsquare.run/rpc",
+		Usage:       "Metascheduler Avalanche C-Chain JSON-RPC endpoint.",
+		Destination: &metaschedulerEndpointRPC,
+		EnvVars:     []string{"METASCHEDULER_ENDPOINT_RPC"},
+	},
+	&cli.StringFlag{
+		Name:        "metascheduler.smart-contract",
+		Value:       "0x3707aB457CF457275b7ec32e203c54df80C299d5",
+		Usage:       "Metascheduler smart-contract address.",
+		Destination: &metaschedulerSmartContract,
+		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
 	},
 	&cli.BoolFlag{
 		Name:    "debug",
@@ -253,9 +276,33 @@ See the GNU General Public License for more details.`,
 			})
 		}
 
+		client, err := ethclient.DialContext(cCtx.Context, metaschedulerEndpointRPC)
+		if err != nil {
+			return err
+		}
+		ms, err := metaschedulerabi.NewMetaScheduler(
+			common.HexToAddress(metaschedulerSmartContract),
+			client,
+		)
+		if err != nil {
+			return err
+		}
+		jobsAddr, err := ms.Jobs(&bind.CallOpts{
+			Context: cCtx.Context,
+		})
+		if err != nil {
+			return err
+		}
+		jobs, err := metaschedulerabi.NewIJobRepository(jobsAddr, client)
+		if err != nil {
+			return err
+		}
+
 		// gRPC server
 		g := grpc.NewServer()
-		sbatchapiv1alpha1.RegisterSBatchAPIServer(g, sbatch.NewAPI(stor, loggerEndpoint))
+		a := internalauth.NewAuth(stor)
+		sbatchapiv1alpha1.RegisterSBatchAPIServer(g, sbatch.NewAPI(a, stor, jobs, loggerEndpoint))
+		sbatchapiv1alpha1.RegisterAuthAPIServer(g, auth.NewAPI(a))
 
 		rg := mixedHandler(r, g)
 

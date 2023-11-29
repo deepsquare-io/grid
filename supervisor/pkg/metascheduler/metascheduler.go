@@ -49,6 +49,7 @@ func FromStructToJob(s metaschedulerabi.Job) *Job {
 		Time:             s.Time,
 		JobName:          s.JobName,
 		HasCancelRequest: s.HasCancelRequest,
+		LastError:        s.LastError,
 	}
 }
 

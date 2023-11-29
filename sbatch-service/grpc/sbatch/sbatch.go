@@ -16,12 +16,17 @@
 package sbatch
 
 import (
+	"bytes"
 	"context"
 	"errors"
 
+	metaschedulerabi "github.com/deepsquare-io/grid/sbatch-service/abi/metascheduler"
+	"github.com/deepsquare-io/grid/sbatch-service/auth"
 	sbatchapiv1alpha1 "github.com/deepsquare-io/grid/sbatch-service/gen/go/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/grid/sbatch-service/logger"
 	"github.com/deepsquare-io/grid/sbatch-service/storage"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,16 +34,27 @@ import (
 
 type API struct {
 	sbatchapiv1alpha1.UnimplementedSBatchAPIServer
+	auth           *auth.Auth
+	jobs           *metaschedulerabi.IJobRepository
 	storage        storage.Storage
 	loggerEndpoint string
 }
 
-func NewAPI(storage storage.Storage, loggerEndpoint string) *API {
+func NewAPI(
+	auth *auth.Auth, storage storage.Storage,
+	jobs *metaschedulerabi.IJobRepository,
+	loggerEndpoint string,
+) *API {
+	if auth == nil {
+		logger.I.Panic("auth is nil")
+	}
 	if storage == nil {
 		logger.I.Panic("storage is nil")
 	}
 	return &API{
 		storage:        storage,
+		jobs:           jobs,
+		auth:           auth,
 		loggerEndpoint: loggerEndpoint,
 	}
 }
@@ -52,6 +68,29 @@ func (a *API) GetSBatch(
 		zap.String("batchLocationHash", req.BatchLocationHash),
 		zap.String("gridLoggerURL", a.loggerEndpoint),
 	)
+
+	// Check origin
+	if err := a.auth.Verify(ctx, hexutil.Encode(req.ProviderAddress), req.Challenge, req.SignedChallenge); err != nil {
+		return nil, status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	// Check existing job
+	var idB [32]byte
+	idS := hexutil.MustDecode(req.JobId)
+	copy(idB[:], idS)
+	job, err := a.jobs.Get(&bind.CallOpts{Context: ctx}, idB)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if !bytes.EqualFold(job.CustomerAddr[:], req.CustomerAddress[:]) {
+		return nil, status.Error(codes.Unauthenticated, "customer is not the same")
+	}
+
+	if !bytes.EqualFold(job.ProviderAddr[:], req.ProviderAddress[:]) {
+		return nil, status.Error(codes.Unauthenticated, "provider is not the same")
+	}
+
 	resp, err := a.storage.Get(ctx, req.BatchLocationHash)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
