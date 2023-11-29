@@ -1,7 +1,7 @@
 package types
 
 import (
-	metaschedulerabi "github.com/deepsquare-io/grid/meta-scheduler/abi/metascheduler"
+	metaschedulerabi "github.com/deepsquare-io/grid/sbatch-service/abi/metascheduler"
 	"github.com/ethereum/go-ethereum/common"
 )
 
