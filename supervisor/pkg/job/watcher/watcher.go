@@ -270,7 +270,12 @@ func (w *Watcher) handleClaimNextJob(
 	}
 
 	// Fetch the job script
-	fResp, err := w.sbatch.Fetch(ctx, event.JobDefinition.BatchLocationHash)
+	fResp, err := w.sbatch.Fetch(
+		ctx,
+		event.JobDefinition.BatchLocationHash,
+		event.CustomerAddr,
+		event.JobId,
+	)
 	if err != nil {
 		logger.I.Error("slurm fetch job body failed, setting job to failed", zap.Error(err))
 		if err := w.metascheduler.SetJobStatus(ctx, event.JobId, metascheduler.JobStatusFailed, 0); err != nil {

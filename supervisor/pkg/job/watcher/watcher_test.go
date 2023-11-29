@@ -281,6 +281,8 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJob() {
 		Fetch(
 			mock.Anything,
 			fixtureClaimNextJobEvent.JobDefinition.BatchLocationHash,
+			fixtureClaimNextJobEvent.CustomerAddr,
+			fixtureClaimNextJobEvent.JobId,
 		).Return(sbatch.FetchResponse{
 		SBatch: fixtureBody,
 	}, nil)
@@ -352,6 +354,8 @@ func (suite *WatcherTestSuite) TestWatchClaimNextJobWithBatchFetchFail() {
 	suite.sbatch.EXPECT().Fetch(
 		mock.Anything,
 		fixtureClaimNextJobEvent.JobDefinition.BatchLocationHash,
+		fixtureClaimNextJobEvent.CustomerAddr,
+		fixtureClaimNextJobEvent.JobId,
 	).Return(sbatch.FetchResponse{}, errors.New("expected error"))
 	// Must fail job
 	suite.metaScheduler.EXPECT().
@@ -377,6 +381,8 @@ func (suite *WatcherTestSuite) TestWatchWithSchedulerSubmitFail() {
 	suite.sbatch.EXPECT().Fetch(
 		mock.Anything,
 		fixtureClaimNextJobEvent.JobDefinition.BatchLocationHash,
+		fixtureClaimNextJobEvent.CustomerAddr,
+		fixtureClaimNextJobEvent.JobId,
 	).Return(sbatch.FetchResponse{
 		SBatch: fixtureBody,
 	}, nil)

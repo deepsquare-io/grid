@@ -527,7 +527,10 @@ type Container struct {
 }
 
 func Init(ctx context.Context) *Container {
-	var err error
+	pk, err := crypto.HexToECDSA(ethHexPK)
+	if err != nil {
+		logger.I.Fatal("couldn't decode private key", zap.Error(err))
+	}
 	var sbatchOpts []grpc.DialOption
 	var tlsConfig = &cryptotls.Config{}
 	if sbatchTLS {
@@ -556,6 +559,7 @@ func Init(ctx context.Context) *Container {
 
 	sbatchClient := pkgsbatch.NewClient(
 		sbatchEndpoint,
+		pk,
 		sbatchOpts...,
 	)
 
@@ -580,10 +584,6 @@ func Init(ctx context.Context) *Container {
 		logger.I.Fatal("ethclientWS dial failed", zap.Error(err))
 	}
 	ethClientWS := ethclient.NewClient(wsClient)
-	pk, err := crypto.HexToECDSA(ethHexPK)
-	if err != nil {
-		logger.I.Fatal("couldn't decode private key", zap.Error(err))
-	}
 	chainID, err := ethClientRPC.ChainID(ctx)
 	if err != nil {
 		logger.I.Fatal("couldn't fetch chainID", zap.Error(err))
