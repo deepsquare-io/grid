@@ -122,8 +122,8 @@ HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-5 # of problems sizes (N)
-63000 76000 95000 101000 107000   Ns
+4 # of problems sizes (N)
+63000 76000 95000 101000   Ns
 10   # of NBs
 64 128 224 256 384 512 640 768 896 1024    NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
@@ -253,8 +253,8 @@ HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-5 # of problems sizes (N)
-63000 76000 95000 101000 107000   Ns
+4 # of problems sizes (N)
+63000 76000 95000 101000   Ns
 10   # of NBs
 64 128 224 256 384 512 640 768 896 1024    NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
@@ -384,8 +384,8 @@ HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-5 # of problems sizes (N)
-89000 107000 134000 143000 152000   Ns
+4 # of problems sizes (N)
+89000 107000 134000 143000   Ns
 10   # of NBs
 64 128 224 256 384 512 640 768 896 1024    NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
@@ -519,8 +519,8 @@ HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-5 # of problems sizes (N)
-89000 107000 134000 143000 152000   Ns
+4 # of problems sizes (N)
+89000 107000 134000 143000   Ns
 10   # of NBs
 64 128 224 256 384 512 640 768 896 1024    NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
@@ -621,7 +621,7 @@ func TestCalculateProcessGrid(t *testing.T) {
 
 func TestCalculateProblemSize(t *testing.T) {
 	// Arrange
-	expectedProblemSize := "63000 76000 95000 101000 107000 "
+	expectedProblemSize := "63000 76000 95000 101000 "
 	memPerNode := uint64(128460)
 
 	// Act

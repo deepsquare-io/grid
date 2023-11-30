@@ -31,12 +31,30 @@ import (
 
 const DefaultHPLImage = "registry-1.deepsquare.run#library/hpc-benchmarks:23.5"
 
+// Problem sizes depend on the RAM. The greater it is, the more precise it is.
+//
+// At 80%, it is possible that Linux will swap the memory. A drop of performance will be seen.
 var benchmarkMemoryUsePercentage = []float64{
 	0.50, // 50% is a sure hit. We do this for healthchecking the HPL health.
 	0.60,
 	0.75,
-	0.80,
-	0.85, // This the most unstable test, which may end in OOM.
+	0.80, // This the most unstable test, which may end in OOM.
+}
+
+// Block sizes depend on the performance of the processing unit.
+//
+// It must be tested randomly. Though, it is said that an A100 takes a 1024 in input.
+var benchmarkBlockSizes = []int{
+	64, 128, 224, 256, 384, 512, 640, 768, 896, 1024,
+}
+
+func intToString(a []int, sep string) string {
+	b := make([]string, len(a))
+	for i, v := range a {
+		b[i] = strconv.Itoa(v)
+	}
+
+	return strings.Join(b, sep)
 }
 
 func applyHPLOptions(opts []Option) *options {
@@ -77,8 +95,8 @@ func GeneratePhase1HPLBenchmark(
 		Q:            q,
 		NProblemSize: nProblemSize,
 		ProblemSize:  problemSize,
-		NBlockSize:   10,
-		BlockSize:    "64 128 224 256 384 512 640 768 896 1024",
+		NBlockSize:   uint64(len(benchmarkBlockSizes)),
+		BlockSize:    intToString(benchmarkBlockSizes, " "),
 	}
 
 	return prepareHPLJobDefinition(params, o)
