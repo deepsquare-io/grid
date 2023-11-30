@@ -37,6 +37,7 @@ import (
 
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -48,6 +49,7 @@ var (
 	ethEndpointRPC             string
 	metaschedulerSmartContract string
 	ethHexPK                   string
+	proposal                   bool
 )
 
 var flags = []cli.Flag{
@@ -66,6 +68,16 @@ var flags = []cli.Flag{
 		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
 	},
 }
+
+var listFlags = append(
+	flags,
+	&cli.BoolFlag{
+		Name:        "proposal",
+		Usage:       "See the proposal of the provider.",
+		Destination: &proposal,
+		Value:       false,
+	},
+)
 
 var authFlags = append(
 	flags,
@@ -86,7 +98,7 @@ var Command = cli.Command{
 		{
 			Name:  "list",
 			Usage: "List providers.",
-			Flags: flags,
+			Flags: listFlags,
 			Action: func(cCtx *cli.Context) error {
 				ctx := cCtx.Context
 				rpcClient, err := rpc.DialOptions(
@@ -108,7 +120,11 @@ var Command = cli.Command{
 					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
 					ChainID:              chainID,
 				})
-				providers, err := clientset.ProviderManager().GetProviders(ctx)
+				opts := make([]types.GetProviderOption, 0)
+				if proposal {
+					opts = append(opts, types.WithProposal())
+				}
+				providers, err := clientset.ProviderManager().GetProviders(ctx, opts...)
 				if err != nil {
 					return err
 				}

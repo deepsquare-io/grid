@@ -152,12 +152,30 @@ type ProviderDetail struct {
 	JobCount             uint64
 }
 
+type GetProviderOption func(*GetProviderOptions)
+type GetProviderOptions struct {
+	Proposal bool
+}
+
+func WithProposal() GetProviderOption {
+	return func(gpo *GetProviderOptions) {
+		gpo.Proposal = true
+	}
+}
+
 // ProviderManager manages admin operation of providers
 type ProviderManager interface {
 	Approve(ctx context.Context, provider common.Address) error
 	Remove(ctx context.Context, provider common.Address) error
-	GetProvider(ctx context.Context, address common.Address) (provider ProviderDetail, err error)
-	GetProviders(ctx context.Context) (providers []ProviderDetail, err error)
+	GetProvider(
+		ctx context.Context,
+		address common.Address,
+		opts ...GetProviderOption,
+	) (provider ProviderDetail, err error)
+	GetProviders(
+		ctx context.Context,
+		opts ...GetProviderOption,
+	) (providers []ProviderDetail, err error)
 }
 
 // NewJobRequest is an event that happens when a user submit a job.

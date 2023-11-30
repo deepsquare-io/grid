@@ -65,13 +65,29 @@ func (c *providerManager) Remove(ctx context.Context, provider common.Address) e
 func (c *providerManager) GetProvider(
 	ctx context.Context,
 	address common.Address,
+	opts ...types.GetProviderOption,
 ) (provider types.ProviderDetail, err error) {
-	p, err := c.GetWaitingForApprovalProvider(
-		&bind.CallOpts{Context: ctx},
-		address,
-	)
-	if err != nil {
-		return provider, WrapError(err)
+	var o types.GetProviderOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	var p metaschedulerabi.Provider
+	if o.Proposal {
+		p, err = c.GetWaitingForApprovalProvider(
+			&bind.CallOpts{Context: ctx},
+			address,
+		)
+		if err != nil {
+			return provider, WrapError(err)
+		}
+	} else {
+		p, err = c.IProviderManager.GetProvider(
+			&bind.CallOpts{Context: ctx},
+			address,
+		)
+		if err != nil {
+			return provider, WrapError(err)
+		}
 	}
 
 	isWaitingForApproval, err := c.IsWaitingForApproval(
@@ -110,6 +126,7 @@ func (c *providerManager) GetProvider(
 
 func (c *providerManager) GetProviders(
 	ctx context.Context,
+	opts ...types.GetProviderOption,
 ) (providers []types.ProviderDetail, err error) {
 	it, err := c.FilterProviderWaitingForApproval(&bind.FilterOpts{Context: ctx})
 	if err != nil {
@@ -122,12 +139,27 @@ func (c *providerManager) GetProviders(
 	providerMap := make(map[common.Address]types.ProviderDetail)
 
 	for it.Next() {
-		provider, err := c.GetWaitingForApprovalProvider(
-			&bind.CallOpts{Context: ctx},
-			it.Event.Addr,
-		)
-		if err != nil {
-			return providers, WrapError(err)
+		var o types.GetProviderOptions
+		for _, opt := range opts {
+			opt(&o)
+		}
+		var provider metaschedulerabi.Provider
+		if o.Proposal {
+			provider, err = c.GetWaitingForApprovalProvider(
+				&bind.CallOpts{Context: ctx},
+				it.Event.Addr,
+			)
+			if err != nil {
+				return providers, WrapError(err)
+			}
+		} else {
+			provider, err = c.IProviderManager.GetProvider(
+				&bind.CallOpts{Context: ctx},
+				it.Event.Addr,
+			)
+			if err != nil {
+				return providers, WrapError(err)
+			}
 		}
 
 		isWaitingForApproval, err := c.IsWaitingForApproval(
