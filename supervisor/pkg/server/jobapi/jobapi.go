@@ -24,6 +24,7 @@ import (
 	supervisorv1alpha1 "github.com/deepsquare-io/grid/supervisor/generated/supervisor/v1alpha1"
 	"github.com/deepsquare-io/grid/supervisor/logger"
 	"github.com/deepsquare-io/grid/supervisor/pkg/job/lock"
+	"github.com/deepsquare-io/grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/grid/supervisor/pkg/utils/try"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -32,7 +33,9 @@ import (
 
 type Server struct {
 	supervisorv1alpha1.UnimplementedJobAPIServer
-	ms      metascheduler.MetaScheduler
+	ms        metascheduler.MetaScheduler
+	scheduler scheduler.Scheduler
+
 	Timeout time.Duration
 	// Delay between tries
 	Delay           time.Duration
@@ -42,6 +45,7 @@ type Server struct {
 func New(
 	ms metascheduler.MetaScheduler,
 	resourceManager *lock.ResourceManager,
+	scheduler scheduler.Scheduler,
 ) *Server {
 	if ms == nil {
 		logger.I.Fatal("ms is nil")
@@ -49,11 +53,15 @@ func New(
 	if resourceManager == nil {
 		logger.I.Fatal("resourceManager is nil")
 	}
+	if scheduler == nil {
+		logger.I.Fatal("scheduler is nil")
+	}
 	return &Server{
 		ms:              ms,
 		Timeout:         15 * time.Second,
 		Delay:           3 * time.Second,
 		resourceManager: resourceManager,
+		scheduler:       scheduler,
 	}
 }
 
@@ -141,8 +149,23 @@ func (s *Server) setJobStatusTask(
 						)
 						return nil
 					}
-					var customErr *metascheduler.InvalidTransition
-					if ok := errors.As(err, &customErr); ok && customErr.From == metascheduler.JobStatusScheduled {
+
+					var jobHotStatusOnlyErr *metascheduler.JobHotStatusOnly
+					if errors.As(err, &jobHotStatusOnlyErr) {
+						logger.I.Error(
+							"Job is already finished, cancelling...",
+							zap.Error(err),
+							zap.String("request.status", req.Status.String()),
+							zap.String("conflict.status", jobHotStatusOnlyErr.Current.String()),
+							zap.String("name", req.Name),
+							zap.Uint64("duration", req.Duration/60),
+						)
+						_ = s.scheduler.CancelJobByID(ctx, req.GetId())
+						return nil
+					}
+
+					var invalidTransitionErr *metascheduler.InvalidTransition
+					if ok := errors.As(err, &invalidTransitionErr); ok && invalidTransitionErr.From == metascheduler.JobStatusScheduled {
 						logger.I.Warn(
 							"Invalid state transition from SCHEDULED.",
 							zap.Error(err),

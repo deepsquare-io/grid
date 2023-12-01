@@ -657,6 +657,7 @@ func Init(ctx context.Context) *Container {
 		metaScheduler,
 		resourceManager,
 		bl,
+		slurmScheduler,
 		slurmSSHB64PK,
 		hplOpts,
 		opts...,

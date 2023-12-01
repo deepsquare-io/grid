@@ -122,6 +122,16 @@ func (s *Slurm) CancelJob(ctx context.Context, name string, user string) error {
 	return err
 }
 
+// CancelJobByID kills a job using scancel command.
+func (s *Slurm) CancelJobByID(ctx context.Context, id uint64) error {
+	cmd := fmt.Sprintf("%s %d", s.scancel, id)
+	out, err := s.ExecAs(ctx, s.adminUser, cmd)
+	if err != nil {
+		logger.I.Error("CancelJobByID failed with error", zap.Error(err), zap.String("out", out))
+	}
+	return err
+}
+
 // Submit a sbatch definition script to the SLURM controller using the sbatch command.
 func (s *Slurm) Submit(ctx context.Context, req *SubmitRequest) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)

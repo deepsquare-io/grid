@@ -95,6 +95,8 @@ type Scheduler interface {
 	Submit(ctx context.Context, req *SubmitRequest) (string, error)
 	// CancelJob kills a job.
 	CancelJob(ctx context.Context, name string, user string) error
+	// CancelJobByID kills a job using admin user and ID.
+	CancelJobByID(ctx context.Context, id uint64) error
 	// TopUp increases the time limit in minutes of a job.
 	TopUp(ctx context.Context, name string, additionalTime uint64) error
 	// Find the memory (MB) per node

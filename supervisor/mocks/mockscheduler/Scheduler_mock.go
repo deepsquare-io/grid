@@ -66,6 +66,49 @@ func (_c *Scheduler_CancelJob_Call) RunAndReturn(run func(context.Context, strin
 	return _c
 }
 
+// CancelJobByID provides a mock function with given fields: ctx, id
+func (_m *Scheduler) CancelJobByID(ctx context.Context, id uint64) error {
+	ret := _m.Called(ctx, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Scheduler_CancelJobByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelJobByID'
+type Scheduler_CancelJobByID_Call struct {
+	*mock.Call
+}
+
+// CancelJobByID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uint64
+func (_e *Scheduler_Expecter) CancelJobByID(ctx interface{}, id interface{}) *Scheduler_CancelJobByID_Call {
+	return &Scheduler_CancelJobByID_Call{Call: _e.mock.On("CancelJobByID", ctx, id)}
+}
+
+func (_c *Scheduler_CancelJobByID_Call) Run(run func(ctx context.Context, id uint64)) *Scheduler_CancelJobByID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64))
+	})
+	return _c
+}
+
+func (_c *Scheduler_CancelJobByID_Call) Return(_a0 error) *Scheduler_CancelJobByID_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Scheduler_CancelJobByID_Call) RunAndReturn(run func(context.Context, uint64) error) *Scheduler_CancelJobByID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // FindCPUsPerNode provides a mock function with given fields: ctx, opts
 func (_m *Scheduler) FindCPUsPerNode(ctx context.Context, opts ...scheduler.FindSpecOption) ([]uint64, error) {
 	_va := make([]interface{}, len(opts))

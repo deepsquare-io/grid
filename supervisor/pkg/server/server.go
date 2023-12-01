@@ -27,6 +27,7 @@ import (
 	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/secret"
 	"github.com/deepsquare-io/grid/supervisor/pkg/benchmark/speedtest"
 	"github.com/deepsquare-io/grid/supervisor/pkg/job/lock"
+	"github.com/deepsquare-io/grid/supervisor/pkg/job/scheduler"
 	"github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
 	"github.com/deepsquare-io/grid/supervisor/pkg/server/health"
 	"github.com/deepsquare-io/grid/supervisor/pkg/server/jobapi"
@@ -42,6 +43,7 @@ func New(
 	ms metascheduler.MetaScheduler,
 	resourceManager *lock.ResourceManager,
 	launcher benchmark.Launcher,
+	scheduler scheduler.Scheduler,
 	pkB64 string,
 	hplOpts []benchmark.Option,
 	opts ...grpc.ServerOption,
@@ -183,7 +185,7 @@ func New(
 	g := grpc.NewServer(opts...)
 	supervisorv1alpha1.RegisterJobAPIServer(
 		g,
-		jobapi.New(ms, resourceManager),
+		jobapi.New(ms, resourceManager, scheduler),
 	)
 	supervisorv1alpha1.RegisterSshAPIServer(
 		g,
