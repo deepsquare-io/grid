@@ -22,6 +22,7 @@ import (
 
 	sbatchv1alpha1 "github.com/deepsquare-io/grid/supervisor/generated/sbatchapi/v1alpha1"
 	"github.com/deepsquare-io/grid/supervisor/logger"
+	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -92,13 +93,13 @@ func (s *client) HealthCheck(ctx context.Context) error {
 
 func (s *client) Fetch(
 	ctx context.Context,
-	hash string,
+	location string,
 	customerAddress common.Address,
 	jobID [32]byte,
 ) (FetchResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	logger.I.Info("Fetch sbatch", zap.String("hash", hash))
+	logger.I.Info("Fetch sbatch", zap.String("location", location))
 	client, auth, conn, err := s.dial(ctx)
 	if err != nil {
 		return FetchResponse{}, err
@@ -111,14 +112,15 @@ func (s *client) Fetch(
 	if err != nil {
 		return FetchResponse{}, err
 	}
-	signed, err := crypto.Sign(challenge.GetChallenge(), s.pk)
+	hash := accounts.TextHash(challenge.GetChallenge())
+	signed, err := crypto.Sign(hash, s.pk)
 	if err != nil {
 		return FetchResponse{}, err
 	}
 
 	addr := crypto.PubkeyToAddress(*s.pub)
 	resp, err := client.GetSBatch(ctx, &sbatchv1alpha1.GetSBatchRequest{
-		BatchLocationHash: hash,
+		BatchLocationHash: location,
 		SignedChallenge:   signed,
 		Challenge:         challenge.GetChallenge(),
 		ProviderAddress:   addr[:],
