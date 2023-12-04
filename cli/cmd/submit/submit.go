@@ -377,7 +377,7 @@ var Command = cli.Command{
 		jobIDBig := new(big.Int).SetBytes(jobID[:])
 
 		fmt.Printf("---Waiting for job %s to be running...---\n", jobIDBig.String())
-		_, err = waitUntilJobRunningOrFinished(sub, transitions, jobID)
+		finished, err := waitUntilJobRunningOrFinished(sub, transitions, jobID)
 		if err != nil {
 			fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
 			return err
@@ -385,24 +385,17 @@ var Command = cli.Command{
 
 		if exitOnJobExit {
 			go func() {
-				status, err := waitUntilJobFinished(sub, transitions, jobID)
-				if err != nil {
-					fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
-					os.Exit(1)
+				if !finished {
+					_, err := waitUntilJobFinished(sub, transitions, jobID)
+					if err != nil {
+						fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
+						os.Exit(1)
+					}
 				}
+
 				job, err := client.GetJob(ctx, jobID)
 				if err != nil {
-					fmt.Printf("failed to fetch job info: %s", err)
-					switch status {
-					case metascheduler.JobStatusFinished:
-						os.Exit(0)
-					case metascheduler.JobStatusCancelled:
-						os.Exit(130)
-					case metascheduler.JobStatusFailed, metascheduler.JobStatusPanicked:
-						os.Exit(1)
-					case metascheduler.JobStatusOutOfCredits:
-						os.Exit(143)
-					}
+					internallog.I.Fatal("failed to fetch job info", zap.Error(err))
 				}
 				os.Exit(int(job.ExitCode / 256))
 			}()
@@ -440,7 +433,7 @@ func waitUntilJobRunningOrFinished(
 	sub ethereum.Subscription,
 	ch <-chan types.JobTransition,
 	jobID [32]byte,
-) (metascheduler.JobStatus, error) {
+) (finished bool, err error) {
 	for {
 		select {
 		case tr := <-ch:
@@ -451,13 +444,14 @@ func waitUntilJobRunningOrFinished(
 					metascheduler.JobStatusFailed,
 					metascheduler.JobStatusFinished,
 					metascheduler.JobStatusPanicked,
-					metascheduler.JobStatusOutOfCredits,
-					metascheduler.JobStatusRunning:
-					return metascheduler.JobStatus(tr.To), nil
+					metascheduler.JobStatusOutOfCredits:
+					return true, nil
+				case metascheduler.JobStatusRunning:
+					return false, nil
 				}
 			}
 		case err := <-sub.Err():
-			return metascheduler.JobStatusUnknown, err
+			return false, err
 		}
 	}
 }
