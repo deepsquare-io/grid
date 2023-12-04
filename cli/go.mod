@@ -9,7 +9,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/erikgeiser/promptkit v0.9.0
 	github.com/ethereum/go-ethereum v1.12.2
-	github.com/go-git/go-billy/v5 v5.5.0
 	github.com/go-git/go-git/v5 v5.10.1
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-runewidth v0.0.15
@@ -61,6 +60,7 @@ require (
 	github.com/gballet/go-libpcsclite v0.0.0-20191108122812-4678299bea08 // indirect
 	github.com/getsentry/sentry-go v0.25.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
+	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect

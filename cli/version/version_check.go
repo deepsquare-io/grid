@@ -18,12 +18,13 @@ package version
 
 import (
 	"context"
+	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 
-	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/storage/memory"
 	"golang.org/x/mod/semver"
 )
 
@@ -36,8 +37,24 @@ func CheckLatest(ctx context.Context) (string, error) {
 		Depth: 1,
 		Tags:  git.AllTags,
 	}
-	repo, err := git.CloneContext(ctx, memory.NewStorage(), memfs.New(), opts)
+	path, err := os.UserCacheDir()
 	if err != nil {
+		path = os.TempDir()
+	}
+	path = filepath.Join(path, "supervisor")
+	repo, err := git.PlainCloneContext(ctx, path, true, opts)
+	if errors.Is(err, git.ErrRepositoryAlreadyExists) {
+		repo, err = git.PlainOpen(path)
+		if err != nil {
+			return "", err
+		}
+		if err := repo.Fetch(&git.FetchOptions{
+			Depth: 1,
+			Tags:  git.AllTags,
+		}); err != nil {
+			return "", err
+		}
+	} else if err != nil {
 		return "", err
 	}
 
