@@ -3,7 +3,7 @@ module github.com/deepsquare-io/grid/cli
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.40
+	github.com/99designs/gqlgen v0.17.41
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.9.1
@@ -15,7 +15,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/mistakenelf/teacup v0.4.1
 	github.com/stretchr/testify v1.8.4
-	github.com/urfave/cli/v2 v2.25.7
+	github.com/urfave/cli/v2 v2.26.0
 	github.com/vektah/gqlparser/v2 v2.5.10
 	go.uber.org/zap v1.26.0
 	golang.org/x/mod v0.14.0
@@ -52,7 +52,7 @@ require (
 	github.com/crate-crypto/go-kzg-4844 v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/deckarep/golang-set/v2 v2.4.0 // indirect
+	github.com/deckarep/golang-set/v2 v2.5.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
@@ -78,7 +78,7 @@ require (
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/klauspost/compress v1.17.3 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -110,8 +110,8 @@ require (
 	github.com/status-im/keycard-go v0.3.2 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
-	github.com/tklauser/go-sysconf v0.3.12 // indirect
-	github.com/tklauser/numcpus v0.6.1 // indirect
+	github.com/tklauser/go-sysconf v0.3.13 // indirect
+	github.com/tklauser/numcpus v0.7.0 // indirect
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect

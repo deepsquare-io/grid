@@ -6,7 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/joho/godotenv v1.5.1
 	github.com/nxadm/tail v1.4.11
-	github.com/urfave/cli/v2 v2.25.7
+	github.com/urfave/cli/v2 v2.26.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/tools v0.16.0
 	google.golang.org/grpc v1.59.0
@@ -31,7 +31,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/holiman/uint256 v1.2.4 // indirect
-	github.com/klauspost/compress v1.17.3 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.17.0 // indirect
@@ -43,7 +43,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
-	github.com/tklauser/go-sysconf v0.3.12 // indirect
+	github.com/tklauser/go-sysconf v0.3.13 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.uber.org/goleak v1.2.1 // indirect

@@ -3,7 +3,7 @@ module github.com/deepsquare-io/grid/smart-contracts-exporter
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.40
+	github.com/99designs/gqlgen v0.17.41
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/cors v1.2.1
@@ -11,7 +11,7 @@ require (
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/client_model v0.5.0
 	github.com/prometheus/common v0.45.0
-	github.com/urfave/cli/v2 v2.25.7
+	github.com/urfave/cli/v2 v2.26.0
 	github.com/vektah/gqlparser/v2 v2.5.10
 	go.uber.org/zap v1.26.0
 	google.golang.org/protobuf v1.31.0
@@ -31,7 +31,7 @@ require (
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/deckarep/golang-set/v2 v2.4.0 // indirect
+	github.com/deckarep/golang-set/v2 v2.5.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -46,7 +46,7 @@ require (
 	github.com/holiman/uint256 v1.2.4 // indirect
 	github.com/huin/goupnp v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.3 // indirect
+	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
@@ -62,8 +62,8 @@ require (
 	github.com/sosodev/duration v1.2.0 // indirect
 	github.com/status-im/keycard-go v0.3.2 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
-	github.com/tklauser/go-sysconf v0.3.12 // indirect
-	github.com/tklauser/numcpus v0.6.1 // indirect
+	github.com/tklauser/go-sysconf v0.3.13 // indirect
+	github.com/tklauser/numcpus v0.7.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
