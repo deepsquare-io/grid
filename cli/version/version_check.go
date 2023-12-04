@@ -51,7 +51,7 @@ func CheckLatest(ctx context.Context) (string, error) {
 		if err := repo.Fetch(&git.FetchOptions{
 			Depth: 1,
 			Tags:  git.AllTags,
-		}); err != nil {
+		}); err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
 			return "", err
 		}
 	} else if err != nil {
