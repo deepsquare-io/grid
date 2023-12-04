@@ -152,11 +152,15 @@ type ProviderDetail struct {
 	JobCount             uint64
 }
 
+// GetProviderOption is an interface for options for the GetProvider method.
 type GetProviderOption func(*GetProviderOptions)
+
+// GetProviderOptions is the structure for holding options for the GetProvider method.
 type GetProviderOptions struct {
 	Proposal bool
 }
 
+// WithProposal enables GetProvider to show the proposal of a provider.
 func WithProposal() GetProviderOption {
 	return func(gpo *GetProviderOptions) {
 		gpo.Proposal = true
