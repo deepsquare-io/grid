@@ -20,6 +20,7 @@ import (
 
 	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/grid/sbatch-service/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,9 +31,8 @@ var cleanWireguardNIC = model.NetworkInterface{
 
 var cleanBoreNIC = model.NetworkInterface{
 	Bore: &model.Bore{
-		Address:    "address.com",
-		Port:       11,
-		TargetPort: 22,
+		BoreAddress: utils.Ptr[string]("address.com:11"),
+		TargetPort:  22,
 	},
 }
 

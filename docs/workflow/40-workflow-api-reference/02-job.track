@@ -90,7 +90,7 @@ Bore is a proxy to expose TCP sockets.
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>address</strong> ⚠️</td>
-<td valign="top"><a href="#string">String</a>!</td>
+<td valign="top"><a href="#string">String</a></td>
 <td>
 
 Bore server IP/Address.
@@ -109,7 +109,7 @@ address is deprecated. Use boreAddress instead.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>boreAddress</strong></td>
-<td valign="top"><a href="#string">String</a>!</td>
+<td valign="top"><a href="#string">String</a></td>
 <td>
 
 Bore server IP/Address:Port.
@@ -120,7 +120,7 @@ Go name: "BoreAddress".
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>port</strong> ⚠️</td>
-<td valign="top"><a href="#int">Int</a>!</td>
+<td valign="top"><a href="#int">Int</a></td>
 <td>
 
 The bore server port.

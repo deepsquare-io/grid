@@ -11,17 +11,17 @@ type Bore struct {
 	// Deprecated: Use boreAddress.
 	//
 	// Go name: "Address".
-	Address string `json:"address" yaml:"address" validate:"ip|fqdn"`
+	Address *string `json:"address,omitempty" yaml:"address" validate:"omitempty,ip|fqdn"`
 	// Bore server IP/Address:Port.
 	//
 	// Go name: "BoreAddress".
-	BoreAddress string `json:"boreAddress" yaml:"boreAddress" validate:"omitempty,hostname_port"`
+	BoreAddress *string `json:"boreAddress,omitempty" yaml:"boreAddress" validate:"omitempty,hostname_port"`
 	// The bore server port.
 	//
 	// Deprecated: Use boreAddress.
 	//
 	// Go name: "Port".
-	Port int `json:"port" yaml:"port"`
+	Port *int `json:"port,omitempty" yaml:"port"`
 	// Target port.
 	//
 	// Go name: "TargetPort".

@@ -1149,13 +1149,9 @@
             "name": "address",
             "description": "Bore server IP/Address.\n\nDeprecated: Use boreAddress.\n\nGo name: \"Address\".",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": true,
@@ -1165,13 +1161,9 @@
             "name": "boreAddress",
             "description": "Bore server IP/Address:Port.\n\nGo name: \"BoreAddress\".",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -1181,13 +1173,9 @@
             "name": "port",
             "description": "The bore server port.\n\nDeprecated: Use boreAddress.\n\nGo name: \"Port\".",
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Int",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": true,

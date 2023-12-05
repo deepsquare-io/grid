@@ -489,9 +489,6 @@
         }
       },
       "required": [
-        "address",
-        "boreAddress",
-        "port",
         "targetPort"
       ],
       "description": "jkuri/bore tunnel Transport for StepRun.\n\nBore is a proxy to expose TCP sockets."

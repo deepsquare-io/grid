@@ -1212,9 +1212,8 @@ func TestValidateWireguard(t *testing.T) {
 }
 
 var cleanBore = model.Bore{
-	Address:    "10.0.0.1",
-	Port:       2200,
-	TargetPort: 80,
+	BoreAddress: utils.Ptr("10.0.0.1:2200"),
+	TargetPort:  80,
 }
 
 func TestValidateBore(t *testing.T) {
@@ -1231,7 +1230,7 @@ func TestValidateBore(t *testing.T) {
 		{
 			input: func() model.Bore {
 				w := cleanBore
-				w.Address = "a.com"
+				w.Address = utils.Ptr("a.com")
 				return w
 			}(),
 			title: "Positive test: fqdn",
@@ -1239,12 +1238,22 @@ func TestValidateBore(t *testing.T) {
 		{
 			input: func() model.Bore {
 				w := cleanBore
-				w.Address = "a"
+				w.Address = utils.Ptr("a")
 				return w
 			}(),
 			title:         "Negative test: Address is not an ip|fqdn",
 			isError:       true,
 			errorContains: []string{"Address", "ip|fqdn"},
+		},
+		{
+			input: func() model.Bore {
+				w := cleanBore
+				w.BoreAddress = utils.Ptr("a")
+				return w
+			}(),
+			title:         "Negative test: BoreAddress is not an hostname_port",
+			isError:       true,
+			errorContains: []string{"BoreAddress", "hostname_port"},
 		},
 	}
 

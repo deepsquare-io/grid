@@ -75,6 +75,13 @@ func quoteEscape(str ...interface{}) string {
 	return strings.Join(out, " ")
 }
 
+func ignoreNil(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
+}
+
 func FormatImageURL(
 	registry *string,
 	image string,
@@ -133,6 +140,7 @@ func funcMap() template.FuncMap {
 	f["escapeSQuote"] = escapeSQuote
 	f["quoteEscape"] = quoteEscape
 	f["formatImageURL"] = FormatImageURL
+	f["ignoreNil"] = ignoreNil
 	f["isCIDRv4"] = func(i string) bool {
 		ip, _, err := net.ParseCIDR(i)
 

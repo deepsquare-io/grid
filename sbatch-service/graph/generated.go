@@ -946,24 +946,26 @@ input Bore {
 
   Go name: "Address".
   """
-  address: String!
+  address: String
     @goTag(key: "yaml")
-    @constraint(format: "ip|fqdn")
+    @constraint(format: "omitempty,ip|fqdn")
     @deprecated(reason: "address is deprecated. Use boreAddress instead.")
   """
   Bore server IP/Address:Port.
 
   Go name: "BoreAddress".
   """
-  boreAddress: String!
+  boreAddress: String
     @goTag(key: "yaml")
     @constraint(format: "omitempty,hostname_port")
   """
   The bore server port.
 
+  Deprecated: Use boreAddress.
+
   Go name: "Port".
   """
-  port: Int!
+  port: Int
     @goTag(key: "yaml")
     @deprecated(reason: "port is deprecated. Use boreAddress instead.")
   """
@@ -3618,21 +3620,21 @@ func (ec *executionContext) unmarshalInputBore(ctx context.Context, obj interfac
 		switch k {
 		case "address":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Address = data
 		case "boreAddress":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("boreAddress"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.BoreAddress = data
 		case "port":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("port"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
 				return it, err
 			}
