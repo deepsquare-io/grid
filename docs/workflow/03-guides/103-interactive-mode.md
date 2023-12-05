@@ -29,8 +29,7 @@ steps:
       network: slirp4netns
       customNetworkInterfaces:
         - bore:
-            address: bore.deepsquare.run
-            port: 2200
+            boreAddress: bore.deepsquare.run:2200
             targetPort: 8080
 ```
 
@@ -63,8 +62,7 @@ steps:
       network: slirp4netns
       customNetworkInterfaces:
         - bore:
-            address: bore.deepsquare.run
-            port: 2200
+            boreAddress: bore.deepsquare.run:2200
             targetPort: 8080
 ```
 
@@ -92,8 +90,7 @@ steps:
       network: slirp4netns
       customNetworkInterfaces:
         - bore:
-            address: bore.deepsquare.run
-            port: 2200
+            boreAddress: bore.deepsquare.run:2200
             targetPort: 8080
 ```
 
@@ -123,8 +120,7 @@ steps:
       network: slirp4netns
       customNetworkInterfaces:
         - bore:
-            address: bore.deepsquare.run
-            port: 2200
+            boreAddress: bore.deepsquare.run:2200
             targetPort: 8080
 ```
 
@@ -149,8 +145,7 @@ steps:
       network: slirp4netns
       customNetworkInterfaces:
         - bore:
-            address: bore.deepsquare.run
-            port: 2200
+            boreAddress: bore.deepsquare.run:2200
             targetPort: 8080
 ```
 
@@ -184,8 +179,7 @@ steps:
       network: slirp4netns
       customNetworkInterfaces:
         - bore:
-            address: bore.deepsquare.run
-            port: 2200
+            boreAddress: bore.deepsquare.run:2200
             targetPort: 2200
 ```
 

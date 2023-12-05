@@ -286,7 +286,7 @@ wait_for_network_device() {
 wait_for_network_device $$ tap0
 
 
-/usr/bin/bore -s address.com -p 11 -ls localhost -lp 22 -r &
+/usr/bin/dpsproxy --to.addr address.com:11 --local.addr localhost:22 -r &
 /usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
 /usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
 

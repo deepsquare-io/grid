@@ -942,21 +942,44 @@ input Bore {
   """
   Bore server IP/Address.
 
+  Deprecated: Use boreAddress.
+
   Go name: "Address".
   """
-  address: String! @goTag(key: "yaml") @constraint(format: "ip|fqdn")
+  address: String!
+    @goTag(key: "yaml")
+    @constraint(format: "ip|fqdn")
+    @deprecated(reason: "address is deprecated. Use boreAddress instead.")
+  """
+  Bore server IP/Address:Port.
+
+  Go name: "BoreAddress".
+  """
+  boreAddress: String!
+    @goTag(key: "yaml")
+    @constraint(format: "omitempty,hostname_port")
   """
   The bore server port.
 
   Go name: "Port".
   """
-  port: Int! @goTag(key: "yaml")
+  port: Int!
+    @goTag(key: "yaml")
+    @deprecated(reason: "port is deprecated. Use boreAddress instead.")
   """
   Target port.
 
   Go name: "TargetPort".
   """
   targetPort: Int! @goTag(key: "yaml")
+  """
+  Secret used to authenticate on a Bore server.
+
+  This secret is used to identify the client.
+
+  Go name: "Secret".
+  """
+  secret: String @goTag(key: "yaml")
 }
 
 """
@@ -3586,7 +3609,7 @@ func (ec *executionContext) unmarshalInputBore(ctx context.Context, obj interfac
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"address", "port", "targetPort"}
+	fieldsInOrder := [...]string{"address", "boreAddress", "port", "targetPort", "secret"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3594,17 +3617,20 @@ func (ec *executionContext) unmarshalInputBore(ctx context.Context, obj interfac
 		}
 		switch k {
 		case "address":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Address = data
+		case "boreAddress":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("boreAddress"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BoreAddress = data
 		case "port":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("port"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -3612,14 +3638,19 @@ func (ec *executionContext) unmarshalInputBore(ctx context.Context, obj interfac
 			}
 			it.Port = data
 		case "targetPort":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetPort"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.TargetPort = data
+		case "secret":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("secret"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Secret = data
 		}
 	}
 
@@ -3641,8 +3672,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 		}
 		switch k {
 		case "image":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -3650,8 +3679,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			}
 			it.Image = data
 		case "mounts":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mounts"))
 			data, err := ec.unmarshalOMount2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐMountᚄ(ctx, v)
 			if err != nil {
@@ -3659,8 +3686,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			}
 			it.Mounts = data
 		case "username":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -3668,8 +3693,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			}
 			it.Username = data
 		case "password":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -3677,8 +3700,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			}
 			it.Password = data
 		case "registry":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("registry"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -3686,8 +3707,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			}
 			it.Registry = data
 		case "apptainer":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("apptainer"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -3695,8 +3714,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			}
 			it.Apptainer = data
 		case "deepsquareHosted":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deepsquareHosted"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -3704,8 +3721,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			}
 			it.DeepsquareHosted = data
 		case "x11":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("x11"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -3713,8 +3728,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			}
 			it.X11 = data
 		case "mountHome":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mountHome"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -3722,8 +3735,6 @@ func (ec *executionContext) unmarshalInputContainerRun(ctx context.Context, obj 
 			}
 			it.MountHome = data
 		case "readOnlyRootFS":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("readOnlyRootFS"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -3751,8 +3762,6 @@ func (ec *executionContext) unmarshalInputEnvVar(ctx context.Context, obj interf
 		}
 		switch k {
 		case "key":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -3760,8 +3769,6 @@ func (ec *executionContext) unmarshalInputEnvVar(ctx context.Context, obj interf
 			}
 			it.Key = data
 		case "value":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -3789,8 +3796,6 @@ func (ec *executionContext) unmarshalInputForRange(ctx context.Context, obj inte
 		}
 		switch k {
 		case "begin":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("begin"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -3798,8 +3803,6 @@ func (ec *executionContext) unmarshalInputForRange(ctx context.Context, obj inte
 			}
 			it.Begin = data
 		case "end":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -3807,8 +3810,6 @@ func (ec *executionContext) unmarshalInputForRange(ctx context.Context, obj inte
 			}
 			it.End = data
 		case "increment":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("increment"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -3836,8 +3837,6 @@ func (ec *executionContext) unmarshalInputHTTPData(ctx context.Context, obj inte
 		}
 		switch k {
 		case "url":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -3865,8 +3864,6 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 		}
 		switch k {
 		case "resources":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
 			data, err := ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
 			if err != nil {
@@ -3874,8 +3871,6 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			}
 			it.Resources = data
 		case "env":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("env"))
 			data, err := ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
 			if err != nil {
@@ -3883,8 +3878,6 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			}
 			it.Env = data
 		case "enableLogging":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("enableLogging"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -3892,8 +3885,6 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			}
 			it.EnableLogging = data
 		case "input":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 			data, err := ec.unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx, v)
 			if err != nil {
@@ -3901,8 +3892,6 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			}
 			it.Input = data
 		case "inputMode":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inputMode"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -3910,8 +3899,6 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			}
 			it.InputMode = data
 		case "steps":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
 			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
@@ -3919,8 +3906,6 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			}
 			it.Steps = data
 		case "output":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("output"))
 			data, err := ec.unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐTransportData(ctx, v)
 			if err != nil {
@@ -3928,8 +3913,6 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 			}
 			it.Output = data
 		case "continuousOutputSync":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("continuousOutputSync"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -3957,8 +3940,6 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 		}
 		switch k {
 		case "tasks":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tasks"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -3966,8 +3947,6 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 			}
 			it.Tasks = data
 		case "cpusPerTask":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cpusPerTask"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -3975,8 +3954,6 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 			}
 			it.CPUsPerTask = data
 		case "memPerCpu":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memPerCpu"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -3984,8 +3961,6 @@ func (ec *executionContext) unmarshalInputJobResources(ctx context.Context, obj 
 			}
 			it.MemPerCPU = data
 		case "gpus":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gpus"))
 			data, err := ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
@@ -4013,8 +3988,6 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4022,8 +3995,6 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 			}
 			it.Name = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4031,8 +4002,6 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 			}
 			it.Description = data
 		case "minimumResources":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minimumResources"))
 			data, err := ec.unmarshalNJobResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐJobResources(ctx, v)
 			if err != nil {
@@ -4040,8 +4009,6 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 			}
 			it.MinimumResources = data
 		case "inputs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inputs"))
 			data, err := ec.unmarshalOModuleInput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleInputᚄ(ctx, v)
 			if err != nil {
@@ -4049,8 +4016,6 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 			}
 			it.Inputs = data
 		case "outputs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("outputs"))
 			data, err := ec.unmarshalOModuleOutput2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐModuleOutputᚄ(ctx, v)
 			if err != nil {
@@ -4058,8 +4023,6 @@ func (ec *executionContext) unmarshalInputModule(ctx context.Context, obj interf
 			}
 			it.Outputs = data
 		case "steps":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
 			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
@@ -4087,8 +4050,6 @@ func (ec *executionContext) unmarshalInputModuleInput(ctx context.Context, obj i
 		}
 		switch k {
 		case "key":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4096,8 +4057,6 @@ func (ec *executionContext) unmarshalInputModuleInput(ctx context.Context, obj i
 			}
 			it.Key = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4105,8 +4064,6 @@ func (ec *executionContext) unmarshalInputModuleInput(ctx context.Context, obj i
 			}
 			it.Description = data
 		case "default":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("default"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4134,8 +4091,6 @@ func (ec *executionContext) unmarshalInputModuleOutput(ctx context.Context, obj 
 		}
 		switch k {
 		case "key":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4143,8 +4098,6 @@ func (ec *executionContext) unmarshalInputModuleOutput(ctx context.Context, obj 
 			}
 			it.Key = data
 		case "description":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4172,8 +4125,6 @@ func (ec *executionContext) unmarshalInputMount(ctx context.Context, obj interfa
 		}
 		switch k {
 		case "hostDir":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hostDir"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4181,8 +4132,6 @@ func (ec *executionContext) unmarshalInputMount(ctx context.Context, obj interfa
 			}
 			it.HostDir = data
 		case "containerDir":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("containerDir"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4190,8 +4139,6 @@ func (ec *executionContext) unmarshalInputMount(ctx context.Context, obj interfa
 			}
 			it.ContainerDir = data
 		case "options":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("options"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4219,8 +4166,6 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 		}
 		switch k {
 		case "wireguard":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wireguard"))
 			data, err := ec.unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx, v)
 			if err != nil {
@@ -4228,8 +4173,6 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 			}
 			it.Wireguard = data
 		case "bore":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bore"))
 			data, err := ec.unmarshalOBore2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐBore(ctx, v)
 			if err != nil {
@@ -4257,8 +4200,6 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 		}
 		switch k {
 		case "region":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("region"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4266,8 +4207,6 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 			}
 			it.Region = data
 		case "bucketUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("bucketUrl"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4275,8 +4214,6 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 			}
 			it.BucketURL = data
 		case "path":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4284,8 +4221,6 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 			}
 			it.Path = data
 		case "accessKeyId":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accessKeyId"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4293,8 +4228,6 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 			}
 			it.AccessKeyID = data
 		case "secretAccessKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("secretAccessKey"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4302,8 +4235,6 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 			}
 			it.SecretAccessKey = data
 		case "endpointUrl":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endpointUrl"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4311,8 +4242,6 @@ func (ec *executionContext) unmarshalInputS3Data(ctx context.Context, obj interf
 			}
 			it.EndpointURL = data
 		case "deleteSync":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deleteSync"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -4340,8 +4269,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 		}
 		switch k {
 		case "name":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4349,8 +4276,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			}
 			it.Name = data
 		case "dependsOn":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dependsOn"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -4358,8 +4283,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			}
 			it.DependsOn = data
 		case "if":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("if"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4367,8 +4290,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			}
 			it.If = data
 		case "steps":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
 			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
@@ -4376,8 +4297,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			}
 			it.Steps = data
 		case "run":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("run"))
 			data, err := ec.unmarshalOStepRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRun(ctx, v)
 			if err != nil {
@@ -4385,8 +4304,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			}
 			it.Run = data
 		case "for":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("for"))
 			data, err := ec.unmarshalOStepFor2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepFor(ctx, v)
 			if err != nil {
@@ -4394,8 +4311,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			}
 			it.For = data
 		case "launch":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("launch"))
 			data, err := ec.unmarshalOStepAsyncLaunch2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepAsyncLaunch(ctx, v)
 			if err != nil {
@@ -4403,8 +4318,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			}
 			it.Launch = data
 		case "use":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("use"))
 			data, err := ec.unmarshalOStepUse2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepUse(ctx, v)
 			if err != nil {
@@ -4412,8 +4325,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			}
 			it.Use = data
 		case "catch":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("catch"))
 			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
@@ -4421,8 +4332,6 @@ func (ec *executionContext) unmarshalInputStep(ctx context.Context, obj interfac
 			}
 			it.Catch = data
 		case "finally":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("finally"))
 			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
@@ -4450,8 +4359,6 @@ func (ec *executionContext) unmarshalInputStepAsyncLaunch(ctx context.Context, o
 		}
 		switch k {
 		case "handleName":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("handleName"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4459,8 +4366,6 @@ func (ec *executionContext) unmarshalInputStepAsyncLaunch(ctx context.Context, o
 			}
 			it.HandleName = data
 		case "signalOnParentStepExit":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("signalOnParentStepExit"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -4468,8 +4373,6 @@ func (ec *executionContext) unmarshalInputStepAsyncLaunch(ctx context.Context, o
 			}
 			it.SignalOnParentStepExit = data
 		case "steps":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
 			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
@@ -4497,8 +4400,6 @@ func (ec *executionContext) unmarshalInputStepFor(ctx context.Context, obj inter
 		}
 		switch k {
 		case "parallel":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parallel"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
 			if err != nil {
@@ -4506,8 +4407,6 @@ func (ec *executionContext) unmarshalInputStepFor(ctx context.Context, obj inter
 			}
 			it.Parallel = data
 		case "items":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("items"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -4515,8 +4414,6 @@ func (ec *executionContext) unmarshalInputStepFor(ctx context.Context, obj inter
 			}
 			it.Items = data
 		case "range":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("range"))
 			data, err := ec.unmarshalOForRange2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐForRange(ctx, v)
 			if err != nil {
@@ -4524,8 +4421,6 @@ func (ec *executionContext) unmarshalInputStepFor(ctx context.Context, obj inter
 			}
 			it.Range = data
 		case "steps":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
 			data, err := ec.unmarshalNStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
@@ -4553,8 +4448,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 		}
 		switch k {
 		case "command":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("command"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4562,8 +4455,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.Command = data
 		case "shell":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("shell"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4571,8 +4462,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.Shell = data
 		case "resources":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resources"))
 			data, err := ec.unmarshalOStepRunResources2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepRunResources(ctx, v)
 			if err != nil {
@@ -4580,8 +4469,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.Resources = data
 		case "container":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("container"))
 			data, err := ec.unmarshalOContainerRun2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐContainerRun(ctx, v)
 			if err != nil {
@@ -4589,8 +4476,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.Container = data
 		case "network":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("network"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4598,8 +4483,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.Network = data
 		case "dns":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dns"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -4607,8 +4490,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.DNS = data
 		case "customNetworkInterfaces":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customNetworkInterfaces"))
 			data, err := ec.unmarshalONetworkInterface2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐNetworkInterfaceᚄ(ctx, v)
 			if err != nil {
@@ -4616,8 +4497,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.CustomNetworkInterfaces = data
 		case "env":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("env"))
 			data, err := ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
 			if err != nil {
@@ -4625,8 +4504,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.Env = data
 		case "mapUid":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mapUid"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -4634,8 +4511,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.MapUID = data
 		case "mapGid":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mapGid"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -4643,8 +4518,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.MapGID = data
 		case "workDir":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("workDir"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4652,8 +4525,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.WorkDir = data
 		case "disableCpuBinding":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("disableCpuBinding"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
@@ -4661,8 +4532,6 @@ func (ec *executionContext) unmarshalInputStepRun(ctx context.Context, obj inter
 			}
 			it.DisableCPUBinding = data
 		case "mpi":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mpi"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4690,8 +4559,6 @@ func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, 
 		}
 		switch k {
 		case "tasks":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tasks"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -4699,8 +4566,6 @@ func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, 
 			}
 			it.Tasks = data
 		case "cpusPerTask":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cpusPerTask"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -4708,8 +4573,6 @@ func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, 
 			}
 			it.CPUsPerTask = data
 		case "memPerCpu":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memPerCpu"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -4717,8 +4580,6 @@ func (ec *executionContext) unmarshalInputStepRunResources(ctx context.Context, 
 			}
 			it.MemPerCPU = data
 		case "gpusPerTask":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gpusPerTask"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {
@@ -4746,8 +4607,6 @@ func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj inter
 		}
 		switch k {
 		case "source":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("source"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4755,8 +4614,6 @@ func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj inter
 			}
 			it.Source = data
 		case "args":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("args"))
 			data, err := ec.unmarshalOEnvVar2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐEnvVarᚄ(ctx, v)
 			if err != nil {
@@ -4764,8 +4621,6 @@ func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj inter
 			}
 			it.Args = data
 		case "exportEnvAs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exportEnvAs"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4773,8 +4628,6 @@ func (ec *executionContext) unmarshalInputStepUse(ctx context.Context, obj inter
 			}
 			it.ExportEnvAs = data
 		case "steps":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("steps"))
 			data, err := ec.unmarshalOStep2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐStepᚄ(ctx, v)
 			if err != nil {
@@ -4802,8 +4655,6 @@ func (ec *executionContext) unmarshalInputTransportData(ctx context.Context, obj
 		}
 		switch k {
 		case "http":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("http"))
 			data, err := ec.unmarshalOHTTPData2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐHTTPData(ctx, v)
 			if err != nil {
@@ -4811,8 +4662,6 @@ func (ec *executionContext) unmarshalInputTransportData(ctx context.Context, obj
 			}
 			it.HTTP = data
 		case "s3":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("s3"))
 			data, err := ec.unmarshalOS3Data2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐS3Data(ctx, v)
 			if err != nil {
@@ -4840,8 +4689,6 @@ func (ec *executionContext) unmarshalInputWireguard(ctx context.Context, obj int
 		}
 		switch k {
 		case "address":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -4849,8 +4696,6 @@ func (ec *executionContext) unmarshalInputWireguard(ctx context.Context, obj int
 			}
 			it.Address = data
 		case "privateKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("privateKey"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4858,8 +4703,6 @@ func (ec *executionContext) unmarshalInputWireguard(ctx context.Context, obj int
 			}
 			it.PrivateKey = data
 		case "peers":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("peers"))
 			data, err := ec.unmarshalOWireguardPeer2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeerᚄ(ctx, v)
 			if err != nil {
@@ -4887,8 +4730,6 @@ func (ec *executionContext) unmarshalInputWireguardPeer(ctx context.Context, obj
 		}
 		switch k {
 		case "publicKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("publicKey"))
 			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
@@ -4896,8 +4737,6 @@ func (ec *executionContext) unmarshalInputWireguardPeer(ctx context.Context, obj
 			}
 			it.PublicKey = data
 		case "preSharedKey":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("preSharedKey"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4905,8 +4744,6 @@ func (ec *executionContext) unmarshalInputWireguardPeer(ctx context.Context, obj
 			}
 			it.PreSharedKey = data
 		case "allowedIPs":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("allowedIPs"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
@@ -4914,8 +4751,6 @@ func (ec *executionContext) unmarshalInputWireguardPeer(ctx context.Context, obj
 			}
 			it.AllowedIPs = data
 		case "endpoint":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endpoint"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -4923,8 +4758,6 @@ func (ec *executionContext) unmarshalInputWireguardPeer(ctx context.Context, obj
 			}
 			it.Endpoint = data
 		case "persistentKeepalive":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("persistentKeepalive"))
 			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
 			if err != nil {

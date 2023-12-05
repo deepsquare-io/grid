@@ -1742,25 +1742,52 @@ Bore is a proxy to expose TCP sockets.
 </thead>
 <tbody>
 <tr>
-<td colspan="2" valign="top"><strong>address</strong></td>
+<td colspan="2" valign="top"><strong>address</strong> ⚠️</td>
 <td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Bore server IP/Address.
 
+Deprecated: Use boreAddress.
+
 Go name: "Address".
+
+<p>⚠️ <strong>DEPRECATED</strong></p>
+<blockquote>
+
+address is deprecated. Use boreAddress instead.
+
+</blockquote>
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>boreAddress</strong></td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Bore server IP/Address:Port.
+
+Go name: "BoreAddress".
 
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>port</strong></td>
+<td colspan="2" valign="top"><strong>port</strong> ⚠️</td>
 <td valign="top"><a href="#int">Int</a>!</td>
 <td>
 
 The bore server port.
 
+Deprecated: Use boreAddress.
+
 Go name: "Port".
 
+<p>⚠️ <strong>DEPRECATED</strong></p>
+<blockquote>
+
+port is deprecated. Use boreAddress instead.
+
+</blockquote>
 </td>
 </tr>
 <tr>
@@ -1782,8 +1809,7 @@ Go name: "TargetPort".
 
 ```yaml title="Bore"
 bore:
-  address: bore.deepsquare.run
-  port: 2200
+  boreAddress: bore.deepsquare.run:2200
   targetPort: 8080
 ```
 

@@ -297,7 +297,7 @@ wait_for_network_device() {
 wait_for_network_device $$ tap0
 
 
-/usr/bin/bore -s bore.deepsquare.run -p 2200 -ls localhost -lp 8080 -r &
+/usr/bin/dpsproxy --to.addr bore.deepsquare.run:2200 --local.addr localhost:8080 -r &
 
 '"'"''"'"'/usr/bin/cat <<'"'"'"'"'"'"'"'"'EOFenroot'"'"'"'"'"'"'"'"' >"$STORAGE_PATH/enroot.conf"
 #ENROOT_REMAP_ROOT=n
@@ -496,7 +496,7 @@ wait_for_network_device() {
 wait_for_network_device $$ tap0
 
 
-/usr/bin/bore -s bore.deepsquare.run -p 2200 -ls localhost -lp 8080 -r &
+/usr/bin/dpsproxy --to.addr bore.deepsquare.run:2200 --local.addr localhost:8080 -r &
 /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFwireguard'"'"'"'"'"'"'"'"' > "$(pwd)/net1.conf"
 [Interface]
 Address = 10.0.0.4/24,fd00:1234:5678::4/128

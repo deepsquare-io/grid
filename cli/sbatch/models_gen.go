@@ -8,9 +8,17 @@ package sbatch
 type Bore struct {
 	// Bore server IP/Address.
 	//
+	// Deprecated: Use boreAddress.
+	//
 	// Go name: "Address".
 	Address string `json:"address" yaml:"address" validate:"ip|fqdn"`
+	// Bore server IP/Address:Port.
+	//
+	// Go name: "BoreAddress".
+	BoreAddress string `json:"boreAddress" yaml:"boreAddress" validate:"omitempty,hostname_port"`
 	// The bore server port.
+	//
+	// Deprecated: Use boreAddress.
 	//
 	// Go name: "Port".
 	Port int `json:"port" yaml:"port"`
@@ -18,6 +26,12 @@ type Bore struct {
 	//
 	// Go name: "TargetPort".
 	TargetPort int `json:"targetPort" yaml:"targetPort"`
+	// Secret used to authenticate on a Bore server.
+	//
+	// This secret is used to identify the client.
+	//
+	// Go name: "Secret".
+	Secret *string `json:"secret,omitempty" yaml:"secret"`
 }
 
 type ContainerRun struct {

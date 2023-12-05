@@ -469,19 +469,28 @@
       "properties": {
         "address": {
           "$ref": "#/definitions/String",
-          "description": "Bore server IP/Address.\n\nGo name: \"Address\"."
+          "description": "Bore server IP/Address.\n\nDeprecated: Use boreAddress.\n\nGo name: \"Address\"."
+        },
+        "boreAddress": {
+          "$ref": "#/definitions/String",
+          "description": "Bore server IP/Address:Port.\n\nGo name: \"BoreAddress\"."
         },
         "port": {
           "$ref": "#/definitions/Int",
-          "description": "The bore server port.\n\nGo name: \"Port\"."
+          "description": "The bore server port.\n\nDeprecated: Use boreAddress.\n\nGo name: \"Port\"."
         },
         "targetPort": {
           "$ref": "#/definitions/Int",
           "description": "Target port.\n\nGo name: \"TargetPort\"."
+        },
+        "secret": {
+          "$ref": "#/definitions/String",
+          "description": "Secret used to authenticate on a Bore server.\n\nThis secret is used to identify the client.\n\nGo name: \"Secret\"."
         }
       },
       "required": [
         "address",
+        "boreAddress",
         "port",
         "targetPort"
       ],

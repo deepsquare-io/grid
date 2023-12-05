@@ -89,25 +89,52 @@ Bore is a proxy to expose TCP sockets.
 </thead>
 <tbody>
 <tr>
-<td colspan="2" valign="top"><strong>address</strong></td>
+<td colspan="2" valign="top"><strong>address</strong> ⚠️</td>
 <td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Bore server IP/Address.
 
+Deprecated: Use boreAddress.
+
 Go name: "Address".
+
+<p>⚠️ <strong>DEPRECATED</strong></p>
+<blockquote>
+
+address is deprecated. Use boreAddress instead.
+
+</blockquote>
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>boreAddress</strong></td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Bore server IP/Address:Port.
+
+Go name: "BoreAddress".
 
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>port</strong></td>
+<td colspan="2" valign="top"><strong>port</strong> ⚠️</td>
 <td valign="top"><a href="#int">Int</a>!</td>
 <td>
 
 The bore server port.
 
+Deprecated: Use boreAddress.
+
 Go name: "Port".
 
+<p>⚠️ <strong>DEPRECATED</strong></p>
+<blockquote>
+
+port is deprecated. Use boreAddress instead.
+
+</blockquote>
 </td>
 </tr>
 <tr>
@@ -118,6 +145,19 @@ Go name: "Port".
 Target port.
 
 Go name: "TargetPort".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>secret</strong></td>
+<td valign="top"><a href="#string">String</a></td>
+<td>
+
+Secret used to authenticate on a Bore server.
+
+This secret is used to identify the client.
+
+Go name: "Secret".
 
 </td>
 </tr>

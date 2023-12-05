@@ -38,8 +38,7 @@ steps:
       customNetworkInterfaces:
         ## Forward TCP/UDP traffic from port 8080 to bore.deepsquare.run:2200.
         - bore:
-            address: bore.deepsquare.run
-            port: 2200
+            boreAddress: bore.deepsquare.run:2200
             targetPort: 8080
 ```
 
