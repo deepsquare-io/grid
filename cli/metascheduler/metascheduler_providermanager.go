@@ -18,6 +18,8 @@ package metascheduler
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
@@ -61,6 +63,13 @@ func (c *providerManager) Remove(ctx context.Context, provider common.Address) e
 	}
 	return nil
 }
+
+// LabelsByKey implements the sort.Interface for the Label slice.
+type LabelsByKey []metaschedulerabi.Label
+
+func (a LabelsByKey) Len() int           { return len(a) }
+func (a LabelsByKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a LabelsByKey) Less(i, j int) bool { return strings.Compare(a[i].Key, a[j].Key) < 0 }
 
 func (c *providerManager) GetProvider(
 	ctx context.Context,
@@ -113,6 +122,9 @@ func (c *providerManager) GetProvider(
 	if err != nil {
 		return provider, WrapError(err)
 	}
+
+	// Sort labels
+	sort.Sort(LabelsByKey(p.Labels))
 
 	p.Addr = address
 
@@ -185,7 +197,7 @@ func (c *providerManager) GetProviders(
 		if err != nil {
 			return providers, WrapError(err)
 		}
-
+		sort.Sort(LabelsByKey(provider.Labels))
 		provider.Addr = it.Event.Addr
 
 		providerMap[it.Event.Addr] = types.ProviderDetail{
