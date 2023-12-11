@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
@@ -69,7 +68,7 @@ type LabelsByKey []metaschedulerabi.Label
 
 func (a LabelsByKey) Len() int           { return len(a) }
 func (a LabelsByKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a LabelsByKey) Less(i, j int) bool { return strings.Compare(a[i].Key, a[j].Key) < 0 }
+func (a LabelsByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
 
 func (c *providerManager) GetProvider(
 	ctx context.Context,
