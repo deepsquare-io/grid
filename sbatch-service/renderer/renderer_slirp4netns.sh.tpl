@@ -89,7 +89,7 @@ wait_for_network_device $$ tap0
 {{- if $nic.Wireguard }}
 {{ renderWireguard $nic.Wireguard (printf "net%d" $i) | escapeSQuote }}
 {{- else if $nic.Bore }}
-/usr/bin/dpsproxy --to.addr {{ $nic.Bore.BoreAddress | ignoreNil }}{{ $nic.Bore.Address | ignoreNil }}{{ if $nic.Bore.Port }}:{{ $nic.Bore.Port }}{{ end }} --local.addr localhost:{{ $nic.Bore.TargetPort }}{{ if $nic.Bore.Secret }} --secret {{ $nic.Bore.Secret | squote }}{{ end }} -r &
+/usr/bin/dpsproxy --to.addr {{ $nic.Bore.BoreAddress | ignoreNil }}{{ $nic.Bore.Address | ignoreNil }}{{ if $nic.Bore.Port }}:{{ $nic.Bore.Port }}{{ end }} --local.addr localhost:{{ $nic.Bore.TargetPort }}{{ if $nic.Bore.Secret }} --secret {{ derefStr $nic.Bore.Secret | squote }}{{ end }} -r &
 {{- end -}}
 {{- end -}}
 {{- range $dns := .Run.DNS }}

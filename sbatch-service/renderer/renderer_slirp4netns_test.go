@@ -33,6 +33,7 @@ var cleanBoreNIC = model.NetworkInterface{
 	Bore: &model.Bore{
 		BoreAddress: utils.Ptr[string]("address.com:11"),
 		TargetPort:  22,
+		Secret:      utils.Ptr[string]("test"),
 	},
 }
 
@@ -286,7 +287,7 @@ wait_for_network_device() {
 wait_for_network_device $$ tap0
 
 
-/usr/bin/dpsproxy --to.addr address.com:11 --local.addr localhost:22 -r &
+/usr/bin/dpsproxy --to.addr address.com:11 --local.addr localhost:22 --secret 'test' -r &
 /usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
 /usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
 
