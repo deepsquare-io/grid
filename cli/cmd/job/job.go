@@ -530,7 +530,7 @@ func waitUntilJobRunningOrFinished(
 	for {
 		select {
 		case tr := <-ch:
-			if bytes.EqualFold(jobID[:], tr.JobId[:]) {
+			if bytes.Equal(jobID[:], tr.JobId[:]) {
 				fmt.Printf("(Job is %s)\n", metascheduler.JobStatus(tr.To))
 				switch metascheduler.JobStatus(tr.To) {
 				case metascheduler.JobStatusCancelled,
