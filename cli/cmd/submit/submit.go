@@ -53,8 +53,10 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/deepsquare-io/grid/cli/deepsquare"
@@ -386,6 +388,14 @@ var Command = cli.Command{
 		if exitOnJobExit {
 			go func() {
 				if !finished {
+					cleanChan := make(chan os.Signal, 1)
+					signal.Notify(cleanChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+					go func() {
+						<-cleanChan
+						fmt.Printf("\nWARNING: Your job %s is still running.\n", jobIDBig.String())
+						os.Exit(1)
+					}()
+
 					_, err := waitUntilJobFinished(sub, transitions, jobID)
 					if err != nil {
 						fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
