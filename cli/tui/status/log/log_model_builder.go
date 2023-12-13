@@ -64,7 +64,7 @@ func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
 			b.Client,
 		),
 		transitions: makeWatchTransitionModel(
-			ctx, b.Watcher,
+			ctx, jobID, b.Watcher, b.Client,
 		),
 		jobID: jobID,
 		keyMap: keyMap{
