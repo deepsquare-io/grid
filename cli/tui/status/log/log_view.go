@@ -59,7 +59,7 @@ func (m model) View() string {
 			"%s\nWaiting for logs... %s%s\n%s",
 			m.headerView(),
 			m.spinner.View(),
-			strings.Repeat("\n", max(0, m.viewport.Height-1)),
+			m.viewport.View(),
 			m.footerView(),
 		)
 	} else {
@@ -70,5 +70,11 @@ func (m model) View() string {
 			m.footerView(),
 		)
 	}
-	return style.Box().Render(view) + "\n" + help
+	return style.Box().
+		BorderTop(true).
+		BorderBottom(true).
+		BorderLeft(false).
+		BorderRight(false).
+		Render(view) +
+		"\n" + help
 }

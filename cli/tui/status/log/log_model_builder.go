@@ -27,21 +27,25 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/deepsquare-io/grid/cli/deepsquare"
 	"github.com/deepsquare-io/grid/cli/tui/style"
-	"github.com/deepsquare-io/grid/cli/types"
 )
 
 // ModelBuilder contains the dependencies to build the model for the log page.
 type ModelBuilder struct {
-	Logger types.Logger
+	Client  deepsquare.Client
+	Watcher deepsquare.Watcher
 }
 
 // Build the bubbletea model for the log page.
 func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
-	if b.Logger == nil {
-		panic("Logger is nil")
+	if b.Client == nil {
+		panic("Client is nil")
 	}
-	vp := viewport.New(118, style.StandardHeight-4)
+	if b.Watcher == nil {
+		panic("Watcher is nil")
+	}
+	vp := viewport.New(118, style.StandardHeight+10)
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
@@ -57,8 +61,12 @@ func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
 		watchLogs: makeWatchLogsModel(
 			ctx,
 			jobID,
-			b.Logger,
+			b.Client,
 		),
+		transitions: makeWatchTransitionModel(
+			ctx, b.Watcher,
+		),
+		jobID: jobID,
 		keyMap: keyMap{
 			ViewPort: vp.KeyMap,
 			Exit: key.NewBinding(
@@ -70,5 +78,6 @@ func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
 		logs:     make([]logMsg, 0, 100),
 		messages: messages,
 		title:    fmt.Sprintf("Job %s", new(big.Int).SetBytes(jobID[:])),
+		client:   b.Client,
 	}
 }

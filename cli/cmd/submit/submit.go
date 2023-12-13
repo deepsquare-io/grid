@@ -389,7 +389,6 @@ var Command = cli.Command{
 
 		fmt.Printf("---Waiting for job %s to be running...---\n", jobIDBig.String())
 		var finished = false
-		var jobIsScheduledOrMetascheduled = false
 		var allocatedProviderAddress common.Address
 		msOrSchedLen, runningLen := int64(0), int64(0)
 		// Wait for finished or running
@@ -397,14 +396,14 @@ var Command = cli.Command{
 		for {
 			select {
 			case tr := <-transitions:
-				if jobIsScheduledOrMetascheduled {
+				if (allocatedProviderAddress != common.Address{}) {
 					jobs, err := client.GetJobsByProvider(ctx, allocatedProviderAddress)
 					if err != nil {
 						internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 					}
 					msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
 					if len(jobs) > 1 && (msOrSchedLen != msLen || runningLen != rLen) {
-						fmt.Printf("%d jobs in provider queue (%d waiting, %d running)\n", len(jobs), msLen, rLen)
+						fmt.Printf("(%d jobs in provider queue: %d waiting, %d running)\n", len(jobs), msLen, rLen)
 					}
 					msOrSchedLen, runningLen = msLen, rLen
 				}
@@ -414,8 +413,6 @@ var Command = cli.Command{
 					switch metascheduler.JobStatus(tr.To) {
 					case metascheduler.JobStatusMetaScheduled,
 						metascheduler.JobStatusScheduled:
-						jobIsScheduledOrMetascheduled = true
-
 						// Print job position in the queue
 						job, err := client.GetJob(ctx, jobID)
 						if err != nil {
@@ -428,7 +425,7 @@ var Command = cli.Command{
 						}
 						msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
 						if len(jobs) > 1 && (msOrSchedLen != msLen || runningLen != rLen) {
-							fmt.Printf("%d jobs in provider queue (%d waiting, %d running)\n", len(jobs), msLen, rLen)
+							fmt.Printf("(%d jobs in provider queue: %d waiting, %d running)\n", len(jobs), msLen, rLen)
 						}
 						msOrSchedLen, runningLen = msLen, rLen
 

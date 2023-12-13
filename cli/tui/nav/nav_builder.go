@@ -99,7 +99,8 @@ func (b *ModelBuilder) Build(ctx context.Context) tea.Model {
 
 		statusModel: status.Model(ctx, b.client, b.watcher, b.userAddress),
 		logModelBuilder: log.ModelBuilder{
-			Logger: b.client,
+			Client:  b.client,
+			Watcher: b.watcher,
 		},
 		editorModelBuilder: editor.ModelBuilder{
 			Client: b.client,

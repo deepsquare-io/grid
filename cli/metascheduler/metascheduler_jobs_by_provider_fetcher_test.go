@@ -1,3 +1,18 @@
+// Copyright (C) 2023 DeepSquare Association
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package metascheduler_test
 
 import (
@@ -24,7 +39,7 @@ type MetaScheduledJobsByProviderFetcherTestSuite struct {
 func (suite *MetaScheduledJobsByProviderFetcherTestSuite) BeforeTest(_, _ string) {
 	suite.fetcher = mocktypes.NewJobFetcher(suite.T())
 	suite.metascheduledJobIDsFetcher = mocktypes.NewMetaScheduledJobsIdsFetcher(suite.T())
-	suite.impl = metascheduler.NewRunningJobsByProviderFetcher(
+	suite.impl = metascheduler.NewJobsByProviderFetcher(
 		suite.metascheduledJobIDsFetcher,
 		suite.fetcher,
 	)

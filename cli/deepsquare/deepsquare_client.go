@@ -183,7 +183,7 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 		Client: c.Client,
 	})
 	fetcher := rpcClientSet.JobFetcher()
-	runningJobsByProviderFetcher := metascheduler.NewRunningJobsByProviderFetcher(oracle, fetcher)
+	runningJobsByProviderFetcher := metascheduler.NewJobsByProviderFetcher(oracle, fetcher)
 	return &client{
 		JobFetcher:            fetcher,
 		JobScheduler:          jobScheduler,

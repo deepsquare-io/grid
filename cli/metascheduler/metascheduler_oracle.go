@@ -1,3 +1,18 @@
+// Copyright (C) 2023 DeepSquare Association
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 package metascheduler
 
 import (
@@ -9,6 +24,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/types"
 )
 
+// DefaultOracleURL is the default oracle URL.
 const DefaultOracleURL = "https://meta-scheduler.deepsquare.run"
 
 type oracle struct {
@@ -16,10 +32,12 @@ type oracle struct {
 	opts OracleOptions
 }
 
+// OracleOptions are options for the oracle.
 type OracleOptions struct {
 	Client *http.Client
 }
 
+// NewOracle instanciates an Oracle.
 func NewOracle(url string, opts OracleOptions) types.MetaScheduledJobsIdsFetcher {
 	if url == "" {
 		url = DefaultOracleURL

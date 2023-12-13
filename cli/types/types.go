@@ -108,10 +108,14 @@ type JobFetcher interface {
 	GetJobs(ctx context.Context) (JobLazyIterator, error)
 }
 
+// MetaScheduledJobsIdsFetcher fetches meta-scheduled jobs ids.
+//
+// This contacts directly the meta-scheduler without the need to fetch all the jobs.
 type MetaScheduledJobsIdsFetcher interface {
 	GetMetaScheduledJobIDs(ctx context.Context) ([][32]byte, error)
 }
 
+// JobsByProviderFetcher fetches the jobs meta-scheduled or running on the provider.
 type JobsByProviderFetcher interface {
 	GetJobsByProvider(ctx context.Context, providerAddress common.Address) ([]Job, error)
 }
