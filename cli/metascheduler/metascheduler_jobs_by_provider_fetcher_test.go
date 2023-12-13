@@ -1,0 +1,72 @@
+package metascheduler_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/deepsquare-io/grid/cli/metascheduler"
+	"github.com/deepsquare-io/grid/cli/mocks/mocktypes"
+	"github.com/deepsquare-io/grid/cli/types"
+	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
+)
+
+type MetaScheduledJobsByProviderFetcherTestSuite struct {
+	suite.Suite
+
+	fetcher                    *mocktypes.JobFetcher
+	metascheduledJobIDsFetcher *mocktypes.MetaScheduledJobsIdsFetcher
+	impl                       types.JobsByProviderFetcher
+}
+
+func (suite *MetaScheduledJobsByProviderFetcherTestSuite) BeforeTest(_, _ string) {
+	suite.fetcher = mocktypes.NewJobFetcher(suite.T())
+	suite.metascheduledJobIDsFetcher = mocktypes.NewMetaScheduledJobsIdsFetcher(suite.T())
+	suite.impl = metascheduler.NewRunningJobsByProviderFetcher(
+		suite.metascheduledJobIDsFetcher,
+		suite.fetcher,
+	)
+}
+
+func (suite *MetaScheduledJobsByProviderFetcherTestSuite) TestGetRunningJobsByProvider() {
+	// Arrange
+	providerAddress := common.Address{1}
+	jobID := metascheduler.JobIDFromHex(
+		"0x00000000000000000000000000000000000000000000000000000000000001b4",
+	)
+	providerAddress2 := common.Address{2}
+	jobID2 := metascheduler.JobIDFromHex(
+		"0x00000000000000000000000000000000000000000000000000000000000001b4",
+	)
+	suite.metascheduledJobIDsFetcher.EXPECT().GetMetaScheduledJobIDs(mock.Anything).Return(
+		[][32]byte{jobID, jobID2},
+		nil,
+	)
+
+	suite.fetcher.EXPECT().GetJob(mock.Anything, jobID).Return(&metaschedulerabi.Job{
+		JobId:        jobID,
+		ProviderAddr: providerAddress,
+	}, nil).Once()
+	suite.fetcher.EXPECT().GetJob(mock.Anything, jobID).Return(&metaschedulerabi.Job{
+		JobId:        jobID2,
+		ProviderAddr: providerAddress2,
+	}, nil).Once()
+
+	// Act
+	jobs, err := suite.impl.GetJobsByProvider(context.Background(), providerAddress)
+
+	// Assert
+	suite.Require().NoError(err)
+	suite.Require().Equal([]types.Job{
+		{
+			JobId:        jobID,
+			ProviderAddr: providerAddress,
+		},
+	}, jobs)
+}
+
+func TestRunningJobsByProviderFetcher(t *testing.T) {
+	suite.Run(t, &MetaScheduledJobsByProviderFetcherTestSuite{})
+}

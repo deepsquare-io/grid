@@ -15,8 +15,12 @@ ifeq ($(pkgsite),)
 pkgsite := $(shell go env GOPATH)/bin/pkgsite
 endif
 
+ifeq ($(mockery),)
+mockery := $(shell go env GOPATH)/bin/mockery
+endif
+
 bin/dps: $(GO_SRCS)
-	CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
+	CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/checksums.txt: $(addprefix bin/,$(bins))
 	sha256sum -b $(addprefix bin/,$(bins)) | sed 's/bin\///' > $@
@@ -29,28 +33,28 @@ bin/checksums.md: bin/checksums.txt
 	@echo "\`\`\`" >> $@
 
 bin/dps-darwin-amd64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/dps-darwin-arm64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/dps-freebsd-amd64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
+	CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/dps-freebsd-arm64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=freebsd GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
+	CGO_ENABLED=0 GOOS=freebsd GOARCH=arm64 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/dps-linux-amd64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/dps-linux-arm64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/dps-linux-riscv64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bin/dps-windows-amd64.exe: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/dps/main.go
 
 bins := dps-darwin-amd64 dps-darwin-arm64 dps-freebsd-arm64 dps-freebsd-arm64 dps-linux-amd64 dps-linux-arm64 dps-linux-riscv64 dps-windows-amd64.exe
 
@@ -79,6 +83,10 @@ license:
 .PHONY: lint
 lint: $(golint)
 	$(golint) run ./...
+
+.PHONY: mocks
+mocks:
+	$(mockery)
 
 .PHONY: clean
 clean:

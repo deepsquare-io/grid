@@ -20,6 +20,7 @@ import (
 	"math/big"
 
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 var zero = new(big.Int)
@@ -76,4 +77,17 @@ func CreditToDuration(
 		return nil, ErrDivByZero
 	}
 	return new(big.Int).Div(creditsWei, creditsPerMin), nil
+}
+
+// JobIDToHex converts a jobID to an 32 bytes hexstring
+func JobIDToHex(jobID [32]byte) string {
+	return hexutil.Encode(jobID[:])
+}
+
+// JobIDFromHex converts a 32 bytes hexstring to a jobID
+func JobIDFromHex(jobID string) [32]byte {
+	var idB [32]byte
+	idS := hexutil.MustDecode(jobID)
+	copy(idB[:], idS)
+	return idB
 }

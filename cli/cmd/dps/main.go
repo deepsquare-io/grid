@@ -79,6 +79,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/cmd/submit"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
+	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/tui/nav"
 	versionpkg "github.com/deepsquare-io/grid/cli/version"
 	"github.com/ethereum/go-ethereum/common"
@@ -93,12 +94,13 @@ var (
 	version          = "dev"
 	availableVersion string
 
-	sbatchEndpoint             string
-	loggerEndpoint             string
-	ethEndpointRPC             string
-	ethEndpointWS              string
-	ethHexPK                   string
-	metaschedulerSmartContract string
+	sbatchEndpoint              string
+	loggerEndpoint              string
+	ethEndpointRPC              string
+	ethEndpointWS               string
+	ethHexPK                    string
+	metaschedulerSmartContract  string
+	metaschedulerOracleEndpoint string
 
 	debug bool
 )
@@ -117,6 +119,13 @@ var flags = []cli.Flag{
 		Usage:       "Metascheduler Avalanche C-Chain WS endpoint.",
 		Destination: &ethEndpointWS,
 		EnvVars:     []string{"METASCHEDULER_WS"},
+	},
+	&cli.StringFlag{
+		Name:        "metascheduler.oracle",
+		Value:       metascheduler.DefaultOracleURL,
+		Usage:       "Metascheduler Oracle endpoint.",
+		Destination: &metaschedulerOracleEndpoint,
+		EnvVars:     []string{"METASCHEDULER_ORACLE"},
 	},
 	&cli.StringFlag{
 		Name:        "metascheduler.smart-contract",
@@ -193,11 +202,12 @@ See the GNU General Public License for more details.`,
 		}
 
 		client, err := deepsquare.NewClient(ctx, &deepsquare.ClientConfig{
-			MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
-			RPCEndpoint:          ethEndpointRPC,
-			SBatchEndpoint:       sbatchEndpoint,
-			LoggerEndpoint:       loggerEndpoint,
-			UserPrivateKey:       pk,
+			MetaschedulerAddress:        common.HexToAddress(metaschedulerSmartContract),
+			RPCEndpoint:                 ethEndpointRPC,
+			SBatchEndpoint:              sbatchEndpoint,
+			LoggerEndpoint:              loggerEndpoint,
+			UserPrivateKey:              pk,
+			MetaschedulerOracleEndpoint: metaschedulerOracleEndpoint,
 		})
 		if err != nil {
 			return err

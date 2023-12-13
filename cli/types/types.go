@@ -108,6 +108,14 @@ type JobFetcher interface {
 	GetJobs(ctx context.Context) (JobLazyIterator, error)
 }
 
+type MetaScheduledJobsIdsFetcher interface {
+	GetMetaScheduledJobIDs(ctx context.Context) ([][32]byte, error)
+}
+
+type JobsByProviderFetcher interface {
+	GetJobsByProvider(ctx context.Context, providerAddress common.Address) ([]Job, error)
+}
+
 // CreditManager handles the credits of the user.
 type CreditManager interface {
 	// Balance fetches the current balance of credits.

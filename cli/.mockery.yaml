@@ -1,0 +1,10 @@
+with-expecter: true
+filename: '{{.InterfaceName}}_mock.go'
+dir: 'mocks/mock{{.PackageName}}'
+mockname: '{{.InterfaceName}}'
+outpkg: 'mock{{.PackageName}}'
+packages:
+  github.com/deepsquare-io/grid/cli/types:
+    interfaces:
+      MetaScheduledJobsIdsFetcher:
+      JobFetcher:

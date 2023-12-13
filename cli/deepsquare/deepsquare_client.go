@@ -53,6 +53,7 @@ type Client interface {
 	types.Logger
 	types.JobScheduler
 	types.JobFetcher
+	types.JobsByProviderFetcher
 	types.CreditManager
 	types.AllowanceManager
 	types.ProviderManager
@@ -62,7 +63,7 @@ type Client interface {
 
 // ClientConfig is used to configure the Client's services.
 type ClientConfig struct {
-	http.Client
+	*http.Client
 	// MetaschedulerAddress is the address of the smart-contract.
 	MetaschedulerAddress common.Address
 	// RPCEndpoint is the URL of the network API of the Ethereum Virtual Machine (EVM). The parameter is optional.
@@ -74,6 +75,8 @@ type ClientConfig struct {
 	// UserPrivateKey is the ECDSA private key of an ethereum wallet. This permits
 	// authenticated requests if specified.
 	UserPrivateKey *ecdsa.PrivateKey
+	// MetaschedulerOracleEndpoint is the URL of the meta-scheduler oracle. The parameter is optional.
+	MetaschedulerOracleEndpoint string
 	// TLSConfig of the HTTP and WS client used for all the connections. This parameter is optional.
 	TLSConfig *tls.Config
 }
@@ -81,6 +84,9 @@ type ClientConfig struct {
 func (c *ClientConfig) applyDefault() {
 	if c == nil {
 		c = &ClientConfig{}
+	}
+	if c.Client == nil {
+		c.Client = http.DefaultClient
 	}
 	if c.RPCEndpoint == "" {
 		c.RPCEndpoint = DefaultRPCEndpoint
@@ -90,6 +96,9 @@ func (c *ClientConfig) applyDefault() {
 	}
 	if c.LoggerEndpoint == "" {
 		c.LoggerEndpoint = DefaultLoggerEndpoint
+	}
+	if c.MetaschedulerOracleEndpoint == "" {
+		c.MetaschedulerOracleEndpoint = metascheduler.DefaultOracleURL
 	}
 	if c.TLSConfig == nil {
 		caCertPool, err := x509.SystemCertPool()
@@ -111,6 +120,7 @@ type client struct {
 	types.Logger
 	types.JobScheduler
 	types.JobFetcher
+	types.JobsByProviderFetcher
 	types.CreditManager
 	types.AllowanceManager
 	types.ProviderManager
@@ -121,7 +131,7 @@ type client struct {
 // NewClient creates a new Client for the given ClientConfig.
 func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 	c.applyDefault()
-	rpcClient, err := rpc.DialOptions(ctx, c.RPCEndpoint, rpc.WithHTTPClient(&c.Client))
+	rpcClient, err := rpc.DialOptions(ctx, c.RPCEndpoint, rpc.WithHTTPClient(c.Client))
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +146,7 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 		EthereumBackend:      ethClientRPC,
 		UserPrivateKey:       c.UserPrivateKey,
 	})
-	sbatch := sbatch.NewService(&c.Client, c.SBatchEndpoint)
+	sbatch := sbatch.NewService(c.Client, c.SBatchEndpoint)
 	jobScheduler := rpcClientSet.JobScheduler(sbatch)
 	dialOptions := []grpc.DialOption{
 		grpc.WithTransportCredentials(credentials.NewTLS(c.TLSConfig)),
@@ -169,15 +179,21 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	oracle := metascheduler.NewOracle(c.MetaschedulerOracleEndpoint, metascheduler.OracleOptions{
+		Client: c.Client,
+	})
+	fetcher := rpcClientSet.JobFetcher()
+	runningJobsByProviderFetcher := metascheduler.NewRunningJobsByProviderFetcher(oracle, fetcher)
 	return &client{
-		JobFetcher:       rpcClientSet.JobFetcher(),
-		JobScheduler:     jobScheduler,
-		CreditManager:    rpcClientSet.CreditManager(),
-		AllowanceManager: rpcClientSet.AllowanceManager(),
-		ProviderManager:  rpcClientSet.ProviderManager(),
-		Logger:           logger,
-		loggerConn:       conn,
-		rpcClient:        rpcClient,
+		JobFetcher:            fetcher,
+		JobScheduler:          jobScheduler,
+		JobsByProviderFetcher: runningJobsByProviderFetcher,
+		CreditManager:         rpcClientSet.CreditManager(),
+		AllowanceManager:      rpcClientSet.AllowanceManager(),
+		ProviderManager:       rpcClientSet.ProviderManager(),
+		Logger:                logger,
+		loggerConn:            conn,
+		rpcClient:             rpcClient,
 	}, nil
 }
 

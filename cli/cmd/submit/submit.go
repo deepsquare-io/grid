@@ -74,15 +74,16 @@ import (
 )
 
 var (
-	sbatchEndpoint             string
-	ethEndpointRPC             string
-	ethEndpointWS              string
-	ethHexPK                   string
-	metaschedulerSmartContract string
-	loggerEndpoint             string
-	watch                      bool
-	exitOnJobExit              bool
-	noTimestamp                bool
+	sbatchEndpoint              string
+	ethEndpointRPC              string
+	ethEndpointWS               string
+	ethHexPK                    string
+	metaschedulerSmartContract  string
+	metaschedulerOracleEndpoint string
+	loggerEndpoint              string
+	watch                       bool
+	exitOnJobExit               bool
+	noTimestamp                 bool
 
 	credits         *big.Int
 	jobName         string
@@ -114,6 +115,13 @@ var flags = []cli.Flag{
 		Destination: &metaschedulerSmartContract,
 		Category:    "DeepSquare Settings:",
 		EnvVars:     []string{"METASCHEDULER_SMART_CONTRACT"},
+	},
+	&cli.StringFlag{
+		Name:        "metascheduler.oracle",
+		Value:       metascheduler.DefaultOracleURL,
+		Usage:       "Metascheduler Oracle endpoint.",
+		Destination: &metaschedulerOracleEndpoint,
+		EnvVars:     []string{"METASCHEDULER_ORACLE"},
 	},
 	&cli.StringFlag{
 		Name:        "sbatch.endpoint",
@@ -253,11 +261,12 @@ var Command = cli.Command{
 			return err
 		}
 		client, err := deepsquare.NewClient(ctx, &deepsquare.ClientConfig{
-			MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
-			RPCEndpoint:          ethEndpointRPC,
-			SBatchEndpoint:       sbatchEndpoint,
-			LoggerEndpoint:       loggerEndpoint,
-			UserPrivateKey:       pk,
+			MetaschedulerAddress:        common.HexToAddress(metaschedulerSmartContract),
+			RPCEndpoint:                 ethEndpointRPC,
+			SBatchEndpoint:              sbatchEndpoint,
+			LoggerEndpoint:              loggerEndpoint,
+			MetaschedulerOracleEndpoint: metaschedulerOracleEndpoint,
+			UserPrivateKey:              pk,
 		})
 		if err != nil {
 			return err
@@ -379,10 +388,66 @@ var Command = cli.Command{
 		jobIDBig := new(big.Int).SetBytes(jobID[:])
 
 		fmt.Printf("---Waiting for job %s to be running...---\n", jobIDBig.String())
-		finished, err := waitUntilJobRunningOrFinished(sub, transitions, jobID)
-		if err != nil {
-			fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
-			return err
+		var finished = false
+		var jobIsScheduledOrMetascheduled = false
+		var allocatedProviderAddress common.Address
+		msOrSchedLen, runningLen := int64(0), int64(0)
+		// Wait for finished or running
+	loop:
+		for {
+			select {
+			case tr := <-transitions:
+				if jobIsScheduledOrMetascheduled {
+					jobs, err := client.GetJobsByProvider(ctx, allocatedProviderAddress)
+					if err != nil {
+						internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
+					}
+					msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
+					if len(jobs) > 1 && (msOrSchedLen != msLen || runningLen != rLen) {
+						fmt.Printf("%d jobs in provider queue (%d waiting, %d running)\n", len(jobs), msLen, rLen)
+					}
+					msOrSchedLen, runningLen = msLen, rLen
+				}
+
+				if bytes.Equal(jobID[:], tr.JobId[:]) {
+					fmt.Printf("(Job is %s)\n", metascheduler.JobStatus(tr.To))
+					switch metascheduler.JobStatus(tr.To) {
+					case metascheduler.JobStatusMetaScheduled,
+						metascheduler.JobStatusScheduled:
+						jobIsScheduledOrMetascheduled = true
+
+						// Print job position in the queue
+						job, err := client.GetJob(ctx, jobID)
+						if err != nil {
+							internallog.I.Fatal("failed to fetch job info", zap.Error(err))
+						}
+						allocatedProviderAddress = job.ProviderAddr
+						jobs, err := client.GetJobsByProvider(ctx, allocatedProviderAddress)
+						if err != nil {
+							internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
+						}
+						msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
+						if len(jobs) > 1 && (msOrSchedLen != msLen || runningLen != rLen) {
+							fmt.Printf("%d jobs in provider queue (%d waiting, %d running)\n", len(jobs), msLen, rLen)
+						}
+						msOrSchedLen, runningLen = msLen, rLen
+
+					case metascheduler.JobStatusCancelled,
+						metascheduler.JobStatusFailed,
+						metascheduler.JobStatusFinished,
+						metascheduler.JobStatusPanicked,
+						metascheduler.JobStatusOutOfCredits:
+						finished = true
+						break loop
+					case metascheduler.JobStatusRunning:
+						finished = false
+						break loop
+					}
+				}
+			case err := <-sub.Err():
+				fmt.Printf("---Watching transitions has unexpectedly closed---\n%s\n", err)
+				return err
+			}
 		}
 
 		if exitOnJobExit {
@@ -439,33 +504,6 @@ var Command = cli.Command{
 	},
 }
 
-func waitUntilJobRunningOrFinished(
-	sub ethereum.Subscription,
-	ch <-chan types.JobTransition,
-	jobID [32]byte,
-) (finished bool, err error) {
-	for {
-		select {
-		case tr := <-ch:
-			if bytes.Equal(jobID[:], tr.JobId[:]) {
-				fmt.Printf("(Job is %s)\n", metascheduler.JobStatus(tr.To))
-				switch metascheduler.JobStatus(tr.To) {
-				case metascheduler.JobStatusCancelled,
-					metascheduler.JobStatusFailed,
-					metascheduler.JobStatusFinished,
-					metascheduler.JobStatusPanicked,
-					metascheduler.JobStatusOutOfCredits:
-					return true, nil
-				case metascheduler.JobStatusRunning:
-					return false, nil
-				}
-			}
-		case err := <-sub.Err():
-			return false, err
-		}
-	}
-}
-
 func waitUntilJobFinished(
 	sub ethereum.Subscription,
 	ch <-chan types.JobTransition,
@@ -503,3 +541,17 @@ var forbiddenReplacer = strings.NewReplacer(
 	"\r\n", "\n",
 	"\r", "\n",
 )
+
+func reduceJobsIntoRunningOrScheduledLens(
+	jobs []types.Job,
+) (metascheduledOrScheduled int64, running int64) {
+	for _, job := range jobs {
+		switch metascheduler.JobStatus(job.Status) {
+		case metascheduler.JobStatusRunning:
+			running++
+		case metascheduler.JobStatusMetaScheduled, metascheduler.JobStatusScheduled:
+			metascheduledOrScheduled++
+		}
+	}
+	return
+}
