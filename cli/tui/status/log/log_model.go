@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -68,6 +69,7 @@ type model struct {
 
 	jobID                    [32]byte
 	allocatedProviderAddress common.Address
+	provider                 types.ProviderDetail
 	msOrSchedLen             int64
 	runningLen               int64
 	status                   metascheduler.JobStatus
@@ -119,8 +121,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 			}
 			msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
-			if len(jobs) > 1 && (m.msOrSchedLen != msLen || m.runningLen != rLen) {
-				m.messages.WriteString(fmt.Sprintf("\n(%d jobs in provider queue: %d waiting, %d running)", len(jobs), msLen, rLen))
+			if len(jobs) > 1 && m.msOrSchedLen > 0 && (m.msOrSchedLen != msLen || m.runningLen != rLen) {
+				waitingTime, err := computeWaitingTime(m.jobID, m.provider, jobs)
+				if err != nil {
+					internallog.I.Fatal("failed to compute waiting time", zap.Error(err))
+				}
+				fmt.Printf("(%d jobs in provider queue: %d waiting, %d running, wait ~%s)\n", len(jobs), msLen, rLen, waitingTime)
 			}
 			m.msOrSchedLen, m.runningLen = msLen, rLen
 		}
@@ -136,13 +142,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					internallog.I.Fatal("failed to fetch job info", zap.Error(err))
 				}
 				m.allocatedProviderAddress = job.ProviderAddr
+				p, err := m.client.GetProvider(context.Background(), m.allocatedProviderAddress)
+				if err != nil {
+					internallog.I.Fatal("failed to get provider info", zap.Error(err))
+				}
+				m.provider = p
 				jobs, err := m.client.GetJobsByProvider(context.Background(), m.allocatedProviderAddress)
 				if err != nil {
 					internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 				}
 				msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
-				if len(jobs) > 1 && (m.msOrSchedLen != msLen || m.runningLen != rLen) {
-					m.messages.WriteString(fmt.Sprintf("\n(%d jobs in provider queue: %d waiting, %d running)", len(jobs), msLen, rLen))
+				if len(jobs) > 1 && m.msOrSchedLen > 0 && (m.msOrSchedLen != msLen || m.runningLen != rLen) {
+					waitingTime, err := computeWaitingTime(m.jobID, m.provider, jobs)
+					if err != nil {
+						internallog.I.Fatal("failed to compute waiting time", zap.Error(err))
+					}
+					fmt.Printf("(%d jobs in provider queue: %d waiting, %d running, wait ~%s)\n", len(jobs), msLen, rLen, waitingTime)
 				}
 				m.msOrSchedLen, m.runningLen = msLen, rLen
 			case metascheduler.JobStatusCancelled,
@@ -188,6 +203,50 @@ func reduceJobsIntoRunningOrScheduledLens(
 		}
 	}
 	return
+}
+
+// computeWaitingTime returns min(running) + sum(waiting)
+func computeWaitingTime(
+	jobID [32]byte,
+	provider types.ProviderDetail,
+	jobs []types.Job,
+) (time.Duration, error) {
+	var waiting, running time.Duration
+	for _, job := range jobs {
+		if bytes.Equal(job.JobId[:], jobID[:]) {
+			continue
+		}
+		switch metascheduler.JobStatus(job.Status) {
+		case metascheduler.JobStatusRunning:
+			durationB, err := metascheduler.CreditToDuration(
+				provider.ProviderPrices,
+				job.Definition,
+				job.Cost.MaxCost,
+			)
+			if err != nil {
+				return 0, err
+			}
+			startTime := time.Unix(job.Time.Start.Int64(), 0)
+			duration := (time.Duration(durationB.Int64())*time.Second - time.Since(startTime)).Truncate(
+				time.Second,
+			)
+			if running > duration || running == 0 {
+				running = duration
+			}
+
+		case metascheduler.JobStatusMetaScheduled, metascheduler.JobStatusScheduled:
+			durationB, err := metascheduler.CreditToDuration(
+				provider.ProviderPrices,
+				job.Definition,
+				job.Cost.MaxCost,
+			)
+			if err != nil {
+				return 0, err
+			}
+			waiting += time.Duration(durationB.Int64()) * time.Second
+		}
+	}
+	return running + waiting, nil
 }
 
 func isRunningOrFinished(status metascheduler.JobStatus) bool {

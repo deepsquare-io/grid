@@ -390,6 +390,7 @@ var Command = cli.Command{
 		fmt.Printf("---Waiting for job %s to be running...---\n", jobIDBig.String())
 		var finished = false
 		var allocatedProviderAddress common.Address
+		var provider types.ProviderDetail
 		msOrSchedLen, runningLen := int64(0), int64(0)
 		// Wait for finished or running
 	loop:
@@ -402,8 +403,12 @@ var Command = cli.Command{
 						internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 					}
 					msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
-					if len(jobs) > 1 && (msOrSchedLen != msLen || runningLen != rLen) {
-						fmt.Printf("(%d jobs in provider queue: %d waiting, %d running)\n", len(jobs), msLen, rLen)
+					if len(jobs) > 1 && msOrSchedLen > 0 && (msOrSchedLen != msLen || runningLen != rLen) {
+						waitingTime, err := computeWaitingTime(jobID, provider, jobs)
+						if err != nil {
+							internallog.I.Fatal("failed to compute waiting time", zap.Error(err))
+						}
+						fmt.Printf("(%d jobs in provider queue: %d waiting, %d running, wait ~%s)\n", len(jobs), msLen, rLen, waitingTime)
 					}
 					msOrSchedLen, runningLen = msLen, rLen
 				}
@@ -423,9 +428,18 @@ var Command = cli.Command{
 						if err != nil {
 							internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 						}
+						p, err := client.GetProvider(ctx, allocatedProviderAddress)
+						if err != nil {
+							internallog.I.Fatal("failed to get provider info", zap.Error(err))
+						}
+						provider = p
 						msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
-						if len(jobs) > 1 && (msOrSchedLen != msLen || runningLen != rLen) {
-							fmt.Printf("(%d jobs in provider queue: %d waiting, %d running)\n", len(jobs), msLen, rLen)
+						if len(jobs) > 1 && msOrSchedLen > 0 && (msOrSchedLen != msLen || runningLen != rLen) {
+							waitingTime, err := computeWaitingTime(jobID, provider, jobs)
+							if err != nil {
+								internallog.I.Fatal("failed to compute waiting time", zap.Error(err))
+							}
+							fmt.Printf("(%d jobs in provider queue: %d waiting, %d running, wait ~%s)\n", len(jobs), msLen, rLen, waitingTime)
 						}
 						msOrSchedLen, runningLen = msLen, rLen
 
@@ -538,6 +552,50 @@ var forbiddenReplacer = strings.NewReplacer(
 	"\r\n", "\n",
 	"\r", "\n",
 )
+
+// computeWaitingTime returns min(running) + sum(waiting)
+func computeWaitingTime(
+	jobID [32]byte,
+	provider types.ProviderDetail,
+	jobs []types.Job,
+) (time.Duration, error) {
+	var waiting, running time.Duration
+	for _, job := range jobs {
+		if bytes.Equal(job.JobId[:], jobID[:]) {
+			continue
+		}
+		switch metascheduler.JobStatus(job.Status) {
+		case metascheduler.JobStatusRunning:
+			durationB, err := metascheduler.CreditToDuration(
+				provider.ProviderPrices,
+				job.Definition,
+				job.Cost.MaxCost,
+			)
+			if err != nil {
+				return 0, err
+			}
+			startTime := time.Unix(job.Time.Start.Int64(), 0)
+			duration := (time.Duration(durationB.Int64())*time.Second - time.Since(startTime)).Truncate(
+				time.Second,
+			)
+			if running > duration || running == 0 {
+				running = duration
+			}
+
+		case metascheduler.JobStatusMetaScheduled, metascheduler.JobStatusScheduled:
+			durationB, err := metascheduler.CreditToDuration(
+				provider.ProviderPrices,
+				job.Definition,
+				job.Cost.MaxCost,
+			)
+			if err != nil {
+				return 0, err
+			}
+			waiting += time.Duration(durationB.Int64()) * time.Second
+		}
+	}
+	return running + waiting, nil
+}
 
 func reduceJobsIntoRunningOrScheduledLens(
 	jobs []types.Job,
