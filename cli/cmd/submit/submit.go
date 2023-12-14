@@ -403,7 +403,7 @@ var Command = cli.Command{
 						internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 					}
 					msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
-					if len(jobs) > 1 && msOrSchedLen > 0 && (msOrSchedLen != msLen || runningLen != rLen) {
+					if len(jobs) > 1 && msOrSchedLen > 1 && (msOrSchedLen != msLen || runningLen != rLen) {
 						waitingTime, err := computeWaitingTime(jobID, provider, jobs)
 						if err != nil {
 							internallog.I.Fatal("failed to compute waiting time", zap.Error(err))
@@ -434,7 +434,7 @@ var Command = cli.Command{
 						}
 						provider = p
 						msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
-						if len(jobs) > 1 && msOrSchedLen > 0 && (msOrSchedLen != msLen || runningLen != rLen) {
+						if len(jobs) > 1 && msOrSchedLen > 1 && (msOrSchedLen != msLen || runningLen != rLen) {
 							waitingTime, err := computeWaitingTime(jobID, provider, jobs)
 							if err != nil {
 								internallog.I.Fatal("failed to compute waiting time", zap.Error(err))

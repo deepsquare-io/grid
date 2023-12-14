@@ -121,7 +121,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 			}
 			msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
-			if len(jobs) > 1 && m.msOrSchedLen > 0 && (m.msOrSchedLen != msLen || m.runningLen != rLen) {
+			if len(jobs) > 1 && m.msOrSchedLen > 1 && (m.msOrSchedLen != msLen || m.runningLen != rLen) {
 				waitingTime, err := computeWaitingTime(m.jobID, m.provider, jobs)
 				if err != nil {
 					internallog.I.Fatal("failed to compute waiting time", zap.Error(err))
@@ -152,7 +152,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 				}
 				msLen, rLen := reduceJobsIntoRunningOrScheduledLens(jobs)
-				if len(jobs) > 1 && m.msOrSchedLen > 0 && (m.msOrSchedLen != msLen || m.runningLen != rLen) {
+				if len(jobs) > 1 && m.msOrSchedLen > 1 && (m.msOrSchedLen != msLen || m.runningLen != rLen) {
 					waitingTime, err := computeWaitingTime(m.jobID, m.provider, jobs)
 					if err != nil {
 						internallog.I.Fatal("failed to compute waiting time", zap.Error(err))
