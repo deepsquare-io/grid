@@ -104,15 +104,15 @@ steps:
             container:
               deepsquareHosted: true,
               apptainer: true,
-              registry: 'registry-1.deepsquare.run',
-              image: 'library/stable-diffusion:latest',
+              registry: 'registry-1.deepsquare.run'
+              image: 'library/stable-diffusion:latest'
               mounts:
-                - hostDir: '/data/beegfs/cache/persistent',
-                  containerDir: '/cache',
-                  options: 'rw',
-                - hostDir: '/opt/models/stable-diffusion',
-                  containerDir: '/models',
-                  options: 'ro',
+                - hostDir: '/data/beegfs/cache/persistent'
+                  containerDir: '/cache'
+                  options: 'rw'
+                - hostDir: '/opt/models/stable-diffusion'
+                  containerDir: '/models'
+                  options: 'ro'
             env:
               - key: HF_HOME
                 value: /cache
@@ -141,7 +141,6 @@ steps:
               cd "${STORAGE_PATH}/batch-${index}"
               find . -type f -not -name "grid*.png" -exec sh -c 'i="$1"; mv "$i" "$(md5sum "$i" | cut -d " " -f 1 | cut -c -12).png"' shell "{}" \\;
               mv grid*.png "grid_${index}.png"
-
 ```
 
 DeepSquare already hosts its own models at `/opt/models`. If you plan to use your own model, you should import the model using the `input` directive.
@@ -160,8 +159,8 @@ steps:
       container:
         deepsquareHosted: true,
         apptainer: true,
-        registry: 'registry-1.deepsquare.run',
-        image: 'library/stable-diffusion:latest',
+        registry: 'registry-1.deepsquare.run'
+        image: 'library/stable-diffusion:latest'
       shell: '/bin/bash'
       command: |
         set -e
@@ -238,17 +237,17 @@ steps:
             resources:
               gpusPerTask: 1
             container:
-              deepsquareHosted: true,
-              apptainer: true,
-              registry: 'registry-1.deepsquare.run',
-              image: 'library/stable-diffusion:latest',
+              deepsquareHosted: true
+              apptainer: true
+              registry: 'registry-1.deepsquare.run'
+              image: 'library/stable-diffusion:latest'
               mounts:
-                - hostDir: '/data/beegfs/cache/persistent',
-                  containerDir: '/cache',
-                  options: 'rw',
-                - hostDir: '/opt/models/stable-diffusion',
-                  containerDir: '/models',
-                  options: 'ro',
+                - hostDir: '/data/beegfs/cache/persistent'
+                  containerDir: '/cache'
+                  options: 'rw'
+                - hostDir: '/opt/models/stable-diffusion'
+                  containerDir: '/models'
+                  options: 'ro'
             env:
               - key: HF_HOME
                 value: /cache
@@ -282,8 +281,8 @@ steps:
       container:
         deepsquareHosted: true,
         apptainer: true,
-        registry: 'registry-1.deepsquare.run',
-        image: 'library/stable-diffusion:latest',
+        registry: 'registry-1.deepsquare.run'
+        image: 'library/stable-diffusion:latest'
       shell: '/bin/bash'
       command: |
         set -e

@@ -315,13 +315,13 @@ resources:
 ## Load environment variables
 env:
   ## Configure point-to-point messaging layer to use UCX.
-  - key: "OMPI_MCA_pml",
-    value: "ucx"
+  - key: 'OMPI_MCA_pml'
+    value: 'ucx'
   ## Configure the byte transfer layer. The "^" prefix means "to exclude". vader, tcp, openib and uct have been excluded.
   ## vader being the shared-memory transport. It is recommended to not use any of the BTL when using UCX.
   ## UCX already uses its own transports (see ucx_info -d).
-  - key: "OMPI_MCA_btl",
-    value: "^vader,tcp,openib,uct"
+  - key: 'OMPI_MCA_btl'
+    value: '^vader,tcp,openib,uct'
 
 ## The job content
 steps:
@@ -337,7 +337,6 @@ steps:
       container:
         image: deepsquare-io/mpi-example:latest
         registry: ghcr.io
-
 ```
 
 :::

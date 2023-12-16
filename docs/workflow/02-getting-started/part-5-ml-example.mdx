@@ -142,7 +142,7 @@ enableLogging: true
 ## Load environment variables
 env:
   ## Configure point-to-point messaging layer to use UCX.
-  - key: "OMPI_MCA_pml",
+  - key: "OMPI_MCA_pml"
     value: "ucx"
   ## Configure the byte transfer layer. The "^" prefix means "to exclude". vader, tcp, openib and uct have been excluded.
   ## vader being the shared-memory transport. It is recommended to not use any of the BTL when using UCX.
@@ -195,30 +195,30 @@ enableLogging: true
 ## Load environment variables
 env:
   ## Configure point-to-point messaging layer to use UCX.
-  - key: "OMPI_MCA_pml",
-    value: "ucx"
+  - key: 'OMPI_MCA_pml'
+    value: 'ucx'
   ## Configure the byte transfer layer. The "^" prefix means "to exclude". vader, tcp, openib and uct have been excluded.
   ## vader being the shared-memory transport. It is recommended to not use any of the BTL when using UCX.
   ## UCX already uses its own transports (see ucx_info -d).
-  - key: "OMPI_MCA_btl",
-    value: "^vader,tcp,openib,uct"
+  - key: 'OMPI_MCA_btl'
+    value: '^vader,tcp,openib,uct'
 
 input:
   s3:
     region: at-vie-1
     bucketUrl: s3://cifar10
-    path: "/"
+    path: '/'
     accessKeyId: EXO***
-    secretAccessKey: "***"
+    secretAccessKey: '***'
     endpointUrl: https://sos-at-vie-1.exo.io
 
 output:
   s3:
     region: at-vie-1
     bucketUrl: s3://cifar10
-    path: "/"
+    path: '/'
     accessKeyId: EXO***
-    secretAccessKey: "***"
+    secretAccessKey: '***'
     endpointUrl: https://sos-at-vie-1.exo.io
 continuousOutputSync: true
 
@@ -246,8 +246,7 @@ steps:
       container:
         image: deepsquare-io/cifar-10-example:latest
         registry: ghcr.io
-      workDir: "/app"
-
+      workDir: '/app'
 ```
 
   </TabItem>
