@@ -318,7 +318,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
   --ntasks=1 \
-  /bin/sh -c 'cd '"'"'/dir'"'"' || { echo "change dir to working directory failed"; exit 1; };''hostname'`,
+  /bin/sh -c 'mkdir -p '"'"'/dir'"'"' && cd '"'"'/dir'"'"' || { echo "change dir to working directory failed"; exit 1; };''hostname'`,
 			title: "Positive test with workdir",
 		},
 		{

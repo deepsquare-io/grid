@@ -169,6 +169,6 @@ trap enrootClean EXIT INT TERM
 {{- end }}
   {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run .Step.Run.Command | squote -}}{{ else }}
 {{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) -}}
-  'cd {{ derefStr .Step.Run.WorkDir | squote | escapeSQuote }} || { echo "change dir to working directory failed"; exit 1; };'{{ end -}}
+  'mkdir -p {{ derefStr .Step.Run.WorkDir | squote | escapeSQuote }} && cd {{ derefStr .Step.Run.WorkDir | squote | escapeSQuote }} || { echo "change dir to working directory failed"; exit 1; };'{{ end -}}
   {{ .Step.Run.Command | squote -}}{{ end }}
 {{- end -}}

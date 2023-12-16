@@ -201,7 +201,7 @@ mounts() {
 
 hooks() {
   /usr/bin/cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
-cd '/dir' || { echo "change dir to working directory failed"; exit 1; }
+mkdir -p '/dir' && cd '/dir' || { echo "change dir to working directory failed"; exit 1; }
 exec "$@"
 EOFrclocal
 }

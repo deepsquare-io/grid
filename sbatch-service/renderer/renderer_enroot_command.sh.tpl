@@ -49,7 +49,7 @@ mounts() {
 hooks() {
   /usr/bin/cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
 {{- if and .Run.WorkDir (derefStr .Run.WorkDir) }}
-cd {{ derefStr .Run.WorkDir | squote }} || { echo "change dir to working directory failed"; exit 1; }
+mkdir -p {{ derefStr .Run.WorkDir | squote }} && cd {{ derefStr .Run.WorkDir | squote }} || { echo "change dir to working directory failed"; exit 1; }
 {{- else }}
 cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
 {{- end }}
