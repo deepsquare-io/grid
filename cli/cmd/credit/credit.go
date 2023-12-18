@@ -29,6 +29,7 @@ package credit
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/big"
@@ -38,6 +39,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/internal/ether"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -198,7 +200,16 @@ var Command = cli.Command{
 }
 
 func initClient(ctx context.Context) (*metascheduler.RPCClientSet, error) {
-	pk, err := crypto.HexToECDSA(ethHexPK)
+	kb, err := hexutil.Decode(ethHexPK)
+	if errors.Is(err, hexutil.ErrMissingPrefix) {
+		kb, err = hex.DecodeString(ethHexPK)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+	pk, err := crypto.ToECDSA(kb)
 	if err != nil {
 		return nil, err
 	}

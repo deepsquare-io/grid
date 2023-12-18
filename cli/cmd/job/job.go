@@ -32,6 +32,7 @@ package job
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -49,6 +50,7 @@ import (
 	"github.com/erikgeiser/promptkit/confirmation"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -213,7 +215,16 @@ var Command = cli.Command{
 				if cCtx.NArg() < 1 {
 					return errors.New("missing arguments")
 				}
-				pk, err := crypto.HexToECDSA(ethHexPK)
+				kb, err := hexutil.Decode(ethHexPK)
+				if errors.Is(err, hexutil.ErrMissingPrefix) {
+					kb, err = hex.DecodeString(ethHexPK)
+					if err != nil {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+				pk, err := crypto.ToECDSA(kb)
 				if err != nil {
 					return err
 				}
@@ -322,7 +333,16 @@ var Command = cli.Command{
 				if cCtx.NArg() < 1 {
 					return errors.New("missing arguments")
 				}
-				pk, err := crypto.HexToECDSA(ethHexPK)
+				kb, err := hexutil.Decode(ethHexPK)
+				if errors.Is(err, hexutil.ErrMissingPrefix) {
+					kb, err = hex.DecodeString(ethHexPK)
+					if err != nil {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+				pk, err := crypto.ToECDSA(kb)
 				if err != nil {
 					return err
 				}
@@ -369,7 +389,16 @@ var Command = cli.Command{
 				if cCtx.NArg() < 1 {
 					return errors.New("missing arguments")
 				}
-				pk, err := crypto.HexToECDSA(ethHexPK)
+				kb, err := hexutil.Decode(ethHexPK)
+				if errors.Is(err, hexutil.ErrMissingPrefix) {
+					kb, err = hex.DecodeString(ethHexPK)
+					if err != nil {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+				pk, err := crypto.ToECDSA(kb)
 				if err != nil {
 					return err
 				}
@@ -416,7 +445,16 @@ var Command = cli.Command{
 				if cCtx.NArg() < 2 {
 					return errors.New("missing arguments")
 				}
-				pk, err := crypto.HexToECDSA(ethHexPK)
+				kb, err := hexutil.Decode(ethHexPK)
+				if errors.Is(err, hexutil.ErrMissingPrefix) {
+					kb, err = hex.DecodeString(ethHexPK)
+					if err != nil {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+				pk, err := crypto.ToECDSA(kb)
 				if err != nil {
 					return err
 				}

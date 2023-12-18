@@ -48,6 +48,7 @@ package submit
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -67,6 +68,7 @@ import (
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -256,7 +258,16 @@ var Command = cli.Command{
 		}
 		jobPath := cCtx.Args().First()
 		ctx := cCtx.Context
-		pk, err := crypto.HexToECDSA(ethHexPK)
+		kb, err := hexutil.Decode(ethHexPK)
+		if errors.Is(err, hexutil.ErrMissingPrefix) {
+			kb, err = hex.DecodeString(ethHexPK)
+			if err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+		pk, err := crypto.ToECDSA(kb)
 		if err != nil {
 			return err
 		}

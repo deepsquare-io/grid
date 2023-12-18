@@ -65,6 +65,7 @@ package main
 import (
 	"context"
 	"crypto/ecdsa"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -83,6 +84,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/tui/nav"
 	versionpkg "github.com/deepsquare-io/grid/cli/version"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
@@ -191,7 +193,16 @@ See the GNU General Public License for more details.`,
 		ctx := cCtx.Context
 		var pk *ecdsa.PrivateKey
 		if ethHexPK != "" {
-			pk, err = crypto.HexToECDSA(ethHexPK)
+			kb, err := hexutil.Decode(ethHexPK)
+			if errors.Is(err, hexutil.ErrMissingPrefix) {
+				kb, err = hex.DecodeString(ethHexPK)
+				if err != nil {
+					return err
+				}
+			} else if err != nil {
+				return err
+			}
+			pk, err = crypto.ToECDSA(kb)
 			if err != nil {
 				return err
 			}

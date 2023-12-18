@@ -30,6 +30,7 @@ COMMANDS:
 package provider
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -39,6 +40,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -146,7 +148,16 @@ var Command = cli.Command{
 					return errors.New("missing arguments")
 				}
 				ctx := cCtx.Context
-				pk, err := crypto.HexToECDSA(ethHexPK)
+				kb, err := hexutil.Decode(ethHexPK)
+				if errors.Is(err, hexutil.ErrMissingPrefix) {
+					kb, err = hex.DecodeString(ethHexPK)
+					if err != nil {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+				pk, err := crypto.ToECDSA(kb)
 				if err != nil {
 					return err
 				}
@@ -184,7 +195,16 @@ var Command = cli.Command{
 					return errors.New("missing arguments")
 				}
 				ctx := cCtx.Context
-				pk, err := crypto.HexToECDSA(ethHexPK)
+				kb, err := hexutil.Decode(ethHexPK)
+				if errors.Is(err, hexutil.ErrMissingPrefix) {
+					kb, err = hex.DecodeString(ethHexPK)
+					if err != nil {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+				pk, err := crypto.ToECDSA(kb)
 				if err != nil {
 					return err
 				}
