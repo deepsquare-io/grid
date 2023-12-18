@@ -64,6 +64,8 @@ func toYAML(v interface{}) string {
 func funcMap() template.FuncMap {
 	f := sprig.TxtFuncMap()
 	f["toYaml"] = toYAML
+	delete(f, "env")
+	delete(f, "expandenv")
 	return f
 }
 
