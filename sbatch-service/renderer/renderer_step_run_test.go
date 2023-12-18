@@ -457,7 +457,7 @@ wait_for_network_device() {
   exit 1
 }
 
-wait_for_network_device $$ tap0
+wait_for_network_device $$ net0
 
 
 /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFwireguard'"'"'"'"'"'"'"'"' > "$(pwd)/net0.conf"
@@ -483,7 +483,7 @@ child=$!
 
 wait_for_network_namespace $child
 
-/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child net0 &
 slirp_pid=$!
 
 cleanup() {
@@ -620,7 +620,7 @@ wait_for_network_device() {
   exit 1
 }
 
-wait_for_network_device $$ tap0
+wait_for_network_device $$ net0
 
 
 /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFwireguard'"'"'"'"'"'"'"'"' > "$(pwd)/net0.conf"
@@ -654,7 +654,7 @@ child=$!
 
 wait_for_network_namespace $child
 
-/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child net0 &
 slirp_pid=$!
 
 cleanup() {
@@ -806,7 +806,7 @@ wait_for_network_device() {
   exit 1
 }
 
-wait_for_network_device $$ tap0
+wait_for_network_device $$ net0
 
 
 /usr/bin/cat << '"'"'"'"'"'"'"'"'EOFwireguard'"'"'"'"'"'"'"'"' > "$(pwd)/net0.conf"
@@ -874,7 +874,7 @@ child=$!
 
 wait_for_network_namespace $child
 
-/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child net0 &
 slirp_pid=$!
 
 cleanup() {

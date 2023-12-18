@@ -617,7 +617,7 @@ type StepRun struct {
 	//
 	// The tunnel interfaces will be named net0, net1, ... netX.
 	//
-	// The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
+	// The default network interface is net0, which is a TAP interface connecting the host and the network namespace.
 	//
 	// Go name: "CustomNetworkInterfaces".
 	CustomNetworkInterfaces []*NetworkInterface `json:"customNetworkInterfaces,omitempty" yaml:"customNetworkInterfaces,omitempty" validate:"omitempty,dive,required"`
