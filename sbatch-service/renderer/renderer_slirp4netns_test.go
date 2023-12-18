@@ -174,7 +174,7 @@ child=$!
 
 wait_for_network_namespace $child
 
-/usr/bin/slirp4netns --configure --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
 slirp_pid=$!
 
 cleanup() {
@@ -296,7 +296,7 @@ child=$!
 
 wait_for_network_namespace $child
 
-/usr/bin/slirp4netns --configure --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child tap0 &
 slirp_pid=$!
 
 cleanup() {
