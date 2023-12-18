@@ -26,7 +26,7 @@ steps:
         curl -fsSL -o "$STORAGE_PATH/tty2web" https://github.com/kost/tty2web/releases/download/v3.0.3/tty2web_linux_amd64
         chmod +x "$STORAGE_PATH/tty2web"
         "$STORAGE_PATH/tty2web" --permit-write --port 8080 --credential admin:password sh
-      network: slirp4netns
+      network: slirp4netns # or "pasta"
       customNetworkInterfaces:
         - bore:
             boreAddress: bore.deepsquare.run:2200
@@ -59,7 +59,7 @@ steps:
         curl -fsSL -o "$STORAGE_PATH/tty2web" https://github.com/kost/tty2web/releases/download/v3.0.3/tty2web_linux_amd64
         chmod +x "$STORAGE_PATH/tty2web"
         "$STORAGE_PATH/tty2web" --permit-write --once --port 8080 --credential admin:password sh
-      network: slirp4netns
+      network: slirp4netns # or "pasta"
       customNetworkInterfaces:
         - bore:
             boreAddress: bore.deepsquare.run:2200
@@ -87,7 +87,7 @@ steps:
           value: xterm
       command: |
         "$STORAGE_PATH/tty2web" --permit-write --port 8080 --credential admin:password sh
-      network: slirp4netns
+      network: slirp4netns # or "pasta"
       customNetworkInterfaces:
         - bore:
             boreAddress: bore.deepsquare.run:2200
@@ -117,7 +117,7 @@ steps:
         apk add screen
         screen -dmS my-session-name sh
         "$STORAGE_PATH/tty2web" --permit-write --port 8080 --credential admin:password screen -x my-session-name
-      network: slirp4netns
+      network: slirp4netns # or "pasta"
       customNetworkInterfaces:
         - bore:
             boreAddress: bore.deepsquare.run:2200
@@ -142,7 +142,7 @@ steps:
         apk add screen
         screen -dmS my-session-name sh
         "$STORAGE_PATH/tty2web" --permit-write --port 8080 --credential admin:password screen -x my-session-name
-      network: slirp4netns
+      network: slirp4netns # or "pasta"
       customNetworkInterfaces:
         - bore:
             boreAddress: bore.deepsquare.run:2200
@@ -176,7 +176,7 @@ steps:
 
         # Start server in foreground (use port 2200 since we are not privileged)
         /usr/sbin/sshd -D -p 2200
-      network: slirp4netns
+      network: slirp4netns # or "pasta"
       customNetworkInterfaces:
         - bore:
             boreAddress: bore.deepsquare.run:2200

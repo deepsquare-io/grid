@@ -177,7 +177,7 @@ steps:
       tasks: 1
       cpusPerTask: 1
       memPerCpu: 500
-    network: slirp4netns
+    network: slirp4netns # or "pasta" # or "pasta"
     dns: 1.1.1.1
     container:
       image: library/ubuntu:latest
@@ -873,7 +873,11 @@ Go name: "Container".
 
 Type of core networking functionality.
 
-Either: "host" (default) or "slirp4netns" (rootless network namespace).
+Either: "host" (default) or "slirp4netns" (rootless network namespace) or "pasta" (simple rootless network namespace)
+
+"slirp4netns" uses "slirp" to forward traffic from a network namespace to the host.
+
+"pasta" is an alternative to "slirp4netns" and uses "passt" to forward traffic from a network namespace to the host.
 
 Go name: "Network".
 
@@ -884,9 +888,9 @@ Go name: "Network".
 <td valign="top">[<a href="#string">String</a>!]</td>
 <td>
 
-Configuration for the DNS in "slirp4netns" mode.
+Configuration for the DNS in "slirp4netns" or "pasta" mode.
 
-ONLY enabled if network is "slirp4netns".
+ONLY enabled if network is "slirp4netns" or "pasta".
 
 A comma-separated list of DNS IP.
 
@@ -901,13 +905,11 @@ Go name: "DNS".
 
 Add custom network interfaces.
 
-ONLY enabled if network is "slirp4netns".
+ONLY enabled if network is "slirp4netns" or "pasta".
 
-Due to the nature of slirp4netns, the user is automatically mapped as root in order to create network namespaces and add new network interfaces.
+You may need to map to root to be able to create network interfaces like Wireguard.
 
-The tunnel interfaces will be named net0, net1, ... netX.
-
-The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
+The default network interface is net0, which is a TAP interface connecting the host and the network namespace.
 
 Go name: "CustomNetworkInterfaces".
 
@@ -1028,13 +1030,13 @@ run:
 ```yaml title="StepRun (with rootless network namespace)"
 run:
   command: echo 'hello world'
-  network: slirp4netns
+  network: slirp4netns # or "pasta"
 ```
 
 ```yaml title="StepRun (with a Wireguard tunnel)"
 run:
   command: ping 10.0.0.1
-  network: slirp4netns
+  network: slirp4netns # or "pasta"
   dns: 1.1.1.1
   customNetworkInterfaces:
     - wireguard:
@@ -1057,7 +1059,7 @@ run:
     tasks: 1
     cpusPerTask: 1
     memPerCpu: 500
-  network: slirp4netns
+  network: slirp4netns # or "pasta"
   dns: 1.1.1.1
   container:
     image: library/ubuntu:latest
@@ -1535,6 +1537,8 @@ wg genkey > sharedkey
 Wireguard VPN Transport for StepRun.
 
 The Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.
+
+The interfaces are named wg0, wg1, ..., wgN.
 
 Wireguard transport uses UDP hole punching to connect to the VPN Server.
 

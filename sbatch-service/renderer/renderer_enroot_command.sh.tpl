@@ -57,7 +57,7 @@ exec "$@"
 EOFrclocal
 }
 EOFenroot
-{{- if and (not (and .Run.Network (eq (derefStr .Run.Network) "slirp4netns"))) (or .Run.MapUID .Run.MapGID) }}
+{{- if and (not (and .Run.Network (eq (derefStr .Run.Network) "slirp4netns"))) (not (and .Run.Network (eq (derefStr .Run.Network) "pasta"))) (or .Run.MapUID .Run.MapGID) }}
 /usr/bin/unshare --map-current-user{{ if .Run.MapUID }} --map-user={{ .Run.MapUID }}{{ end }}{{ if .Run.MapGID }} --map-group={{ .Run.MapGID }}{{ end }} --mount \
 {{- end }}
 /usr/bin/enroot start \

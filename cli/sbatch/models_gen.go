@@ -597,13 +597,17 @@ type StepRun struct {
 	Container *ContainerRun `json:"container,omitempty" yaml:"container,omitempty"`
 	// Type of core networking functionality.
 	//
-	// Either: "host" (default) or "slirp4netns" (rootless network namespace).
+	// Either: "host" (default) or "slirp4netns" (rootless network namespace) or "pasta" (simple rootless network namespace)
+	//
+	// "slirp4netns" uses "slirp" to forward traffic from a network namespace to the host.
+	//
+	// "pasta" is an alternative to "slirp4netns" and uses "passt" to forward traffic from a network namespace to the host.
 	//
 	// Go name: "Network".
-	Network *string `json:"network,omitempty" yaml:"network,omitempty" validate:"omitempty,oneof=host slirp4netns"`
-	// Configuration for the DNS in "slirp4netns" mode.
+	Network *string `json:"network,omitempty" yaml:"network,omitempty" validate:"omitempty,oneof=host slirp4netns pasta"`
+	// Configuration for the DNS in "slirp4netns" or "pasta" mode.
 	//
-	// ONLY enabled if network is "slirp4netns".
+	// ONLY enabled if network is "slirp4netns" or "pasta".
 	//
 	// A comma-separated list of DNS IP.
 	//
@@ -611,13 +615,11 @@ type StepRun struct {
 	DNS []string `json:"dns,omitempty" yaml:"dns,omitempty" validate:"omitempty,dive,ip"`
 	// Add custom network interfaces.
 	//
-	// ONLY enabled if network is "slirp4netns".
+	// ONLY enabled if network is "slirp4netns" or "pasta".
 	//
-	// Due to the nature of slirp4netns, the user is automatically mapped as root in order to create network namespaces and add new network interfaces.
+	// You may need to map to root to be able to create network interfaces like Wireguard.
 	//
-	// The tunnel interfaces will be named net0, net1, ... netX.
-	//
-	// The default network interface is tap0, which is a TAP interface connecting the host and the network namespace.
+	// The default network interface is net0, which is a TAP interface connecting the host and the network namespace.
 	//
 	// Go name: "CustomNetworkInterfaces".
 	CustomNetworkInterfaces []*NetworkInterface `json:"customNetworkInterfaces,omitempty" yaml:"customNetworkInterfaces,omitempty" validate:"omitempty,dive,required"`
@@ -747,6 +749,8 @@ type TransportData struct {
 // Wireguard VPN Transport for StepRun.
 //
 // The Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.
+//
+// The interface is named wg0, wg1, ..., wgN.
 //
 // Wireguard transport uses UDP hole punching to connect to the VPN Server.
 //

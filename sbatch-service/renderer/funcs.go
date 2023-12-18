@@ -127,6 +127,7 @@ func funcMap() template.FuncMap {
 	f["renderWireguard"] = RenderWireguard
 	f["renderApptainerCommand"] = RenderApptainerCommand
 	f["renderSlirp4NetNS"] = RenderSlirp4NetNS
+	f["renderPastaNS"] = RenderPastaNS
 	f["renderEnrootCommand"] = RenderEnrootCommand
 	f["renderStepAsyncLaunch"] = RenderStepAsyncLaunch
 	f["renderStepUse"] = func(

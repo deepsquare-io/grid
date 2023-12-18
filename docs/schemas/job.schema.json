@@ -1073,7 +1073,7 @@
       {
         "kind": "INPUT_OBJECT",
         "name": "Wireguard",
-        "description": "Wireguard VPN Transport for StepRun.\n\nThe Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.\n\nWireguard transport uses UDP hole punching to connect to the VPN Server.\n\nDisabled settings: PreUp, PostUp, PreDown, PostDown, ListenPort, Table, MTU, SaveConfig.\n\nIf these features are necessary, please do contact DeepSquare developpers!",
+        "description": "Wireguard VPN Transport for StepRun.\n\nThe Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.\n\nThe interface is named wg0, wg1, ..., wgN.\n\nWireguard transport uses UDP hole punching to connect to the VPN Server.\n\nDisabled settings: PreUp, PostUp, PreDown, PostDown, ListenPort, Table, MTU, SaveConfig.\n\nIf these features are necessary, please do contact DeepSquare developpers!",
         "specifiedByURL": null,
         "fields": null,
         "inputFields": [
@@ -1311,7 +1311,7 @@
           },
           {
             "name": "network",
-            "description": "Type of core networking functionality.\n\nEither: \"host\" (default) or \"slirp4netns\" (rootless network namespace).\n\nGo name: \"Network\".",
+            "description": "Type of core networking functionality.\n\nEither: \"host\" (default) or \"slirp4netns\" (rootless network namespace) or \"pasta\" (simple rootless network namespace)\n\n\"slirp4netns\" uses \"slirp\" to forward traffic from a network namespace to the host.\n\n\"pasta\" is an alternative to \"slirp4netns\" and uses \"passt\" to forward traffic from a network namespace to the host.\n\nGo name: \"Network\".",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1323,7 +1323,7 @@
           },
           {
             "name": "dns",
-            "description": "Configuration for the DNS in \"slirp4netns\" mode.\n\nONLY enabled if network is \"slirp4netns\".\n\nA comma-separated list of DNS IP.\n\nGo name: \"DNS\".",
+            "description": "Configuration for the DNS in \"slirp4netns\" or \"pasta\" mode.\n\nONLY enabled if network is \"slirp4netns\" or \"pasta\".\n\nA comma-separated list of DNS IP.\n\nGo name: \"DNS\".",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -1343,7 +1343,7 @@
           },
           {
             "name": "customNetworkInterfaces",
-            "description": "Add custom network interfaces.\n\nONLY enabled if network is \"slirp4netns\".\n\nDue to the nature of slirp4netns, the user is automatically mapped as root in order to create network namespaces and add new network interfaces.\n\nThe tunnel interfaces will be named net0, net1, ... netX.\n\nThe default network interface is tap0, which is a TAP interface connecting the host and the network namespace.\n\nGo name: \"CustomNetworkInterfaces\".",
+            "description": "Add custom network interfaces.\n\nONLY enabled if network is \"slirp4netns\" or \"pasta\".\n\nYou may need to map to root to be able to create network interfaces like Wireguard.\n\nThe default network interface is net0, which is a TAP interface connecting the host and the network namespace.\n\nGo name: \"CustomNetworkInterfaces\".",
             "type": {
               "kind": "LIST",
               "name": null,

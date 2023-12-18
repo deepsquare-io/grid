@@ -1,0 +1,305 @@
+#!/bin/bash -l
+
+set -e
+
+export NTASKS='1'
+export CPUS_PER_TASK='2'
+export MEM_PER_CPU='2000'
+export GPUS='0'
+export CPUS='2'
+export MEM='4000'
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
+DEEPSQUARE_SHARED_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_SHARED_TMP
+DEEPSQUARE_SHARED_WORLD_TMP="/opt/cache/world-tmp"
+export DEEPSQUARE_SHARED_WORLD_TMP
+DEEPSQUARE_DISK_TMP="/opt/cache/disk/tmp/user-$(id -u)"
+export DEEPSQUARE_DISK_TMP
+DEEPSQUARE_DISK_WORLD_TMP="/opt/cache/disk/world-tmp"
+export DEEPSQUARE_DISK_WORLD_TMP
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
+/usr/bin/touch "$DEEPSQUARE_ENV"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+
+cd "$STORAGE_PATH/"
+loadDeepsquareEnv() {
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
+}
+
+declare -A EXIT_SIGNALS
+/usr/bin/echo 'Running: ''as 1337'
+/usr/bin/srun --job-name='as 1337' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=2000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  /usr/bin/unshare --map-current-user --map-user=1337 --map-group=1337 --mount \
+  /bin/sh -c 'id'
+/usr/bin/echo 'Running: ''as 0'
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry-1.docker.io/library/bash:latest'
+/usr/bin/echo "Image successfully imported!"
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw"
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-name='as 0' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=2000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /usr/bin/unshare --map-current-user --map-user=0 --map-group=0 --mount \/usr/bin/apptainer --silent exec \
+  --disable-cache \
+  --contain \
+  --writable-tmpfs \
+  --nv \
+  --pwd "/deepsquare" \
+  "$IMAGE_PATH" \
+  /bin/sh -c 'id'
+/usr/bin/echo 'Running: ''as 1337'
+
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry-1.docker.io#library/bash:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+if [ $? -ne 0 ]; then
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
+fi
+set -e
+tries=1; while [ "$tries" -lt 10 ]; do
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+# shellcheck disable=SC2097,SC2098,SC1078
+/usr/bin/srun --job-name='as 1337' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=2000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
+}
+trap enrootClean EXIT INT TERM
+''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=y
+
+environ() {
+  # Keep all the environment from the host
+  /usr/bin/env
+
+  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+
+  /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+}
+
+mounts() {
+  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+}
+
+hooks() {
+  /usr/bin/cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/unshare --map-current-user --map-user=1337 --map-group=1337 --mount \
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c '"'"'id'"'"''
+/usr/bin/echo 'Running: ''as 1337'
+/usr/bin/srun --job-name='as 1337' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=2000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  /usr/bin/unshare --map-current-user --map-user=1337 --map-group=1337 --mount \
+  /bin/sh -c 'id'
+/usr/bin/echo 'Running: ''as 0'
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry-1.docker.io/library/bash:latest'
+/usr/bin/echo "Image successfully imported!"
+export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw"
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-name='as 0' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=2000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /usr/bin/unshare --map-current-user --map-user=0 --map-group=0 --mount \/usr/bin/apptainer --silent exec \
+  --disable-cache \
+  --contain \
+  --writable-tmpfs \
+  --nv \
+  --pwd "/deepsquare" \
+  "$IMAGE_PATH" \
+  /bin/sh -c 'id'
+/usr/bin/echo 'Running: ''as 1337'
+
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry-1.docker.io#library/bash:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+if [ $? -ne 0 ]; then
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
+fi
+set -e
+tries=1; while [ "$tries" -lt 10 ]; do
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+# shellcheck disable=SC2097,SC2098,SC1078
+/usr/bin/srun --job-name='as 1337' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=2000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
+}
+trap enrootClean EXIT INT TERM
+''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=y
+
+environ() {
+  # Keep all the environment from the host
+  /usr/bin/env
+
+  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+
+  /usr/bin/echo "STORAGE_PATH=/deepsquare"
+  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+}
+
+mounts() {
+  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+}
+
+hooks() {
+  /usr/bin/cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/unshare --map-current-user --map-user=1337 --map-group=1337 --mount \
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c '"'"'id'"'"''
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+done
+

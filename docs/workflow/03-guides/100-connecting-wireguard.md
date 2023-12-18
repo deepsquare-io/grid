@@ -416,8 +416,8 @@ steps:
         image: nginxinc/nginx-unprivileged
       dns:
         - 8.8.8.8
-      ## Use the container network interface slirp4netns.
-      network: slirp4netns
+      ## Use the container network interface slirp4netns (or pasta).
+      network: slirp4netns # or pasta
       ## Need to map to root to start wireguard
       mapUid: 0
       mapGid: 0
@@ -463,8 +463,8 @@ steps:
         image: nginxinc/nginx-unprivileged
       dns:
         - 8.8.8.8
-      ## Use the container network interface slirp4netns.
-      network: slirp4netns
+      ## Use the container network interface slirp4netns (or pasta).
+      network: slirp4netns # or pasta
       ## Need to map to root to start wireguard
       mapUid: 0
       mapGid: 0

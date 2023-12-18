@@ -11,7 +11,7 @@ Advantages of jkuri/bore over WireGuard are:
 
 ## How to use
 
-Similar to WireGuard, you MUST set `network` to `slirp4netns`.
+Similar to WireGuard, you MUST set `network` to `slirp4netns` or `pasta`.
 
 A bore server has been deployed at [bore.deepsquare.run:2200](https://bore.deepsquare.run), with HTTPS already set up. If you are concerned about authority, you can choose to host your own bore server by following the README in [the official repository of jkuri/bore](https://github.dev/jkuri/bore/). We also recommend deploying [Caddy](https://caddyserver.com) reverse proxy for easy configuration (auto TLS, HTTP/3 support).
 
@@ -33,8 +33,8 @@ steps:
       container:
         registry: registry-1.docker.io
         image: nginxinc/nginx-unprivileged:latest
-      ## Use the container network interface slirp4netns to create a network namespace.
-      network: slirp4netns
+      ## Use the container network interface slirp4netns (or pasta) to create a network namespace.
+      network: slirp4netns # or pasta
       customNetworkInterfaces:
         ## Forward TCP/UDP traffic from port 8080 to bore.deepsquare.run:2200.
         - bore:

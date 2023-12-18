@@ -1,0 +1,59 @@
+job:
+  enableLogging: false
+  resources:
+    tasks: 1
+    cpusPerTask: 2
+    memPerCpu: 2000
+    gpus: 0
+  steps:
+    - name: as 1337
+      run:
+        mapUid: 1337
+        mapGid: 1337
+        command: id
+    - name: as 0
+      run:
+        container:
+          apptainer: true
+          registry: registry-1.docker.io
+          image: library/bash:latest
+          mountHome: true
+        mapUid: 0
+        mapGid: 0
+        command: id
+    - name: as 1337
+      run:
+        container:
+          registry: registry-1.docker.io
+          image: library/bash:latest
+          mountHome: true
+        mapUid: 1337
+        mapGid: 1337
+        command: id
+    - name: as 1337
+      network: 'slirp4netns'
+      run:
+        mapUid: 1337
+        mapGid: 1337
+        command: id
+    - name: as 0
+      network: 'slirp4netns'
+      run:
+        container:
+          apptainer: true
+          registry: registry-1.docker.io
+          image: library/bash:latest
+          mountHome: true
+        mapUid: 0
+        mapGid: 0
+        command: id
+    - name: as 1337
+      network: 'slirp4netns'
+      run:
+        container:
+          registry: registry-1.docker.io
+          image: library/bash:latest
+          mountHome: true
+        mapUid: 1337
+        mapGid: 1337
+        command: id
