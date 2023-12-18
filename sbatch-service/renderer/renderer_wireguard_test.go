@@ -58,9 +58,9 @@ func TestRenderWireguard(t *testing.T) {
 				InterfaceName string
 			}{
 				Wireguard:     cleanWireguard,
-				InterfaceName: "net0",
+				InterfaceName: "wg0",
 			},
-			expected: `/usr/bin/cat << 'EOFwireguard' > "$(pwd)/net0.conf"
+			expected: `/usr/bin/cat << 'EOFwireguard' > "$(pwd)/wg0.conf"
 [Interface]
 Address = 10.0.0.1/32
 PrivateKey = abc
@@ -72,8 +72,8 @@ Endpoint = 10.0.0.0:30
 PresharedKey = sha
 PersistentKeepalive = 20
 EOFwireguard
-/usr/bin/chmod 600 "$(pwd)/net0.conf"
-wg-quick up "$(pwd)/net0.conf"
+/usr/bin/chmod 600 "$(pwd)/wg0.conf"
+wg-quick up "$(pwd)/wg0.conf"
 `,
 			title: "Positive test with wireguard tunnel",
 		},
