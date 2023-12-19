@@ -123,7 +123,7 @@ fi
   --cpu-bind=none \
 {{- end }}
   --gpu-bind=none \
-  /bin/sh -c '
+  {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c '
 {{- if isAbs $image -}}
 /usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$STORAGE_PATH"{{ $image | squote }} >/dev/null 2>&1
 {{- else -}}
