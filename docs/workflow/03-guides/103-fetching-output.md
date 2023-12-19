@@ -164,7 +164,7 @@ First, follows the steps indicated by [`gdrive`'s README](https://github.com/glo
       base64 -d << EOF > gdrive_export.tar
       **PASTE**
       EOF
-   
+
       ```
 
 5. [remote] Run `gdrive account import gdrive_export.tar`
@@ -314,7 +314,7 @@ steps:
 
 A bore URL will be written in the logs, which can be used to access to the HTTP server.
 
-### Pulling with an SSH server
+### Pulling from an SSH server
 
 Similar to File Browser, but with an SSH server:
 
@@ -426,7 +426,5 @@ Use `curl` or `s5cmd` to extract the data and pushing directly into your file se
 Pulling data requires a proxy or tunnel, since ports cannot be exposed from the cluster.
 
 Host a server (SSH, HTTP, or something else) and use the **Bore proxy** to traverse the firewall of the cluster.
-
-
 
 Using the **Interactive Mode**, you can fetch data in a more secure way since the credentials can be passed through a secure transport (via SSH or HTTPS).
