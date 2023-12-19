@@ -60,7 +60,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
   --cpu-bind=none \
 {{- end }}
   --gpu-bind=none \
-  {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}/bin/sh -c {{ renderSlirp4NetNS .Step.Run (renderApptainerCommand .Step.Run) | squote -}}{{ else if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "pasta") }}/bin/sh -c {{ renderPastaNS .Step.Run (renderApptainerCommand .Step.Run) | squote -}}{{ else }}{{ renderApptainerCommand .Step.Run }}{{ end }}
+  {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ renderSlirp4NetNS .Step.Run (renderApptainerCommand .Step.Run) | squote -}}{{ else if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "pasta") }}{{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ renderPastaNS .Step.Run (renderApptainerCommand .Step.Run) | squote -}}{{ else }}{{ renderApptainerCommand .Step.Run }}{{ end }}
 {{- else -}}
 {{- /* Enroot */ -}}
 {{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password -}}
