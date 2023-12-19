@@ -16,6 +16,8 @@ This allows to have a namespace where you can host your own services and use you
 
 When we talk about **unprivileged**, we're talking about **root-less** and **capabilities-less**, i.e. you need to be able to create a functional network namespace with Internet connection without needing root privileges.
 
+Usually, when creating a network namespace (for example, with `unshare --net --user`), the namespace has **zero** connectivity. It is fully isolated and fully contained. That creates one issue: there is no Internet connection. Normally, with Docker or Kubernetes, a bridge or a virtual Ethernet device (veth) is created to handle to traffic forwarding and Internet connectivity. To create that interface, you need root privileged, which is not possible on DeepSquare. Instead, we have to rely on TCP/IP stack emulation.
+
 Currently on DeepSquare, there are two solutions for unprivileged network namespaces:
 
 - [`slirp4netns`](https://github.com/rootless-containers/slirp4netns) which uses SliRP.
