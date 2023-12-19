@@ -1,7 +1,23 @@
 linters:
   enable:
-    # Drop-in replacement of `golint`.
     - revive
+    - exportloopref
+    - govet
+    - tagliatelle
+    - godox
+    - execinquery
+    - nolintlint
+    - musttag # causes issues with imported libs
+
+    # We should strive to enable these:
+    # - wrapcheck
+    - dupl
+    - makezero
+
+    # Limits the methods of an interface to 10. We have more in integration tests
+    - interfacebloat
+
+    - testpackage
 
 issues:
   include:

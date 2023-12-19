@@ -74,9 +74,9 @@ func (m *model) initializeRows(ctx context.Context) []table.Row {
 	rows := make([]table.Row, 0, len(pp))
 	for _, p := range pp {
 		prices, err := json.Marshal(struct {
-			GPUPricePerMin  string
-			CPUPricePerMin  string
-			MemPricesPerMin string
+			GPUPricePerMin  string `json:"gpuPricePerMin"`
+			CPUPricePerMin  string `json:"cpuPricePerMin"`
+			MemPricesPerMin string `json:"memPricesPerMin"`
 		}{
 			GPUPricePerMin:  ether.FromWei(p.ProviderPrices.GpuPricePerMin).String(),
 			CPUPricePerMin:  ether.FromWei(p.ProviderPrices.CpuPricePerMin).String(),

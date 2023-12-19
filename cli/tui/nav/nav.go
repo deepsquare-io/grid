@@ -135,7 +135,6 @@ func (m *model) tick() tea.Msg {
 }
 
 func (m model) Init() tea.Cmd {
-	// TODO: handle termination
 	return tea.Batch(
 		m.statusModel.Init(),
 		m.watchEvents(context.TODO()),

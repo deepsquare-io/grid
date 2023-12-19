@@ -144,45 +144,12 @@ var Command = cli.Command{
 			ArgsUsage: "<0x>",
 			Flags:     authFlags,
 			Action: func(cCtx *cli.Context) error {
-				if cCtx.NArg() < 1 {
-					return errors.New("missing arguments")
-				}
-				ctx := cCtx.Context
-				kb, err := hexutil.Decode(ethHexPK)
-				if errors.Is(err, hexutil.ErrMissingPrefix) {
-					kb, err = hex.DecodeString(ethHexPK)
-					if err != nil {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-				pk, err := crypto.ToECDSA(kb)
+				clientset, err := initMutableClientSet(cCtx)
 				if err != nil {
 					return err
 				}
 				providerAddress := common.HexToAddress(cCtx.Args().First())
-				rpcClient, err := rpc.DialOptions(
-					ctx,
-					ethEndpointRPC,
-					rpc.WithHTTPClient(http.DefaultClient),
-				)
-				if err != nil {
-					return err
-				}
-				defer rpcClient.Close()
-				ethClientRPC := ethclient.NewClient(rpcClient)
-				chainID, err := ethClientRPC.ChainID(ctx)
-				if err != nil {
-					return err
-				}
-				clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
-					EthereumBackend:      ethClientRPC,
-					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
-					ChainID:              chainID,
-					UserPrivateKey:       pk,
-				})
-				return clientset.ProviderManager().Approve(ctx, providerAddress)
+				return clientset.ProviderManager().Approve(cCtx.Context, providerAddress)
 			},
 		},
 		{
@@ -191,46 +158,53 @@ var Command = cli.Command{
 			ArgsUsage: "<0x>",
 			Flags:     authFlags,
 			Action: func(cCtx *cli.Context) error {
-				if cCtx.NArg() < 1 {
-					return errors.New("missing arguments")
-				}
-				ctx := cCtx.Context
-				kb, err := hexutil.Decode(ethHexPK)
-				if errors.Is(err, hexutil.ErrMissingPrefix) {
-					kb, err = hex.DecodeString(ethHexPK)
-					if err != nil {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-				pk, err := crypto.ToECDSA(kb)
+				clientset, err := initMutableClientSet(cCtx)
 				if err != nil {
 					return err
 				}
 				providerAddress := common.HexToAddress(cCtx.Args().First())
-				rpcClient, err := rpc.DialOptions(
-					ctx,
-					ethEndpointRPC,
-					rpc.WithHTTPClient(http.DefaultClient),
-				)
-				if err != nil {
-					return err
-				}
-				defer rpcClient.Close()
-				ethClientRPC := ethclient.NewClient(rpcClient)
-				chainID, err := ethClientRPC.ChainID(ctx)
-				if err != nil {
-					return err
-				}
-				clientset := metascheduler.NewRPCClientSet(metascheduler.Backend{
-					EthereumBackend:      ethClientRPC,
-					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
-					ChainID:              chainID,
-					UserPrivateKey:       pk,
-				})
-				return clientset.ProviderManager().Remove(ctx, providerAddress)
+				return clientset.ProviderManager().Remove(cCtx.Context, providerAddress)
 			},
 		},
 	},
+}
+
+func initMutableClientSet(cCtx *cli.Context) (*metascheduler.RPCClientSet, error) {
+	if cCtx.NArg() < 1 {
+		return nil, errors.New("missing arguments")
+	}
+	ctx := cCtx.Context
+	kb, err := hexutil.Decode(ethHexPK)
+	if errors.Is(err, hexutil.ErrMissingPrefix) {
+		kb, err = hex.DecodeString(ethHexPK)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+	pk, err := crypto.ToECDSA(kb)
+	if err != nil {
+		return nil, err
+	}
+	rpcClient, err := rpc.DialOptions(
+		ctx,
+		ethEndpointRPC,
+		rpc.WithHTTPClient(http.DefaultClient),
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rpcClient.Close()
+	ethClientRPC := ethclient.NewClient(rpcClient)
+	chainID, err := ethClientRPC.ChainID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return metascheduler.NewRPCClientSet(metascheduler.Backend{
+		EthereumBackend:      ethClientRPC,
+		MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
+		ChainID:              chainID,
+		UserPrivateKey:       pk,
+	}), nil
 }

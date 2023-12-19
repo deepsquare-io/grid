@@ -78,7 +78,6 @@ type model struct {
 }
 
 func (m model) Init() tea.Cmd {
-	// TODO: handle termination
 	return tea.Batch(
 		m.watchLogs.Init(),
 		m.transitions.Init(),

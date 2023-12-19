@@ -205,7 +205,6 @@ func initializeRows(
 
 // addMoreRows fetches the last "x" jobs and add it as row.
 func (m *model) addMoreRows(ctx context.Context) {
-	// TODO: handle termination
 	oldRows := m.table.Rows()
 	rows := make([]table.Row, 0, len(oldRows)+style.StandardHeight)
 	if m.it == nil {
@@ -324,7 +323,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keyMap.TableKeyMap.LineDown):
 			if m.table.Cursor() == len(m.table.Rows())-1 {
-				// TODO: handle termination
 				m.addMoreRows(context.TODO())
 			}
 

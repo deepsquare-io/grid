@@ -93,8 +93,6 @@ type EthereumBackend interface {
 type Backend struct {
 	MetaschedulerAddress common.Address
 	// EthereumBackend is the Ethereum Client.
-	//
-	// TODO: check if websocket or rpc.
 	EthereumBackend
 	// ChainID of the blockchain.
 	ChainID *big.Int
