@@ -73,7 +73,7 @@ devDependencies:
     version: 2.0.0
   docusaurus-theme-search-typesense:
     specifier: 0.14.0
-    version: 0.14.0(@algolia/client-search@4.22.0)(@babel/runtime@7.23.4)(@docusaurus/core@3.0.0)(@docusaurus/theme-common@3.0.0)(@docusaurus/types@3.0.0)(@types/react@18.2.45)(algoliasearch@4.20.0)(eslint@8.55.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.3.3)
+    version: 0.14.0(@algolia/client-search@4.22.0)(@babel/runtime@7.23.6)(@docusaurus/core@3.0.0)(@docusaurus/theme-common@3.0.0)(@docusaurus/types@3.0.0)(@types/react@18.2.45)(algoliasearch@4.20.0)(eslint@8.55.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.3.3)
   eslint:
     specifier: 8.55.0
     version: 8.55.0
@@ -96,8 +96,8 @@ devDependencies:
     specifier: 3.1.1
     version: 3.1.1
   prism-react-renderer:
-    specifier: 2.3.0
-    version: 2.3.0(react@18.2.0)
+    specifier: 2.3.1
+    version: 2.3.1(react@18.2.0)
   react:
     specifier: 18.2.0
     version: 18.2.0
@@ -2244,7 +2244,7 @@ packages:
       lodash: 4.17.21
       nprogress: 0.2.0
       postcss: 8.4.31
-      prism-react-renderer: 2.3.0(react@18.2.0)
+      prism-react-renderer: 2.3.1(react@18.2.0)
       prismjs: 1.29.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -2290,7 +2290,7 @@ packages:
       '@types/react-router-config': 5.0.10
       clsx: 1.2.1
       parse-numeric-range: 1.3.0
-      prism-react-renderer: 2.3.0(react@18.2.0)
+      prism-react-renderer: 2.3.1(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       tslib: 2.6.2
@@ -2933,10 +2933,10 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.4
+      '@babel/runtime': 7.23.6
       '@floating-ui/react-dom': 2.0.4(react-dom@18.2.0)(react@18.2.0)
-      '@mui/types': 7.2.10(@types/react@18.2.45)
-      '@mui/utils': 5.14.20(@types/react@18.2.45)(react@18.2.0)
+      '@mui/types': 7.2.11(@types/react@18.2.45)
+      '@mui/utils': 5.15.0(@types/react@18.2.45)(react@18.2.0)
       '@popperjs/core': 2.11.8
       '@types/react': 18.2.45
       clsx: 2.0.0
@@ -2966,10 +2966,6 @@ packages:
       prop-types: 15.8.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-    dev: true
-
-  /@mui/core-downloads-tracker@5.14.20:
-    resolution: {integrity: sha512-fXoGe8VOrIYajqALysFuyal1q1YmBARqJ3tmnWYDVl0scu8f6h6tZQbS2K8BY28QwkWNGyv4WRfuUkzN5HR3Ow==}
     dev: true
 
   /@mui/core-downloads-tracker@5.15.0:
@@ -3042,14 +3038,14 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.4
+      '@babel/runtime': 7.23.6
       '@emotion/react': 11.11.1(@types/react@18.2.45)(react@18.2.0)
       '@emotion/styled': 11.11.0(@emotion/react@11.11.1)(@types/react@18.2.45)(react@18.2.0)
       '@mui/base': 5.0.0-beta.24(@types/react@18.2.45)(react-dom@18.2.0)(react@18.2.0)
-      '@mui/core-downloads-tracker': 5.14.20
-      '@mui/system': 5.14.20(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(@types/react@18.2.45)(react@18.2.0)
-      '@mui/types': 7.2.10(@types/react@18.2.45)
-      '@mui/utils': 5.14.20(@types/react@18.2.45)(react@18.2.0)
+      '@mui/core-downloads-tracker': 5.15.0
+      '@mui/system': 5.15.0(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(@types/react@18.2.45)(react@18.2.0)
+      '@mui/types': 7.2.11(@types/react@18.2.45)
+      '@mui/utils': 5.15.0(@types/react@18.2.45)(react@18.2.0)
       '@types/react': 18.2.45
       '@types/react-transition-group': 4.4.9
       clsx: 2.0.0
@@ -3059,23 +3055,6 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
       react-is: 18.2.0
       react-transition-group: 4.4.5(react-dom@18.2.0)(react@18.2.0)
-    dev: true
-
-  /@mui/private-theming@5.14.20(@types/react@18.2.45)(react@18.2.0):
-    resolution: {integrity: sha512-WV560e1vhs2IHCh0pgUaWHznrcrVoW9+cDCahU1VTkuwPokWVvb71ccWQ1f8Y3tRBPPcNkU2dChkkRJChLmQlQ==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@types/react': ^17.0.0 || ^18.0.0
-      react: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.23.4
-      '@mui/utils': 5.14.20(@types/react@18.2.45)(react@18.2.0)
-      '@types/react': 18.2.45
-      prop-types: 15.8.1
-      react: 18.2.0
     dev: true
 
   /@mui/private-theming@5.15.0(@types/react@18.2.45)(react@18.2.0):
@@ -3091,28 +3070,6 @@ packages:
       '@babel/runtime': 7.23.6
       '@mui/utils': 5.15.0(@types/react@18.2.45)(react@18.2.0)
       '@types/react': 18.2.45
-      prop-types: 15.8.1
-      react: 18.2.0
-    dev: true
-
-  /@mui/styled-engine@5.14.19(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(react@18.2.0):
-    resolution: {integrity: sha512-jtj/Pyn/bS8PM7NXdFNTHWZfE3p+vItO4/HoQbUeAv3u+cnWXcTBGHHY/xdIn446lYGFDczTh1YyX8G4Ts0Rtg==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@emotion/react': ^11.4.1
-      '@emotion/styled': ^11.3.0
-      react: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@emotion/react':
-        optional: true
-      '@emotion/styled':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.23.4
-      '@emotion/cache': 11.11.0
-      '@emotion/react': 11.11.1(@types/react@18.2.45)(react@18.2.0)
-      '@emotion/styled': 11.11.0(@emotion/react@11.11.1)(@types/react@18.2.45)(react@18.2.0)
-      csstype: 3.1.2
       prop-types: 15.8.1
       react: 18.2.0
     dev: true
@@ -3134,36 +3091,6 @@ packages:
       '@emotion/cache': 11.11.0
       '@emotion/react': 11.11.1(@types/react@18.2.45)(react@18.2.0)
       '@emotion/styled': 11.11.0(@emotion/react@11.11.1)(@types/react@18.2.45)(react@18.2.0)
-      csstype: 3.1.2
-      prop-types: 15.8.1
-      react: 18.2.0
-    dev: true
-
-  /@mui/system@5.14.20(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(@types/react@18.2.45)(react@18.2.0):
-    resolution: {integrity: sha512-jKOGtK4VfYZG5kdaryUHss4X6hzcfh0AihT8gmnkfqRtWP7xjY+vPaUhhuSeibE5sqA5wCtdY75z6ep9pxFnIg==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@emotion/react': ^11.5.0
-      '@emotion/styled': ^11.3.0
-      '@types/react': ^17.0.0 || ^18.0.0
-      react: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@emotion/react':
-        optional: true
-      '@emotion/styled':
-        optional: true
-      '@types/react':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.23.4
-      '@emotion/react': 11.11.1(@types/react@18.2.45)(react@18.2.0)
-      '@emotion/styled': 11.11.0(@emotion/react@11.11.1)(@types/react@18.2.45)(react@18.2.0)
-      '@mui/private-theming': 5.14.20(@types/react@18.2.45)(react@18.2.0)
-      '@mui/styled-engine': 5.14.19(@emotion/react@11.11.1)(@emotion/styled@11.11.0)(react@18.2.0)
-      '@mui/types': 7.2.10(@types/react@18.2.45)
-      '@mui/utils': 5.14.20(@types/react@18.2.45)(react@18.2.0)
-      '@types/react': 18.2.45
-      clsx: 2.0.0
       csstype: 3.1.2
       prop-types: 15.8.1
       react: 18.2.0
@@ -3199,17 +3126,6 @@ packages:
       react: 18.2.0
     dev: true
 
-  /@mui/types@7.2.10(@types/react@18.2.45):
-    resolution: {integrity: sha512-wX1vbDC+lzF7FlhT6A3ffRZgEoKWPF8VqRoTu4lZwouFX2t90KyCMsgepMw5DxLak1BSp/KP86CmtZttikb/gQ==}
-    peerDependencies:
-      '@types/react': ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-    dependencies:
-      '@types/react': 18.2.45
-    dev: true
-
   /@mui/types@7.2.11(@types/react@18.2.45):
     resolution: {integrity: sha512-KWe/QTEsFFlFSH+qRYf3zoFEj3z67s+qAuSnMMg+gFwbxG7P96Hm6g300inQL1Wy///gSRb8juX7Wafvp93m3w==}
     peerDependencies:
@@ -3219,24 +3135,6 @@ packages:
         optional: true
     dependencies:
       '@types/react': 18.2.45
-    dev: true
-
-  /@mui/utils@5.14.20(@types/react@18.2.45)(react@18.2.0):
-    resolution: {integrity: sha512-Y6yL5MoFmtQml20DZnaaK1znrCEwG6/vRSzW8PKOTrzhyqKIql0FazZRUR7sA5EPASgiyKZfq0FPwISRXm5NdA==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      '@types/react': ^17.0.0 || ^18.0.0
-      react: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-    dependencies:
-      '@babel/runtime': 7.23.4
-      '@types/prop-types': 15.7.11
-      '@types/react': 18.2.45
-      prop-types: 15.8.1
-      react: 18.2.0
-      react-is: 18.2.0
     dev: true
 
   /@mui/utils@5.15.0(@types/react@18.2.45)(react@18.2.0):
@@ -5694,7 +5592,7 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /docusaurus-theme-search-typesense@0.14.0(@algolia/client-search@4.22.0)(@babel/runtime@7.23.4)(@docusaurus/core@3.0.0)(@docusaurus/theme-common@3.0.0)(@docusaurus/types@3.0.0)(@types/react@18.2.45)(algoliasearch@4.20.0)(eslint@8.55.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.3.3):
+  /docusaurus-theme-search-typesense@0.14.0(@algolia/client-search@4.22.0)(@babel/runtime@7.23.6)(@docusaurus/core@3.0.0)(@docusaurus/theme-common@3.0.0)(@docusaurus/types@3.0.0)(@types/react@18.2.45)(algoliasearch@4.20.0)(eslint@8.55.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.3.3):
     resolution: {integrity: sha512-ShXZQQaa7h1FvmWvau1EjYqHOHXmHleAd2A3cMW8vHZh4CtiwOux5YbAYr84uvSeR+AshWVpnGZ23swKBep+bw==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -5718,8 +5616,8 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       tslib: 2.6.2
-      typesense-docsearch-react: 3.4.1(@algolia/client-search@4.22.0)(@babel/runtime@7.23.4)(@types/react@18.2.45)(algoliasearch@4.20.0)(react-dom@18.2.0)(react@18.2.0)
-      typesense-instantsearch-adapter: 2.7.1(@babel/runtime@7.23.4)
+      typesense-docsearch-react: 3.4.1(@algolia/client-search@4.22.0)(@babel/runtime@7.23.6)(@types/react@18.2.45)(algoliasearch@4.20.0)(react-dom@18.2.0)(react@18.2.0)
+      typesense-instantsearch-adapter: 2.7.1(@babel/runtime@7.23.6)
       utility-types: 3.10.0
     transitivePeerDependencies:
       - '@algolia/client-search'
@@ -5753,7 +5651,7 @@ packages:
   /dom-helpers@5.2.1:
     resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
     dependencies:
-      '@babel/runtime': 7.23.4
+      '@babel/runtime': 7.23.6
       csstype: 3.1.2
     dev: true
 
@@ -9556,8 +9454,8 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /prism-react-renderer@2.3.0(react@18.2.0):
-    resolution: {integrity: sha512-UYRg2TkVIaI6tRVHC5OJ4/BxqPUxJkJvq/odLT/ykpt1zGYXooNperUxQcCvi87LyRnR4nCh81ceOA+e7nrydg==}
+  /prism-react-renderer@2.3.1(react@18.2.0):
+    resolution: {integrity: sha512-Rdf+HzBLR7KYjzpJ1rSoxT9ioO85nZngQEoFIhL07XhtJHlCU3SOz0GJ6+qvMyQe0Se+BV3qpe6Yd/NmQF5Juw==}
     peerDependencies:
       react: '>=16.0.0'
     dependencies:
@@ -9866,7 +9764,7 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
     dependencies:
-      '@babel/runtime': 7.23.4
+      '@babel/runtime': 7.23.6
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
@@ -10916,7 +10814,7 @@ packages:
     resolution: {integrity: sha512-mN8K18pfIpCrhzsMAJBzoS7l/YDcC4P3f9vsScenUceXmC8n3FCPldmF10dKDJmK3Lr7aAScQt70jCA5126y2w==}
     dev: true
 
-  /typesense-docsearch-react@3.4.1(@algolia/client-search@4.22.0)(@babel/runtime@7.23.4)(@types/react@18.2.45)(algoliasearch@4.20.0)(react-dom@18.2.0)(react@18.2.0):
+  /typesense-docsearch-react@3.4.1(@algolia/client-search@4.22.0)(@babel/runtime@7.23.6)(@types/react@18.2.45)(algoliasearch@4.20.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-d0PQym/B/p5oP+hfdFEOH6goiKa1JLR63bikZSDGq1+jT2FtuwNrdMGVBZZMNFUsXVsJRA8ULHJpsREmfSJmVw==}
     peerDependencies:
       '@types/react': '>= 16.8.0 < 19.0.0'
@@ -10935,9 +10833,9 @@ packages:
       '@types/react': 18.2.45
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      typesense: 1.7.2(@babel/runtime@7.23.4)
+      typesense: 1.7.2(@babel/runtime@7.23.6)
       typesense-docsearch-css: 0.4.1
-      typesense-instantsearch-adapter: 2.7.1(@babel/runtime@7.23.4)
+      typesense-instantsearch-adapter: 2.7.1(@babel/runtime@7.23.6)
     transitivePeerDependencies:
       - '@algolia/client-search'
       - '@babel/runtime'
@@ -10945,25 +10843,25 @@ packages:
       - debug
     dev: true
 
-  /typesense-instantsearch-adapter@2.7.1(@babel/runtime@7.23.4):
+  /typesense-instantsearch-adapter@2.7.1(@babel/runtime@7.23.6):
     resolution: {integrity: sha512-GSEwkNzXoVcL4iSV/LDiZvjx/knctqfGLLKUNRe5twgzFprnoU07UUh2mQ5Z0/aP1moY/UpBF1bMKhTU6ECoAQ==}
     requiresBuild: true
     peerDependencies:
       '@babel/runtime': ^7.17.2
     dependencies:
-      '@babel/runtime': 7.23.4
-      typesense: 1.7.2(@babel/runtime@7.23.4)
+      '@babel/runtime': 7.23.6
+      typesense: 1.7.2(@babel/runtime@7.23.6)
     transitivePeerDependencies:
       - debug
     dev: true
 
-  /typesense@1.7.2(@babel/runtime@7.23.4):
+  /typesense@1.7.2(@babel/runtime@7.23.6):
     resolution: {integrity: sha512-hgQESOiyNJq+w2mpRJa/a1UMhWtJ/+sb0p7NoeCDSkikm9sasisJdnc7uhQchM6vTWKw2sMLWUBNbAhItR6zUQ==}
     engines: {node: '>=14'}
     peerDependencies:
       '@babel/runtime': ^7.17.2
     dependencies:
-      '@babel/runtime': 7.23.4
+      '@babel/runtime': 7.23.6
       axios: 0.26.1
       loglevel: 1.8.1
     transitivePeerDependencies:
