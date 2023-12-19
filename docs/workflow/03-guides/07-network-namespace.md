@@ -1,4 +1,4 @@
-# Avoiding port conflict with neighbors with network namespaces
+# Avoiding port conflict with neighbors by using network namespaces
 
 As we're in the HPC ecosystem, there's no default network isolation, so MPI can work as fast as possible. Consequently, opening a port **risky**. It is not just a question of privilege, but also of security.
 
