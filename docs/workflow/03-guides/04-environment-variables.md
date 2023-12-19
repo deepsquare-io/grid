@@ -82,7 +82,7 @@ And this environment variable will be loaded at the next step.
 
 Remember that `$STORAGE_PATH` is a shared storage between all nodes and steps?
 
-You can add you own files if prefer no to use `$DEEPSQUARE_ENV`.
+You can add you own files if prefer not to use `$DEEPSQUARE_ENV`.
 
 For example:
 
