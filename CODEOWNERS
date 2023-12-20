@@ -5,7 +5,7 @@ docker/ @Darkness4
 # Contracts
 smart-contracts/ @Lymnah @Darkness4 @efelem
 protos/ @Darkness4 @efelem @Lymnah
-schemas/ @Darkness4 @valentinpollart
+schemas/ @Darkness4
 
 # Customer side
 cli/ @Darkness4 @Lymnah
