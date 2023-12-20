@@ -142,7 +142,6 @@ wait_for_network_device $$ net0
 [Interface]
 Address = 10.0.0.1/32
 PrivateKey = abc
-MTU = 1420
 [Peer]
 PublicKey = pub
 AllowedIPs = 0.0.0.0/0,172.10.0.0/32
@@ -167,8 +166,6 @@ wait_for_network_namespace $child
   --netns "/proc/$child/ns/net" \
   --userns "/proc/$child/ns/user" \
   --ns-ifname net0 \
-  --address 169.254.254.0 -n 24 \
-  --gateway 169.254.254.1 \
   -f &
 pasta_pid=$!
 
@@ -297,8 +294,6 @@ wait_for_network_namespace $child
   --netns "/proc/$child/ns/net" \
   --userns "/proc/$child/ns/user" \
   --ns-ifname net0 \
-  --address 169.254.254.0 -n 24 \
-  --gateway 169.254.254.1 \
   -f &
 pasta_pid=$!
 

@@ -57,7 +57,6 @@ job:
               # [Interface]
               # Address = 10.0.0.1/24
               # ListenPort = 51000
-              # MTU = 1420
               # PrivateKey = <TO FILL: Serv PK>
               # PostUp = iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE; iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 25565 -j DNAT --to-destination 10.0.0.2:25565; iptables -A FORWARD -p tcp -d 10.0.0.2 --dport 25565 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT; iptables -t nat -A POSTROUTING -o wgnet0 -j MASQUERADE
               # PostDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE; iptables -t nat -D PREROUTING -p tcp -i eth0 --dport 25565 -j DNAT --to-destination 10.0.0.2:25565; iptables -D FORWARD -p tcp -d 10.0.0.2 --dport 25565 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT; iptables -t nat -D POSTROUTING -o wgnet -j MASQUERADE

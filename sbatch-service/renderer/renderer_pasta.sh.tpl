@@ -110,8 +110,6 @@ wait_for_network_namespace $child
   --netns "/proc/$child/ns/net" \
   --userns "/proc/$child/ns/user" \
   --ns-ifname net0 \
-  --address 169.254.254.0 -n 24 \
-  --gateway 169.254.254.1 \
   -f &
 pasta_pid=$!
 

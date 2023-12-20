@@ -2,7 +2,6 @@
 [Interface]
 Address = {{ .Wireguard.Address | join "," }}
 PrivateKey = {{ printf "%s" .Wireguard.PrivateKey | replace "'" "" }}
-MTU = 1420
 
 {{- range $i,$peer := .Wireguard.Peers }}
 [Peer]

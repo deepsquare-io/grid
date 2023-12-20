@@ -155,7 +155,6 @@ wait_for_network_device $$ net0
 [Interface]
 Address = 10.0.0.1/32
 PrivateKey = abc
-MTU = 1420
 [Peer]
 PublicKey = pub
 AllowedIPs = 0.0.0.0/0,172.10.0.0/32
