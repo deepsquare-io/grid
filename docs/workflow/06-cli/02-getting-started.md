@@ -4,6 +4,28 @@
 
 You can download static binaries in the [Releases tab of the Grid git repository](https://github.com/deepsquare-io/grid/releases?q=cli%2F&expanded=true).
 
+To install it:
+
+```shell
+mkdir -p ~/.local/bin
+# Move local install dir
+mv dps* ~/.local/bin/dps
+# Add executation permission
+chmod +x ~/.local/bin/dps
+```
+
+For Windows users:
+
+```bat
+mkdir "%USERPROFILE%\.local\bin"
+move dps* "%USERPROFILE%\.local\bin\dps"
+cd "%USERPROFILE%\.local\bin\dps"
+```
+
+Make sure that `$HOME/.local/bin` (`%USERPROFILE%\.local\bin` for Windows) is added to the `$PATH` (`%PATH%`) environment variable.
+
+[Help: Adding to PATH](https://www.java.com/en/download/help/path.html).
+
 ## Install from source
 
 With Go, it is possible to install from source directly by running:
@@ -11,6 +33,10 @@ With Go, it is possible to install from source directly by running:
 ```shell
 go install github.com/deepsquare-io/grid/cli/cmd/dps@latest
 ```
+
+Make sure that `$HOME/go/bin` (`%HOME%\go\bin` for Windows) is added to the `$PATH` (`%PATH%`) environment variable.
+
+[Help: Adding to PATH](https://www.java.com/en/download/help/path.html).
 
 ## Usage
 

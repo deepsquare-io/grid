@@ -35,9 +35,9 @@ steps:
 
 To launch a workflow file, you have a couple of choices:
 
-1\. Visit [DeepSquare Dev App](https://app.deepsquare.run/sandbox), paste the workflow, and run it.
-
-2\. Use the [DeepSquare SDK](https://www.npmjs.com/package/@deepsquare/deepsquare-client) which provides a simple and abstracted interface from web3 to the DeepSquare Grid.
+- Use the [DeepSquare CLI](/workflow/cli/getting-started) which a TUI or CLI or Go library, that can be used to interact with the DeepSquare Grid.
+- Visit [DeepSquare Dev App](https://app.deepsquare.run/sandbox), paste the workflow, and run it.
+- Use the [DeepSquare SDK](https://www.npmjs.com/package/@deepsquare/deepsquare-client) which provides a simple and abstracted interface from web3 to the DeepSquare Grid.
 
 ## Credits and SQUARE Tokens
 
