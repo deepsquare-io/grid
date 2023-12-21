@@ -19,7 +19,7 @@ Because it is creating a file, make sure that there is no exiting directory of f
 
 If you wish to cache `/path/to/be/cached` and this directory already exists, you should run:
 
-```shell
+```shell title="command"
 # Delete path
 rm -rf /path/to/be/cached
 mkdir -p $DEEPSQUARE_SHARED_TMP/my-cache
@@ -28,7 +28,7 @@ ln -s $DEEPSQUARE_SHARED_TMP/my-cache /path/to/be/cached
 
 If there are existing files in the `/path/to/be/cached`, you may want to save them:
 
-```shell
+```shell title="command"
 # Save path
 mkdir -p $DEEPSQUARE_SHARED_TMP/my-cache
 # Save files
@@ -47,7 +47,7 @@ Right now, to use a mount namespace, you can either use a network namespace or `
 
 **Before**
 
-```yaml
+```yaml title="Workflow"
 steps:
   - name: 'example'
     run:
@@ -59,7 +59,7 @@ steps:
 
 **After, with mount namespace via MapUid**
 
-```yaml
+```yaml title="Workflow"
 steps:
   - name: 'example'
     run:
@@ -71,7 +71,7 @@ steps:
 
 **After, with mount namespace via network namespace**
 
-```yaml
+```yaml title="Workflow"
 steps:
   - name: 'example'
     run:
@@ -87,7 +87,7 @@ This avoids to use `rm` which may throw a `Device or resource busy`.
 
 If there are existing files in the `/path/to/be/cached`, you may want to save them:
 
-```shell
+```shell title="command"
 mkdir -p $DEEPSQUARE_SHARED_TMP/my-cache
 # Save files
 mv /path/to/be/cached/* $DEEPSQUARE_SHARED_TMP/my-cache
