@@ -22,11 +22,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/deepsquare-io/grid/cli/internal/graphql"
+	"gopkg.in/yaml.v3"
 )
 
 // The Service is used to interact with the sbatch hosting service.
@@ -99,5 +101,18 @@ func (s *service) Submit(ctx context.Context, job *Job) (string, error) {
 	if err = json.Unmarshal(body, &result); err != nil {
 		return "", err
 	}
-	return result.Data.Submit, err
+	if len(result.Errors) > 0 {
+		out, err := yaml.Marshal(result.Errors)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("sbatch failure:")
+		fmt.Println(string(out))
+		errs := make([]error, 0, len(result.Errors))
+		for _, err := range result.Errors {
+			errs = append(errs, errors.New(err.Error()))
+		}
+		return "", errors.Join(errs...)
+	}
+	return result.Data.Submit, nil
 }
