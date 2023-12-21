@@ -39,9 +39,7 @@ ln -s $DEEPSQUARE_SHARED_TMP/my-cache /path/to/be/cached
 
 ## Mount binds
 
-How to use `mount --bind` instead of symbolic link
-
-When using the caches or `$STORAGE_PATH`, it is very possible that you are not able to delete a directory. You can use a "mount namespace", which is able to isolate the mounts table.
+When using the caches or `$STORAGE_PATH`, it is very possible that you are not able to delete a directory. You can use a "mount namespace", which is able to isolate the mounts table, and allows you to execute `mount` even if you are not privileged.
 
 Right now, to use a mount namespace, you can either use a network namespace or `mapUid: 0`.
 
