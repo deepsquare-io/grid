@@ -1,0 +1,50 @@
+job:
+  enableLogging: false
+  resources:
+    tasks: 2
+    cpusPerTask: 1
+    memPerCpu: 1000
+    gpus: 0
+
+  virtualNetworks:
+    - name: test
+      gatewayAddress: 10.0.0.1/24
+
+  steps:
+    - name: do-async
+      launch:
+        handleName: task1
+        steps:
+          - name: work
+            run:
+              network: slirp4netns
+              mapUid: 0
+              mapGid: 0
+              customNetworkInterfaces:
+                - vnet:
+                    name: test
+                    address: 10.0.0.2/24
+              command: |-
+                nc -l -p 12345
+
+    - name: run main
+      run:
+        network: slirp4netns
+        mapUid: 0
+        mapGid: 0
+        customNetworkInterfaces:
+          - vnet:
+              name: test
+              address: 10.0.0.3/24
+        command: |-
+          while true; do
+              echo "Trying to connect..."
+              if echo "hello world" | nc 10.0.0.2 12345; then
+                  echo "Connection successful"
+                  break
+              else
+                  echo "Connection failed. Retrying in 5 seconds..."
+                  sleep 5
+              fi
+          done
+          echo "Success"

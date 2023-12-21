@@ -1,5 +1,3 @@
-set -e
-
 nsenter_flags() {
   pid="$1"
   flags="--target=${pid}"
@@ -20,7 +18,7 @@ nsenter_flags() {
   if [ "${netns}" != "${self_netns}" ]; then
     flags="$flags -n"
   fi
-  echo "${flags}"
+  /usr/bin/echo "${flags}"
 }
 
 wait_for_network_namespace() {
@@ -28,7 +26,7 @@ wait_for_network_namespace() {
   COUNTER=0
   while [ $COUNTER -lt 40 ]; do
     flags=$(nsenter_flags "$1")
-    if echo "$flags" | grep -qvw -- -n; then
+    if /usr/bin/echo "$flags" | grep -qvw -- -n; then
       flags="$flags -n"
     fi
     # shellcheck disable=SC2086
@@ -42,9 +40,38 @@ wait_for_network_namespace() {
   exit 1
 }
 
-# shellcheck disable=SC2016,SC1078,SC1079
-/usr/bin/unshare --map-current-user --net --mount{{ if .Run.MapUID }} --map-user={{ .Run.MapUID }}{{ end }}{{ if .Run.MapGID }} --map-group={{ .Run.MapGID }}{{ end }} {{ if .Run.Shell }}{{ derefStr .Run.Shell }}{{ else }}/bin/sh{{ end }} -c '
+# Find random UDP port
+/usr/bin/python -c 'import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.bind(("", 0)); print(s.getsockname()[1]); s.close()' > "$STORAGE_PATH/vnet{{ .Index }}_port"
+
+pk="$(/usr/bin/wg genkey)"
+/usr/bin/echo "$pk" > "$STORAGE_PATH/vnet{{ $.Index }}_pk"
+/usr/bin/echo "$(/usr/bin/echo "$pk" | /usr/bin/wg pubkey)" > "$STORAGE_PATH/vnet{{ .Index }}_pub"
+/usr/bin/echo "$(ip route get 1 | awk 'NR==1 {print $7}')" > "$STORAGE_PATH/vnet{{ .Index }}_endpoint"
+
+{{ range $i, $peer := .Peers -}}
+pk="$(/usr/bin/wg genkey)"
+/usr/bin/echo "$pk" > "$STORAGE_PATH/vnet{{ $.Index }}_peer{{ $i }}_pk"
+/usr/bin/echo "$(/usr/bin/echo "$pk" | /usr/bin/wg pubkey)" > "$STORAGE_PATH/vnet{{ $.Index }}_peer{{ $i }}_pub"
+
+{{ end -}}
+
+/usr/bin/cat << EOF > "$STORAGE_PATH/vnet{{ .Index }}.conf"
+[Interface]
+Address = {{ .VirtualNetwork.GatewayAddress }}
+ListenPort = $(/usr/bin/cat "$STORAGE_PATH/vnet{{ .Index }}_port")
+PrivateKey = $(/usr/bin/cat "$STORAGE_PATH/vnet{{ .Index }}_pk")
+
+{{ range $i, $peer := .Peers -}}
+[Peer]
+PublicKey = $(/usr/bin/cat "$STORAGE_PATH/vnet{{ $.Index }}_peer{{ $i }}_pub")
+AllowedIPs = {{ $peer }}
+
+{{ end -}}
+EOF
+
+/usr/bin/unshare --map-root-user --net --mount /bin/sh -c '
 set -e
+umask 0077
 
 nsenter_flags() {
   pid=$1
@@ -85,39 +112,24 @@ wait_for_network_device() {
 
 wait_for_network_device $$ net0
 
-{{ range $i, $nic := .Run.CustomNetworkInterfaces }}
-{{- if $nic.Wireguard }}
-{{ renderWireguard $nic.Wireguard (printf "wg%d" $i) | escapeSQuote }}
-{{- else if $nic.VNet }}
-{{ renderVNet $nic.VNet (printf "vnet%d" $i) $.Job | escapeSQuote }}
-{{- else if $nic.Bore }}
-/usr/bin/dpsproxy --to.addr {{ $nic.Bore.BoreAddress | ignoreNil }}{{ $nic.Bore.Address | ignoreNil }}{{ if $nic.Bore.Port }}:{{ $nic.Bore.Port }}{{ end }} --local.addr localhost:{{ $nic.Bore.TargetPort }}{{ if $nic.Bore.Secret }} --secret {{ derefStr $nic.Bore.Secret | squote }}{{ end }} -r &
-{{- end -}}
-{{- end -}}
-{{- range $dns := .Run.DNS }}
-/usr/bin/echo "nameserver {{ $dns }}" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
-{{- end }}
-{{- if gt (len .Run.DNS) 0 }}
-/usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
-{{- end }}
+/usr/bin/wg-quick up "$STORAGE_PATH/vnet{{ $.Index }}.conf"
 
-'{{ .Command | squote }} &
+/usr/bin/sleep infinity
+
+' &
 child=$!
 
 wait_for_network_namespace $child
 
 /usr/bin/pasta --config-net \
   --tcp-ports none \
-  --udp-ports none \
+  --udp-ports "$(cat "$STORAGE_PATH/vnet{{ .Index }}_port")" \
   --netns "/proc/$child/ns/net" \
   --userns "/proc/$child/ns/user" \
   --ns-ifname net0 \
   -f &
 pasta_pid=$!
-
 cleanup() {
   kill -9 $child $pasta_pid || true
 }
 trap cleanup EXIT INT TERM
-
-wait $child

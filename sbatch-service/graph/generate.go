@@ -27,7 +27,11 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-func constraintFieldHook(td *ast.Definition, fd *ast.FieldDefinition, f *modelgen.Field) (*modelgen.Field, error) {
+func constraintFieldHook(
+	td *ast.Definition,
+	fd *ast.FieldDefinition,
+	f *modelgen.Field,
+) (*modelgen.Field, error) {
 	if f, err := modelgen.DefaultFieldMutateHook(td, fd, f); err != nil {
 		return f, err
 	}

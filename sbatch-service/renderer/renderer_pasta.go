@@ -29,6 +29,7 @@ var pastaTpl string
 
 func RenderPastaNS(
 	run *model.StepRun,
+	job *model.Job,
 	command string,
 ) (string, error) {
 	for _, nic := range run.CustomNetworkInterfaces {
@@ -45,9 +46,11 @@ func RenderPastaNS(
 	var out bytes.Buffer
 	if err = tmpl.Execute(&out, struct {
 		Run     *model.StepRun
+		Job     *model.Job
 		Command string
 	}{
 		Run:     run,
+		Job:     job,
 		Command: command,
 	}); err != nil {
 		return "", err

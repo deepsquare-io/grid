@@ -1,0 +1,483 @@
+#!/bin/bash -l
+
+set -e
+
+export NTASKS='2'
+export CPUS_PER_TASK='1'
+export MEM_PER_CPU='1000'
+export GPUS='0'
+export CPUS='2'
+export MEM='2000'
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
+DEEPSQUARE_SHARED_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_SHARED_TMP
+DEEPSQUARE_SHARED_WORLD_TMP="/opt/cache/world-tmp"
+export DEEPSQUARE_SHARED_WORLD_TMP
+DEEPSQUARE_DISK_TMP="/opt/cache/disk/tmp/user-$(id -u)"
+export DEEPSQUARE_DISK_TMP
+DEEPSQUARE_DISK_WORLD_TMP="/opt/cache/disk/world-tmp"
+export DEEPSQUARE_DISK_WORLD_TMP
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
+/usr/bin/touch "$DEEPSQUARE_ENV"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+# Start VPNs
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if /usr/bin/echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# Find random UDP port
+/usr/bin/python -c 'import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.bind(("", 0)); print(s.getsockname()[1]); s.close()' > "$STORAGE_PATH/vnet0_port"
+
+pk="$(/usr/bin/wg genkey)"
+/usr/bin/echo "$pk" > "$STORAGE_PATH/vnet0_pk"
+/usr/bin/echo "$(/usr/bin/echo "$pk" | /usr/bin/wg pubkey)" > "$STORAGE_PATH/vnet0_pub"
+/usr/bin/echo "$(ip route get 1 | awk 'NR==1 {print $7}')" > "$STORAGE_PATH/vnet0_endpoint"
+
+pk="$(/usr/bin/wg genkey)"
+/usr/bin/echo "$pk" > "$STORAGE_PATH/vnet0_peer0_pk"
+/usr/bin/echo "$(/usr/bin/echo "$pk" | /usr/bin/wg pubkey)" > "$STORAGE_PATH/vnet0_peer0_pub"
+
+pk="$(/usr/bin/wg genkey)"
+/usr/bin/echo "$pk" > "$STORAGE_PATH/vnet0_peer1_pk"
+/usr/bin/echo "$(/usr/bin/echo "$pk" | /usr/bin/wg pubkey)" > "$STORAGE_PATH/vnet0_peer1_pub"
+
+/usr/bin/cat << EOF > "$STORAGE_PATH/vnet0.conf"
+[Interface]
+Address = 10.0.0.1/24
+ListenPort = $(/usr/bin/cat "$STORAGE_PATH/vnet0_port")
+PrivateKey = $(/usr/bin/cat "$STORAGE_PATH/vnet0_pk")
+
+[Peer]
+PublicKey = $(/usr/bin/cat "$STORAGE_PATH/vnet0_peer0_pub")
+AllowedIPs = 10.0.0.2
+
+[Peer]
+PublicKey = $(/usr/bin/cat "$STORAGE_PATH/vnet0_peer1_pub")
+AllowedIPs = 10.0.0.3
+
+EOF
+
+/usr/bin/unshare --map-root-user --net --mount /bin/sh -c '
+set -e
+umask 0077
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ net0
+
+/usr/bin/wg-quick up "$STORAGE_PATH/vnet0.conf"
+
+/usr/bin/sleep infinity
+
+' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/pasta --config-net \
+  --tcp-ports none \
+  --udp-ports "$(cat "$STORAGE_PATH/vnet0_port")" \
+  --netns "/proc/$child/ns/net" \
+  --userns "/proc/$child/ns/user" \
+  --ns-ifname net0 \
+  -f &
+pasta_pid=$!
+cleanup() {
+  kill -9 $child $pasta_pid || true
+}
+trap cleanup EXIT INT TERM
+
+
+
+cd "$STORAGE_PATH/"
+loadDeepsquareEnv() {
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
+}
+
+declare -A EXIT_SIGNALS
+/usr/bin/echo 'Running: ''do-async'
+(
+declare -A EXIT_SIGNALS
+/usr/bin/echo 'Running: ''work'
+/usr/bin/srun --job-name='work' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  /usr/bin/unshare --map-current-user --map-user=0 --map-group=0 --mount \
+  /bin/sh -c 'set -e
+
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# shellcheck disable=SC2016,SC1078,SC1079
+/usr/bin/unshare --map-current-user --net --mount --map-user=0 --map-group=0 /bin/sh -c '"'"'
+set -e
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ net0
+
+
+/usr/bin/mkdir -p "$(pwd)/peer0"
+/usr/bin/cat << EOFwireguard > "$(pwd)/peer0/vnet0.conf"
+[Interface]
+Address = 10.0.0.2/24
+PrivateKey = $(cat "$STORAGE_PATH/vnet0_peer0_pk")
+
+[Peer]
+PublicKey = $(cat "$STORAGE_PATH/vnet0_pub")
+AllowedIPs = 10.0.0.0/24
+Endpoint = $(cat "$STORAGE_PATH/vnet0_endpoint"):$(cat "$STORAGE_PATH/vnet0_port")
+PersistentKeepalive = 20
+EOFwireguard
+/usr/bin/chmod 600 "$(pwd)/peer0/vnet0.conf"
+/usr/bin/wg-quick up "$(pwd)/peer0/vnet0.conf"
+
+
+'"'"''"'"'nc -l -p 12345'"'"' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child net0 &
+slirp_pid=$!
+
+cleanup() {
+  kill -9 $child $slirp_pid || true
+}
+trap cleanup EXIT INT TERM
+
+wait $child
+'
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  /usr/bin/echo "Process $$ sending signal ${EXIT_SIGNALS[$pid]} to $pid"
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
+done
+) &
+asynclaunchpid="$!"
+export PID_TASK1="$asynclaunchpid"
+EXIT_SIGNALS[$asynclaunchpid]=15
+/usr/bin/echo 'Running: ''run main'
+/usr/bin/srun --job-name='run main' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=1 \
+  --mem-per-cpu=1000M \
+  --gpus-per-task=0 \
+  --ntasks=1 \
+  /usr/bin/unshare --map-current-user --map-user=0 --map-group=0 --mount \
+  /bin/sh -c 'set -e
+
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# shellcheck disable=SC2016,SC1078,SC1079
+/usr/bin/unshare --map-current-user --net --mount --map-user=0 --map-group=0 /bin/sh -c '"'"'
+set -e
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ net0
+
+
+/usr/bin/mkdir -p "$(pwd)/peer1"
+/usr/bin/cat << EOFwireguard > "$(pwd)/peer1/vnet0.conf"
+[Interface]
+Address = 10.0.0.3/24
+PrivateKey = $(cat "$STORAGE_PATH/vnet0_peer1_pk")
+
+[Peer]
+PublicKey = $(cat "$STORAGE_PATH/vnet0_pub")
+AllowedIPs = 10.0.0.0/24
+Endpoint = $(cat "$STORAGE_PATH/vnet0_endpoint"):$(cat "$STORAGE_PATH/vnet0_port")
+PersistentKeepalive = 20
+EOFwireguard
+/usr/bin/chmod 600 "$(pwd)/peer1/vnet0.conf"
+/usr/bin/wg-quick up "$(pwd)/peer1/vnet0.conf"
+
+
+'"'"''"'"'while true; do
+    echo "Trying to connect..."
+    if echo "hello world" | nc 10.0.0.2 12345; then
+        echo "Connection successful"
+        break
+    else
+        echo "Connection failed. Retrying in 5 seconds..."
+        sleep 5
+    fi
+done
+echo "Success"'"'"' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child net0 &
+slirp_pid=$!
+
+cleanup() {
+  kill -9 $child $slirp_pid || true
+}
+trap cleanup EXIT INT TERM
+
+wait $child
+'
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
+done

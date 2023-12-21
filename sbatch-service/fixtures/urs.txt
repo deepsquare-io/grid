@@ -156,7 +156,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --logFile -'
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 )
 # END SCOPE: LOGS

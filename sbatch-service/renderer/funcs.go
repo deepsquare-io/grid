@@ -125,6 +125,8 @@ func funcMap() template.FuncMap {
 	f["renderStepRun"] = RenderStepRun
 	f["renderStepFor"] = RenderStepFor
 	f["renderWireguard"] = RenderWireguard
+	f["renderVirtualNetwork"] = RenderVirtualNetwork
+	f["renderVNet"] = RenderVNet
 	f["renderApptainerCommand"] = RenderApptainerCommand
 	f["renderSlirp4NetNS"] = RenderSlirp4NetNS
 	f["renderPastaNS"] = RenderPastaNS

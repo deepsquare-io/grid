@@ -20,32 +20,21 @@ import (
 
 	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/grid/sbatch-service/renderer"
-	"github.com/deepsquare-io/grid/sbatch-service/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var cleanWireguardPeer = model.WireguardPeer{
-	PublicKey:           "pub",
-	AllowedIPs:          []string{"0.0.0.0/0", "172.10.0.0/32"},
-	PreSharedKey:        utils.Ptr("sha"),
-	Endpoint:            utils.Ptr("10.0.0.0:30"),
-	PersistentKeepalive: utils.Ptr(20),
+var cleanVNet = model.VNet{
+	Name:    "test",
+	Address: "10.0.0.2/24",
 }
 
-var cleanWireguard = model.Wireguard{
-	Address:    []string{"10.0.0.1/32"},
-	PrivateKey: "abc",
-	Peers: []*model.WireguardPeer{
-		&cleanWireguardPeer,
-	},
-}
-
-func TestRenderWireguard(t *testing.T) {
+func TestRenderVNet(t *testing.T) {
 	tests := []struct {
 		input struct {
-			model.Wireguard
+			model.VNet
 			InterfaceName string
+			model.Job
 		}
 		isError       bool
 		errorContains []string
@@ -54,34 +43,69 @@ func TestRenderWireguard(t *testing.T) {
 	}{
 		{
 			input: struct {
-				model.Wireguard
+				model.VNet
 				InterfaceName string
+				model.Job
 			}{
-				Wireguard:     cleanWireguard,
-				InterfaceName: "wg0",
+				VNet:          cleanVNet,
+				InterfaceName: "vnet0",
+				Job: model.Job{
+					VirtualNetworks: []*model.VirtualNetwork{
+						&cleanVirtualNetwork,
+					},
+					Steps: []*model.Step{
+						cleanStepWithRun(
+							&model.StepRun{
+								CustomNetworkInterfaces: []*model.NetworkInterface{
+									{
+										VNet: &cleanVNet,
+									},
+								},
+							},
+						),
+					},
+				},
 			},
-			expected: `/usr/bin/cat << 'EOFwireguard' > "$(pwd)/wg0.conf"
+			expected: `/usr/bin/mkdir -p "$(pwd)/peer0"
+/usr/bin/cat << EOFwireguard > "$(pwd)/peer0/vnet0.conf"
 [Interface]
-Address = 10.0.0.1/32
-PrivateKey = abc
+Address = 10.0.0.2/24
+PrivateKey = $(cat "$STORAGE_PATH/vnet0_peer0_pk")
+
 [Peer]
-PublicKey = pub
-AllowedIPs = 0.0.0.0/0,172.10.0.0/32
-Endpoint = 10.0.0.0:30
-PresharedKey = sha
+PublicKey = $(cat "$STORAGE_PATH/vnet0_pub")
+AllowedIPs = 10.0.0.0/24
+Endpoint = $(cat "$STORAGE_PATH/vnet0_endpoint"):$(cat "$STORAGE_PATH/vnet0_port")
 PersistentKeepalive = 20
 EOFwireguard
-/usr/bin/chmod 600 "$(pwd)/wg0.conf"
-/usr/bin/wg-quick up "$(pwd)/wg0.conf"
+/usr/bin/chmod 600 "$(pwd)/peer0/vnet0.conf"
+/usr/bin/wg-quick up "$(pwd)/peer0/vnet0.conf"
 `,
-			title: "Positive test with wireguard tunnel",
+			title: "Positive test",
+		},
+		{
+			input: struct {
+				model.VNet
+				InterfaceName string
+				model.Job
+			}{
+				VNet:          cleanVNet,
+				InterfaceName: "vnet0",
+				Job:           model.Job{},
+			},
+			isError: true,
+			title:   "Negative test: Missing network",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
 			// Act
-			actual, err := renderer.RenderWireguard(&tt.input.Wireguard, tt.input.InterfaceName)
+			actual, err := renderer.RenderVNet(
+				&tt.input.VNet,
+				tt.input.InterfaceName,
+				&tt.input.Job,
+			)
 
 			// Assert
 			if tt.isError {

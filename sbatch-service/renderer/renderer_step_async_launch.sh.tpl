@@ -7,7 +7,7 @@ declare -A EXIT_SIGNALS
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
   /usr/bin/echo "Process $$ sending signal ${EXIT_SIGNALS[$pid]} to $pid"
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 ) &
 asynclaunchpid="$!"

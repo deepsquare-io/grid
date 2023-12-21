@@ -243,7 +243,7 @@ wait_for_network_namespace() {
       flags="$flags -n"
     fi
     # shellcheck disable=SC2086
-    if nsenter ${flags} true >/dev/null 2>&1; then
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -284,7 +284,7 @@ wait_for_network_device() {
   # Wait that the device appears.
   COUNTER=0
   while [ $COUNTER -lt 40 ]; do
-    if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -442,7 +442,7 @@ wait_for_network_namespace() {
       flags="$flags -n"
     fi
     # shellcheck disable=SC2086
-    if nsenter ${flags} true >/dev/null 2>&1; then
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -483,7 +483,7 @@ wait_for_network_device() {
   # Wait that the device appears.
   COUNTER=0
   while [ $COUNTER -lt 40 ]; do
-    if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -508,7 +508,7 @@ Endpoint = 10.0.0.1:1
 PersistentKeepalive = 0
 EOFwireguard
 /usr/bin/chmod 600 "$(pwd)/wg1.conf"
-wg-quick up "$(pwd)/wg1.conf"
+/usr/bin/wg-quick up "$(pwd)/wg1.conf"
 
 /usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
 /usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
@@ -770,7 +770,7 @@ wait $child
 '
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 )
 # END SCOPE: LOGS

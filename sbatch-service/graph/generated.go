@@ -147,6 +147,8 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputStepRunResources,
 		ec.unmarshalInputStepUse,
 		ec.unmarshalInputTransportData,
+		ec.unmarshalInputVNet,
+		ec.unmarshalInputVirtualNetwork,
 		ec.unmarshalInputWireguard,
 		ec.unmarshalInputWireguardPeer,
 	)
@@ -504,6 +506,42 @@ input Job {
   """
   continuousOutputSync: Boolean
     @goTag(key: "yaml", value: "continuousOutputSync,omitempty")
+  """
+  A list of virtual network.
+
+  Can only be used with network namespaces.
+
+  Go name: "VirtualNetworks".
+  """
+  virtualNetworks: [VirtualNetwork!]
+    @goTag(key: "yaml", value: "virtualNetworks,omitempty")
+    @constraint(format: "dive,required")
+}
+
+"""
+A virtual network is a network that can be used to connect network namespaces.
+
+For now, the virtual network use
+"""
+input VirtualNetwork {
+  """
+  Name of the virtual network.
+
+  Use this name to reference the network.
+
+  Go name: "Name".
+  """
+  name: String! @goTag(key: "yaml", value: "name,omitempty")
+  """
+  Gateway address (CIDR). Note this does not forward to the internet. This is only used for NAT traversal.
+
+  Example: "10.0.0.1/24". IPv6 is also supported.
+
+  Go name: "GatewayAddress".
+  """
+  gatewayAddress: String!
+    @goTag(key: "yaml", value: "gatewayAddress,omitempty")
+    @constraint(format: "cidr")
 }
 
 """
@@ -898,7 +936,7 @@ Wireguard VPN Transport for StepRun.
 
 The Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.
 
-The interface are named wg0, wg1, ..., wgN.
+The interfaces are named wg0, wg1, ..., wgN.
 
 Wireguard transport uses UDP hole punching to connect to the VPN Server.
 
@@ -1006,6 +1044,42 @@ input NetworkInterface {
   Go name: "Bore".
   """
   bore: Bore @goTag(key: "yaml", value: "bore,omitempty")
+  """
+  Use a DeepSquare-managed virtual network for inter-step communication.
+
+  It uses Wireguard to interconnect the steps. The communication are encrypted.
+
+  Go name: "VNet".
+  """
+  vnet: VNet @goTag(key: "yaml", value: "vnet,omitempty") @goField(name: "VNet")
+}
+
+"""
+Use VNet as network interface.
+"""
+input VNet {
+  """
+  Name of the network to be used. Must exists.
+
+  See Job.Networks.
+
+  Go name: "Name".
+  """
+  name: String! @goTag(key: "yaml", value: "name,omitempty")
+  """
+  Address (CIDR) of the interface.
+
+  Example: "10.0.0.2/24" which means
+
+    - The interface's IP is 10.0.0.2.
+
+    - Route packets with destination 10.0.0.0/24 to that interface.
+
+  Go name: "Address"
+  """
+  address: String!
+    @goTag(key: "yaml", value: "address,omitempty")
+    @constraint(format: "cidr")
 }
 
 """
@@ -3862,7 +3936,7 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"resources", "env", "enableLogging", "input", "inputMode", "steps", "output", "continuousOutputSync"}
+	fieldsInOrder := [...]string{"resources", "env", "enableLogging", "input", "inputMode", "steps", "output", "continuousOutputSync", "virtualNetworks"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -3925,6 +3999,13 @@ func (ec *executionContext) unmarshalInputJob(ctx context.Context, obj interface
 				return it, err
 			}
 			it.ContinuousOutputSync = data
+		case "virtualNetworks":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("virtualNetworks"))
+			data, err := ec.unmarshalOVirtualNetwork2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐVirtualNetworkᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VirtualNetworks = data
 		}
 	}
 
@@ -4164,7 +4245,7 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"wireguard", "bore"}
+	fieldsInOrder := [...]string{"wireguard", "bore", "vnet"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4185,6 +4266,13 @@ func (ec *executionContext) unmarshalInputNetworkInterface(ctx context.Context, 
 				return it, err
 			}
 			it.Bore = data
+		case "vnet":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("vnet"))
+			data, err := ec.unmarshalOVNet2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐVNet(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.VNet = data
 		}
 	}
 
@@ -4674,6 +4762,74 @@ func (ec *executionContext) unmarshalInputTransportData(ctx context.Context, obj
 				return it, err
 			}
 			it.S3 = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputVNet(ctx context.Context, obj interface{}) (model.VNet, error) {
+	var it model.VNet
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "address"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "address":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("address"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Address = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputVirtualNetwork(ctx context.Context, obj interface{}) (model.VirtualNetwork, error) {
+	var it model.VirtualNetwork
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "gatewayAddress"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "gatewayAddress":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gatewayAddress"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GatewayAddress = data
 		}
 	}
 
@@ -5345,6 +5501,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNVirtualNetwork2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐVirtualNetwork(ctx context.Context, v interface{}) (*model.VirtualNetwork, error) {
+	res, err := ec.unmarshalInputVirtualNetwork(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNWireguardPeer2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguardPeer(ctx context.Context, v interface{}) (*model.WireguardPeer, error) {
 	res, err := ec.unmarshalInputWireguardPeer(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -5905,6 +6066,34 @@ func (ec *executionContext) unmarshalOTransportData2ᚖgithubᚗcomᚋdeepsquare
 	}
 	res, err := ec.unmarshalInputTransportData(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOVNet2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐVNet(ctx context.Context, v interface{}) (*model.VNet, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputVNet(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOVirtualNetwork2ᚕᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐVirtualNetworkᚄ(ctx context.Context, v interface{}) ([]*model.VirtualNetwork, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.VirtualNetwork, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNVirtualNetwork2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐVirtualNetwork(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOWireguard2ᚖgithubᚗcomᚋdeepsquareᚑioᚋgridᚋsbatchᚑserviceᚋgraphᚋmodelᚐWireguard(ctx context.Context, v interface{}) (*model.Wireguard, error) {

@@ -32,7 +32,7 @@ wait_for_network_namespace() {
       flags="$flags -n"
     fi
     # shellcheck disable=SC2086
-    if nsenter ${flags} true >/dev/null 2>&1; then
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -73,7 +73,7 @@ wait_for_network_device() {
   # Wait that the device appears.
   COUNTER=0
   while [ $COUNTER -lt 40 ]; do
-    if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -88,6 +88,8 @@ wait_for_network_device $$ net0
 {{ range $i, $nic := .Run.CustomNetworkInterfaces }}
 {{- if $nic.Wireguard }}
 {{ renderWireguard $nic.Wireguard (printf "wg%d" $i) | escapeSQuote }}
+{{- else if $nic.VNet }}
+{{ renderVNet $nic.VNet (printf "vnet%d" $i) $.Job | escapeSQuote }}
 {{- else if $nic.Bore }}
 /usr/bin/dpsproxy --to.addr {{ $nic.Bore.BoreAddress | ignoreNil }}{{ $nic.Bore.Address | ignoreNil }}{{ if $nic.Bore.Port }}:{{ $nic.Bore.Port }}{{ end }} --local.addr localhost:{{ $nic.Bore.TargetPort }}{{ if $nic.Bore.Secret }} --secret {{ derefStr $nic.Bore.Secret | squote }}{{ end }} -r &
 {{- end -}}

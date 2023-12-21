@@ -60,6 +60,10 @@ var (
 	fixtureCS2 string
 	//go:embed cs2.txt
 	expectedCS2 string
+	//go:embed virtual-networks.yaml
+	fixtureVirtualNetworks string
+	//go:embed virtual-networks.txt
+	expectedVirtualNetworks string
 
 	r = renderer.NewJobRenderer(
 		"logger.example.com:443",
@@ -112,6 +116,11 @@ func TestFixtures(t *testing.T) {
 			name:     "CS2",
 			fixture:  fixtureCS2,
 			expected: expectedCS2,
+		},
+		{
+			name:     "virtual-network",
+			fixture:  fixtureVirtualNetworks,
+			expected: expectedVirtualNetworks,
 		},
 	}
 

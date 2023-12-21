@@ -202,6 +202,12 @@ type Job struct {
 	//
 	// Go name: "ContinuousOutputSync".
 	ContinuousOutputSync *bool `json:"continuousOutputSync,omitempty" yaml:"continuousOutputSync,omitempty"`
+	// A list of virtual network.
+	//
+	// Can only be used with network namespaces.
+	//
+	// Go name: "VirtualNetworks".
+	VirtualNetworks []*VirtualNetwork `json:"virtualNetworks,omitempty" yaml:"virtualNetworks,omitempty" validate:"dive,required"`
 }
 
 // JobResources are the allocated resources for a job in a cluster.
@@ -374,6 +380,12 @@ type NetworkInterface struct {
 	//
 	// Go name: "Bore".
 	Bore *Bore `json:"bore,omitempty" yaml:"bore,omitempty"`
+	// Use a DeepSquare-managed virtual network for inter-step communication.
+	//
+	// It uses Wireguard to interconnect the steps. The communication are encrypted.
+	//
+	// Go name: "VNet".
+	VNet *VNet `json:"vnet,omitempty" yaml:"vnet,omitempty"`
 }
 
 // S3Data describes the necessary variables to connect to a S3 storage.
@@ -746,11 +758,49 @@ type TransportData struct {
 	S3 *S3Data `json:"s3,omitempty" yaml:"s3,omitempty"`
 }
 
+// Use VNet as network interface.
+type VNet struct {
+	// Name of the network to be used. Must exists.
+	//
+	// See Job.Networks.
+	//
+	// Go name: "Name".
+	Name string `json:"name" yaml:"name,omitempty"`
+	// Address (CIDR) of the interface.
+	//
+	// Example: "10.0.0.2/24" which means
+	//
+	//   - The interface's IP is 10.0.0.2.
+	//
+	//   - Route packets with destination 10.0.0.0/24 to that interface.
+	//
+	// Go name: "Address"
+	Address string `json:"address" yaml:"address,omitempty" validate:"cidr"`
+}
+
+// A virtual network is a network that can be used to connect network namespaces.
+//
+// For now, the virtual network use
+type VirtualNetwork struct {
+	// Name of the virtual network.
+	//
+	// Use this name to reference the network.
+	//
+	// Go name: "Name".
+	Name string `json:"name" yaml:"name,omitempty"`
+	// Gateway address (CIDR). Note this does not forward to the internet. This is only used for NAT traversal.
+	//
+	// Example: "10.0.0.1/24". IPv6 is also supported.
+	//
+	// Go name: "GatewayAddress".
+	GatewayAddress string `json:"gatewayAddress" yaml:"gatewayAddress,omitempty" validate:"cidr"`
+}
+
 // Wireguard VPN Transport for StepRun.
 //
 // The Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.
 //
-// The interface is named wg0, wg1, ..., wgN.
+// The interfaces are named wg0, wg1, ..., wgN.
 //
 // Wireguard transport uses UDP hole punching to connect to the VPN Server.
 //

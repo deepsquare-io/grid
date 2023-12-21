@@ -262,7 +262,7 @@ if "${IS_VIDEO}"; then
 fi'
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 )
 # END SCOPE: CONTINUOUS SYNC

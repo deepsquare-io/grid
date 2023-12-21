@@ -21,4 +21,4 @@ PersistentKeepalive = {{ derefInt $peer.PersistentKeepalive }}
 {{- end }}
 EOFwireguard
 /usr/bin/chmod 600 "$(pwd)/{{ .InterfaceName }}.conf"
-wg-quick up "$(pwd)/{{ .InterfaceName }}.conf"
+/usr/bin/wg-quick up "$(pwd)/{{ .InterfaceName }}.conf"

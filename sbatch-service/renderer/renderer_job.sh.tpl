@@ -91,6 +91,13 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+{{- if .Job.VirtualNetworks }}
+# Start VPNs
+{{ range $i, $vpn := .Job.VirtualNetworks -}}
+{{ renderVirtualNetwork $vpn $i $.Job.Steps }}
+{{ end }}
+{{- end }}
+
 cd "$STORAGE_PATH/"
 loadDeepsquareEnv() {
   while IFS= read -r envvar; do
@@ -162,7 +169,7 @@ declare -A EXIT_SIGNALS
 {{- end }}
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 
 {{- if and .Job.Output .Job.Output.HTTP }}

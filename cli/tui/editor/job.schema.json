@@ -38,6 +38,13 @@
     "continuousOutputSync": {
       "$ref": "#/definitions/Boolean",
       "description": "ContinuousOutputSync will push data during the whole job.\n\nThis is useful when it is not desired to lose data when the job is suddenly stopped.\n\nContinousOutputSync is not available with HTTP.\n\nGo name: \"ContinuousOutputSync\"."
+    },
+    "virtualNetworks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/VirtualNetwork"
+      },
+      "description": "A list of virtual network.\n\nCan only be used with network namespaces.\n\nGo name: \"VirtualNetworks\"."
     }
   },
   "definitions": {
@@ -211,6 +218,13 @@
         "continuousOutputSync": {
           "$ref": "#/definitions/Boolean",
           "description": "ContinuousOutputSync will push data during the whole job.\n\nThis is useful when it is not desired to lose data when the job is suddenly stopped.\n\nContinousOutputSync is not available with HTTP.\n\nGo name: \"ContinuousOutputSync\"."
+        },
+        "virtualNetworks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VirtualNetwork"
+          },
+          "description": "A list of virtual network.\n\nCan only be used with network namespaces.\n\nGo name: \"VirtualNetworks\"."
         }
       },
       "required": [
@@ -218,6 +232,24 @@
         "steps"
       ],
       "description": "A Job is a finite sequence of instructions."
+    },
+    "VirtualNetwork": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/String",
+          "description": "Name of the virtual network.\n\nUse this name to reference the network.\n\nGo name: \"Name\"."
+        },
+        "gatewayAddress": {
+          "$ref": "#/definitions/String",
+          "description": "Gateway address (CIDR). Note this does not forward to the internet. This is only used for NAT traversal.\n\nExample: \"10.0.0.1/24\". IPv6 is also supported.\n\nGo name: \"GatewayAddress\"."
+        }
+      },
+      "required": [
+        "name",
+        "gatewayAddress"
+      ],
+      "description": "A virtual network is a network that can be used to connect network namespaces.\n\nFor now, the virtual network use"
     },
     "Step": {
       "type": "object",
@@ -462,7 +494,7 @@
       "required": [
         "privateKey"
       ],
-      "description": "Wireguard VPN Transport for StepRun.\n\nThe Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.\n\nThe interface is named wg0, wg1, ..., wgN.\n\nWireguard transport uses UDP hole punching to connect to the VPN Server.\n\nDisabled settings: PreUp, PostUp, PreDown, PostDown, ListenPort, Table, MTU, SaveConfig.\n\nIf these features are necessary, please do contact DeepSquare developpers!"
+      "description": "Wireguard VPN Transport for StepRun.\n\nThe Wireguard VPN can be used as a gateway for the steps. All that is needed is a Wireguard server outside the cluster that acts as a public gateway.\n\nThe interfaces are named wg0, wg1, ..., wgN.\n\nWireguard transport uses UDP hole punching to connect to the VPN Server.\n\nDisabled settings: PreUp, PostUp, PreDown, PostDown, ListenPort, Table, MTU, SaveConfig.\n\nIf these features are necessary, please do contact DeepSquare developpers!"
     },
     "Bore": {
       "type": "object",
@@ -503,10 +535,32 @@
         "bore": {
           "$ref": "#/definitions/Bore",
           "description": "Use the bore transport.\n\nGo name: \"Bore\"."
+        },
+        "vnet": {
+          "$ref": "#/definitions/VNet",
+          "description": "Use a DeepSquare-managed virtual network for inter-step communication.\n\nIt uses Wireguard to interconnect the steps. The communication are encrypted.\n\nGo name: \"VNet\"."
         }
       },
       "required": [],
       "description": "Connect a network interface on a StepRun.\n\nThe network interface is connected via slirp4netns.\n\nIf using wireguard, please mapUid to root (mapUid=0)."
+    },
+    "VNet": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/String",
+          "description": "Name of the network to be used. Must exists.\n\nSee Job.Networks.\n\nGo name: \"Name\"."
+        },
+        "address": {
+          "$ref": "#/definitions/String",
+          "description": "Address (CIDR) of the interface.\n\nExample: \"10.0.0.2/24\" which means\n\n  - The interface's IP is 10.0.0.2.\n\n  - Route packets with destination 10.0.0.0/24 to that interface.\n\nGo name: \"Address\""
+        }
+      },
+      "required": [
+        "name",
+        "address"
+      ],
+      "description": "Use VNet as network interface."
     },
     "StepRun": {
       "type": "object",

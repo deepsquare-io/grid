@@ -31,6 +31,7 @@ func TestRenderPastaNS(t *testing.T) {
 			DNS     []string
 			Command string
 			Shell   *string
+			Job     *model.Job
 		}
 		isError       bool
 		errorContains []string
@@ -43,6 +44,7 @@ func TestRenderPastaNS(t *testing.T) {
 				DNS     []string
 				Command string
 				Shell   *string
+				Job     *model.Job
 			}{
 				NICs: []*model.NetworkInterface{
 					&cleanWireguardNIC,
@@ -84,7 +86,7 @@ wait_for_network_namespace() {
       flags="$flags -n"
     fi
     # shellcheck disable=SC2086
-    if nsenter ${flags} true >/dev/null 2>&1; then
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -125,7 +127,7 @@ wait_for_network_device() {
   # Wait that the device appears.
   COUNTER=0
   while [ $COUNTER -lt 40 ]; do
-    if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -150,7 +152,7 @@ PresharedKey = sha
 PersistentKeepalive = 20
 EOFwireguard
 /usr/bin/chmod 600 "$(pwd)/wg0.conf"
-wg-quick up "$(pwd)/wg0.conf"
+/usr/bin/wg-quick up "$(pwd)/wg0.conf"
 
 /usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
 /usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
@@ -184,6 +186,7 @@ wait $child
 				DNS     []string
 				Command string
 				Shell   *string
+				Job     *model.Job
 			}{
 				NICs: []*model.NetworkInterface{
 					&cleanBoreNIC,
@@ -225,7 +228,7 @@ wait_for_network_namespace() {
       flags="$flags -n"
     fi
     # shellcheck disable=SC2086
-    if nsenter ${flags} true >/dev/null 2>&1; then
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -266,7 +269,7 @@ wait_for_network_device() {
   # Wait that the device appears.
   COUNTER=0
   while [ $COUNTER -lt 40 ]; do
-    if nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
       return 0
     else
       /usr/bin/sleep 0.5
@@ -318,6 +321,7 @@ wait $child
 					Command:                 tt.input.Command,
 					Shell:                   tt.input.Shell,
 				},
+				tt.input.Job,
 				tt.input.Command,
 			)
 

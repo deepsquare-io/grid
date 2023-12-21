@@ -134,6 +134,19 @@ Go name: "ContinuousOutputSync".
 
 </td>
 </tr>
+<tr>
+<td colspan="2" valign="top"><strong>virtualNetworks</strong></td>
+<td valign="top">[<a href="#virtualnetwork">VirtualNetwork</a>!]</td>
+<td>
+
+A list of virtual network.
+
+Can only be used with network namespaces.
+
+Go name: "VirtualNetworks".
+
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -333,6 +346,99 @@ Go name: "Value".
 env:
   - key: MY_ENV
     value: my value
+```
+
+</details>
+
+### `.virtualNetworks[]` _VirtualNetwork_
+
+A virtual network is a network that can be used to connect network namespaces.
+
+For now, the virtual network use
+
+<table>
+<thead>
+<tr>
+<th colspan="2" align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="2" valign="top"><strong>name</strong></td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Name of the virtual network.
+
+Use this name to reference the network.
+
+Go name: "Name".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>gatewayAddress</strong></td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Gateway address (CIDR). Note this does not forward to the internet. This is only used for NAT traversal.
+
+Example: "10.0.0.1/24". IPv6 is also supported.
+
+Go name: "GatewayAddress".
+
+</td>
+</tr>
+</tbody>
+</table>
+
+<details>
+  <summary>Examples</summary>
+
+```yaml title="Virtual Network"
+virtualNetworks:
+  - name: my-network
+    gatewayAddress: 10.0.0.1/24
+
+steps:
+  - name: do-async
+    launch:
+      steps:
+        - name: server
+          run:
+            network: slirp4netns
+            mapUid: 0
+            mapGid: 0
+            customNetworkInterfaces:
+              - vnet:
+                  name: my-network
+                  address: 10.0.0.2/24
+            command: |-
+              nc -l -p 12345
+
+  - name: client
+    run:
+      network: slirp4netns
+      mapUid: 0
+      mapGid: 0
+      customNetworkInterfaces:
+        - vnet:
+            name: my-network
+            address: 10.0.0.3/24
+      command: |-
+        while true; do
+            echo "Trying to connect..."
+            if echo "hello world" | nc 10.0.0.2 12345; then
+                echo "Connection successful"
+                break
+            else
+                echo "Connection failed. Retrying in 5 seconds..."
+                sleep 5
+            fi
+        done
+        echo "Success"
 ```
 
 </details>
@@ -1502,6 +1608,19 @@ Go name: "Bore".
 
 </td>
 </tr>
+<tr>
+<td colspan="2" valign="top"><strong>vnet</strong></td>
+<td valign="top"><a href="#vnet">VNet</a></td>
+<td>
+
+Use a DeepSquare-managed virtual network for inter-step communication.
+
+It uses Wireguard to interconnect the steps. The communication are encrypted.
+
+Go name: "VNet".
+
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -1818,6 +1937,52 @@ bore:
 ```
 
 </details>
+
+### `steps[].run.customNetworkInterfaces[].vnet` _VNet_
+
+Use VNet as network interface.
+
+<table>
+<thead>
+<tr>
+<th colspan="2" align="left">Field</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td colspan="2" valign="top"><strong>name</strong></td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Name of the network to be used. Must exists.
+
+See Job.Networks.
+
+Go name: "Name".
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>address</strong></td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Address (CIDR) of the interface.
+
+Example: "10.0.0.2/24" which means
+
+- The interface's IP is 10.0.0.2.
+
+- Route packets with destination 10.0.0.0/24 to that interface.
+
+Go name: "Address"
+
+</td>
+</tr>
+</tbody>
+</table>
 
 ### `.steps[].for` _StepFor_
 

@@ -246,7 +246,7 @@ EOFenroot
   /bin/sh -c '"'"'/usr/bin/echo '"'"'"'"'"'"'"'"'hello world'"'"'"'"'"'"'"'"''"'"''
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 )
 # END SCOPE: LOGS
@@ -493,7 +493,7 @@ EOFenroot
   /bin/sh -c '"'"'/usr/bin/echo '"'"'"'"'"'"'"'"'hello world'"'"'"'"'"'"'"'"''"'"''
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 )
 # END SCOPE: CONTINUOUS SYNC
@@ -734,7 +734,7 @@ EOFenroot
   /bin/sh -c '"'"'/usr/bin/echo '"'"'"'"'"'"'"'"'hello world'"'"'"'"'"'"'"'"''"'"''
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
@@ -973,7 +973,7 @@ EOFenroot
   /bin/sh -c '"'"'/usr/bin/echo '"'"'"'"'"'"'"'"'hello world'"'"'"'"'"'"'"'"''"'"''
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 /usr/bin/echo "Output contains:"
 /usr/bin/find "$DEEPSQUARE_OUTPUT/" -exec realpath --relative-to "$DEEPSQUARE_OUTPUT/" {} \;
@@ -1157,7 +1157,7 @@ EOFenroot
   /bin/sh -c '"'"'/usr/bin/echo '"'"'"'"'"'"'"'"'hello world'"'"'"'"'"'"'"'"''"'"''
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 `,
 			title: "Positive test with no logs",
@@ -1295,7 +1295,7 @@ loadDeepsquareEnv() {
 declare -A EXIT_SIGNALS
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 test
 `,
@@ -1368,7 +1368,7 @@ loadDeepsquareEnv() {
 declare -A EXIT_SIGNALS
 
 for pid in "${!EXIT_SIGNALS[@]}"; do
-  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || echo "Sending signal ${EXIT_SIGNALS[$pid]} to $pid failed, continuing..."
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
 `,
 		},
