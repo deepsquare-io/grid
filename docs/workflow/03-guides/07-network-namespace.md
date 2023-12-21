@@ -38,7 +38,9 @@ steps:
       # You may need to configure the DNS.
       dns:
         - 8.8.8.8
-      # Set the network namespace.
+      # Set the network namespace. You need to be root to setup WireGuard.
+      mapUid: 0
+      mapGid: 0
       network: slirp4netns # or "pasta"
       customNetworkInterfaces:
         - wireguard:
