@@ -88,9 +88,22 @@ steps:
 
 You **have** to **map to root** (`mapUid: 0`) so that it is possible to create `vnet` network interfaces.
 
-The `name` field of the network interface references the Virtual Network previously declared. The `address` is the IP used by the step. Note that there is a mask (`/24`), this can be changed in case you which to change the route mask.
+The `name` field of the network interface references the Virtual Network previously declared. The `address` is the IP used by the step. Note that there is a mask (`/24`), this can be changed in case you wish to change the route mask.
 
 Remainder:
 
 - `/24` routes the IP range from `10.0.0.1` to `10.0.0.255`, to the virtual network.
 - `/16` routes the IP range from `10.0.0.1` to `10.0.255.255`, to the virtual network.
+
+If you are doubting about which value to use, just use `/24` (254 IPs allocated for the virtual network) or higher.
+
+When the job will run, the step will have a `vnet0` network interface with the defined IP. You can check with `ip a`:
+
+```shell title="Running ip a on step 'client'"
+3: vnet0: <POINTOPOINT,NOARP,UP,LOWER_UP> mtu 65440 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/none
+    inet 10.0.0.3/24 scope global vnet0
+       valid_lft forever preferred_lft forever
+```
+
+Feel free to use as many Virtual Networks as you like - it's free!
