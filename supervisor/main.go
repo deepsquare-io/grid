@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -726,169 +727,176 @@ See the GNU General Public License for more details.`,
 		}()
 
 		// Launch benchmark which will register the node
-		if !benchmarkDisable {
-			go func() {
-				logger.I.Info("initial slurm healthcheck...")
-				if err := try.Do(10, 10*time.Second, func(try int) error {
-					return container.scheduler.HealthCheck(ctx)
-				}); err != nil {
-					logger.I.Fatal("healthcheck failed", zap.Error(err))
-				}
+		go func() {
+			logger.I.Info("initial slurm healthcheck...")
+			if err := try.Do(10, 10*time.Second, func(try int) error {
+				return container.scheduler.HealthCheck(ctx)
+			}); err != nil {
+				logger.I.Fatal("healthcheck failed", zap.Error(err))
+			}
 
-				logger.I.Info("cancelling old benchmarks")
-				if err := container.benchmarkLauncher.Cancel(ctx, "osu"); err != nil {
-					logger.I.Warn("failed to cancel osu benchmark", zap.Error(err))
-				}
-				if err := container.benchmarkLauncher.Cancel(ctx, "speedtest"); err != nil {
-					logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
-				}
-				if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
-					logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
-				}
-				if err := container.benchmarkLauncher.Cancel(ctx, "ior"); err != nil {
-					logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))
-				}
-				logger.I.Info("launching new benchmarks")
+			logger.I.Info("cancelling old benchmarks")
+			if err := container.benchmarkLauncher.Cancel(ctx, "osu"); err != nil {
+				logger.I.Warn("failed to cancel osu benchmark", zap.Error(err))
+			}
+			if err := container.benchmarkLauncher.Cancel(ctx, "speedtest"); err != nil {
+				logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
+			}
+			if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
+				logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
+			}
+			if err := container.benchmarkLauncher.Cancel(ctx, "ior"); err != nil {
+				logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))
+			}
 
-				logger.I.Info("searching for cluster specs...")
-				var findOpts []scheduler.FindSpecOption
-				if !benchmarkUnresponsive {
-					findOpts = append(findOpts, scheduler.WithOnlyResponding())
-				}
-				nodes, err := container.scheduler.FindTotalNodes(ctx, findOpts...)
-				if err != nil {
-					logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
-				}
-				if nodes == 0 {
-					logger.I.Fatal("no nodes available, check sinfo")
-				}
-				var hplNodes uint64
-				if benchmarkHPLSingleNode {
-					hplNodes = 1
-				} else {
-					hplNodes = nodes
-				}
-				var iorNodes uint64
-				if benchmarkIORSingleNode {
-					iorNodes = 1
-				} else {
-					iorNodes = nodes
-				}
-				cpusPerNode, err := container.scheduler.FindCPUsPerNode(ctx, findOpts...)
-				if err != nil {
-					logger.I.Fatal("failed to check cpus per node", zap.Error(err))
-				}
-				var minCPUsPerNode uint64
-				if len(cpusPerNode) == 0 {
-					minCPUsPerNode = 0
-				} else {
-					minCPUsPerNode = slices.Min(cpusPerNode)
-				}
-				gpusPerNode, err := container.scheduler.FindGPUsPerNode(ctx, findOpts...)
-				if err != nil {
-					logger.I.Fatal("failed to check gpus per node", zap.Error(err))
-				}
-				var minGPUsPerNode uint64
-				if len(gpusPerNode) == 0 {
-					minGPUsPerNode = 0
-				} else {
-					minGPUsPerNode = slices.Min(gpusPerNode)
-				}
-				memPerNode, err := container.scheduler.FindMemPerNode(ctx, findOpts...)
-				if err != nil {
-					logger.I.Fatal("failed to check mem per node", zap.Error(err))
-				}
-				var minMemPerNode uint64
-				if len(memPerNode) == 0 {
-					minMemPerNode = 0
-				} else {
-					minMemPerNode = slices.Min(memPerNode)
-				}
+			logger.I.Info("searching for cluster specs...")
+			var findOpts []scheduler.FindSpecOption
+			if !benchmarkUnresponsive {
+				findOpts = append(findOpts, scheduler.WithOnlyResponding())
+			}
+			nodes, err := container.scheduler.FindTotalNodes(ctx, findOpts...)
+			if err != nil {
+				logger.I.Fatal("failed to check total number of nodes", zap.Error(err))
+			}
+			if nodes == 0 {
+				logger.I.Fatal("no nodes available, check sinfo")
+			}
+			var hplNodes uint64
+			if benchmarkHPLSingleNode {
+				hplNodes = 1
+			} else {
+				hplNodes = nodes
+			}
+			var iorNodes uint64
+			if benchmarkIORSingleNode {
+				iorNodes = 1
+			} else {
+				iorNodes = nodes
+			}
+			cpusPerNode, err := container.scheduler.FindCPUsPerNode(ctx, findOpts...)
+			if err != nil {
+				logger.I.Fatal("failed to check cpus per node", zap.Error(err))
+			}
+			var minCPUsPerNode uint64
+			if len(cpusPerNode) == 0 {
+				minCPUsPerNode = 0
+			} else {
+				minCPUsPerNode = slices.Min(cpusPerNode)
+			}
+			gpusPerNode, err := container.scheduler.FindGPUsPerNode(ctx, findOpts...)
+			if err != nil {
+				logger.I.Fatal("failed to check gpus per node", zap.Error(err))
+			}
+			var minGPUsPerNode uint64
+			if len(gpusPerNode) == 0 {
+				minGPUsPerNode = 0
+			} else {
+				minGPUsPerNode = slices.Min(gpusPerNode)
+			}
+			memPerNode, err := container.scheduler.FindMemPerNode(ctx, findOpts...)
+			if err != nil {
+				logger.I.Fatal("failed to check mem per node", zap.Error(err))
+			}
+			var minMemPerNode uint64
+			if len(memPerNode) == 0 {
+				minMemPerNode = 0
+			} else {
+				minMemPerNode = slices.Min(memPerNode)
+			}
 
-				// Parse additional env
-				var envOpts []benchmark.Option
-				for _, env := range benchmarkEnv.Value() {
-					k, v, ok := strings.Cut(env, "=")
-					if !ok {
-						logger.I.Error("invalid env format", zap.String("env", env))
-						continue
-					}
-					envOpts = append(envOpts, benchmark.WithAdditionalEnv(k, v))
+			// Parse additional env
+			var envOpts []benchmark.Option
+			for _, env := range benchmarkEnv.Value() {
+				k, v, ok := strings.Cut(env, "=")
+				if !ok {
+					logger.I.Error("invalid env format", zap.String("env", env))
+					continue
 				}
+				envOpts = append(envOpts, benchmark.WithAdditionalEnv(k, v))
+			}
 
-				hplOpts := append(
-					commonBenchmarkOpts,
-					benchmark.WithClusterSpecs(
-						hplNodes,
-						minCPUsPerNode,
-						minGPUsPerNode,
-						minMemPerNode,
-					),
-					benchmark.WithImage(benchmarkHPLImage),
+			hplOpts := append(
+				commonBenchmarkOpts,
+				benchmark.WithClusterSpecs(
+					hplNodes,
+					minCPUsPerNode,
+					minGPUsPerNode,
+					minMemPerNode,
+				),
+				benchmark.WithImage(benchmarkHPLImage),
+			)
+			hplOpts = append(hplOpts, envOpts...)
+
+			osuOpts := append(
+				commonBenchmarkOpts,
+				benchmark.WithClusterSpecs(
+					nodes,
+					minCPUsPerNode,
+					minGPUsPerNode,
+					minMemPerNode,
+				),
+				benchmark.WithImage(benchmarkOSUImage),
+			)
+			osuOpts = append(osuOpts, envOpts...)
+
+			iorOpts := append(
+				commonBenchmarkOpts,
+				benchmark.WithClusterSpecs(
+					iorNodes,
+					minCPUsPerNode,
+					minGPUsPerNode,
+					minMemPerNode,
+				),
+				benchmark.WithImage(benchmarkIORImage),
+			)
+			iorOpts = append(iorOpts, envOpts...)
+
+			speedtestOpts := append(
+				commonBenchmarkOpts,
+				benchmark.WithClusterSpecs(
+					nodes,
+					minCPUsPerNode,
+					minGPUsPerNode,
+					minMemPerNode,
+				),
+				benchmark.WithImage(benchmarkSpeedTestImage),
+			)
+			speedtestOpts = append(speedtestOpts, envOpts...)
+
+			logger.I.Info("checking if it is necessary to re-run the benchmark")
+			oldInfo, err := container.metascheduler.GetOldInfo(ctx)
+			if err != nil {
+				logger.I.Warn("failed to fetch old info, running benchmark...", zap.Error(err))
+			}
+			hardware := metaschedulerabi.ProviderHardware{
+				Nodes:       nodes,
+				GpusPerNode: gpusPerNode,
+				CpusPerNode: cpusPerNode,
+				MemPerNode:  memPerNode,
+			}
+			prices := metaschedulerabi.ProviderPrices{
+				GpuPricePerMin: gpuPricePerMin,
+				CpuPricePerMin: cpuPricePerMin,
+				MemPricePerMin: memPricePerMin,
+			}
+			if metascheduler.ProviderHardwareEqual(hardware, oldInfo.ProviderHardware) &&
+				metascheduler.ProviderPricesEqual(prices, oldInfo.ProviderPrices) &&
+				metascheduler.LabelsContains(labels, oldInfo.Labels) {
+				logger.I.Info(
+					"hardware, prices and labels are the same, no need to run a benchmark",
+					zap.Any("info", oldInfo),
 				)
-				hplOpts = append(hplOpts, envOpts...)
-
-				osuOpts := append(
-					commonBenchmarkOpts,
-					benchmark.WithClusterSpecs(
-						nodes,
-						minCPUsPerNode,
-						minGPUsPerNode,
-						minMemPerNode,
-					),
-					benchmark.WithImage(benchmarkOSUImage),
-				)
-				osuOpts = append(osuOpts, envOpts...)
-
-				iorOpts := append(
-					commonBenchmarkOpts,
-					benchmark.WithClusterSpecs(
-						iorNodes,
-						minCPUsPerNode,
-						minGPUsPerNode,
-						minMemPerNode,
-					),
-					benchmark.WithImage(benchmarkIORImage),
-				)
-				iorOpts = append(iorOpts, envOpts...)
-
-				speedtestOpts := append(
-					commonBenchmarkOpts,
-					benchmark.WithClusterSpecs(
-						nodes,
-						minCPUsPerNode,
-						minGPUsPerNode,
-						minMemPerNode,
-					),
-					benchmark.WithImage(benchmarkSpeedTestImage),
-				)
-				speedtestOpts = append(speedtestOpts, envOpts...)
-
-				logger.I.Info("checking if it is necessary to re-run the benchmark")
-				oldInfo, err := container.metascheduler.GetOldInfo(ctx)
-				if err != nil {
-					logger.I.Warn("failed to fetch old info, running benchmark...", zap.Error(err))
-				}
-				hardware := metaschedulerabi.ProviderHardware{
-					Nodes:       nodes,
-					GpusPerNode: gpusPerNode,
-					CpusPerNode: cpusPerNode,
-					MemPerNode:  memPerNode,
-				}
-				prices := metaschedulerabi.ProviderPrices{
-					GpuPricePerMin: gpuPricePerMin,
-					CpuPricePerMin: cpuPricePerMin,
-					MemPricePerMin: memPricePerMin,
-				}
-				if metascheduler.ProviderHardwareEqual(hardware, oldInfo.ProviderHardware) &&
-					metascheduler.ProviderPricesEqual(prices, oldInfo.ProviderPrices) &&
-					metascheduler.LabelsContains(labels, oldInfo.Labels) {
-					logger.I.Info(
-						"hardware, prices and labels are the same, no need to run a benchmark",
-						zap.Any("info", oldInfo),
+				// Add old benchmark labels
+				labels = oldInfo.Labels
+			} else {
+				if benchmarkDisable {
+					logger.I.Warn("benchmark disabled, defaults to zero values or old values",
+						zap.Any("oldInfo", oldInfo),
+						zap.Any("expectedHardware", hardware),
+						zap.Any("expectedPrices", prices),
+						zap.Any("expectedLabels", labels),
 					)
-					// Add old benchmark labels
-					labels = oldInfo.Labels
+					benchmark.DefaultStore.ImportFromLabels(oldInfo.Labels)
 				} else {
 					logger.I.Info(
 						"need to run a new benchmark",
@@ -905,151 +913,23 @@ See the GNU General Public License for more details.`,
 						speedtestOpts,
 						iorOpts,
 					)
-
-					result := benchmark.DefaultStore.Dump()
-
-					labels = metascheduler.MergeLabels(labels, []metaschedulerabi.Label{
-						{
-							Key:   "cpu",
-							Value: result.MachineSpec.CPU,
-						},
-						{
-							Key:   "cpu.microarch",
-							Value: result.MachineSpec.MicroArch,
-						},
-						{
-							Key:   "os",
-							Value: result.MachineSpec.OS,
-						},
-						{
-							Key:   "arch",
-							Value: result.MachineSpec.Arch,
-						},
-						{
-							Key:   "gpu",
-							Value: result.MachineSpec.GPU,
-						},
-						{
-							Key:   "compute.gflops",
-							Value: fmt.Sprintf("%.2f", result.GFLOPS),
-						},
-						{
-							Key:   "network.upload.bw.mbps",
-							Value: fmt.Sprintf("%.2f", float64(result.UploadBandwidth)/1e6),
-						},
-						{
-							Key:   "network.download.bw.mbps",
-							Value: fmt.Sprintf("%.2f", float64(result.DownloadBandwidth)/1e6),
-						},
-						{
-							Key:   "network.p2p.bw.mbps",
-							Value: fmt.Sprintf("%.2f", result.P2PBidirectionalBandwidth),
-						},
-						{
-							Key:   "network.p2p.latency.us",
-							Value: fmt.Sprintf("%.2f", result.P2PLatency),
-						},
-						{
-							Key:   "network.all-to-all.latency.us",
-							Value: fmt.Sprintf("%.2f", result.AllToAllCollectiveLatency),
-						},
-						{
-							Key:   "storage.scratch.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.scratch.read.iops",
-							Value: fmt.Sprintf("%.2f", result.ScratchAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.scratch.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.scratch.write.iops",
-							Value: fmt.Sprintf("%.2f", result.ScratchAvgWrite.IOPS),
-						},
-						{
-							Key:   "storage.shared-world-tmp.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.shared-world-tmp.read.iops",
-							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.shared-world-tmp.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.shared-world-tmp.write.iops",
-							Value: fmt.Sprintf("%.2f", result.SharedWorldTmpAvgWrite.IOPS),
-						},
-						{
-							Key:   "storage.shared-tmp.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.shared-tmp.read.iops",
-							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.shared-tmp.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.shared-tmp.write.iops",
-							Value: fmt.Sprintf("%.2f", result.SharedTmpAvgWrite.IOPS),
-						},
-						{
-							Key:   "storage.disk-world-tmp.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.disk-world-tmp.read.iops",
-							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.disk-world-tmp.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.disk-world-tmp.write.iops",
-							Value: fmt.Sprintf("%.2f", result.DiskWorldTmpAvgWrite.IOPS),
-						},
-						{
-							Key:   "storage.disk-tmp.read.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.Bandwidth),
-						},
-						{
-							Key:   "storage.disk-tmp.read.iops",
-							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgRead.IOPS),
-						},
-						{
-							Key:   "storage.disk-tmp.write.bw.mibps",
-							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.Bandwidth),
-						},
-						{
-							Key:   "storage.disk-tmp.write.iops",
-							Value: fmt.Sprintf("%.2f", result.DiskTmpAvgWrite.IOPS),
-						},
-					})
 				}
 
-				labels = metascheduler.ProcessLabels(labels)
-				logger.I.Info("asking for registration")
-				if err := container.metascheduler.Register(
-					ctx,
-					hardware,
-					prices,
-					labels,
-				); err != nil {
-					logger.I.Fatal("supervisor failed to register", zap.Error(err))
-				}
-			}()
-		} else {
-			logger.I.Warn("benchmark disabled, will not register to the smart-contract")
-		}
+				labels = metascheduler.MergeLabels(labels, benchmark.DefaultStore.DumpAsLabels())
+			}
+
+			labels = metascheduler.ProcessLabels(labels)
+			sort.Slice(labels, func(i, j int) bool { return labels[i].Key < labels[j].Key })
+			logger.I.Info("asking for registration")
+			if err := container.metascheduler.Register(
+				ctx,
+				hardware,
+				prices,
+				labels,
+			); err != nil {
+				logger.I.Fatal("supervisor failed to register", zap.Error(err))
+			}
+		}()
 
 		go func() {
 			if err := container.gc.Loop(ctx); err != nil {

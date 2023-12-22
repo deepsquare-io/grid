@@ -27,8 +27,17 @@ import (
 )
 
 func TestWaitForCompletion(t *testing.T) {
-	var fakeIORResult ior.Result
-	var fakeMachineSpec benchmark.MachineSpec
+	fakeIORResult := ior.Result{
+		IOPS:      1,
+		Bandwidth: 2,
+	}
+	fakeMachineSpec := benchmark.MachineSpec{
+		MicroArch: "a",
+		OS:        "b",
+		CPU:       "c",
+		Arch:      "d",
+		GPU:       "e",
+	}
 	store := benchmark.NewStore()
 	go func() {
 		store.SetAllToAllCollectiveLatency(1)
@@ -53,25 +62,43 @@ func TestWaitForCompletion(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	require.Equal(t, benchmark.Data{
-		AllToAllCollectiveLatency: 1,
-		DownloadBandwidth:         2,
-		GFLOPS:                    3,
-		P2PBidirectionalBandwidth: 4,
-		P2PLatency:                5,
-		UploadBandwidth:           6,
-		ScratchAvgRead:            &fakeIORResult,
-		ScratchAvgWrite:           &fakeIORResult,
-		SharedWorldTmpAvgRead:     &fakeIORResult,
-		SharedWorldTmpAvgWrite:    &fakeIORResult,
-		SharedTmpAvgRead:          &fakeIORResult,
-		SharedTmpAvgWrite:         &fakeIORResult,
-		DiskWorldTmpAvgRead:       &fakeIORResult,
-		DiskWorldTmpAvgWrite:      &fakeIORResult,
-		DiskTmpAvgRead:            &fakeIORResult,
-		DiskTmpAvgWrite:           &fakeIORResult,
-		MachineSpec:               &fakeMachineSpec,
-	}, store.Dump())
+	expected := map[string]string{
+		"arch":                                    "d",
+		"compute.gflops":                          "3.00",
+		"cpu":                                     "c",
+		"cpu.microarch":                           "a",
+		"gpu":                                     "c",
+		"network.all-to-all.latency.us":           "1.00",
+		"network.download.bw.mbps":                "0.00",
+		"network.p2p.bw.mbps":                     "4.00",
+		"network.p2p.latency.us":                  "5.00",
+		"network.upload.bw.mbps":                  "0.00",
+		"os":                                      "b",
+		"storage.disk-tmp.read.bw.mibps":          "2.00",
+		"storage.disk-tmp.read.iops":              "1.00",
+		"storage.disk-tmp.write.bw.mibps":         "2.00",
+		"storage.disk-tmp.write.iops":             "1.00",
+		"storage.disk-world-tmp.read.bw.mibps":    "2.00",
+		"storage.disk-world-tmp.read.iops":        "1.00",
+		"storage.disk-world-tmp.write.bw.mibps":   "2.00",
+		"storage.disk-world-tmp.write.iops":       "1.00",
+		"storage.scratch.read.bw.mibps":           "2.00",
+		"storage.scratch.read.iops":               "1.00",
+		"storage.scratch.write.bw.mibps":          "2.00",
+		"storage.scratch.write.iops":              "1.00",
+		"storage.shared-tmp.read.bw.mibps":        "2.00",
+		"storage.shared-tmp.read.iops":            "1.00",
+		"storage.shared-tmp.write.bw.mibps":       "2.00",
+		"storage.shared-tmp.write.iops":           "1.00",
+		"storage.shared-world-tmp.read.bw.mibps":  "2.00",
+		"storage.shared-world-tmp.read.iops":      "1.00",
+		"storage.shared-world-tmp.write.bw.mibps": "2.00",
+		"storage.shared-world-tmp.write.iops":     "1.00",
+	}
+	actual := store.Dump()
+	for k, v := range expected {
+		require.Equal(t, v, actual[k])
+	}
 }
 
 func TestWaitForCompletionFailure(t *testing.T) {
