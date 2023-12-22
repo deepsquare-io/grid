@@ -63,13 +63,6 @@ func (c *providerManager) Remove(ctx context.Context, provider common.Address) e
 	return nil
 }
 
-// LabelsByKey implements the sort.Interface for the Label slice.
-type LabelsByKey []metaschedulerabi.Label
-
-func (a LabelsByKey) Len() int           { return len(a) }
-func (a LabelsByKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a LabelsByKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
-
 func (c *providerManager) GetProvider(
 	ctx context.Context,
 	address common.Address,
@@ -123,7 +116,7 @@ func (c *providerManager) GetProvider(
 	}
 
 	// Sort labels
-	sort.Sort(LabelsByKey(p.Labels))
+	sort.Slice(p.Labels, func(i, j int) bool { return p.Labels[i].Key < p.Labels[j].Key })
 
 	p.Addr = address
 
@@ -196,7 +189,11 @@ func (c *providerManager) GetProviders(
 		if err != nil {
 			return providers, WrapError(err)
 		}
-		sort.Sort(LabelsByKey(provider.Labels))
+		sort.Slice(
+			provider.Labels,
+			func(i, j int) bool { return provider.Labels[i].Key < provider.Labels[j].Key },
+		)
+
 		provider.Addr = it.Event.Addr
 
 		providerMap[it.Event.Addr] = types.ProviderDetail{
