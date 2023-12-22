@@ -8,6 +8,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Github Releases To Discord
-        uses: sillyangel/releases-to-discord@v1.0.0
+        uses: sillyangel/releases-to-discord@v1
         with:
           webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
