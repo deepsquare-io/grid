@@ -6,7 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/joho/godotenv v1.5.1
 	github.com/nxadm/tail v1.4.11
-	github.com/urfave/cli/v2 v2.26.0
+	github.com/urfave/cli/v2 v2.27.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/tools v0.16.1
 	google.golang.org/grpc v1.60.1
