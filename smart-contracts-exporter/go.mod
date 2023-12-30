@@ -3,7 +3,7 @@ module github.com/deepsquare-io/grid/smart-contracts-exporter
 go 1.21
 
 require (
-	github.com/99designs/gqlgen v0.17.41
+	github.com/99designs/gqlgen v0.17.42
 	github.com/ethereum/go-ethereum v1.12.2
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-chi/cors v1.2.1
