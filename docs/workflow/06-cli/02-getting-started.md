@@ -7,19 +7,23 @@ You can download static binaries in the [Releases tab of the Grid git repository
 To install it:
 
 ```shell
+# Create a local directory to store executable.
 mkdir -p ~/.local/bin
-# Move local install dir
+# Move executable to install directory.
 mv dps* ~/.local/bin/dps
-# Add executation permission
+# Add executation permission.
 chmod +x ~/.local/bin/dps
 ```
 
-For Windows users:
+**Or, in one shot: `curl https://raw.githubusercontent.com/deepsquare-io/grid/main/cli/get-dps | bash`.**
+
+For **Windows** users:
 
 ```bat
+:: Create a local directory to store executable.
 mkdir "%USERPROFILE%\.local\bin"
+:: Move executable to install directory.
 move dps* "%USERPROFILE%\.local\bin\dps"
-cd "%USERPROFILE%\.local\bin\dps"
 ```
 
 Make sure that `$HOME/.local/bin` (`%USERPROFILE%\.local\bin` for Windows) is added to the `$PATH` (`%PATH%`) environment variable.
