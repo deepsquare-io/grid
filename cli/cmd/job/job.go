@@ -32,7 +32,6 @@ package job
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -45,13 +44,12 @@ import (
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	"github.com/deepsquare-io/grid/cli/internal/ether"
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
+	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/types"
 	"github.com/erikgeiser/promptkit/confirmation"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/urfave/cli/v2"
@@ -63,6 +61,7 @@ var (
 	ethEndpointWS              string
 	metaschedulerSmartContract string
 	ethHexPK                   string
+	ethHexPKPath               string
 	panicReason                string
 	loggerEndpoint             string
 
@@ -94,9 +93,16 @@ var authFlags = append(
 	&cli.StringFlag{
 		Name:        "private-key",
 		Usage:       "An hexadecimal private key for ethereum transactions.",
-		Required:    true,
+		Value:       "",
 		Destination: &ethHexPK,
 		EnvVars:     []string{"ETH_PRIVATE_KEY"},
+	},
+	&cli.StringFlag{
+		Name:        "private-key.path",
+		Usage:       "Path to an hexadecimal private key for ethereum transactions.",
+		Destination: &ethHexPKPath,
+		EnvVars:     []string{"ETH_PRIVATE_KEY_PATH"},
+		Value:       "",
 	},
 )
 
@@ -215,16 +221,7 @@ var Command = cli.Command{
 				if cCtx.NArg() < 1 {
 					return errors.New("missing arguments")
 				}
-				kb, err := hexutil.Decode(ethHexPK)
-				if errors.Is(err, hexutil.ErrMissingPrefix) {
-					kb, err = hex.DecodeString(ethHexPK)
-					if err != nil {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-				pk, err := crypto.ToECDSA(kb)
+				pk, err := utils.GetPrivateKey(ethHexPK, ethHexPKPath)
 				if err != nil {
 					return err
 				}
@@ -333,16 +330,7 @@ var Command = cli.Command{
 				if cCtx.NArg() < 1 {
 					return errors.New("missing arguments")
 				}
-				kb, err := hexutil.Decode(ethHexPK)
-				if errors.Is(err, hexutil.ErrMissingPrefix) {
-					kb, err = hex.DecodeString(ethHexPK)
-					if err != nil {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-				pk, err := crypto.ToECDSA(kb)
+				pk, err := utils.GetPrivateKey(ethHexPK, ethHexPKPath)
 				if err != nil {
 					return err
 				}
@@ -389,16 +377,7 @@ var Command = cli.Command{
 				if cCtx.NArg() < 1 {
 					return errors.New("missing arguments")
 				}
-				kb, err := hexutil.Decode(ethHexPK)
-				if errors.Is(err, hexutil.ErrMissingPrefix) {
-					kb, err = hex.DecodeString(ethHexPK)
-					if err != nil {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-				pk, err := crypto.ToECDSA(kb)
+				pk, err := utils.GetPrivateKey(ethHexPK, ethHexPKPath)
 				if err != nil {
 					return err
 				}
@@ -445,16 +424,7 @@ var Command = cli.Command{
 				if cCtx.NArg() < 2 {
 					return errors.New("missing arguments")
 				}
-				kb, err := hexutil.Decode(ethHexPK)
-				if errors.Is(err, hexutil.ErrMissingPrefix) {
-					kb, err = hex.DecodeString(ethHexPK)
-					if err != nil {
-						return err
-					}
-				} else if err != nil {
-					return err
-				}
-				pk, err := crypto.ToECDSA(kb)
+				pk, err := utils.GetPrivateKey(ethHexPK, ethHexPKPath)
 				if err != nil {
 					return err
 				}

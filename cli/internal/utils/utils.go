@@ -17,11 +17,21 @@
 package utils
 
 import (
+	"crypto/ecdsa"
+	"encoding/hex"
+	"errors"
 	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"strings"
 
+	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/erikgeiser/promptkit/confirmation"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 // BoolToYN converts a boolean to "yes" or "no".
@@ -98,4 +108,85 @@ func StringsToLabels(input string) ([]types.Label, error) {
 	}
 
 	return labels, nil
+}
+
+func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
+	var pk *ecdsa.PrivateKey
+	if ethHexPK == "" {
+		// Default dps path
+		if orPath == "" {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return pk, err
+			}
+			orPath = filepath.Join(home, "/.dps/key")
+		}
+
+		finfo, err := os.Stat(orPath)
+		if errors.Is(err, fs.ErrNotExist) {
+			internallog.I.Sugar().Errorf(
+				"Ethereum private key not found at path %s.\n",
+				orPath,
+			)
+
+			input := confirmation.New(
+				fmt.Sprintf("Do you wish to generate a private key at `%s`?", orPath),
+				confirmation.No,
+			)
+			ok, prompterr := input.RunPrompt()
+			if prompterr != nil {
+				return nil, prompterr
+			}
+			if !ok {
+				return nil, err
+			}
+			key, err := crypto.GenerateKey()
+			if err != nil {
+				return nil, err
+			}
+			keyb := hexutil.Encode(crypto.FromECDSA(key))
+			if err := os.MkdirAll(filepath.Dir(orPath), 0700); err != nil {
+				panic(err)
+			}
+			if os.WriteFile(orPath, []byte(keyb), 0600); err != nil {
+				return nil, err
+			}
+			finfo, err = os.Stat(orPath)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("Private Key: %s\n", keyb)
+			fmt.Printf("Public Address: %s\n", crypto.PubkeyToAddress(key.PublicKey))
+
+		} else if err != nil {
+			return nil, err
+		}
+		if !(finfo.Mode()&0700 > 0 && (finfo.Mode()&0070 == 0) && (finfo.Mode()&0007 == 0)) {
+			internallog.I.Sugar().Errorf(
+				"Permission of %s is insecure! Please `chmod 600 %s`.\n",
+				orPath,
+				orPath,
+			)
+			return nil, errors.New("insecure file permission")
+		}
+		b, err := os.ReadFile(orPath)
+		if err != nil {
+			return pk, err
+		}
+		ethHexPK = string(b)
+	}
+	kb, err := hexutil.Decode(ethHexPK)
+	if errors.Is(err, hexutil.ErrMissingPrefix) {
+		kb, err = hex.DecodeString(ethHexPK)
+		if err != nil {
+			return pk, err
+		}
+	} else if err != nil {
+		return pk, err
+	}
+	pk, err = crypto.ToECDSA(kb)
+	if err != nil {
+		return pk, err
+	}
+	return pk, nil
 }

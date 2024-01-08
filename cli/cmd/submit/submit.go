@@ -71,7 +71,6 @@ package submit
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -85,14 +84,13 @@ import (
 
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
+	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/sbatch"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
@@ -103,6 +101,7 @@ var (
 	ethEndpointRPC              string
 	ethEndpointWS               string
 	ethHexPK                    string
+	ethHexPKPath                string
 	metaschedulerSmartContract  string
 	metaschedulerOracleEndpoint string
 	loggerEndpoint              string
@@ -188,10 +187,18 @@ var flags = []cli.Flag{
 	&cli.StringFlag{
 		Name:        "private-key",
 		Usage:       "An hexadecimal private key for ethereum transactions.",
-		Required:    true,
+		Value:       "",
 		Destination: &ethHexPK,
 		Category:    "DeepSquare Settings:",
 		EnvVars:     []string{"ETH_PRIVATE_KEY"},
+	},
+	&cli.StringFlag{
+		Name:        "private-key.path",
+		Usage:       "Path to an hexadecimal private key for ethereum transactions.",
+		Destination: &ethHexPKPath,
+		EnvVars:     []string{"ETH_PRIVATE_KEY_PATH"},
+		Category:    "DeepSquare Settings:",
+		Value:       "",
 	},
 	&cli.StringFlag{
 		Name:        "job-name",
@@ -281,16 +288,7 @@ var Command = cli.Command{
 		}
 		jobPath := cCtx.Args().First()
 		ctx := cCtx.Context
-		kb, err := hexutil.Decode(ethHexPK)
-		if errors.Is(err, hexutil.ErrMissingPrefix) {
-			kb, err = hex.DecodeString(ethHexPK)
-			if err != nil {
-				return err
-			}
-		} else if err != nil {
-			return err
-		}
-		pk, err := crypto.ToECDSA(kb)
+		pk, err := utils.GetPrivateKey(ethHexPK, ethHexPKPath)
 		if err != nil {
 			return err
 		}

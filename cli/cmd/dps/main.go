@@ -64,8 +64,6 @@ package main
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
@@ -81,11 +79,11 @@ import (
 	"github.com/deepsquare-io/grid/cli/cmd/validate"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
+	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/tui/nav"
 	versionpkg "github.com/deepsquare-io/grid/cli/version"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
@@ -102,6 +100,7 @@ var (
 	ethEndpointRPC              string
 	ethEndpointWS               string
 	ethHexPK                    string
+	ethHexPKPath                string
 	metaschedulerSmartContract  string
 	metaschedulerOracleEndpoint string
 
@@ -155,6 +154,14 @@ var flags = []cli.Flag{
 		Usage:       "An hexadecimal private key for ethereum transactions.",
 		Destination: &ethHexPK,
 		EnvVars:     []string{"ETH_PRIVATE_KEY"},
+		Value:       "",
+	},
+	&cli.StringFlag{
+		Name:        "private-key.path",
+		Usage:       "Path to an hexadecimal private key for ethereum transactions.",
+		Destination: &ethHexPKPath,
+		EnvVars:     []string{"ETH_PRIVATE_KEY_PATH"},
+		Value:       "",
 	},
 	&cli.BoolFlag{
 		Name:        "debug",
@@ -193,21 +200,9 @@ See the GNU General Public License for more details.`,
 	},
 	Action: func(cCtx *cli.Context) (err error) {
 		ctx := cCtx.Context
-		var pk *ecdsa.PrivateKey
-		if ethHexPK != "" {
-			kb, err := hexutil.Decode(ethHexPK)
-			if errors.Is(err, hexutil.ErrMissingPrefix) {
-				kb, err = hex.DecodeString(ethHexPK)
-				if err != nil {
-					return err
-				}
-			} else if err != nil {
-				return err
-			}
-			pk, err = crypto.ToECDSA(kb)
-			if err != nil {
-				return err
-			}
+		pk, err := utils.GetPrivateKey(ethHexPK, ethHexPKPath)
+		if err != nil {
+			return err
 		}
 
 		if metaschedulerSmartContract == "" {
