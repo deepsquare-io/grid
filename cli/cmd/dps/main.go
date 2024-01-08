@@ -78,6 +78,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/cmd/job"
 	"github.com/deepsquare-io/grid/cli/cmd/provider"
 	"github.com/deepsquare-io/grid/cli/cmd/submit"
+	"github.com/deepsquare-io/grid/cli/cmd/validate"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
@@ -188,6 +189,7 @@ See the GNU General Public License for more details.`,
 		&job.Command,
 		&provider.Command,
 		&submit.Command,
+		&validate.Command,
 	},
 	Action: func(cCtx *cli.Context) (err error) {
 		ctx := cCtx.Context

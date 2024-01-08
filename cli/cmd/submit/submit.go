@@ -22,9 +22,32 @@ USAGE:
 
 OPTIONS:
 
-Submit Settings:
+	--metascheduler.oracle value  Metascheduler Oracle endpoint. (default: "https://meta-scheduler.deepsquare.run") [$METASCHEDULER_ORACLE]
 
-	--affinities key<value [ --affinities key<value ]  Affinities flag. Used to filter the clusters. Format: key<value, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value` or `key:in:value`.
+	DeepSquare Settings:
+
+
+	--logger.endpoint value               Grid Logger endpoint. (default: "https://grid-logger.deepsquare.run") [$LOGGER_ENDPOINT]
+
+
+	--metascheduler.rpc value             Metascheduler Avalanche C-Chain JSON-RPC endpoint. (default: "https://testnet.deepsquare.run/rpc") [$METASCHEDULER_RPC]
+
+
+	--metascheduler.smart-contract value  Metascheduler smart-contract address. [$METASCHEDULER_SMART_CONTRACT]
+
+
+	--metascheduler.ws value              Metascheduler Avalanche C-Chain WS endpoint. (default: "wss://testnet.deepsquare.run/ws") [$METASCHEDULER_WS]
+
+
+	--private-key value                   An hexadecimal private key for ethereum transactions. [$ETH_PRIVATE_KEY]
+
+
+	--sbatch.endpoint value               SBatch Service GraphQL endpoint. (default: "https://sbatch.deepsquare.run/graphql") [$SBATCH_ENDPOINT]
+
+	Submit Settings:
+
+
+	--affinities key<value [ --affinities key<value ]  Affinities flag. Used to filter the clusters. Format: key<value, `key<=value`, `key=value`, `key>=value`, `key>value`, `key!=value` or `key:in:value`
 
 
 	--credits value                                    Allocated a number of credits. Unit is 1e18. Is a float and is not precise. (default: 0)
