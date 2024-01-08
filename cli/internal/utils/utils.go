@@ -110,6 +110,7 @@ func StringsToLabels(input string) ([]types.Label, error) {
 	return labels, nil
 }
 
+// GetPrivateKey fetch or generates an ethereum private key.
 func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 	var pk *ecdsa.PrivateKey
 	if ethHexPK == "" {
@@ -148,7 +149,7 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 			if err := os.MkdirAll(filepath.Dir(orPath), 0700); err != nil {
 				panic(err)
 			}
-			if os.WriteFile(orPath, []byte(keyb), 0600); err != nil {
+			if err := os.WriteFile(orPath, []byte(keyb), 0600); err != nil {
 				return nil, err
 			}
 			finfo, err = os.Stat(orPath)
