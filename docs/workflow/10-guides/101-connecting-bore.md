@@ -53,3 +53,46 @@ Generated HTTP URL:  http://3d6393aa.bore.deepsquare.run
 Generated HTTPS URL: https://3d6393aa.bore.deepsquare.run
 Direct TCP:          tcp://bore.deepsquare.run:63206
 ```
+
+## Allocate a Bore address
+
+This feature is unique to DeepSquare. If you go to the  [DeepSquare's Bore Proxy](https://bore.deepsquare.run) website, you can fetch a unique route:
+
+![image-20240108143148167](./101-connecting-bore.assets/image-20240108143148167.png)
+
+Use a **long-lived** token if you plan to reuse the same authentication token. **Fetch route** will fetch an existing route. If the route doesn't exists yet, a new route will be generated.
+
+Use MetaMask to authenticate. No payment is required, you only have to **sign a message**, which doesn't use any blockchain.
+
+This will be returned:
+
+> Allocated HTTP URL: `http://f43677a4-6acb-4d81-b917-85915e3f3073.bore.deepsquare.run`
+>
+> Allocated HTTPS URL: `https://f43677a4-6acb-4d81-b917-85915e3f3073.bore.deepsquare.run`
+>
+> Allocated TCP URL: `tcp://bore.deepsquare.run:39447`
+>
+> Token: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDQ4MDcxODIsInVzZXJfaWQiOiIweDc1NzYxYjE3YzMwODhjZTVjZDhlMDI1NzVjNmRhYTQzOGZmYTZlMTIiLCJ1c2VyX25hbWUiOiIweDc1NzYxYjE3YzMwODhjZTVjZDhlMDI1NzVjNmRhYTQzOGZmYTZlMTIiLCJub25jZSI6IlFrODE5a2tLQU9DM0FhR0I2bXdrMXc9PSJ9.vcmUYuS-okXVpCQcVhJWBD8-Tq4yv1r3SpaK1secFcg`
+>
+> Token expiration: 2024-01-09 14:33:02 +0100 CET
+
+The URL and port is allocated to you and you can use it for your jobs. Right now, only one URL is allowed per user.
+
+Use the **token** to fill the `secret` field of the bore proxy:
+
+```yaml
+bore:
+  boreAddress: bore.deepsquare.run:2200
+  targetPort: 8080
+  secret: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDQ4MDcxODIsInVzZXJfaWQiOiIweDc1NzYxYjE3YzMwODhjZTVjZDhlMDI1NzVjNmRhYTQzOGZmYTZlMTIiLCJ1c2VyX25hbWUiOiIweDc1NzYxYjE3YzMwODhjZTVjZDhlMDI1NzVjNmRhYTQzOGZmYTZlMTIiLCJub25jZSI6IlFrODE5a2tLQU9DM0FhR0I2bXdrMXc9PSJ9.vcmUYuS-okXVpCQcVhJWBD8-Tq4yv1r3SpaK1secFcg
+```
+
+The authentication token will automatically expire after a certain time, but **the route will remain accessible.**
+
+If you've lost your token, you can recover the route and the old token will be invalidated.
+
+:::note
+
+If you self-host your own [Bore](https://github.com/jkuri/bore) proxy, the `secret` will correspond to the `id` parameter.
+
+:::

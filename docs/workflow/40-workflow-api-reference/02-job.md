@@ -1924,6 +1924,19 @@ Go name: "TargetPort".
 
 </td>
 </tr>
+<tr>
+<td colspan="2" valign="top"><strong>secret</strong></td>
+<td valign="top"><a href="#string">String</a></td>
+<td>
+
+Secret used to authenticate on a Bore server.
+
+This secret is used to identify the client.
+
+Go name: "Secret".
+
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -1934,6 +1947,7 @@ Go name: "TargetPort".
 bore:
   boreAddress: bore.deepsquare.run:2200
   targetPort: 8080
+  secret: <token>
 ```
 
 </details>
