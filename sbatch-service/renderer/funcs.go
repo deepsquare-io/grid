@@ -25,6 +25,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/grid/sbatch-service/utils/base58"
+	"github.com/kballard/go-shellquote"
 )
 
 func squote(str ...interface{}) string {
@@ -153,6 +154,13 @@ func funcMap() template.FuncMap {
 		ip, _, err := net.ParseCIDR(i)
 
 		return err == nil && ip.To4() == nil
+	}
+	f["escapeCommand"] = func(i string) (string, error) {
+		split, err := shellquote.Split(i)
+		if err != nil {
+			return "", err
+		}
+		return shellquote.Join(split...), nil
 	}
 	return f
 }

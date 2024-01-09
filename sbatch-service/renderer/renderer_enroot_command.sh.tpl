@@ -14,46 +14,46 @@
 
 environ() {
   # Keep all the environment from the host
-  /usr/bin/env
+  env
 
-  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+  cat "${ENROOT_ROOTFS}/etc/environment"
 
-  /usr/bin/echo "STORAGE_PATH=/deepsquare"
-  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
-  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+  echo "STORAGE_PATH=/deepsquare"
+  echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
 {{- range $env := .Run.Env }}
-  /usr/bin/echo "{{ $env.Key }}={{ $env.Value | squote }}"
+  echo "{{ $env.Key }}={{ $env.Value | squote }}"
 {{- end }}
 }
 
 mounts() {
-  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+  echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
 {{- if and .Run.Container.X11 (derefBool .Run.Container.X11 ) }}
-  /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
+  echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
 {{- end }}
 {{- range $mount := .Run.Container.Mounts }}
-  /usr/bin/echo '{{ $mount.HostDir }} {{ $mount.ContainerDir }} none x-create=auto,bind,{{ $mount.Options }}'
+  echo '{{ $mount.HostDir }} {{ $mount.ContainerDir }} none x-create=auto,bind,{{ $mount.Options }}'
 {{- end }}
 }
 
 hooks() {
-  /usr/bin/cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+  cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
 {{- if and .Run.WorkDir (derefStr .Run.WorkDir) }}
 mkdir -p {{ derefStr .Run.WorkDir | squote }} && cd {{ derefStr .Run.WorkDir | squote }} || { echo "change dir to working directory failed"; exit 1; }
-{{- else }}
-cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
 {{- end }}
+{{- if not (and .Run.Shell (eq (derefStr .Run.Shell) "ENTRYPOINT")) }}
 exec "$@"
+{{- end }}
 EOFrclocal
 }
 EOFenroot
@@ -63,4 +63,4 @@ EOFenroot
 /usr/bin/enroot start \
   --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
   "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" {{ if .Run.Command }}\
-  {{ if .Run.Shell }}{{ derefStr .Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Run.Command | squote }}{{ end -}}
+  {{ if and .Run.Shell (eq (derefStr .Run.Shell) "ENTRYPOINT") }}{{ .Run.Command | escapeCommand }}{{ else if .Run.Shell}}{{ derefStr .Run.Shell }} -c {{ .Run.Command | squote }}{{ else }}/bin/sh -c {{ .Run.Command | squote }}{{ end }}{{ end -}}

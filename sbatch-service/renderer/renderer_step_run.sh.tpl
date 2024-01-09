@@ -123,7 +123,7 @@ fi
   --cpu-bind=none \
 {{- end }}
   --gpu-bind=none \
-  {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c '
+  /bin/bash -c '
 {{- if isAbs $image -}}
 /usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$STORAGE_PATH"{{ $image | squote }} >/dev/null 2>&1
 {{- else -}}
@@ -167,7 +167,7 @@ trap enrootClean EXIT INT TERM
 {{- if or .Step.Run.MapUID .Step.Run.MapGID }}
   /usr/bin/unshare --map-current-user{{ if .Step.Run.MapUID }} --map-user={{ .Step.Run.MapUID }}{{ end }}{{ if .Step.Run.MapGID }} --map-group={{ .Step.Run.MapGID }}{{ end }} --mount \
 {{- end }}
-  {{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run .Job .Step.Run.Command | squote -}}{{ else if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "pasta") }}{{ renderPastaNS .Step.Run .Job .Step.Run.Command | squote -}}{{ else }}
+  {{ if and .Step.Run.Shell (not eq (derefStr .Step.Run.Shell) "ENTRYPOINT") }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run .Job .Step.Run.Command | squote -}}{{ else if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "pasta") }}{{ renderPastaNS .Step.Run .Job .Step.Run.Command | squote -}}{{ else }}
 {{- if and .Step.Run.WorkDir (derefStr .Step.Run.WorkDir) -}}
   'mkdir -p {{ derefStr .Step.Run.WorkDir | squote | escapeSQuote }} && cd {{ derefStr .Step.Run.WorkDir | squote | escapeSQuote }} || { echo "change dir to working directory failed"; exit 1; };'{{ end -}}
   {{ .Step.Run.Command | squote -}}{{ end }}

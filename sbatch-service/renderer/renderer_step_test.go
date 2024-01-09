@@ -103,7 +103,7 @@ fi
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+  /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
 enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
 }
@@ -115,35 +115,34 @@ trap enrootClean EXIT INT TERM
 
 environ() {
   # Keep all the environment from the host
-  /usr/bin/env
+  env
 
-  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+  cat "${ENROOT_ROOTFS}/etc/environment"
 
-  /usr/bin/echo "STORAGE_PATH=/deepsquare"
-  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
-  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  /usr/bin/echo "test='"'"'value'"'"'"
+  echo "STORAGE_PATH=/deepsquare"
+  echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+  echo "test='"'"'value'"'"'"
 }
 
 mounts() {
-  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '"'"'/host /container none x-create=auto,bind,ro'"'"'
+  echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+  echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
+  echo '"'"'/host /container none x-create=auto,bind,ro'"'"'
 }
 
 hooks() {
-  /usr/bin/cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
-cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+  cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
 exec "$@"
 EOFrclocal
 }
@@ -250,7 +249,7 @@ fi
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+  /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
 enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
 }
@@ -262,35 +261,34 @@ trap enrootClean EXIT INT TERM
 
 environ() {
   # Keep all the environment from the host
-  /usr/bin/env
+  env
 
-  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+  cat "${ENROOT_ROOTFS}/etc/environment"
 
-  /usr/bin/echo "STORAGE_PATH=/deepsquare"
-  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
-  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  /usr/bin/echo "test='"'"'value'"'"'"
+  echo "STORAGE_PATH=/deepsquare"
+  echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+  echo "test='"'"'value'"'"'"
 }
 
 mounts() {
-  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '"'"'/host /container none x-create=auto,bind,ro'"'"'
+  echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+  echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
+  echo '"'"'/host /container none x-create=auto,bind,ro'"'"'
 }
 
 hooks() {
-  /usr/bin/cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
-cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+  cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
 exec "$@"
 EOFrclocal
 }
@@ -339,7 +337,7 @@ fi
   --gpus-per-task=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+  /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
 enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
 }
@@ -351,35 +349,34 @@ trap enrootClean EXIT INT TERM
 
 environ() {
   # Keep all the environment from the host
-  /usr/bin/env
+  env
 
-  /usr/bin/cat "${ENROOT_ROOTFS}/etc/environment"
+  cat "${ENROOT_ROOTFS}/etc/environment"
 
-  /usr/bin/echo "STORAGE_PATH=/deepsquare"
-  /usr/bin/echo "DEEPSQUARE_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
-  /usr/bin/echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
-  /usr/bin/echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
-  /usr/bin/echo "DEEPSQUARE_INPUT=/deepsquare/input"
-  /usr/bin/echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
-  /usr/bin/echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  /usr/bin/echo "test='"'"'value'"'"'"
+  echo "STORAGE_PATH=/deepsquare"
+  echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+  echo "test='"'"'value'"'"'"
 }
 
 mounts() {
-  /usr/bin/echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
-  /usr/bin/echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
-  /usr/bin/echo '"'"'/host /container none x-create=auto,bind,ro'"'"'
+  echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+  echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
+  echo '"'"'/host /container none x-create=auto,bind,ro'"'"'
 }
 
 hooks() {
-  /usr/bin/cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
-cd "/deepsquare" || { echo "change dir to working directory failed"; exit 1; }
+  cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
 exec "$@"
 EOFrclocal
 }

@@ -141,7 +141,6 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --writable-tmpfs \
   --no-home \
   --nv \
-  --pwd "/deepsquare" \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
 
@@ -213,7 +212,6 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --writable-tmpfs \
   --no-home \
   --nv \
-  --pwd "/deepsquare" \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/bash -c 'set -ex
 
@@ -252,7 +250,6 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --writable-tmpfs \
   --no-home \
   --nv \
-  --pwd "/deepsquare" \
   '/opt/software/registry-1.deepsquare.run/library/upscaling:latest' \
   /bin/sh -c 'set -ex
 

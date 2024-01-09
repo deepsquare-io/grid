@@ -138,7 +138,6 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --writable-tmpfs \
   --no-home \
   --nv \
-  --pwd "/deepsquare" \
   '/opt/software/registry-1.docker.io/linuxserver/blender:3.4.1' \
   /bin/sh -c 'set -e
 
@@ -205,7 +204,6 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --writable-tmpfs \
   --no-home \
   --nv \
-  --pwd "/deepsquare" \
   '/opt/software/registry-1.docker.io/linuxserver/blender:3.4.1' \
   /bin/bash -c 'set -e
 

@@ -139,7 +139,6 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --writable-tmpfs \
   --no-home \
   --nv \
-  --pwd "/deepsquare" \
   '/opt/software/registry-1.deepsquare.run/library/tdp:latest' \
   /bin/sh -c '$DEEPSQUARE_INPUT/DeepSquareURSSample.x86_64 \
   -maxplayers 8 \
