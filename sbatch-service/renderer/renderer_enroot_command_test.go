@@ -62,7 +62,7 @@ func TestRenderEnrootCommand(t *testing.T) {
 	}{
 		{
 			input: *cleanEnrootStepRun("hostname"),
-			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=n
@@ -103,7 +103,7 @@ EOFrclocal
 }
 EOFenroot
 /usr/bin/enroot start \
-  --conf "$STORAGE_PATH/enroot.conf" \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
   "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with enroot image",
@@ -114,7 +114,7 @@ EOFenroot
 				r.Container.Image = "/test/my.sqshfs"
 				return r
 			}(),
-			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=n
@@ -155,7 +155,7 @@ EOFrclocal
 }
 EOFenroot
 /usr/bin/enroot start \
-  --conf "$STORAGE_PATH/enroot.conf" \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
   "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with enroot absolute path image",
@@ -166,7 +166,7 @@ EOFenroot
 				r.WorkDir = utils.Ptr("/dir")
 				return r
 			}(),
-			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=n
@@ -207,7 +207,7 @@ EOFrclocal
 }
 EOFenroot
 /usr/bin/enroot start \
-  --conf "$STORAGE_PATH/enroot.conf" \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
   "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with workdir",

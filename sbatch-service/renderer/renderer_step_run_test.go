@@ -113,7 +113,7 @@ enrootClean() {
   /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
 }
 trap enrootClean EXIT INT TERM
-''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot.conf"
+''/usr/bin/cat <<'"'"'EOFenroot'"'"' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=n
@@ -154,7 +154,7 @@ EOFrclocal
 }
 EOFenroot
 /usr/bin/enroot start \
-  --conf "$STORAGE_PATH/enroot.conf" \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
   "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c '"'"'hostname'"'"''`,
 			title: "Positive test with image",
@@ -824,7 +824,7 @@ EOFwireguard
 /usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
 /usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
 
-'"'"''"'"'/usr/bin/cat <<'"'"'"'"'"'"'"'"'EOFenroot'"'"'"'"'"'"'"'"' >"$STORAGE_PATH/enroot.conf"
+'"'"''"'"'/usr/bin/cat <<'"'"'"'"'"'"'"'"'EOFenroot'"'"'"'"'"'"'"'"' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
 #ENROOT_REMAP_ROOT=n
 #ENROOT_ROOTFS_WRITABLE=y
 #ENROOT_MOUNT_HOME=n
@@ -864,7 +864,7 @@ EOFrclocal
 }
 EOFenroot
 /usr/bin/enroot start \
-  --conf "$STORAGE_PATH/enroot.conf" \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
   "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c '"'"'"'"'"'"'"'"'hostname'"'"'"'"'"'"'"'"''"'"' &
 child=$!

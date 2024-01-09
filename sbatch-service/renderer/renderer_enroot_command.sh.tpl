@@ -1,4 +1,4 @@
-/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot.conf"
+/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
 #ENROOT_REMAP_ROOT=n
 {{- if and .Run.Container.ReadOnlyRootFS (derefBool .Run.Container.ReadOnlyRootFS) }}
 #ENROOT_ROOTFS_WRITABLE=n
@@ -61,6 +61,6 @@ EOFenroot
 /usr/bin/unshare --map-current-user{{ if .Run.MapUID }} --map-user={{ .Run.MapUID }}{{ end }}{{ if .Run.MapGID }} --map-group={{ .Run.MapGID }}{{ end }} --mount \
 {{- end }}
 /usr/bin/enroot start \
-  --conf "$STORAGE_PATH/enroot.conf" \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
   "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   {{ if .Run.Shell }}{{ derefStr .Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ .Run.Command | squote -}}
