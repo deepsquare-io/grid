@@ -1379,7 +1379,7 @@
         "inputFields": [
           {
             "name": "command",
-            "description": "Command specifies a shell script.\n\nIf container is used, command automatically overwrite the ENTRYPOINT and CMD. If you want to execute the entrypoint, it MUST be re-specified.\n\nYou can install and use skopeo to inspect an image without having to pull it.\n\nExample: skopeo inspect --config docker://curlimages/curl:latest will gives \"/entrypoint.sh\" as ENTRYPOINT and \"curl\" as CMD. Therefore command=\"/entrypoint.sh curl\".\n\nGo name: \"Command\".",
+            "description": "Command specifies a shell script or CMD.\n\nIf container is used, `command` and `shell` automatically overwrite the ENTRYPOINT and CMD.\n\nIf you want to execute the default ENTRYPOINT and CMD, set the `command` empty.\n\nIf you want to execute the default ENTRYPOINT with a custom CMD, set the `command` to your args and set the `shell` to `ENTRYPOINT`.\n\nRight now, ENTRYPOINT cannot be overriden for security reasons.\n\nGo name: \"Command\".",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1395,7 +1395,7 @@
           },
           {
             "name": "shell",
-            "description": "Shell to use.\n\nAccepted: /bin/bash, /bin/ash, /bin/sh\nDefault: /bin/sh\n\nGo name: \"Shell\".",
+            "description": "Shell to use.\n\nUse \"ENTRYPOINT\" to use the default ENTRYPOINT.\n\nAccepted: /bin/bash, /bin/ash, /bin/sh, ENTRYPOINT\nDefault: /bin/sh\n\nGo name: \"Shell\".",
             "type": {
               "kind": "SCALAR",
               "name": "String",
