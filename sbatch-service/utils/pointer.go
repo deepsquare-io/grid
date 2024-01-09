@@ -19,3 +19,11 @@ package utils
 func Ptr[T any](it T) *T {
 	return &it
 }
+
+func SafeDeref[T any](it *T) T {
+	if it == nil {
+		var t T
+		return t
+	}
+	return *it
+}

@@ -21,6 +21,7 @@ import (
 	_ "embed"
 
 	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/utils"
 	"github.com/deepsquare-io/grid/sbatch-service/validate"
 )
 
@@ -34,6 +35,17 @@ func RenderStepRun(j *model.Job, s *model.Step) (string, error) {
 
 	if err := validate.I.Struct(s); err != nil {
 		return "", err
+	}
+
+	if s.Run.Container != nil && s.Run.Container.Image != "" {
+		if err := validate.CheckContainerImage(
+			utils.SafeDeref(s.Run.Container.Username),
+			utils.SafeDeref(s.Run.Container.Password),
+			utils.SafeDeref(s.Run.Container.Registry),
+			s.Run.Container.Image,
+		); err != nil {
+			return "", err
+		}
 	}
 
 	tmpl, err := engine().Parse(stepRunTpl)

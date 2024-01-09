@@ -16,6 +16,8 @@
 package validate_test
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/deepsquare-io/grid/sbatch-service/validate"
@@ -57,6 +59,44 @@ func TestContainerURLValidator(t *testing.T) {
 		t.Run(tt.input, func(t *testing.T) {
 			res := validate.ContainerURLValidator(tt.input)
 			require.Equal(t, tt.expected, res)
+		})
+	}
+}
+
+func TestCheckContainerImage(t *testing.T) {
+	tests := []struct {
+		username string
+		password string
+		registry string
+		image    string
+		expected error
+	}{
+		{
+			username: "",
+			password: "",
+			registry: "registry-1.docker.io",
+			image:    "curlimages/curl:latest",
+			expected: nil,
+		},
+		{
+			username: "",
+			password: "",
+			registry: "",
+			image:    "library/mariadb:latest",
+			expected: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.image, func(t *testing.T) {
+			res := validate.CheckContainerImage(
+				tt.username,
+				tt.password,
+				tt.registry,
+				tt.image,
+			)
+			fmt.Println(res)
+			require.True(t, errors.Is(res, tt.expected))
 		})
 	}
 }
