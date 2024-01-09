@@ -166,6 +166,12 @@ steps:
       command: echo "Hello World"
 ```
 
+:::note
+
+A empty command field (`command: ""`) will executes the default container `ENTRYPOINT`.
+
+:::
+
 ```yaml title="Job (full)"
 resources:
   tasks: 1

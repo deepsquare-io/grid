@@ -31,6 +31,12 @@ steps:
       command: echo "hello world"
 ```
 
+:::note
+
+A empty command field (`command: ""`) will executes the default container `ENTRYPOINT`.
+
+:::
+
 ## Executing a workflow
 
 To launch a workflow file, you have a couple of choices:
