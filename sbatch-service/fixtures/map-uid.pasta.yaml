@@ -15,8 +15,7 @@ job:
       run:
         container:
           apptainer: true
-          registry: registry-1.docker.io
-          image: library/bash:latest
+          image: bash:latest
           mountHome: true
         mapUid: 0
         mapGid: 0
@@ -24,8 +23,7 @@ job:
     - name: as 1337
       run:
         container:
-          registry: registry-1.docker.io
-          image: library/bash:latest
+          image: bash:latest
           mountHome: true
         mapUid: 1337
         mapGid: 1337
