@@ -64,6 +64,8 @@ Make sure that `$HOME/go/bin` (`%HOME%\go\bin` for Windows) is added to the `$PA
 
    If you want to generate a private key instead, you can run `dps init`.
 
+   To run on DeepSquare, you need **credits**. You can fetch free credits by filling [this form](https://share-eu1.hsforms.com/1PVlRXYdMSdy-iBH_PXx_0wev6gi).
+
 3. You can run CLI commands by executing:
 
    ```shell
