@@ -110,6 +110,7 @@ fi
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
@@ -198,6 +199,7 @@ fi
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
@@ -302,6 +304,7 @@ fi
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
@@ -390,6 +393,7 @@ fi
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1

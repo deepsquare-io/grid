@@ -106,6 +106,7 @@ fi
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
@@ -191,6 +192,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
@@ -233,6 +235,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
@@ -274,6 +277,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /usr/bin/apptainer --silent exec \
@@ -299,6 +303,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   /bin/sh -c 'hostname
 /usr/bin/echo "test"'`,
@@ -316,6 +321,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   /bin/sh -c 'mkdir -p '"'"'/dir'"'"' && cd '"'"'/dir'"'"' || { echo "change dir to working directory failed"; exit 1; };''hostname'`,
 			title: "Positive test with workdir",
@@ -332,6 +338,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --cpu-bind=none \
   /bin/sh -c 'hostname'`,
@@ -349,6 +356,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --mpi=none \
   /bin/sh -c 'hostname'`,
@@ -370,6 +378,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   /bin/sh -c 'set -e
 
@@ -531,6 +540,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /bin/sh -c 'set -e
@@ -711,6 +721,7 @@ fi
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1

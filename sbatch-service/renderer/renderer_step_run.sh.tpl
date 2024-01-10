@@ -1,4 +1,8 @@
 {{- /* In this file contains 3 launch modes: Apptainer, Enroot and none. */ -}}
+{{- $ntasks := 1 }}
+{{- if and .Step.Run.Resources .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) }}
+{{- $ntasks = derefInt .Step.Run.Resources.Tasks }}
+{{- end }}
 {{- if .Step.Run.Container -}}
 {{- if .Step.Run.Container.Mounts -}}
 /usr/bin/cat << 'EOFmounterror'
@@ -45,8 +49,10 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.GPUsPerTask }}
   --gpus-per-task={{ derefInt .Step.Run.Resources.GPUsPerTask }} \
+  --gpus={{ mul (derefInt .Step.Run.Resources.GPUsPerTask) $ntasks }} \
 {{- else }}
   --gpus-per-task=0 \
+  --gpus=0 \
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) }}
   --ntasks={{ derefInt .Step.Run.Resources.Tasks }} \
@@ -108,8 +114,10 @@ fi
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.GPUsPerTask }}
   --gpus-per-task={{ derefInt .Step.Run.Resources.GPUsPerTask }} \
+  --gpus={{ mul (derefInt .Step.Run.Resources.GPUsPerTask) $ntasks }} \
 {{- else }}
   --gpus-per-task=0 \
+  --gpus=0 \
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) }}
   --ntasks={{ derefInt .Step.Run.Resources.Tasks }} \
@@ -150,8 +158,10 @@ trap enrootClean EXIT INT TERM
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.GPUsPerTask }}
   --gpus-per-task={{ derefInt .Step.Run.Resources.GPUsPerTask }} \
+  --gpus={{ mul (derefInt .Step.Run.Resources.GPUsPerTask) $ntasks }} \
 {{- else }}
   --gpus-per-task=0 \
+  --gpus=0 \
 {{- end }}
 {{- if and .Step.Run.Resources .Step.Run.Resources.Tasks (derefInt .Step.Run.Resources.Tasks) }}
   --ntasks={{ derefInt .Step.Run.Resources.Tasks }} \

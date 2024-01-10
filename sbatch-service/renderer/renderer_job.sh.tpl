@@ -83,7 +83,7 @@ export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
-  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+  srun --job-name="prepare-dir" -N 1-1 --gpus=0 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
 done
 
 cleanup() {

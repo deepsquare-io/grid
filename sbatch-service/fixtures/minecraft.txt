@@ -44,7 +44,7 @@ export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
 /usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
 
 for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
-  srun --job-name="prepare-dir" -N 1-1 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+  srun --job-name="prepare-dir" -N 1-1 --gpus=0 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
 done
 
 cleanup() {
@@ -88,6 +88,7 @@ declare -A EXIT_SIGNALS
   --cpus-per-task=8 \
   --mem-per-cpu=8000M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   /bin/sh -c 'mv $DEEPSQUARE_INPUT/* $DEEPSQUARE_OUTPUT/'
 /usr/bin/echo 'Running: ''start-minecraft'
@@ -111,6 +112,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" EULA='true' MEMORYSIZE=
   --cpus-per-task=8 \
   --mem-per-cpu=8000M \
   --gpus-per-task=0 \
+  --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
   /bin/sh -c 'set -e
