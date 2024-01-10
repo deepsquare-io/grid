@@ -129,6 +129,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" HF_HOME='/cache' /usr/b
   --writable-tmpfs \
   --no-home \
   --nv \
+  --pwd "/" \
   '/opt/software/registry-1.deepsquare.run/library/stable-diffusion:latest' \
   /bin/bash -c 'set -e
 

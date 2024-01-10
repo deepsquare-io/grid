@@ -224,6 +224,7 @@ EOFwireguard
   --writable-tmpfs \
   --no-home \
   --nv \
+  --pwd '"'"'"'"'"'"'"'"'/data'"'"'"'"'"'"'"'"' \
   "$IMAGE_PATH" \
   /bin/sh -c '"'"'"'"'"'"'"'"'cd $DEEPSQUARE_OUTPUT
 sed -i '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'s/eula=false/eula=true/g'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"' eula.txt

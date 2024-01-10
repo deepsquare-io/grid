@@ -13,16 +13,31 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package validate
+package renderer_test
 
 import (
-	"regexp"
+	"fmt"
+
+	"github.com/deepsquare-io/grid/sbatch-service/validate"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
-var (
-	regexAlphaNumUnderscore = regexp.MustCompilePOSIX(`^[[:alnum:]_]+$`)
-)
+type mockImageFetcher struct{}
 
-func AlphaNumUnderscoreValidator(value string) bool {
-	return regexAlphaNumUnderscore.MatchString(value)
+func (*mockImageFetcher) FetchContainerImage(
+	username string,
+	password string,
+	registry string,
+	img string,
+) (image ocispec.Image, err error) {
+	return ocispec.Image{
+		Config: ocispec.ImageConfig{
+			WorkingDir: "/",
+		},
+	}, nil
+}
+
+func init() {
+	fmt.Println("mocked ImageFetcher")
+	validate.OverrideImageFetcher(&mockImageFetcher{})
 }

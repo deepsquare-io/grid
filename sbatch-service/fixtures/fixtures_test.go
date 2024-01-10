@@ -1,4 +1,4 @@
-// Copyright (C) 2023 DeepSquare Association
+// Copyright (C) 2024 DeepSquare Association
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
 package fixtures_test
 
 import (
-	"fmt"
 	"testing"
 
 	_ "embed"
@@ -134,7 +133,6 @@ func TestFixtures(t *testing.T) {
 
 			out, err := r.RenderJob(&j.Job)
 			require.NoError(t, err)
-			fmt.Println(out)
 			require.Equal(t, tt.expected, out)
 			require.NoError(t, renderer.Shellcheck(out))
 		})

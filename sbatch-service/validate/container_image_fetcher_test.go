@@ -13,16 +13,42 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package validate
+package validate_test
 
 import (
-	"regexp"
+	"errors"
+	"testing"
+
+	"github.com/deepsquare-io/grid/sbatch-service/validate"
+	"github.com/stretchr/testify/require"
 )
 
-var (
-	regexAlphaNumUnderscore = regexp.MustCompilePOSIX(`^[[:alnum:]_]+$`)
-)
+func TestCheckContainerImage(t *testing.T) {
+	tests := []struct {
+		username string
+		password string
+		registry string
+		image    string
+		expected error
+	}{
+		{
+			username: "",
+			password: "",
+			registry: "registry-1.deepsquare.run",
+			image:    "library/ubuntu:latest",
+			expected: nil,
+		},
+	}
 
-func AlphaNumUnderscoreValidator(value string) bool {
-	return regexAlphaNumUnderscore.MatchString(value)
+	for _, tt := range tests {
+		t.Run(tt.image, func(t *testing.T) {
+			_, res := validate.DefaultImageFetcher.FetchContainerImage(
+				tt.username,
+				tt.password,
+				tt.registry,
+				tt.image,
+			)
+			require.True(t, errors.Is(res, tt.expected))
+		})
+	}
 }

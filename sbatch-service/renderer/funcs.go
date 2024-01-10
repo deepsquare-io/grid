@@ -1,4 +1,4 @@
-// Copyright (C) 2023 DeepSquare Association
+// Copyright (C) 2024 DeepSquare Association
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -104,6 +104,12 @@ func FormatImageURL(
 	// Is apptainer
 	if apptainer != nil && *apptainer {
 		if registry != nil && *registry != "" {
+			if strings.Contains(*registry, "docker.io") {
+				_, _, ok := strings.Cut(image, "/")
+				if !ok {
+					image = "library/" + image
+				}
+			}
 			return fmt.Sprintf("docker://%s/%s", *registry, image)
 		}
 		return fmt.Sprintf("docker://%s", image)
@@ -111,6 +117,12 @@ func FormatImageURL(
 
 	// Is enroot
 	if registry != nil && *registry != "" {
+		if strings.Contains(*registry, "docker.io") {
+			_, _, ok := strings.Cut(image, "/")
+			if !ok {
+				image = "library/" + image
+			}
+		}
 		return fmt.Sprintf("docker://%s#%s", *registry, image)
 	}
 	return fmt.Sprintf("docker://%s", image)

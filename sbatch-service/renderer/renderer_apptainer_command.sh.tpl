@@ -13,6 +13,12 @@
   --nv \
 {{- if and .Run.WorkDir (derefStr .Run.WorkDir) }}
   --pwd {{ derefStr .Run.WorkDir | squote }} \
+{{- else }}
+{{- if and .Image .Image.Config.WorkingDir }}
+  --pwd {{ .Image.Config.WorkingDir | squote }} \
+{{- else }}
+  --pwd "/" \
+{{- end }}
 {{- end }}
 {{- if isAbs $image }}
   {{ if not (and .Run.Container.DeepsquareHosted (derefBool .Run.Container.DeepsquareHosted)) }}"$STORAGE_PATH"{{ end }}{{ $image | squote }} {{ if .Run.Command }}\{{ end }}

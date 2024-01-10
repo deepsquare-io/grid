@@ -1,4 +1,4 @@
-// Copyright (C) 2023 DeepSquare Association
+// Copyright (C) 2024 DeepSquare Association
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -199,6 +199,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --writable-tmpfs \
   --no-home \
   --nv \
+  --pwd '/' \
   "$IMAGE_PATH" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer image",
@@ -240,6 +241,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --writable-tmpfs \
   --no-home \
   --nv \
+  --pwd '/' \
   "$STORAGE_PATH"'/test/my.sqshfs' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with apptainer absolute path image",
@@ -280,6 +282,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --writable-tmpfs \
   --no-home \
   --nv \
+  --pwd "/" \
   '/opt/software/registry/image' \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with deepsquare-hosted image",
@@ -641,6 +644,7 @@ EOFwireguard
   --writable-tmpfs \
   --no-home \
   --nv \
+  --pwd '"'"'"'"'"'"'"'"'/'"'"'"'"'"'"'"'"' \
   "$IMAGE_PATH" \
   /bin/sh -c '"'"'"'"'"'"'"'"'hostname'"'"'"'"'"'"'"'"''"'"' &
 child=$!

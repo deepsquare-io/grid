@@ -1,4 +1,4 @@
-// Copyright (C) 2023 DeepSquare Association
+// Copyright (C) 2024 DeepSquare Association
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,7 +21,9 @@ import (
 	_ "embed"
 
 	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/utils"
 	"github.com/deepsquare-io/grid/sbatch-service/validate"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 //go:embed renderer_enroot_command.sh.tpl
@@ -32,6 +34,21 @@ func RenderEnrootCommand(r *model.StepRun) (string, error) {
 		return "", err
 	}
 
+	var image *ocispec.Image
+	if r.Container != nil && r.Container.Image != "" &&
+		(r.Container.DeepsquareHosted == nil || !*r.Container.DeepsquareHosted) {
+		i, err := validate.DefaultImageFetcher.FetchContainerImage(
+			utils.SafeDeref(r.Container.Username),
+			utils.SafeDeref(r.Container.Password),
+			utils.SafeDeref(r.Container.Registry),
+			r.Container.Image,
+		)
+		if err != nil {
+			return "", err
+		}
+		image = &i
+	}
+
 	tmpl, err := engine().Parse(enrootTpl)
 	if err != nil {
 		return "", err
@@ -39,9 +56,11 @@ func RenderEnrootCommand(r *model.StepRun) (string, error) {
 
 	var out bytes.Buffer
 	if err = tmpl.Execute(&out, struct {
-		Run *model.StepRun
+		Run   *model.StepRun
+		Image *ocispec.Image
 	}{
-		Run: r,
+		Run:   r,
+		Image: image,
 	}); err != nil {
 		return "", err
 	}

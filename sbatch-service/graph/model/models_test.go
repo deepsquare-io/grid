@@ -1,4 +1,4 @@
-// Copyright (C) 2023 DeepSquare Association
+// Copyright (C) 2024 DeepSquare Association
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -418,10 +418,8 @@ func TestValidateStepRunResources(t *testing.T) {
 }
 
 var cleanContainerRunWith = model.ContainerRun{
-	Image:    "image:latest",
-	Username: utils.Ptr("username"),
-	Password: utils.Ptr("password"),
-	Registry: utils.Ptr("registry"),
+	Image:    "library/ubuntu:latest",
+	Registry: utils.Ptr("registry-1.deepsquare.run"),
 	X11:      utils.Ptr(true),
 	Mounts: []*model.Mount{
 		{
