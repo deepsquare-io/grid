@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"encoding/hex"
 	"errors"
@@ -26,6 +27,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
@@ -125,13 +128,17 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 
 		finfo, err := os.Stat(orPath)
 		if errors.Is(err, fs.ErrNotExist) {
-			internallog.I.Sugar().Errorf(
-				"Ethereum private key not found at path %s.\n",
+			fmt.Println("Hey! It looks like you didn't set the private key of your wallet.")
+			fmt.Printf(
+				"You can fetch your MetaMask private key by following this guide:\nhttps://support.metamask.io/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key .\n\n",
+			)
+			fmt.Printf(
+				"After that, you can put the Hexadecimal-encoded private key at `%s`.\nAnd make sure the key has the right permissions (no world nor group permissions: chmod 600 %s)!\n\n",
+				orPath,
 				orPath,
 			)
-
 			input := confirmation.New(
-				fmt.Sprintf("Do you wish to generate a private key at `%s`?", orPath),
+				fmt.Sprintf("Or, do you prefer to generate a private key at `%s`?", orPath),
 				confirmation.No,
 			)
 			ok, prompterr := input.RunPrompt()
@@ -156,8 +163,10 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 			if err != nil {
 				panic(err)
 			}
-			fmt.Printf("Private Key: %s\n", keyb)
-			fmt.Printf("Public Address: %s\n", crypto.PubkeyToAddress(key.PublicKey))
+			fmt.Println(renderOutput(keyb, crypto.PubkeyToAddress(key.PublicKey).String()))
+			fmt.Println(
+				"You can fetch free credits by filling this form:\nhttps://share-eu1.hsforms.com/1PVlRXYdMSdy-iBH_PXx_0wev6gi",
+			)
 
 		} else if err != nil {
 			return nil, err
@@ -174,6 +183,7 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 		if err != nil {
 			return pk, err
 		}
+		b = bytes.TrimSpace(b)
 		ethHexPK = string(b)
 	}
 	kb, err := hexutil.Decode(ethHexPK)
@@ -190,4 +200,27 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 		return pk, err
 	}
 	return pk, nil
+}
+
+var primaryColor = lipgloss.Color("#9202de")
+var borderStyle = lipgloss.NewStyle().Foreground(primaryColor)
+var cellStyle = lipgloss.NewStyle().PaddingRight(1).PaddingLeft(1).Bold(true)
+
+func renderOutput(hexkey string, publicAddress string) string {
+	rows := [][]string{
+		{"Private Key", hexkey},
+		{"Public Address", publicAddress},
+	}
+
+	return table.New().
+		Border(lipgloss.NormalBorder()).
+		BorderRow(true).
+		BorderColumn(true).
+		BorderStyle(borderStyle).
+		StyleFunc(func(row, col int) lipgloss.Style {
+			return cellStyle
+		}).
+		Rows(rows...).
+		Render() +
+		"\n"
 }

@@ -36,6 +36,7 @@ import (
 	_ "embed"
 
 	"github.com/deepsquare-io/grid/cli/internal/log"
+	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/internal/wordlists"
 	"github.com/urfave/cli/v2"
 )
@@ -48,6 +49,9 @@ var (
 
 	//go:embed job.schema.json
 	schema []byte
+
+	ethHexPK     string
+	ethHexPKPath string
 )
 
 const templateFormat = "# yaml-language-server: $schema=%s\n%s"
@@ -58,6 +62,22 @@ var flags = []cli.Flag{
 		Usage:       "Output path.",
 		Destination: &output,
 		Aliases:     []string{"o"},
+	},
+	&cli.StringFlag{
+		Name:        "private-key",
+		Usage:       "An hexadecimal private key for ethereum transactions.",
+		Value:       "",
+		Destination: &ethHexPK,
+		Category:    "DeepSquare Settings:",
+		EnvVars:     []string{"ETH_PRIVATE_KEY"},
+	},
+	&cli.StringFlag{
+		Name:        "private-key.path",
+		Usage:       "Path to an hexadecimal private key for ethereum transactions.",
+		Destination: &ethHexPKPath,
+		EnvVars:     []string{"ETH_PRIVATE_KEY_PATH"},
+		Category:    "DeepSquare Settings:",
+		Value:       "",
 	},
 }
 
@@ -93,6 +113,10 @@ var Command = cli.Command{
 	Usage: "Bootstrap a job workflow file.",
 	Flags: flags,
 	Action: func(cCtx *cli.Context) error {
+		_, err := utils.GetPrivateKey(ethHexPK, ethHexPKPath)
+		if err != nil {
+			return err
+		}
 		return prepareFiles()
 	},
 }
