@@ -48,12 +48,23 @@ Make sure that `$HOME/go/bin` (`%HOME%\go\bin` for Windows) is added to the `$PA
 
    ```shell
    METASCHEDULER_SMART_CONTRACT=<0x address>
-   ETH_PRIVATE_KEY=<hex key, without 0x>
    ```
 
    You can find the smart-contract address in the [Releases tab of the Grid git repository](https://github.com/deepsquare-io/grid/releases?q=smart-contracts&expanded=true).
 
-2. You can run CLI commands by executing:
+2. Create a directory at `.dps` and put your wallet private key at `.dps/key`:
+
+   ```shell
+   mkdir -p .dps
+   echo "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff" > .dps/key
+   chmod 600 .dps/key
+   ```
+
+   You can fetch your private key from MetaMask by following [this guide](https://support.metamask.io/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key#).
+
+   If you want to generate a private key instead, you can run `dps init`.
+
+3. You can run CLI commands by executing:
 
    ```shell
    dps command [command options] [arguments...]
@@ -71,6 +82,6 @@ Make sure that `$HOME/go/bin` (`%HOME%\go\bin` for Windows) is added to the `$PA
    help, h    Shows a list of commands or help for one command
    ```
 
-3. You can run the TUI by simply running `dps`.
+4. You can run the TUI by simply running `dps`.
 
 The next pages will explain the commands and their usages.
