@@ -74,7 +74,7 @@ declare -A EXIT_SIGNALS
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry-1.docker.io/library/bash:latest'
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://bash:latest'
 /usr/bin/echo "Image successfully imported!"
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw"
 # shellcheck disable=SC2097,SC2098,SC1078
@@ -99,6 +99,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --contain \
   --writable-tmpfs \
   --nv \
+  --pwd "/" \
   "$IMAGE_PATH" \
   /bin/sh -c 'id'
 /usr/bin/echo 'Running: ''as 1337'
@@ -194,7 +195,7 @@ EOFenroot
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry-1.docker.io/library/bash:latest'
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://bash:latest'
 /usr/bin/echo "Image successfully imported!"
 export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw"
 # shellcheck disable=SC2097,SC2098,SC1078
@@ -219,6 +220,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --contain \
   --writable-tmpfs \
   --nv \
+  --pwd "/" \
   "$IMAGE_PATH" \
   /bin/sh -c 'id'
 /usr/bin/echo 'Running: ''as 1337'
