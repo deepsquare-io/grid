@@ -81,4 +81,4 @@ To summarize, by quantifying the computation with a value, we are able to exchan
 
 ### And, you.
 
-Without you, we couldn't make DeepSquare run. If you are ready to accelerate your software development experience with DeepSquare, you can read the next part about the [storage layout](/workflow/learn/storage-layout).
+Without you, we wouldn't be able to make DeepSquare work. If you're ready to accelerate your software development experience with DeepSquare, you can read the following section on [storage layout](/workflow/learn/storage-layout).

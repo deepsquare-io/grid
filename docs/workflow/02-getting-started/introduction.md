@@ -20,4 +20,4 @@ Here's an overview of the learning path we'll follow in this guide:
 
 By the conclusion of this guide, you'll be equipped with the knowledge and skills required to effectively harness DeepSquare for your HPC tasks. Whether you're a researcher, data scientist, or an engineer, this guide will empower you to effectively deploy and manage HPC workloads without the burden of infrastructure maintenance.
 
-Let's embark on this exciting journey with DeepSquare and explore how we can maximize the efficiency of your HPC tasks!
+[Let's embark on this exciting journey with DeepSquare and explore how we can maximize the efficiency of your HPC tasks!](part-1-helloworld)

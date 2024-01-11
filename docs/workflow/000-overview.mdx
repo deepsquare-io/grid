@@ -18,6 +18,7 @@ import GoLogo from '@site/static/img/Go-Logo_Blue.svg';
 import TypeScriptLogo from '@site/static/img/ts-logo-128.svg';
 import Button from '@mui/joy/Button';
 import Box from '@mui/joy/Box';
+import { Link } from 'react-router-dom';
 
 <h1 style={{ opacity: 0.8, fontSize: '24pt' }}>
   Scale up and accelerate your software development on the decentralized HPC. You can design and share any type of
@@ -25,10 +26,10 @@ import Box from '@mui/joy/Box';
 </h1>
 
 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }} style={{ paddingTop: '20px', paddingBottom: '40px' }}>
-  <Button size="lg">
+  <Button component={Link} size="lg" to="/workflow/quick-start">
     <center style={{ padding: '10px' }}>Quick Start</center>
   </Button>
-  <Button variant="outlined" size="lg">
+  <Button component={Link} size="lg" variant="outlined" size="lg" to="/workflow/learn/introduction">
     <center style={{ padding: '10px' }}>Overview</center>
   </Button>
 </Box>

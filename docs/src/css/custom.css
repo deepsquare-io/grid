@@ -297,12 +297,24 @@ a.card:hover {
 }
 
 /* Sidebar nav header  */
-.menu > .menu__list > .theme-doc-sidebar-item-link-level-1 {
+.menu > .menu__list > .theme-doc-sidebar-item-link-level-1:first-child {
   margin-bottom: 4px;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+
+.menu > .menu__list > .theme-doc-sidebar-item-link-level-1 {
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.menu > .menu__list > .theme-doc-sidebar-item-link-level-1 a {
+  padding-left: var(--ifm-col-spacing-vertical);
 }
 
 .menu > .menu__list > .menu__list-item > .theme-doc-sidebar-item-link-level-1 a {
@@ -337,7 +349,6 @@ a.card:hover {
 }
 
 .menu > ul.menu__list ul.menu__list .menu__link {
-  border-radius: 0;
   font-size: 0.85rem;
   /* margin-left: calc(var(--ifm-menu-link-padding-horizontal) * -1);
   padding-left: var(--ifm-menu-link-padding-horizontal); */
@@ -350,7 +361,7 @@ a.card:hover {
 
 .menu .menu__link,
 .menu .menu__link:hover,
-.menu .menu__link.menu__link--active:not(.menu__link--sublist) {
+.menu .menu__link.menu__link--active:not(.menu__link--sublist):not(.theme-doc-sidebar-item-link-level-1) {
   background: none;
   line-height: calc(var(--ifm-spacing-vertical) * 1);
 }

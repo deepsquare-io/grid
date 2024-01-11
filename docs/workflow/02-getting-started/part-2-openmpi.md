@@ -131,6 +131,8 @@ You can launch it on [DeepSquare Dev app](https://app.deepsquare.run/sandbox) to
 
 </div>
 
+## Demonstrating OpenMPI with an MPI application
+
 Following our previous 'Hello World' example, where we operated 16 separate processes, we're now going to explore **inter-process communication** with **OpenMPI**. This feature is crucial for high-performance computing as it enables **coordinated tasks and data sharing between multiple processors**.
 
 In our next example, the application, written in C and utilizing OpenMPI, conducts a simple ring test within a distributed computing environment. The main points are as follows:
@@ -341,6 +343,8 @@ steps:
 
 :::
 
+## Next steps
+
 Great job on completing the inter-process communication task using OpenMPI on DeepSquare! You've effectively used multiple processors for synchronized communication - a significant milestone in high-performance computing.
 
-Next, we venture into storage management. Data science projects on HPC often involve large-scale data processing. So, you'll learn how to manage datasets as inputs and outputs, a critical skill to leverage the full potential of the DeepSquare platform. Stay tuned for more!
+[Next, we venture into storage management](part-3-storage). Data science projects on HPC often involve large-scale data processing. So, you'll learn how to manage datasets as inputs and outputs, a critical skill to leverage the full potential of the DeepSquare platform.

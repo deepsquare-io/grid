@@ -282,7 +282,7 @@ _(Since we use PyTorch DataLoader, we could also have downloaded the dataset dir
 
 Great job on mastering storage management with DeepSquare! You've successfully imported and exported data in a job.
 
-Next, we will dive into the process of containerizing an application. This segment will cover:
+[Next, we will dive into the process of containerizing an application](part-4-containerization). This segment will cover:
 
 - The concept of application containers.
 - Building and packaging applications with Docker, Podman, or Buildah.
