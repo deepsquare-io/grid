@@ -50,8 +50,8 @@ Creating a module is quite easy:
 
    Optionally, you can describe:
 
-   - expected `inputs` which the user of the module can use by adding a value to the `args` field of the [_StepUse_](/workflow/workflow-api-reference/job#steprsuse-stepuse).
-   - expected `outputs`, which can be exported if the user of the module specify the `exportEnvAs` field of the [_StepUse_](/workflow/workflow-api-reference/job#steprsuse-stepuse).
+   - expected `inputs` which the user of the module can use by adding a value to the `args` field of the [_StepUse_](/workflow/workflow-api-reference/job#stepsuse-stepuse).
+   - expected `outputs`, which can be exported if the user of the module specify the `exportEnvAs` field of the [_StepUse_](/workflow/workflow-api-reference/job#stepsuse-stepuse).
 
    Notice that the `module.yaml` goes through a Go template engine before being used. This means you can access to context variables like [`Job`](/workflow/workflow-api-reference/job) or [`Step`](/workflow/workflow-api-reference/job#steps-step). This can help you design your module according based on the job or step specifications.
 
