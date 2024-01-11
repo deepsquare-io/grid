@@ -56,3 +56,7 @@ It is recommended that you take additional precautions, such as encryption, perm
 - **Delete the files at the end of the jobs explicitly if necessary.**
 
 Other practices may exists to ensure the **confidentiality**, **integrity** and **availability** of your data. Again, you are responsible for managing the risks.
+
+## Next steps
+
+Now that you learn about the storage layout, you should know that not every clusters are equal. Even if we are on a decentralized network of HPC, we don't want a chaotic job scheduling. Therefore, there is the concepts of [labels and affinities](/workflow/learn/providers-labels) that you can read about in the [next part](/workflow/learn/providers-labels).

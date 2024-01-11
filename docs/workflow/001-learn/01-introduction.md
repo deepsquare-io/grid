@@ -5,3 +5,7 @@ Welcome to DeepSquare, a pioneering force in the decentralized cloud space that 
 DeepSquare aggregates the unique capabilities of supercomputers from diverse compute providers worldwide into a unified computational infrastructure known as the [DeepSquare Grid](/workflow/learn/core-concepts#deepsquare-grid). Our primary aim is to democratize HPC, and the Grid stands as a powerful embodiment of this commitment.
 
 DeepSquare operates with a user-centric approach to resource allocation. Users specify the computational requirements for their workloads, and DeepSquare, through its [Meta-scheduling](/workflow/learn/core-concepts#meta-scheduling) process, matches these workloads to the most appropriate compute provider available on the grid.
+
+---
+
+If you are ready to learn about DeepSquare, see how a job is structured in the [next part](/workflow/learn/running-on-dps).

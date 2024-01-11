@@ -4,9 +4,9 @@ DeepSquare allows you to run your computational tasks on any compute provider wi
 
 ## Workflow Files: Your Starting Point
 
-A workflow file is your primary tool for running applications on DeepSquare. It outlines resource allocation and the sequence of instructions for your application. Here's an example:
+A workflow file is a YAML file describing the flow of your application. It outlines resource allocation and the sequence of instructions for your application. Here's an example:
 
-```yaml
+```yaml title="workflow.yaml"
 ## Allow DeepSquare logging
 enableLogging: true
 
@@ -31,11 +31,7 @@ steps:
       command: echo "hello world"
 ```
 
-:::note
-
-A empty command field (`command: ""`) will executes the default container `ENTRYPOINT`.
-
-:::
+Steps are run sequentially, on single or multiple nodes depending on the resource allocation.
 
 ## Executing a workflow
 
@@ -45,30 +41,37 @@ To launch a workflow file, you have a couple of choices:
 - Visit [DeepSquare Dev App](https://app.deepsquare.run/sandbox), paste the workflow, and run it.
 - Use the [DeepSquare SDK](https://www.npmjs.com/package/@deepsquare/deepsquare-client) which provides a simple and abstracted interface from web3 to the DeepSquare Grid.
 
-## Credits and SQUARE Tokens
+## Job life cycle
 
-Regardless of how you choose to run the job, whether through the portal or SDK, you need to have credits to pay for the jobs and SQUARE tokens to pay for gas fees. SQUARE tokens function similarly to ether in the Ethereum network, while credits are akin to USDC on the Ethereum blockchain. You can request free credits [here](https://share-eu1.hsforms.com/18lhtQBNNTVWVRXCm7t-83Aev6gi).
+After the job is submitted, the job will have an assigned state, and will be treated with a finite state machine.
 
-### Credit Allocation
+```mermaid
+flowchart LR
+  PENDING --> META_SCHEDULED --> SCHEDULED --> RUNNING
+  META_SCHEDULED -.-> CANCELLED
+  SCHEDULED -.-> CANCELLED
+  RUNNING --> CANCELLED
+  RUNNING --> FINISHED
+  RUNNING --> FAILED
+  RUNNING --> OUT_OF_CREDITS
+  RUNNING --> PANICKED
+  SCHEDULED -.-> PANICKED
+  META_SCHEDULED -.-> PANICKED
 
-You'll be prompted to specify the number of credit tokens to allocate when initiating a job via the SDK. Allocate extra tokens to prevent premature termination due to insufficient credits. Tokens are locked during the job, with remaining tokens returned to your account upon completion.
+```
 
-### Submitting Your Job
+- `PENDING`: A job has been submitted by a user and is awaiting meta-scheduling.
+- `META_SCHEDULED`: The job is assigned to a cluster.
+- `SCHEDULED`: The job has been queued internally by the cluster.
+- `RUNNING`: The job is being executed.
+- `FINISHED`: The job has ended successfully.
+- `FAILED`: The job has ended with a non-zero error code.
+- `OUT_OF_CREDITS`: The job has ended due to the time limit/credit allocation.
+- `CANCELLED`: The job has been cancelled by the user.
+- `PANICKED`: The job is in an undefined behavior and has been killed.
 
-Once you've prepared your workflow file, acquired credits, and obtained SQUARE tokens, you're ready to submit your job to the DeepSquare Grid. Either press 'Submit' on the portal or use the `submitJob` function in the SDK.
+## Next steps
 
-### Monitoring Job Status
+Now that you know how a job is structured, you should learn about where does it goes and where does it ends.
 
-Monitor your [job status](/workflow/learn/core-concepts#job-status) until it's finished to retrieve your job results, if any.
-
-### Job Completion
-
-Jobs end when they've naturally completed (success, failure, canceled), or there are no credits left for the job.
-
-### Pricing
-
-To gain a practical understanding of executing workloads on our platform, we recommend following our [Getting Started](/workflow/getting-started/introduction) guide. This guide provides a step-by-step tutorial on submitting your first job on the DeepSquare Grid, thereby familiarizing you with our tools and processes.
-
-If you have further inquiries or require assistance, our team is readily available on our [Discord server](https://discord.gg/rDaWwNfxfg) to provide support. As you delve deeper into the platform, don't hesitate to reach out to our community and experts who can help you navigate any complexities.
-
-We look forward to supporting your computational work on the DeepSquare platform.
+See the [Scheduling Architecture](/workflow/learn/architecture) to learn about that.

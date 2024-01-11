@@ -66,3 +66,7 @@ When submitting a job, it is possible to filter clusters:
 - "Only if the CPU architecture is arm64", rule is `arch=arm64`, which is also equivalent to the **Use** flag `arch=arm64`.
 - "Only if the GFLOPS is greater than 1000", rule is `compute.gflops>1000`.
 - "Only if the GPU is NVIDIA", rule is `gpu:in:nvidia`.
+
+## Next steps
+
+Now that you've learned about DeepSquare's filtering system, you can finish off by reading about the [credits and SQUARE token](/workflow/learn/credits-token) used in our system to reward suppliers and add value to computing resources.
