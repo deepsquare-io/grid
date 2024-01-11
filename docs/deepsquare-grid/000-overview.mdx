@@ -1,0 +1,23 @@
+---
+hide_table_of_contents: true
+---
+
+# Infrastructure Documentation
+
+import Button from '@mui/joy/Button';
+import Box from '@mui/joy/Box';
+import { Link } from 'react-router-dom';
+
+<h1 style={{ opacity: 0.8, fontSize: '24pt' }}>
+  Share your infrastructure to the community on the decentralized HPC. Make available your infrastructure to DeepSquare,
+  and get rewarded when jobs are running.
+</h1>
+
+<Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }} style={{ paddingTop: '20px', paddingBottom: '40px' }}>
+  <Button component={Link} size="lg" to="/deepsquare-grid/join/overview">
+    <center style={{ padding: '10px' }}>Join the Grid</center>
+  </Button>
+  <Button component={Link} size="lg" variant="outlined" size="lg" to="/deepsquare-grid/clusterfactory/overview">
+    <center style={{ padding: '10px' }}>Deploy with ClusterFactory</center>
+  </Button>
+</Box>

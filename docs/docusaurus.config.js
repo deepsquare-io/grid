@@ -110,7 +110,7 @@ const config = {
             position: 'left',
           },
           {
-            href: '/deepsquare-grid/join/overview',
+            href: '/deepsquare-grid/overview',
             label: 'Infrastructure Documentation',
             position: 'left',
           },
