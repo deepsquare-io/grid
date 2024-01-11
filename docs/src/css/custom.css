@@ -359,11 +359,10 @@ a.card:hover {
   padding-left: 0;
 }
 
-.menu .menu__link,
-.menu .menu__link:hover,
-.menu .menu__link.menu__link--active:not(.menu__link--sublist):not(.theme-doc-sidebar-item-link-level-1) {
+.menu .menu__link:not(.theme-doc-sidebar-item-link-level-1 > .menu__link),
+.menu .menu__link:not(.theme-doc-sidebar-item-link-level-1 > .menu__link):hover,
+.menu .menu__link.menu__link--active:not(.menu__link--sublist) {
   background: none;
-  line-height: calc(var(--ifm-spacing-vertical) * 1);
 }
 
 .menu__link--sublist {
