@@ -26,15 +26,15 @@ The example provided will illustrate how credits gets allocated, how jobs are su
 
 3. Let's run a Stable Diffusion inference, i.e., a text to image. Copy the follwing YAML content into the editor:
 
-   ```yaml
+   ```yaml title="stable-diffusion.yaml"
    resources:
      tasks: 1
      gpus: 1
      cpusPerTask: 1
      memPerCpu: 32000
-   
+
    enableLogging: true
-   
+
    steps:
      - name: stable-diffusion
        use:
@@ -42,7 +42,6 @@ The example provided will illustrate how credits gets allocated, how jobs are su
          args:
            - key: PROMPT
              value: spatioport scifi deep_space
-   
    ```
 
    You can replace the `value` of the `PROMPT`, if you want.
