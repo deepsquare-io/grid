@@ -19,14 +19,16 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
 	"strings"
 
 	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
-	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 	"gopkg.in/yaml.v3"
 )
 
@@ -72,7 +74,20 @@ func Resolve(
 	}
 
 	// Clone
-	r, err := git.CloneContext(ctx, memory.NewStorage(), memfs.New(), opts)
+	dir, err := os.MkdirTemp("", "module")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(dir)
+
+	fsstorDir, err := os.MkdirTemp("", "module")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(fsstorDir)
+
+	fsstor := filesystem.NewStorage(osfs.New(fsstorDir), cache.NewObjectLRUDefault())
+	r, err := git.CloneContext(ctx, fsstor, osfs.New(dir), opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to clone: %w", err)
 	}
