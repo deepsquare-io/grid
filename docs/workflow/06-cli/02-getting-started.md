@@ -52,17 +52,31 @@ Make sure that `$HOME/go/bin` (`%HOME%\go\bin` for Windows) is added to the `$PA
 
    You can find the smart-contract address in the [Releases tab of the Grid git repository](https://github.com/deepsquare-io/grid/releases?q=smart-contracts&expanded=true).
 
-2. Create a directory at `.dps` and put your wallet private key at `.dps/key`:
+2. Create a directory at `~/.dps` and put your wallet private key at `~/.dps/key`:
 
    ```shell
-   mkdir -p .dps
-   echo "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff" > .dps/key
-   chmod 600 .dps/key
+   mkdir -p ~/.dps
+   echo "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff" > ~/.dps/key
+   # Ensure the permission of the key excludes world and group permissions.
+   chmod 600 ~/.dps/key
    ```
 
-   You can fetch your private key from MetaMask by following [this guide](https://support.metamask.io/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key#).
+   For **Windows** users:
 
-   If you want to generate a private key instead, you can run `dps init`.
+   ```bat
+   mkdir "%USERPROFILE%\.dps"
+   echo "0000111122223333444455556666777788889999aaaabbbbccccddddeeeeffff" > "%USERPROFILE%\.dps\key"
+   icacls "%USERPROFILE%\.dps\key" /inheritance:r
+   icacls "%USERPROFILE%\.dps\key" /grant:r "%username%":"(R)"
+   ```
+
+   :::note
+
+   **If you want to typing these steps manually, or want to generate a private key instead, you can run `dps init`.**
+
+   :::
+
+   You can fetch your private key from MetaMask by following [this guide](https://support.metamask.io/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key#).
 
    To run on DeepSquare, you need **credits**. You can fetch free credits by filling [this form](https://share-eu1.hsforms.com/1PVlRXYdMSdy-iBH_PXx_0wev6gi).
 
