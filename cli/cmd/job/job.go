@@ -312,11 +312,10 @@ var Command = cli.Command{
 						)
 						return err
 					}
-					clean := forbiddenReplacer.Replace(string(req.GetData()))
 					if noTimestamp {
-						fmt.Printf("%s\n", clean)
+						fmt.Printf("%s\n", string(req.GetData()))
 					} else {
-						fmt.Printf("%s:\t%s\n", time.Unix(0, req.GetTimestamp()), clean)
+						fmt.Printf("%s:\t%s\n", time.Unix(0, req.GetTimestamp()), forbiddenReplacer.Replace(string(req.GetData())))
 					}
 				}
 			},
