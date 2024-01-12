@@ -11,7 +11,7 @@ toc_max_heading_level: 2
 
 It brings together best-in-class solutions from the HPC, Cloud, and DevOps industries to deploy and manage compute clusters in a declarative way in combination with the GitOps practice.
 
-**ClusterFactory** is the easiest method to make your infrastructure ready to join the [DeepSquare Grid](/deepsquare-grid/join/overview).
+**ClusterFactory** is the easiest method to make your infrastructure ready to join the [DeepSquare Grid](/deepsquare-grid/overview).
 
 To learn more about ClusterFactory, please have a look to its [dedicated documentation](https://docs.clusterfactory.io)
 
