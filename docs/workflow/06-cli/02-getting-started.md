@@ -10,20 +10,20 @@ To install it:
 # Create a local directory to store executable.
 mkdir -p ~/.local/bin
 # Move executable to install directory.
-mv dps* ~/.local/bin/dps
+mv <path/to/dps> ~/.local/bin/dps
 # Add executation permission.
 chmod +x ~/.local/bin/dps
 ```
 
 **Or, in one shot: `curl https://raw.githubusercontent.com/deepsquare-io/grid/main/cli/get-dps | bash`.**
 
-For **Windows** users:
+For **Windows** users, open `cmd.exe` (don't use PowerShell) and execute:
 
 ```bat
 :: Create a local directory to store executable.
 mkdir "%USERPROFILE%\.local\bin"
 :: Move executable to install directory.
-move dps* "%USERPROFILE%\.local\bin\dps"
+move <path/to/dps> "%USERPROFILE%\.local\bin\dps.exe"
 ```
 
 Make sure that `$HOME/.local/bin` (`%USERPROFILE%\.local\bin` for Windows) is added to the `$PATH` (`%PATH%`) environment variable.

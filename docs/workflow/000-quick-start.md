@@ -90,4 +90,5 @@ Are you ready to get started? Here are some helpful resources for taking your ne
 
 - For understanding DeepSquare and its internals, follow up on the next part ["Learn - Introduction"](/workflow/learn/introduction).
 - For developing complete workflow with DeepSquare, see the ["Getting Started"](/workflow/getting-started/introduction).
+- To install the `dps` to quickly launch workflows, see [Command Line Interface](/workflow/cli/overview).
 - For examples that demonstrate more complex features of Deepsquare, see the ["Guides"](/workflow/guides/overview).
