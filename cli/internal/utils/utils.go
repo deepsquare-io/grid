@@ -35,6 +35,7 @@ import (
 	"github.com/erikgeiser/promptkit/confirmation"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"go.uber.org/zap"
 )
 
 // BoolToYN converts a boolean to "yes" or "no".
@@ -123,7 +124,7 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 			if err != nil {
 				return pk, err
 			}
-			orPath = filepath.Join(home, "/.dps/key")
+			orPath = filepath.Join(home, ".dps", "key")
 		}
 
 		finfo, err := os.Stat(orPath)
@@ -171,13 +172,22 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 		} else if err != nil {
 			return nil, err
 		}
-		if !(finfo.Mode()&0700 > 0 && (finfo.Mode()&0070 == 0) && (finfo.Mode()&0007 == 0)) {
-			internallog.I.Sugar().Errorf(
-				"Permission of %s is insecure! Please `chmod 600 %s`.\n",
-				orPath,
-				orPath,
-			)
-			return nil, errors.New("insecure file permission")
+		// Check os is not windows
+		if os.PathSeparator != '\\' {
+			if !(finfo.Mode()&0700 > 0 && (finfo.Mode()&0070 == 0) && (finfo.Mode()&0007 == 0)) {
+				if err := os.Chmod(orPath, 0600); err != nil {
+					internallog.I.Error("Couldn't chmod to read-only.", zap.Error(err))
+					internallog.I.Sugar().Errorf(
+						"Permission of %s is insecure! Please `chmod 600 %s`.\n",
+						orPath,
+						orPath,
+					)
+				}
+
+				return nil, errors.New("insecure file permission")
+			}
+		} else {
+			internallog.I.Sugar().Warnf("You are running on Windows. Please make sure the file permission of %s is secure.\n", orPath)
 		}
 		b, err := os.ReadFile(orPath)
 		if err != nil {
