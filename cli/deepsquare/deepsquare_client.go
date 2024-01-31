@@ -20,6 +20,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/tls"
 	"crypto/x509"
+	"math/big"
 	"net"
 	"net/http"
 	"net/url"
@@ -30,6 +31,11 @@ import (
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/sbatch"
 	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/allowance"
+	"github.com/deepsquare-io/grid/cli/types/credit"
+	"github.com/deepsquare-io/grid/cli/types/event"
+	"github.com/deepsquare-io/grid/cli/types/job"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -51,12 +57,12 @@ const (
 // Users must call Close() at the end of the application to avoid pending connections.
 type Client interface {
 	types.Logger
-	types.JobScheduler
-	types.JobFetcher
-	types.JobsByProviderFetcher
-	types.CreditManager
-	types.AllowanceManager
-	types.ProviderManager
+	job.Scheduler
+	job.Fetcher
+	job.ByProviderFetcher
+	credit.Manager
+	allowance.Manager
+	provider.Manager
 	// Close all connections.
 	Close() error
 }
@@ -118,14 +124,87 @@ func (c *ClientConfig) applyDefault() {
 
 type client struct {
 	types.Logger
-	types.JobScheduler
-	types.JobFetcher
-	types.JobsByProviderFetcher
-	types.CreditManager
-	types.AllowanceManager
-	types.ProviderManager
-	loggerConn *grpc.ClientConn
-	rpcClient  *rpc.Client
+	job.Scheduler
+	job.Fetcher
+	job.ByProviderFetcher
+	CreditManager    credit.Manager
+	AllowanceManager allowance.Manager
+	ProviderManager  provider.Manager
+	loggerConn       *grpc.ClientConn
+	rpcClient        *rpc.Client
+}
+
+// GetProvider implements Client.
+func (c *client) GetProvider(
+	ctx context.Context,
+	address common.Address,
+	opts ...provider.GetProviderOption,
+) (provider provider.Detail, err error) {
+	return c.ProviderManager.GetProvider(ctx, address, opts...)
+}
+
+// GetProviders implements Client.
+func (c *client) GetProviders(
+	ctx context.Context,
+	opts ...provider.GetProviderOption,
+) (providers []provider.Detail, err error) {
+	return c.ProviderManager.GetProviders(ctx, opts...)
+}
+
+// Approve implements Client.
+func (c *client) ApproveProvider(ctx context.Context, provider common.Address) error {
+	return c.ProviderManager.ApproveProvider(ctx, provider)
+}
+
+// Balance implements Client.
+func (c *client) Balance(ctx context.Context) (*big.Int, error) {
+	return c.CreditManager.Balance(ctx)
+}
+
+// BalanceOf implements Client.
+func (c *client) BalanceOf(ctx context.Context, address common.Address) (*big.Int, error) {
+	return c.CreditManager.BalanceOf(ctx, address)
+}
+
+// ClearAllowance implements Client.
+func (c *client) ClearAllowance(ctx context.Context) error {
+	return c.AllowanceManager.ClearAllowance(ctx)
+}
+
+// GetAllowance implements Client.
+func (c *client) GetAllowance(ctx context.Context) (*big.Int, error) {
+	return c.AllowanceManager.GetAllowance(ctx)
+}
+
+// ReduceToAllowance implements Client.
+func (c *client) ReduceToAllowance(
+	ctx context.Context,
+	approvals <-chan types.Approval,
+) (<-chan *big.Int, error) {
+	return c.AllowanceManager.ReduceToAllowance(ctx, approvals)
+}
+
+// ReduceToBalance implements Client.
+func (c *client) ReduceToBalance(
+	ctx context.Context,
+	transfers <-chan types.Transfer,
+) (<-chan *big.Int, error) {
+	return c.CreditManager.ReduceToBalance(ctx, transfers)
+}
+
+// RemoveProvider implements Client.
+func (c *client) RemoveProvider(ctx context.Context, provider common.Address) error {
+	return c.ProviderManager.RemoveProvider(ctx, provider)
+}
+
+// SetAllowance implements Client.
+func (c *client) SetAllowance(ctx context.Context, amount *big.Int) error {
+	return c.AllowanceManager.SetAllowance(ctx, amount)
+}
+
+// Transfer implements Client.
+func (c *client) Transfer(ctx context.Context, to common.Address, amount *big.Int) error {
+	return c.CreditManager.Transfer(ctx, to, amount)
 }
 
 // NewClient creates a new Client for the given ClientConfig.
@@ -185,15 +264,15 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 	fetcher := rpcClientSet.JobFetcher()
 	runningJobsByProviderFetcher := metascheduler.NewJobsByProviderFetcher(oracle, fetcher)
 	return &client{
-		JobFetcher:            fetcher,
-		JobScheduler:          jobScheduler,
-		JobsByProviderFetcher: runningJobsByProviderFetcher,
-		CreditManager:         rpcClientSet.CreditManager(),
-		AllowanceManager:      rpcClientSet.AllowanceManager(),
-		ProviderManager:       rpcClientSet.ProviderManager(),
-		Logger:                logger,
-		loggerConn:            conn,
-		rpcClient:             rpcClient,
+		Fetcher:           fetcher,
+		Scheduler:         jobScheduler,
+		ByProviderFetcher: runningJobsByProviderFetcher,
+		CreditManager:     rpcClientSet.CreditManager(),
+		AllowanceManager:  rpcClientSet.AllowanceManager(),
+		ProviderManager:   rpcClientSet.ProviderManager(),
+		Logger:            logger,
+		loggerConn:        conn,
+		rpcClient:         rpcClient,
 	}, nil
 }
 
@@ -206,7 +285,7 @@ func (c *client) Close() error {
 //
 // Users must call Close() at the end of the application to avoid pending connections.
 type Watcher interface {
-	types.EventSubscriber
+	event.Subscriber
 	// Close all connections.
 	Close() error
 }
@@ -248,7 +327,7 @@ func (c *WatcherConfig) applyDefault() {
 }
 
 type watcher struct {
-	types.EventSubscriber
+	event.Subscriber
 	rpcClient *rpc.Client
 	wsClient  *rpc.Client
 }
@@ -283,9 +362,9 @@ func NewWatcher(ctx context.Context, c *WatcherConfig) (Watcher, error) {
 		UserPrivateKey:       c.UserPrivateKey,
 	}
 	return &watcher{
-		EventSubscriber: metascheduler.NewEventSubscriber(metaschedulerRPC, metaschedulerWS),
-		rpcClient:       rpcClient,
-		wsClient:        wsClient,
+		Subscriber: metascheduler.NewEventSubscriber(metaschedulerRPC, metaschedulerWS),
+		rpcClient:  rpcClient,
+		wsClient:   wsClient,
 	}, nil
 }
 

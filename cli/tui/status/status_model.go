@@ -35,6 +35,8 @@ import (
 	"github.com/deepsquare-io/grid/cli/tui/components/ticker"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/job"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 	"github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
 )
@@ -57,12 +59,12 @@ type model struct {
 	idToJob map[[32]byte]types.Job
 	// Index jobID to running job
 	runningIDs    map[[32]byte]bool
-	it            types.JobLazyIterator
+	it            job.LazyIterator
 	help          help.Model
 	watchJobs     channel.Model[transitionMsg]
 	client        deepsquare.Client
 	keyMap        keyMap
-	cacheProvider map[[32]byte]types.ProviderDetail
+	cacheProvider map[[32]byte]provider.Detail
 
 	ticker ticker.Model
 
@@ -164,13 +166,13 @@ func rowToJobID(row table.Row) [32]byte {
 // This method is executed before the loading of the page for SSR.
 func initializeRows(
 	ctx context.Context,
-	fetcher types.JobFetcher,
+	fetcher job.Fetcher,
 ) (
 	rows []table.Row,
 	idToRow map[[32]byte]table.Row,
 	idToJob map[[32]byte]types.Job,
 	runningIDs map[[32]byte]bool,
-	it types.JobLazyIterator,
+	it job.LazyIterator,
 ) {
 	it, err := fetcher.GetJobs(ctx)
 	if err != nil {
@@ -445,7 +447,7 @@ func Model(
 			),
 		},
 		client:        client,
-		cacheProvider: make(map[[32]byte]types.ProviderDetail),
+		cacheProvider: make(map[[32]byte]provider.Detail),
 		watchJobs: makeWatchJobsModel(
 			ctx,
 			userAddress,

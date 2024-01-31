@@ -29,7 +29,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/internal/validator"
 	"github.com/deepsquare-io/grid/cli/tui/style"
-	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 	"gopkg.in/yaml.v3"
 )
 
@@ -41,7 +41,7 @@ func indent(spaces int, v string) string {
 }
 
 // Model is used to build the bubbletea Model for showing the provider details.
-func Model(p types.ProviderDetail) tea.Model {
+func Model(p provider.Detail) tea.Model {
 	vp := viewport.New(118, style.StandardHeight)
 	prices := fmt.Sprintf(`CPU pricing: %s credits/(CPU.min)
 Memory pricing: %s credits/(MB.min)
@@ -132,12 +132,12 @@ Is banned: %s
 	inputs[creditsInput].SetValue("100")
 
 	return &model{
-		ProviderDetail: p,
-		help:           help,
-		viewport:       vp,
-		inputs:         inputs,
-		credits:        new(big.Float),
-		errors:         make([]error, inputsSize),
+		Detail:   p,
+		help:     help,
+		viewport: vp,
+		inputs:   inputs,
+		credits:  new(big.Float),
+		errors:   make([]error, inputsSize),
 		keyMap: keyMap{
 			ViewPortKeyMap: vp.KeyMap,
 			Exit: key.NewBinding(

@@ -21,8 +21,8 @@ import (
 	"math/big"
 
 	"github.com/deepsquare-io/grid/cli/sbatch"
-	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/job"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
@@ -75,16 +75,16 @@ func (c *jobScheduler) requestNewJob(
 
 func (c *jobScheduler) SubmitJob(
 	ctx context.Context,
-	job *sbatch.Job,
+	j *sbatch.Job,
 	lockedAmount *big.Int,
 	jobName [32]byte,
-	opts ...types.SubmitJobOption,
+	opts ...job.SubmitJobOption,
 ) ([32]byte, error) {
-	var o types.SubmitJobOptions
+	var o job.SubmitJobOptions
 	for _, opt := range opts {
 		opt(&o)
 	}
-	hash, err := c.Submit(ctx, job)
+	hash, err := c.Submit(ctx, j)
 	if err != nil {
 		return [32]byte{}, fmt.Errorf("failed to submit job: %w", err)
 	}
@@ -106,10 +106,10 @@ func (c *jobScheduler) SubmitJob(
 	}
 
 	definition := metaschedulerabi.JobDefinition{
-		Ntasks:            uint64(job.Resources.Tasks),
-		Gpus:              uint64(job.Resources.GPUs),
-		MemPerCpu:         uint64(job.Resources.MemPerCPU),
-		CpusPerTask:       uint64(job.Resources.CPUsPerTask),
+		Ntasks:            uint64(j.Resources.Tasks),
+		Gpus:              uint64(j.Resources.GPUs),
+		MemPerCpu:         uint64(j.Resources.MemPerCPU),
+		CpusPerTask:       uint64(j.Resources.CPUsPerTask),
 		StorageType:       0,
 		BatchLocationHash: hash,
 		Uses:              msUses,

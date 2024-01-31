@@ -22,6 +22,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/tui/channel"
 	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/event"
 	"go.uber.org/zap"
 )
 
@@ -38,7 +39,7 @@ func makeWatchJobModel(
 		OnInit: func(c chan transitionMsg) func() error {
 			transitions := make(chan types.JobTransition, 1)
 			sub, err := watcher.SubscribeEvents(ctx,
-				types.FilterJobTransition(transitions),
+				event.FilterJobTransition(transitions),
 			)
 			if err != nil {
 				log.I.Fatal(err.Error())

@@ -27,7 +27,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/tui/components/table"
 	"github.com/deepsquare-io/grid/cli/tui/provider/details"
-	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 	"go.uber.org/zap"
 )
 
@@ -45,9 +45,9 @@ func emitExitMsg() tea.Msg {
 }
 
 // ShowProviderDetailsMsg is the signal when a user select a provider.
-type ShowProviderDetailsMsg types.ProviderDetail
+type ShowProviderDetailsMsg provider.Detail
 
-func emitShowProviderDetailsMsg(p types.ProviderDetail) tea.Cmd {
+func emitShowProviderDetailsMsg(p provider.Detail) tea.Cmd {
 	return func() tea.Msg {
 		return ShowProviderDetailsMsg(p)
 	}
@@ -58,8 +58,8 @@ type model struct {
 	help   help.Model
 	keyMap keyMap
 
-	client    types.ProviderManager
-	providers map[string]types.ProviderDetail
+	client    provider.Manager
+	providers map[string]provider.Detail
 
 	// detailsModel is nullable
 	detailsModel tea.Model
@@ -133,7 +133,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		rows := m.initializeRows(context.TODO())
 		m.table.SetRows(rows)
 	case ShowProviderDetailsMsg:
-		m.detailsModel = details.Model(types.ProviderDetail(msg))
+		m.detailsModel = details.Model(provider.Detail(msg))
 		cmds = append(
 			cmds,
 			m.detailsModel.Init(),

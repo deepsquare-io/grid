@@ -34,7 +34,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/internal/validator"
 	"github.com/deepsquare-io/grid/cli/sbatch"
 	"github.com/deepsquare-io/grid/cli/tui/channel"
-	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/job"
 	"github.com/mistakenelf/teacup/code"
 	"gopkg.in/yaml.v3"
 )
@@ -128,8 +128,8 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 				if err != nil {
 					return errorMsg(err)
 				}
-				var job sbatch.Job
-				if err := yaml.Unmarshal(dat, &job); err != nil {
+				var j sbatch.Job
+				if err := yaml.Unmarshal(dat, &j); err != nil {
 					return errorMsg(err)
 				}
 
@@ -174,10 +174,10 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 				copy(jobName[:], m.inputs[jobNameInput].Value())
 				jobID, err := m.client.SubmitJob(
 					ctx,
-					&job,
+					&j,
 					allocatedCreditsBigI,
 					jobName,
-					types.WithUse(labels...),
+					job.WithUse(labels...),
 				)
 				if err != nil {
 					return errorMsg(err)

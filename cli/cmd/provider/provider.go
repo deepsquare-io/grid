@@ -38,7 +38,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
-	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -128,9 +128,9 @@ var Command = cli.Command{
 					MetaschedulerAddress: common.HexToAddress(metaschedulerSmartContract),
 					ChainID:              chainID,
 				})
-				opts := make([]types.GetProviderOption, 0)
+				opts := make([]provider.GetProviderOption, 0)
 				if proposal {
-					opts = append(opts, types.WithProposal())
+					opts = append(opts, provider.WithProposal())
 				}
 				providers, err := clientset.ProviderManager().GetProviders(ctx, opts...)
 				if err != nil {
@@ -155,7 +155,7 @@ var Command = cli.Command{
 					return err
 				}
 				providerAddress := common.HexToAddress(cCtx.Args().First())
-				return clientset.ProviderManager().Approve(cCtx.Context, providerAddress)
+				return clientset.ProviderManager().ApproveProvider(cCtx.Context, providerAddress)
 			},
 		},
 		{
@@ -169,7 +169,7 @@ var Command = cli.Command{
 					return err
 				}
 				providerAddress := common.HexToAddress(cCtx.Args().First())
-				return clientset.ProviderManager().Remove(cCtx.Context, providerAddress)
+				return clientset.ProviderManager().RemoveProvider(cCtx.Context, providerAddress)
 			},
 		},
 	},

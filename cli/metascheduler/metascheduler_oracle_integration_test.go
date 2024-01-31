@@ -23,14 +23,14 @@ import (
 	"testing"
 
 	"github.com/deepsquare-io/grid/cli/metascheduler"
-	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/job"
 	"github.com/stretchr/testify/suite"
 )
 
 type OracleTestSuite struct {
 	suite.Suite
 
-	impl types.MetaScheduledJobsIdsFetcher
+	impl job.MetaScheduledIdsFetcher
 }
 
 func (suite *OracleTestSuite) BeforeTest(_, _ string) {

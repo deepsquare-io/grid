@@ -20,9 +20,10 @@ import (
 	"testing"
 
 	"github.com/deepsquare-io/grid/cli/metascheduler"
-	"github.com/deepsquare-io/grid/cli/mocks/mocktypes"
+	"github.com/deepsquare-io/grid/cli/mocks/mockjob"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/job"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -31,14 +32,14 @@ import (
 type MetaScheduledJobsByProviderFetcherTestSuite struct {
 	suite.Suite
 
-	fetcher                    *mocktypes.JobFetcher
-	metascheduledJobIDsFetcher *mocktypes.MetaScheduledJobsIdsFetcher
-	impl                       types.JobsByProviderFetcher
+	fetcher                    *mockjob.Fetcher
+	metascheduledJobIDsFetcher *mockjob.MetaScheduledIdsFetcher
+	impl                       job.ByProviderFetcher
 }
 
 func (suite *MetaScheduledJobsByProviderFetcherTestSuite) BeforeTest(_, _ string) {
-	suite.fetcher = mocktypes.NewJobFetcher(suite.T())
-	suite.metascheduledJobIDsFetcher = mocktypes.NewMetaScheduledJobsIdsFetcher(suite.T())
+	suite.fetcher = mockjob.NewFetcher(suite.T())
+	suite.metascheduledJobIDsFetcher = mockjob.NewMetaScheduledIdsFetcher(suite.T())
 	suite.impl = metascheduler.NewJobsByProviderFetcher(
 		suite.metascheduledJobIDsFetcher,
 		suite.fetcher,

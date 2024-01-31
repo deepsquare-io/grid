@@ -21,6 +21,7 @@ import (
 
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/job"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
@@ -40,7 +41,7 @@ func (c *jobFetcher) GetJob(ctx context.Context, id [32]byte) (types.Job, error)
 }
 
 type jobIterator struct {
-	types.JobFetcher
+	job.Fetcher
 	array  [][32]byte
 	length int
 	index  int
@@ -92,7 +93,7 @@ func (it *jobIterator) Error() error {
 	return it.err
 }
 
-func (c *jobFetcher) GetJobs(ctx context.Context) (types.JobLazyIterator, error) {
+func (c *jobFetcher) GetJobs(ctx context.Context) (job.LazyIterator, error) {
 	jobIDs, err := c.GetByCustomer(&bind.CallOpts{
 		Context: ctx,
 	}, c.from())
@@ -104,10 +105,10 @@ func (c *jobFetcher) GetJobs(ctx context.Context) (types.JobLazyIterator, error)
 		jobIDs[i], jobIDs[j] = jobIDs[j], jobIDs[i]
 	}
 	return &jobIterator{
-		JobFetcher: c,
-		array:      jobIDs,
-		length:     len(jobIDs),
-		index:      -1,
-		job:        nil,
+		Fetcher: c,
+		array:   jobIDs,
+		length:  len(jobIDs),
+		index:   -1,
+		job:     nil,
 	}, nil
 }

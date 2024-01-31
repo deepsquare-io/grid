@@ -89,6 +89,9 @@ import (
 	"github.com/deepsquare-io/grid/cli/sbatch"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/event"
+	"github.com/deepsquare-io/grid/cli/types/job"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/urfave/cli/v2"
@@ -326,8 +329,8 @@ var Command = cli.Command{
 		if err != nil {
 			return err
 		}
-		var job sbatch.Job
-		if err := yaml.Unmarshal(dat, &job); err != nil {
+		var j sbatch.Job
+		if err := yaml.Unmarshal(dat, &j); err != nil {
 			return err
 		}
 
@@ -389,11 +392,11 @@ var Command = cli.Command{
 		if !watch {
 			jobID, err := client.SubmitJob(
 				ctx,
-				&job,
+				&j,
 				credits,
 				jobNameB,
-				types.WithUse(usesLabels...),
-				types.WithAffinity(affinities...),
+				job.WithUse(usesLabels...),
+				job.WithAffinity(affinities...),
 			)
 			if err != nil {
 				return err
@@ -406,13 +409,13 @@ var Command = cli.Command{
 
 		// Watch submit logic
 		transitions := make(chan types.JobTransition, 1)
-		sub, err := watcher.SubscribeEvents(ctx, types.FilterJobTransition(transitions))
+		sub, err := watcher.SubscribeEvents(ctx, event.FilterJobTransition(transitions))
 		if err != nil {
 			return err
 		}
 		defer sub.Unsubscribe()
 
-		jobID, err := client.SubmitJob(ctx, &job, credits, jobNameB, types.WithUse(usesLabels...))
+		jobID, err := client.SubmitJob(ctx, &j, credits, jobNameB, job.WithUse(usesLabels...))
 		if err != nil {
 			return err
 		}
@@ -422,7 +425,7 @@ var Command = cli.Command{
 		fmt.Printf("---Waiting for job %s to be running...---\n", jobIDBig.String())
 		var finished = false
 		var allocatedProviderAddress common.Address
-		var provider types.ProviderDetail
+		var provider provider.Detail
 		msOrSchedLen, runningLen := int64(0), int64(0)
 		// Wait for finished or running
 	loop:
@@ -587,7 +590,7 @@ var forbiddenReplacer = strings.NewReplacer(
 // computeWaitingTime returns min(running) + sum(waiting)
 func computeWaitingTime(
 	jobID [32]byte,
-	provider types.ProviderDetail,
+	provider provider.Detail,
 	jobs []types.Job,
 ) (time.Duration, error) {
 	var waiting, running time.Duration

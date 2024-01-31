@@ -26,7 +26,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/tui/components/table"
 	"github.com/deepsquare-io/grid/cli/tui/style"
-	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 )
 
 // ModelBuilder contains the dependencies used to build the bubbletea Model for the provider page.
@@ -107,7 +107,7 @@ func (b *ModelBuilder) Build() tea.Model {
 				key.WithHelp("esc/q", "exit"),
 			),
 		},
-		providers: make(map[string]types.ProviderDetail),
+		providers: make(map[string]provider.Detail),
 		client:    b.Client,
 	}
 }

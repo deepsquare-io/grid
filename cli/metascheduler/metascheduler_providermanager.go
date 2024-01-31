@@ -19,9 +19,12 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -31,7 +34,7 @@ type providerManager struct {
 	*metaschedulerabi.IProviderManager
 }
 
-func (c *providerManager) Approve(ctx context.Context, provider common.Address) error {
+func (c *providerManager) ApproveProvider(ctx context.Context, provider common.Address) error {
 	opts, err := c.authOpts(ctx)
 	if err != nil {
 		return fmt.Errorf("failed get auth options: %w", err)
@@ -47,7 +50,7 @@ func (c *providerManager) Approve(ctx context.Context, provider common.Address) 
 	return nil
 }
 
-func (c *providerManager) Remove(ctx context.Context, provider common.Address) error {
+func (c *providerManager) RemoveProvider(ctx context.Context, provider common.Address) error {
 	opts, err := c.authOpts(ctx)
 	if err != nil {
 		return fmt.Errorf("failed get auth options: %w", err)
@@ -66,9 +69,9 @@ func (c *providerManager) Remove(ctx context.Context, provider common.Address) e
 func (c *providerManager) GetProvider(
 	ctx context.Context,
 	address common.Address,
-	opts ...types.GetProviderOption,
-) (provider types.ProviderDetail, err error) {
-	var o types.GetProviderOptions
+	opts ...provider.GetProviderOption,
+) (detail provider.Detail, err error) {
+	var o provider.GetProviderOptions
 	for _, opt := range opts {
 		opt(&o)
 	}
@@ -79,7 +82,7 @@ func (c *providerManager) GetProvider(
 			address,
 		)
 		if err != nil {
-			return provider, WrapError(err)
+			return detail, WrapError(err)
 		}
 	} else {
 		p, err = c.IProviderManager.GetProvider(
@@ -87,7 +90,7 @@ func (c *providerManager) GetProvider(
 			address,
 		)
 		if err != nil {
-			return provider, WrapError(err)
+			return detail, WrapError(err)
 		}
 	}
 
@@ -96,7 +99,7 @@ func (c *providerManager) GetProvider(
 		address,
 	)
 	if err != nil {
-		return provider, WrapError(err)
+		return detail, WrapError(err)
 	}
 
 	isValidForScheduling, err := c.IsValidForScheduling(
@@ -104,7 +107,7 @@ func (c *providerManager) GetProvider(
 		address,
 	)
 	if err != nil {
-		return provider, WrapError(err)
+		return detail, WrapError(err)
 	}
 
 	jobCount, err := c.GetJobCount(
@@ -112,7 +115,7 @@ func (c *providerManager) GetProvider(
 		address,
 	)
 	if err != nil {
-		return provider, WrapError(err)
+		return detail, WrapError(err)
 	}
 
 	// Sort labels
@@ -120,7 +123,7 @@ func (c *providerManager) GetProvider(
 
 	p.Addr = address
 
-	return types.ProviderDetail{
+	return provider.Detail{
 		Provider:             p,
 		IsWaitingForApproval: isWaitingForApproval,
 		IsValidForScheduling: isValidForScheduling,
@@ -130,8 +133,13 @@ func (c *providerManager) GetProvider(
 
 func (c *providerManager) GetProviders(
 	ctx context.Context,
-	opts ...types.GetProviderOption,
-) (providers []types.ProviderDetail, err error) {
+	opts ...provider.GetProviderOption,
+) (providers []provider.Detail, err error) {
+	var o provider.GetProviderOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+
 	it, err := c.FilterProviderWaitingForApproval(&bind.FilterOpts{Context: ctx})
 	if err != nil {
 		return providers, WrapError(err)
@@ -140,16 +148,12 @@ func (c *providerManager) GetProviders(
 		_ = it.Close()
 	}()
 
-	providerMap := make(map[common.Address]types.ProviderDetail)
+	providerMap := make(map[common.Address]provider.Detail)
 
 	for it.Next() {
-		var o types.GetProviderOptions
-		for _, opt := range opts {
-			opt(&o)
-		}
-		var provider metaschedulerabi.Provider
+		var prov metaschedulerabi.Provider
 		if o.Proposal {
-			provider, err = c.GetWaitingForApprovalProvider(
+			prov, err = c.GetWaitingForApprovalProvider(
 				&bind.CallOpts{Context: ctx},
 				it.Event.Addr,
 			)
@@ -157,13 +161,18 @@ func (c *providerManager) GetProviders(
 				return providers, WrapError(err)
 			}
 		} else {
-			provider, err = c.IProviderManager.GetProvider(
+			prov, err = c.IProviderManager.GetProvider(
 				&bind.CallOpts{Context: ctx},
 				it.Event.Addr,
 			)
 			if err != nil {
 				return providers, WrapError(err)
 			}
+		}
+
+		// Check if provider matches affinities
+		if len(o.Affinities) != 0 && !CheckAffinities(o.Affinities, prov.Labels) {
+			continue
 		}
 
 		isWaitingForApproval, err := c.IsWaitingForApproval(
@@ -190,24 +199,98 @@ func (c *providerManager) GetProviders(
 			return providers, WrapError(err)
 		}
 		sort.Slice(
-			provider.Labels,
-			func(i, j int) bool { return provider.Labels[i].Key < provider.Labels[j].Key },
+			prov.Labels,
+			func(i, j int) bool { return prov.Labels[i].Key < prov.Labels[j].Key },
 		)
 
-		provider.Addr = it.Event.Addr
+		prov.Addr = it.Event.Addr
 
-		providerMap[it.Event.Addr] = types.ProviderDetail{
-			Provider:             provider,
+		providerMap[it.Event.Addr] = provider.Detail{
+			Provider:             prov,
 			IsWaitingForApproval: isWaitingForApproval,
 			IsValidForScheduling: isValidForScheduling,
 			JobCount:             jobCount,
 		}
 	}
 
-	providers = make([]types.ProviderDetail, 0, len(providerMap))
+	providers = make([]provider.Detail, 0, len(providerMap))
 	for _, v := range providerMap {
 		providers = append(providers, v)
 	}
 
 	return providers, nil
+}
+
+// CompareValues compares two values using the given operator.
+func CompareValues(op, valueA, valueB string) bool {
+	numA, errA := strconv.ParseFloat(valueA, 64)
+	numB, errB := strconv.ParseFloat(valueB, 64)
+	if errA == nil && errB == nil {
+		switch op {
+		case "=", "==":
+			return numB == numA
+		case "in":
+			return strings.Contains(valueB, valueA)
+		case ">":
+			return numB > numA
+		case "<":
+			return numB < numA
+		case ">=":
+			return numB >= numA
+		case "<=":
+			return numB <= numA
+		case "!=":
+			return numB != numA
+		default:
+			return numB == numA
+		}
+	} else {
+		// Perform simple string comparison
+		switch op {
+		case "=", "==":
+			return valueB == valueA
+		case "in":
+			return strings.Contains(valueB, valueA)
+		case ">":
+			return valueB > valueA
+		case "<":
+			return valueB < valueA
+		case ">=":
+			return valueB >= valueA
+		case "<=":
+			return valueB <= valueA
+		case "!=":
+			return valueB != valueA
+		default:
+			return valueB == valueA
+		}
+	}
+}
+
+// CheckAffinities checks if the given labels satisfy the given affinities.
+func CheckAffinities(
+	affinities []types.Affinity,
+	labels []metaschedulerabi.Label,
+) bool {
+	kv := make(map[string]string)
+	for _, affinity := range affinities {
+		op := strings.Trim(string(affinity.Op[:]), "\x00")
+
+		for _, label := range labels {
+			// If key found and condition satisfied
+			if affinity.Label.Key == label.Key &&
+				CompareValues(op, affinity.Label.Value, label.Value) {
+				kv[affinity.Label.Key] = affinity.Label.Value
+				break
+			}
+		}
+	}
+
+	for _, item := range affinities {
+		if _, found := kv[item.Label.Key]; !found {
+			return false
+		}
+	}
+
+	return true
 }

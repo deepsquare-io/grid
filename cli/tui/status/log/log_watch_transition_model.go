@@ -24,6 +24,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/tui/channel"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/event"
 )
 
 type transitionMsg types.JobTransition
@@ -39,7 +40,7 @@ func makeWatchTransitionModel(
 		OnInit: func(c chan transitionMsg) func() error {
 			transitions := make(chan types.JobTransition, 1)
 			sub, err := watcher.SubscribeEvents(ctx,
-				types.FilterJobTransition(transitions),
+				event.FilterJobTransition(transitions),
 			)
 			if err != nil {
 				log.I.Fatal(err.Error())

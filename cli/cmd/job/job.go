@@ -47,6 +47,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/event"
 	"github.com/erikgeiser/promptkit/confirmation"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -263,7 +264,7 @@ var Command = cli.Command{
 				transitions := make(chan types.JobTransition, 1)
 				sub, err := watcher.SubscribeEvents(
 					ctx,
-					types.FilterJobTransition(transitions),
+					event.FilterJobTransition(transitions),
 				)
 				if err != nil {
 					return err

@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/job"
 )
 
 // DefaultOracleURL is the default oracle URL.
@@ -38,7 +38,7 @@ type OracleOptions struct {
 }
 
 // NewOracle instanciates an Oracle.
-func NewOracle(url string, opts OracleOptions) types.MetaScheduledJobsIdsFetcher {
+func NewOracle(url string, opts OracleOptions) job.MetaScheduledIdsFetcher {
 	if url == "" {
 		url = DefaultOracleURL
 	}

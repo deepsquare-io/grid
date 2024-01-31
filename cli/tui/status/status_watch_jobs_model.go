@@ -22,6 +22,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/tui/channel"
 	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/event"
 	"github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
 )
@@ -40,8 +41,8 @@ func makeWatchJobsModel(
 			newJobs := make(chan types.NewJobRequest, 1)
 			transitions := make(chan types.JobTransition, 1)
 			sub, err := watcher.SubscribeEvents(ctx,
-				types.FilterNewJobRequest(newJobs),
-				types.FilterJobTransition(transitions),
+				event.FilterNewJobRequest(newJobs),
+				event.FilterJobTransition(transitions),
 			)
 			if err != nil {
 				log.I.Fatal(err.Error())

@@ -32,6 +32,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/metascheduler"
 	"github.com/deepsquare-io/grid/cli/tui/channel"
 	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 	"github.com/ethereum/go-ethereum/common"
 	"go.uber.org/zap"
 )
@@ -69,7 +70,7 @@ type model struct {
 
 	jobID                    [32]byte
 	allocatedProviderAddress common.Address
-	provider                 types.ProviderDetail
+	provider                 provider.Detail
 	msOrSchedLen             int64
 	runningLen               int64
 	status                   metascheduler.JobStatus
@@ -207,7 +208,7 @@ func reduceJobsIntoRunningOrScheduledLens(
 // computeWaitingTime returns min(running) + sum(waiting)
 func computeWaitingTime(
 	jobID [32]byte,
-	provider types.ProviderDetail,
+	provider provider.Detail,
 	jobs []types.Job,
 ) (time.Duration, error) {
 	var waiting, running time.Duration

@@ -28,8 +28,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/deepsquare-io/grid/cli/internal/ether"
 	"github.com/deepsquare-io/grid/cli/metascheduler"
-	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/provider"
 )
 
 const (
@@ -77,7 +77,7 @@ type model struct {
 	// Form result
 	duration string
 
-	types.ProviderDetail
+	provider.Detail
 }
 
 func (m model) Init() tea.Cmd {

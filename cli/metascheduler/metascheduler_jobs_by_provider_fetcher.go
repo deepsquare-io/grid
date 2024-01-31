@@ -20,22 +20,23 @@ import (
 	"context"
 
 	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/job"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 type runningJobsByProviderFetcher struct {
-	types.MetaScheduledJobsIdsFetcher
-	types.JobFetcher
+	job.MetaScheduledIdsFetcher
+	job.Fetcher
 }
 
 // NewJobsByProviderFetcher instanciates a JobsByProviderFetcher.
 func NewJobsByProviderFetcher(
-	oracle types.MetaScheduledJobsIdsFetcher,
-	fetcher types.JobFetcher,
-) types.JobsByProviderFetcher {
+	oracle job.MetaScheduledIdsFetcher,
+	fetcher job.Fetcher,
+) job.ByProviderFetcher {
 	return &runningJobsByProviderFetcher{
-		MetaScheduledJobsIdsFetcher: oracle,
-		JobFetcher:                  fetcher,
+		MetaScheduledIdsFetcher: oracle,
+		Fetcher:                 fetcher,
 	}
 }
 

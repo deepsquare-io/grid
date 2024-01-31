@@ -26,7 +26,7 @@ import (
 )
 
 func (m model) headerView() string {
-	return style.LogTitle().Render(m.ProviderDetail.Addr.Hex())
+	return style.LogTitle().Render(m.Detail.Addr.Hex())
 }
 
 func (m model) View() string {

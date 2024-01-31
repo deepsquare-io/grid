@@ -4,7 +4,7 @@ dir: 'mocks/mock{{.PackageName}}'
 mockname: '{{.InterfaceName}}'
 outpkg: 'mock{{.PackageName}}'
 packages:
-  github.com/deepsquare-io/grid/cli/types:
+  github.com/deepsquare-io/grid/cli/types/job:
     interfaces:
-      MetaScheduledJobsIdsFetcher:
-      JobFetcher:
+      MetaScheduledIdsFetcher:
+      Fetcher:

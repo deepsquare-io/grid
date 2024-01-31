@@ -36,6 +36,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/tui/style"
 	"github.com/deepsquare-io/grid/cli/tui/transfer"
 	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/event"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
@@ -86,8 +87,8 @@ func (m *model) watchEvents(
 		transfers := make(chan types.Transfer, 1)
 		sub, err := m.watcher.SubscribeEvents(
 			ctx,
-			types.FilterApproval(approvals),
-			types.FilterTransfer(transfers),
+			event.FilterApproval(approvals),
+			event.FilterTransfer(transfers),
 		)
 		if err != nil {
 			internallog.I.Fatal(err.Error())

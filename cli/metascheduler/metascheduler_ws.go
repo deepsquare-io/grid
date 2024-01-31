@@ -19,8 +19,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/event"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -38,7 +38,7 @@ type eventSubscriber struct {
 func NewEventSubscriber(
 	rpc Backend,
 	ws Backend,
-) types.EventSubscriber {
+) event.Subscriber {
 	m, err := metaschedulerabi.NewMetaScheduler(rpc.MetaschedulerAddress, rpc.EthereumBackend)
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
@@ -52,11 +52,11 @@ func NewEventSubscriber(
 
 func (c *eventSubscriber) SubscribeEvents(
 	ctx context.Context,
-	opts ...types.SubscriptionOption,
+	opts ...event.SubscriptionOption,
 ) (ethereum.Subscription, error) {
 	var err error
 	logs := make(chan ethtypes.Log, 100)
-	var o types.SubscriptionOptions
+	var o event.SubscriptionOptions
 	for _, opt := range opts {
 		opt(&o)
 	}
@@ -139,7 +139,7 @@ func (c *eventSubscriber) SubscribeEvents(
 
 func (c *eventSubscriber) filter(
 	logs <-chan ethtypes.Log,
-	o types.SubscriptionOptions,
+	o event.SubscriptionOptions,
 ) {
 	var creditFilterer metaschedulerabi.IERC20Filterer
 	if o.TransferChan != nil || o.ApprovalChan != nil {
