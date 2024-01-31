@@ -3,4 +3,4 @@ supervisor=0.16.4
 ldap-connector=1.4.0
 provider-ssh-authorized-keys=v1.3.0
 sbatch-service=0.18.0
-cli=v1.4.1
+cli=v1.5.0
