@@ -256,7 +256,7 @@ var flags = []cli.Flag{
 }
 
 var keyValueOperatorRegex = regexp.MustCompile(
-	`^([^<>=!in:]+)\s*(==|<=|>=|<|>|!=|=|:in:)\s*([^<>=!in:]+)$`,
+	`^([^<>=!:]+)\s*(==|<=|>=|<|>|!=|=|:in:)\s*([^<>=!:]+)$`,
 )
 
 // parseKeyValueOperator parses a string in the format "key operator value" and returns the key, value, and operator.
