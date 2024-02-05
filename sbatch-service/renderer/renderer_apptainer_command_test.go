@@ -63,7 +63,18 @@ func TestRenderApptainer(t *testing.T) {
 	}{
 		{
 			input: *cleanApptainerStepRun("hostname"),
-			expected: `/usr/bin/apptainer --silent exec \
+			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' \
+/usr/bin/apptainer --silent exec \
   --disable-cache \
   --contain \
   --writable-tmpfs \
@@ -80,7 +91,18 @@ func TestRenderApptainer(t *testing.T) {
 				r.Container.Image = "/test/my.sqshfs"
 				return r
 			}(),
-			expected: `/usr/bin/apptainer --silent exec \
+			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' \
+/usr/bin/apptainer --silent exec \
   --disable-cache \
   --contain \
   --writable-tmpfs \
@@ -97,7 +119,18 @@ func TestRenderApptainer(t *testing.T) {
 				r.Container.DeepsquareHosted = utils.Ptr(true)
 				return r
 			}(),
-			expected: `/usr/bin/apptainer --silent exec \
+			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' \
+/usr/bin/apptainer --silent exec \
   --disable-cache \
   --contain \
   --writable-tmpfs \
@@ -114,7 +147,18 @@ func TestRenderApptainer(t *testing.T) {
 				r.WorkDir = utils.Ptr("/dir")
 				return r
 			}(),
-			expected: `/usr/bin/apptainer --silent exec \
+			expected: `export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='/deepsquare' \
+DEEPSQUARE_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
+DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
+DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
+DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
+DEEPSQUARE_INPUT='/deepsquare/input' \
+DEEPSQUARE_OUTPUT='/deepsquare/output' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' \
+/usr/bin/apptainer --silent exec \
   --disable-cache \
   --contain \
   --writable-tmpfs \

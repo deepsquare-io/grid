@@ -177,17 +177,7 @@ export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry/image'
 /usr/bin/echo "Image successfully imported!"
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-# shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+/usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -195,15 +185,26 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /usr/bin/apptainer --silent exec \
+  /bin/bash -c 'export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'"'"'/host'"'"':'"'"'/container'"'"':'"'"'ro'"'"'
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='"'"'/deepsquare'"'"' \
+DEEPSQUARE_TMP='"'"'/deepsquare/tmp'"'"' \
+DEEPSQUARE_SHARED_TMP='"'"'/deepsquare/tmp'"'"' \
+DEEPSQUARE_SHARED_WORLD_TMP='"'"'/deepsquare/world-tmp'"'"' \
+DEEPSQUARE_DISK_TMP='"'"'/deepsquare/disk/tmp'"'"' \
+DEEPSQUARE_DISK_WORLD_TMP='"'"'/deepsquare/disk/world-tmp'"'"' \
+DEEPSQUARE_INPUT='"'"'/deepsquare/input'"'"' \
+DEEPSQUARE_OUTPUT='"'"'/deepsquare/output'"'"' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='"'"'value'"'"' \
+/usr/bin/apptainer --silent exec \
   --disable-cache \
   --contain \
   --writable-tmpfs \
   --no-home \
   --nv \
-  --pwd '/' \
+  --pwd '"'"'/'"'"' \
   "$IMAGE_PATH" \
-  /bin/sh -c 'hostname'`,
+  /bin/sh -c '"'"'hostname'"'"''`,
 			title: "Positive test with apptainer image",
 		},
 		{
@@ -220,17 +221,7 @@ The cache is cleared periodically and only persists on the site.
 EOFmounterror
 export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-# shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+/usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -238,15 +229,26 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /usr/bin/apptainer --silent exec \
+  /bin/bash -c 'export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'"'"'/host'"'"':'"'"'/container'"'"':'"'"'ro'"'"'
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='"'"'/deepsquare'"'"' \
+DEEPSQUARE_TMP='"'"'/deepsquare/tmp'"'"' \
+DEEPSQUARE_SHARED_TMP='"'"'/deepsquare/tmp'"'"' \
+DEEPSQUARE_SHARED_WORLD_TMP='"'"'/deepsquare/world-tmp'"'"' \
+DEEPSQUARE_DISK_TMP='"'"'/deepsquare/disk/tmp'"'"' \
+DEEPSQUARE_DISK_WORLD_TMP='"'"'/deepsquare/disk/world-tmp'"'"' \
+DEEPSQUARE_INPUT='"'"'/deepsquare/input'"'"' \
+DEEPSQUARE_OUTPUT='"'"'/deepsquare/output'"'"' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='"'"'value'"'"' \
+/usr/bin/apptainer --silent exec \
   --disable-cache \
   --contain \
   --writable-tmpfs \
   --no-home \
   --nv \
-  --pwd '/' \
-  "$STORAGE_PATH"'/test/my.sqshfs' \
-  /bin/sh -c 'hostname'`,
+  --pwd '"'"'/'"'"' \
+  "$STORAGE_PATH"'"'"'/test/my.sqshfs'"'"' \
+  /bin/sh -c '"'"'hostname'"'"''`,
 			title: "Positive test with apptainer absolute path image",
 		},
 		{
@@ -262,17 +264,7 @@ The cache is cleared periodically and only persists on the site.
 EOFmounterror
 export APPTAINER_DOCKER_USERNAME='username'
 export APPTAINER_DOCKER_PASSWORD='password'
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-# shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/srun --job-name='test' \
+/usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -280,15 +272,26 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='value' /usr/bin/s
   --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /usr/bin/apptainer --silent exec \
+  /bin/bash -c 'export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'"'"'/host'"'"':'"'"'/container'"'"':'"'"'ro'"'"'
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='"'"'/deepsquare'"'"' \
+DEEPSQUARE_TMP='"'"'/deepsquare/tmp'"'"' \
+DEEPSQUARE_SHARED_TMP='"'"'/deepsquare/tmp'"'"' \
+DEEPSQUARE_SHARED_WORLD_TMP='"'"'/deepsquare/world-tmp'"'"' \
+DEEPSQUARE_DISK_TMP='"'"'/deepsquare/disk/tmp'"'"' \
+DEEPSQUARE_DISK_WORLD_TMP='"'"'/deepsquare/disk/world-tmp'"'"' \
+DEEPSQUARE_INPUT='"'"'/deepsquare/input'"'"' \
+DEEPSQUARE_OUTPUT='"'"'/deepsquare/output'"'"' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" test='"'"'value'"'"' \
+/usr/bin/apptainer --silent exec \
   --disable-cache \
   --contain \
   --writable-tmpfs \
   --no-home \
   --nv \
   --pwd "/" \
-  '/opt/software/registry/image' \
-  /bin/sh -c 'hostname'`,
+  '"'"'/opt/software/registry/image'"'"' \
+  /bin/sh -c '"'"'hostname'"'"''`,
 			title: "Positive test with deepsquare-hosted image",
 		},
 		{
@@ -525,17 +528,7 @@ export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry/image'
 /usr/bin/echo "Image successfully imported!"
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'/host':'/container':'ro'
-# shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-name='test' \
+/usr/bin/srun --job-name='test' \
   --export=ALL"$(loadDeepsquareEnv)" \
   --cpus-per-task=1 \
   --mem-per-cpu=1M \
@@ -543,7 +536,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" /usr/bin/srun --job-nam
   --gpus=0 \
   --ntasks=1 \
   --gpu-bind=none \
-  /bin/sh -c 'set -e
+  /bin/bash -c 'set -e
 
 nsenter_flags() {
   pid="$1"
@@ -648,7 +641,18 @@ EOFwireguard
 /usr/bin/echo "nameserver 1.1.1.1" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
 /usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
 
-'"'"''"'"'/usr/bin/apptainer --silent exec \
+'"'"''"'"'export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw,/tmp/.X11-unix:/tmp/.X11-unix:ro",'"'"'"'"'"'"'"'"'/host'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"'/container'"'"'"'"'"'"'"'"':'"'"'"'"'"'"'"'"'ro'"'"'"'"'"'"'"'"'
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='"'"'"'"'"'"'"'"'/deepsquare'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_TMP='"'"'"'"'"'"'"'"'/deepsquare/tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_SHARED_TMP='"'"'"'"'"'"'"'"'/deepsquare/tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_SHARED_WORLD_TMP='"'"'"'"'"'"'"'"'/deepsquare/world-tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_DISK_TMP='"'"'"'"'"'"'"'"'/deepsquare/disk/tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_DISK_WORLD_TMP='"'"'"'"'"'"'"'"'/deepsquare/disk/world-tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_INPUT='"'"'"'"'"'"'"'"'/deepsquare/input'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_OUTPUT='"'"'"'"'"'"'"'"'/deepsquare/output'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" \
+/usr/bin/apptainer --silent exec \
   --disable-cache \
   --contain \
   --writable-tmpfs \

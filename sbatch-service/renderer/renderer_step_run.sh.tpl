@@ -25,17 +25,7 @@ export IMAGE_PATH
 /usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" {{ $image | squote }}
 /usr/bin/echo "Image successfully imported!"
 {{ end -}}
-export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw{{ if and .Step.Run.Container.X11 (derefBool .Step.Run.Container.X11 ) }},/tmp/.X11-unix:/tmp/.X11-unix:ro{{ end }}"{{ range $mount := .Step.Run.Container.Mounts }},{{ $mount.HostDir | squote }}:{{ $mount.ContainerDir | squote }}:{{ $mount.Options | squote }}{{ end }}
-# shellcheck disable=SC2097,SC2098,SC1078
-STORAGE_PATH='/deepsquare' \
-DEEPSQUARE_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_TMP='/deepsquare/tmp' \
-DEEPSQUARE_SHARED_WORLD_TMP='/deepsquare/world-tmp' \
-DEEPSQUARE_DISK_TMP='/deepsquare/disk/tmp' \
-DEEPSQUARE_DISK_WORLD_TMP='/deepsquare/disk/world-tmp' \
-DEEPSQUARE_INPUT='/deepsquare/input' \
-DEEPSQUARE_OUTPUT='/deepsquare/output' \
-DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.Run.Env }} {{ $env.Key }}={{ $env.Value | squote }}{{ end }} /usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
+/usr/bin/srun {{ if and .Step.Name (derefStr .Step.Name) }}--job-name={{ derefStr .Step.Name | squote }}{{ end }} \
   --export=ALL"$(loadDeepsquareEnv)" \
 {{- if and .Step.Run.Resources .Step.Run.Resources.CPUsPerTask (derefInt .Step.Run.Resources.CPUsPerTask) }}
   --cpus-per-task={{ derefInt .Step.Run.Resources.CPUsPerTask }} \
@@ -66,7 +56,7 @@ DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)"{{ range $env := .Step.R
   --cpu-bind=none \
 {{- end }}
   --gpu-bind=none \
-  {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ renderSlirp4NetNS .Step.Run .Job (renderApptainerCommand .Step.Run) | squote -}}{{ else if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "pasta") }}{{ if .Step.Run.Shell }}{{ derefStr .Step.Run.Shell }}{{ else }}/bin/sh{{ end }} -c {{ renderPastaNS .Step.Run .Job (renderApptainerCommand .Step.Run) | squote -}}{{ else }}{{ renderApptainerCommand .Step.Run }}{{ end }}
+  /bin/bash -c {{ if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "slirp4netns") }}{{ renderSlirp4NetNS .Step.Run .Job (renderApptainerCommand .Step.Run) | squote -}}{{ else if and .Step.Run.Network (eq (derefStr .Step.Run.Network) "pasta") }}{{ renderPastaNS .Step.Run .Job (renderApptainerCommand .Step.Run) | squote -}}{{ else }}{{ renderApptainerCommand .Step.Run | squote }}{{ end }}
 {{- else -}}
 {{- /* Enroot */ -}}
 {{- if and .Step.Run.Container.Registry .Step.Run.Container.Username .Step.Run.Container.Password -}}

@@ -1,0 +1,151 @@
+job:
+  # yaml-language-server: $schema=../.job.schema.json
+
+  enableLogging: false
+  resources:
+    tasks: 3
+    cpusPerTask: 2
+    memPerCpu: 10000
+    gpus: 1
+
+  virtualNetworks:
+    - name: network
+      gatewayAddress: 10.0.0.1/24
+
+  steps:
+    - name: 'text-generation-inference'
+      launch:
+        steps:
+          - run:
+              container:
+                deepsquareHosted: true
+                apptainer: true
+                registry: registry-1.deepsquare.run
+                image: library/text-generation-inference:1.4
+              resources:
+                gpusPerTask: 1
+              env:
+                - key: HF_HOME
+                  value: /deepsquare
+              command: |
+                set -e
+
+                # Mount the weights
+                mkdir -p /data
+                mkdir -p $DEEPSQUARE_SHARED_WORLD_TMP/hf-tgi-weights
+                mount --bind $DEEPSQUARE_SHARED_WORLD_TMP/hf-tgi-weights /data
+                chmod -R 777 $DEEPSQUARE_SHARED_WORLD_TMP/hf-tgi-weights || true
+
+                # Launch the model
+                text-generation-launcher --hostname 0.0.0.0 -p 8080 --model-id mistralai/Mistral-7B-Instruct-v0.1
+                echo "Exited $?"
+              network: slirp4netns
+              mapGid: 0
+              mapUid: 0
+              dns:
+                - 8.8.8.8
+              customNetworkInterfaces:
+                - vnet:
+                    name: network
+                    address: 10.0.0.2/24
+
+    - name: 'mongo'
+      launch:
+        steps:
+          - run:
+              container:
+                image: mongo:7.0.5
+              command: |
+                set -ex
+
+                # Mount the db
+                mkdir -p /data/db
+                mkdir -p $DEEPSQUARE_TMP/mongo
+                mount --bind $DEEPSQUARE_TMP/mongo /data/db
+
+                # Launch the db
+                numactl --interleave=all mongod --bind_ip_all > $DEEPSQUARE_TMP/mongod.log &
+                pid=$!
+                sleep 5
+                mongosh --eval 'if (db.getUser("root") != null) db.createUser({ user: "root", pwd: "example", roles: [ { role: "readWrite", db: "test" } ] })' || true
+                wait $pid
+                echo "Exited $?"
+              network: slirp4netns
+              mapGid: 0
+              mapUid: 0
+              customNetworkInterfaces:
+                - vnet:
+                    name: network
+                    address: 10.0.0.3/24
+
+    - name: mongodb-healthcheck
+      run:
+        container:
+          image: mongo:7.0.5
+        network: slirp4netns
+        mapGid: 0
+        mapUid: 0
+        env:
+          - key: MONGODB_USERNAME
+            value: root
+          - key: MONGODB_PASSWORD
+            value: example
+        customNetworkInterfaces:
+          - vnet:
+              name: network
+              address: 10.0.0.4/24
+        command: |
+          while ! mongosh mongodb://$MONGODB_USERNAME:$MONGODB_PASSWORD@10.0.0.3:27017/test --eval 'db.runCommand({ping: 1})'; do
+              echo "Waiting for database connection..."
+              sleep 2
+          done
+
+    - name: 'chat-ui'
+      steps:
+        - run:
+            container:
+              registry: registry-1.deepsquare.run
+              # To update the image, just pull ghcr.io/huggingface/chat-ui:latest
+              # and push it to registry-1.deepsquare.run/library/chat-ui:latest
+              image: library/chat-ui:latest
+            command: |
+              set -e
+
+              cat << 'EOF' > .env.local
+              MONGODB_URL=mongodb://root:example@10.0.0.3:27017/test
+              MODELS=`[
+                {
+                  "name": "Mistral-7B-Instruct-v0.1",
+                  "parameters": {
+                    "temperature": 0.7,
+                    "top_p": 0.95,
+                    "repetition_penalty": 1.1,
+                    "top_k": 40,
+                    "truncate": 1000,
+                    "max_new_tokens": 1024,
+                    "stop": []
+                  },
+                  "endpoints": [{
+                    "type" : "tgi",
+                    "url": "http://10.0.0.2:8080"
+                  }]
+                }
+              ]`
+              EOF
+
+              docker-entrypoint.sh /bin/bash -c /app/entrypoint.sh
+              # Or run:
+              # npm run build
+              # npm run preview -- --host 0.0.0.0 --port 3000
+              echo "Exited $?"
+            network: slirp4netns
+            mapGid: 0
+            mapUid: 0
+            customNetworkInterfaces:
+              - bore:
+                  address: bore.deepsquare.run
+                  port: 2200
+                  targetPort: 3000
+              - vnet:
+                  name: network
+                  address: 10.0.0.4/24
