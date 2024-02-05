@@ -250,4 +250,3 @@ export S3_ENDPOINT_URL='https://example'
 s5cmd sync --destination-region 'region' "$DEEPSQUARE_OUTPUT/" 's3://test''/test'
 )
 # END SCOPE: LOGS
-
