@@ -1,2 +1,1037 @@
-2024-02-05T23:12:47.454+0100	[31mERROR[0m	cmd/render.go:63	failed to render sbatch script from file	{"error": "template: gotpl:168:3: executing \"gotpl\" at <renderStep $.Job $step>: error calling renderStep: template: gotpl:50:3: executing \"gotpl\" at <renderStepAsyncLaunch .Job .Step.Launch>: error calling renderStepAsyncLaunch: template: gotpl:5:3: executing \"gotpl\" at <renderStep $.Job $step>: error calling renderStep: template: gotpl:46:3: executing \"gotpl\" at <renderStepRun .Job .Step>: error calling renderStepRun: template: gotpl:134:116: executing \"gotpl\" at <renderEnrootCommand .Step.Run>: error calling renderEnrootCommand: {\n  \"errors\": [\n    {\n      \"code\": \"TOOMANYREQUESTS\",\n      \"message\": \"You have reached your pull rate limit. You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit\"\n    }\n  ]\n}\n"}
-2024-02-05T23:12:47.454+0100	[31mFATAL[0m	sbatch-service/server.go:339	app crashed	{"error": "template: gotpl:168:3: executing \"gotpl\" at <renderStep $.Job $step>: error calling renderStep: template: gotpl:50:3: executing \"gotpl\" at <renderStepAsyncLaunch .Job .Step.Launch>: error calling renderStepAsyncLaunch: template: gotpl:5:3: executing \"gotpl\" at <renderStep $.Job $step>: error calling renderStep: template: gotpl:46:3: executing \"gotpl\" at <renderStepRun .Job .Step>: error calling renderStepRun: template: gotpl:134:116: executing \"gotpl\" at <renderEnrootCommand .Step.Run>: error calling renderEnrootCommand: {\n  \"errors\": [\n    {\n      \"code\": \"TOOMANYREQUESTS\",\n      \"message\": \"You have reached your pull rate limit. You may increase the limit by authenticating and upgrading: https://www.docker.com/increase-rate-limit\"\n    }\n  ]\n}\n"}
+#!/bin/bash -l
+
+set -e
+
+export NTASKS='3'
+export CPUS_PER_TASK='2'
+export MEM_PER_CPU='10000'
+export GPUS='1'
+export CPUS='6'
+export MEM='60000'
+STORAGE_PATH="/opt/cache/shared/$(id -u)/$SLURM_JOB_NAME.$SLURM_JOB_ID"
+export STORAGE_PATH
+export DEEPSQUARE_INPUT="$STORAGE_PATH/input"
+export DEEPSQUARE_OUTPUT="$STORAGE_PATH/output"
+export DEEPSQUARE_ENV="$STORAGE_PATH/env"
+DEEPSQUARE_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_TMP
+DEEPSQUARE_SHARED_TMP="/opt/cache/persistent/user-$(id -u)"
+export DEEPSQUARE_SHARED_TMP
+DEEPSQUARE_SHARED_WORLD_TMP="/opt/cache/world-tmp"
+export DEEPSQUARE_SHARED_WORLD_TMP
+DEEPSQUARE_DISK_TMP="/opt/cache/disk/tmp/user-$(id -u)"
+export DEEPSQUARE_DISK_TMP
+DEEPSQUARE_DISK_WORLD_TMP="/opt/cache/disk/world-tmp"
+export DEEPSQUARE_DISK_WORLD_TMP
+ENROOT_RUNTIME_PATH="/run/enroot/user-$(id -u)"
+export ENROOT_RUNTIME_PATH
+ENROOT_CACHE_PATH="/opt/cache/enroot/group-$(id -g)"
+export ENROOT_CACHE_PATH
+ENROOT_DATA_PATH="/mnt/scratch/tmp/enroot/containers/user-$(id -u)"
+export ENROOT_DATA_PATH
+export APPTAINER_TMPDIR="/mnt/scratch/tmp/apptainer"
+/usr/bin/mkdir -p "$STORAGE_PATH" "$DEEPSQUARE_OUTPUT" "$DEEPSQUARE_INPUT" "$DEEPSQUARE_TMP"
+/usr/bin/touch "$DEEPSQUARE_ENV"
+/usr/bin/chmod -R 700 "$STORAGE_PATH"
+/usr/bin/chmod 700 "$DEEPSQUARE_TMP"
+
+# Create mountpoints
+/usr/bin/mkdir -p "$STORAGE_PATH/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/world-tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/tmp"
+/usr/bin/mkdir -p "$STORAGE_PATH/disk/world-tmp"
+
+/usr/bin/chown -R "$(id -u):$(id -g)" "$STORAGE_PATH"
+
+for node in $(scontrol show hostnames "$SLURM_NODELIST"); do
+  srun --job-name="prepare-dir" -N 1-1 --gpus=0 -n 1 -w "$node" sh -c 'mkdir -p "$DEEPSQUARE_DISK_TMP" && /usr/bin/chmod 700 "$DEEPSQUARE_DISK_TMP"'
+done
+
+cleanup() {
+  /bin/rm -rf "$STORAGE_PATH"
+}
+trap cleanup EXIT INT TERM
+# Start VPNs
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if /usr/bin/echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# Find random UDP port
+/usr/bin/python -c 'import socket; s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.bind(("", 0)); print(s.getsockname()[1]); s.close()' > "$STORAGE_PATH/vnet0_port"
+
+pk="$(/usr/bin/wg genkey)"
+/usr/bin/echo "$pk" > "$STORAGE_PATH/vnet0_pk"
+/usr/bin/echo "$(/usr/bin/echo "$pk" | /usr/bin/wg pubkey)" > "$STORAGE_PATH/vnet0_pub"
+/usr/bin/echo "$(ip route get 1 | awk 'NR==1 {print $7}')" > "$STORAGE_PATH/vnet0_endpoint"
+
+pk="$(/usr/bin/wg genkey)"
+/usr/bin/echo "$pk" > "$STORAGE_PATH/vnet0_peer0_pk"
+/usr/bin/echo "$(/usr/bin/echo "$pk" | /usr/bin/wg pubkey)" > "$STORAGE_PATH/vnet0_peer0_pub"
+
+pk="$(/usr/bin/wg genkey)"
+/usr/bin/echo "$pk" > "$STORAGE_PATH/vnet0_peer1_pk"
+/usr/bin/echo "$(/usr/bin/echo "$pk" | /usr/bin/wg pubkey)" > "$STORAGE_PATH/vnet0_peer1_pub"
+
+pk="$(/usr/bin/wg genkey)"
+/usr/bin/echo "$pk" > "$STORAGE_PATH/vnet0_peer2_pk"
+/usr/bin/echo "$(/usr/bin/echo "$pk" | /usr/bin/wg pubkey)" > "$STORAGE_PATH/vnet0_peer2_pub"
+
+/usr/bin/cat << EOF > "$STORAGE_PATH/vnet0.conf"
+[Interface]
+Address = 10.0.0.1/24
+ListenPort = $(/usr/bin/cat "$STORAGE_PATH/vnet0_port")
+PrivateKey = $(/usr/bin/cat "$STORAGE_PATH/vnet0_pk")
+
+[Peer]
+PublicKey = $(/usr/bin/cat "$STORAGE_PATH/vnet0_peer0_pub")
+AllowedIPs = 10.0.0.2
+
+[Peer]
+PublicKey = $(/usr/bin/cat "$STORAGE_PATH/vnet0_peer1_pub")
+AllowedIPs = 10.0.0.3
+
+[Peer]
+PublicKey = $(/usr/bin/cat "$STORAGE_PATH/vnet0_peer2_pub")
+AllowedIPs = 10.0.0.4
+
+EOF
+
+/usr/bin/unshare --map-root-user --net --mount /bin/sh -c '
+set -e
+umask 0077
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ net0
+
+/usr/bin/wg-quick up "$STORAGE_PATH/vnet0.conf"
+
+/usr/bin/sleep infinity
+
+' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/pasta --config-net \
+  --tcp-ports none \
+  --udp-ports "$(cat "$STORAGE_PATH/vnet0_port")" \
+  --netns "/proc/$child/ns/net" \
+  --userns "/proc/$child/ns/user" \
+  --ns-ifname net0 \
+  -f &
+pasta_pid=$!
+cleanup() {
+  kill -9 $child $pasta_pid || true
+}
+trap cleanup EXIT INT TERM
+
+
+
+cd "$STORAGE_PATH/"
+loadDeepsquareEnv() {
+  while IFS= read -r envvar; do
+    printf ',%s' "$envvar"
+  done < <(/usr/bin/grep -v '^#' "$DEEPSQUARE_ENV" | /usr/bin/grep '=')
+}
+
+declare -A EXIT_SIGNALS
+/usr/bin/echo 'Running: ''text-generation-inference'
+(
+declare -A EXIT_SIGNALS
+
+/usr/bin/srun  \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=10000M \
+  --gpus-per-task=1 \
+  --gpus=1 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /bin/bash -c 'set -e
+
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# shellcheck disable=SC2016,SC1078,SC1079
+/usr/bin/unshare --map-current-user --net --mount --map-user=0 --map-group=0 /bin/sh -c '"'"'
+set -e
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ net0
+
+
+/usr/bin/mkdir -p "$(pwd)/peer0"
+/usr/bin/cat << EOFwireguard > "$(pwd)/peer0/vnet0.conf"
+[Interface]
+Address = 10.0.0.2/24
+PrivateKey = $(cat "$STORAGE_PATH/vnet0_peer0_pk")
+
+[Peer]
+PublicKey = $(cat "$STORAGE_PATH/vnet0_pub")
+AllowedIPs = 10.0.0.0/24
+Endpoint = $(cat "$STORAGE_PATH/vnet0_endpoint"):$(cat "$STORAGE_PATH/vnet0_port")
+PersistentKeepalive = 20
+EOFwireguard
+/usr/bin/chmod 600 "$(pwd)/peer0/vnet0.conf"
+/usr/bin/wg-quick up "$(pwd)/peer0/vnet0.conf"
+
+/usr/bin/echo "nameserver 8.8.8.8" > "$(pwd)/resolv.$SLURM_JOB_ID.conf"
+/usr/bin/mount --bind "$(pwd)/resolv.$SLURM_JOB_ID.conf" /etc/resolv.conf
+
+'"'"''"'"'export APPTAINER_BIND="$STORAGE_PATH:/deepsquare:rw,$DEEPSQUARE_SHARED_TMP:/deepsquare/tmp:rw,$DEEPSQUARE_SHARED_WORLD_TMP:/deepsquare/world-tmp:rw,$DEEPSQUARE_DISK_TMP:/deepsquare/disk/tmp:rw,$DEEPSQUARE_DISK_WORLD_TMP:/deepsquare/disk/world-tmp:rw"
+# shellcheck disable=SC2097,SC2098,SC1078
+STORAGE_PATH='"'"'"'"'"'"'"'"'/deepsquare'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_TMP='"'"'"'"'"'"'"'"'/deepsquare/tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_SHARED_TMP='"'"'"'"'"'"'"'"'/deepsquare/tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_SHARED_WORLD_TMP='"'"'"'"'"'"'"'"'/deepsquare/world-tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_DISK_TMP='"'"'"'"'"'"'"'"'/deepsquare/disk/tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_DISK_WORLD_TMP='"'"'"'"'"'"'"'"'/deepsquare/disk/world-tmp'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_INPUT='"'"'"'"'"'"'"'"'/deepsquare/input'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_OUTPUT='"'"'"'"'"'"'"'"'/deepsquare/output'"'"'"'"'"'"'"'"' \
+DEEPSQUARE_ENV="/deepsquare/$(basename $DEEPSQUARE_ENV)" HF_HOME='"'"'"'"'"'"'"'"'/deepsquare'"'"'"'"'"'"'"'"' \
+/usr/bin/apptainer --silent exec \
+  --disable-cache \
+  --contain \
+  --writable-tmpfs \
+  --no-home \
+  --nv \
+  --pwd "/" \
+  '"'"'"'"'"'"'"'"'/opt/software/registry-1.deepsquare.run/library/text-generation-inference:1.4'"'"'"'"'"'"'"'"' \
+  /bin/sh -c '"'"'"'"'"'"'"'"'set -e
+
+# Mount the weights
+mkdir -p /data
+mkdir -p $DEEPSQUARE_SHARED_WORLD_TMP/hf-tgi-weights
+mount --bind $DEEPSQUARE_SHARED_WORLD_TMP/hf-tgi-weights /data
+chmod -R 777 $DEEPSQUARE_SHARED_WORLD_TMP/hf-tgi-weights || true
+
+# Launch the model
+text-generation-launcher --hostname 0.0.0.0 -p 8080 --model-id mistralai/Mistral-7B-Instruct-v0.1
+echo "Exited $?"
+'"'"'"'"'"'"'"'"''"'"' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child net0 &
+slirp_pid=$!
+
+cleanup() {
+  kill -9 $child $slirp_pid || true
+}
+trap cleanup EXIT INT TERM
+
+wait $child
+'
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  /usr/bin/echo "Process $$ sending signal ${EXIT_SIGNALS[$pid]} to $pid"
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
+done
+) &
+asynclaunchpid="$!"
+EXIT_SIGNALS[$asynclaunchpid]=15
+/usr/bin/echo 'Running: ''mongo'
+(
+declare -A EXIT_SIGNALS
+
+
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://mongo:7.0.5' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+if [ $? -ne 0 ]; then
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
+fi
+set -e
+tries=1; while [ "$tries" -lt 10 ]; do
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+# shellcheck disable=SC2097,SC2098,SC1078
+/usr/bin/srun  \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=10000M \
+  --gpus-per-task=0 \
+  --gpus=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
+}
+trap enrootClean EXIT INT TERM
+''set -e
+
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# shellcheck disable=SC2016,SC1078,SC1079
+/usr/bin/unshare --map-current-user --net --mount --map-user=0 --map-group=0 /bin/sh -c '"'"'
+set -e
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ net0
+
+
+/usr/bin/mkdir -p "$(pwd)/peer1"
+/usr/bin/cat << EOFwireguard > "$(pwd)/peer1/vnet0.conf"
+[Interface]
+Address = 10.0.0.3/24
+PrivateKey = $(cat "$STORAGE_PATH/vnet0_peer1_pk")
+
+[Peer]
+PublicKey = $(cat "$STORAGE_PATH/vnet0_pub")
+AllowedIPs = 10.0.0.0/24
+Endpoint = $(cat "$STORAGE_PATH/vnet0_endpoint"):$(cat "$STORAGE_PATH/vnet0_port")
+PersistentKeepalive = 20
+EOFwireguard
+/usr/bin/chmod 600 "$(pwd)/peer1/vnet0.conf"
+/usr/bin/wg-quick up "$(pwd)/peer1/vnet0.conf"
+
+
+'"'"''"'"'/usr/bin/cat <<'"'"'"'"'"'"'"'"'EOFenroot'"'"'"'"'"'"'"'"' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=n
+
+environ() {
+  # Keep all the environment from the host
+  env
+
+  cat "${ENROOT_ROOTFS}/etc/environment"
+
+  echo "STORAGE_PATH=/deepsquare"
+  echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+}
+
+mounts() {
+  echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+}
+
+hooks() {
+  cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c '"'"'"'"'"'"'"'"'set -ex
+
+# Mount the db
+mkdir -p /data/db
+mkdir -p $DEEPSQUARE_TMP/mongo
+mount --bind $DEEPSQUARE_TMP/mongo /data/db
+
+# Launch the db
+numactl --interleave=all mongod --bind_ip_all > $DEEPSQUARE_TMP/mongod.log &
+pid=$!
+sleep 5
+mongosh --eval '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'if (db.getUser("root") != null) db.createUser({ user: "root", pwd: "example", roles: [ { role: "readWrite", db: "test" } ] })'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"' || true
+wait $pid
+echo "Exited $?"
+'"'"'"'"'"'"'"'"''"'"' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child net0 &
+slirp_pid=$!
+
+cleanup() {
+  kill -9 $child $slirp_pid || true
+}
+trap cleanup EXIT INT TERM
+
+wait $child
+'
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  /usr/bin/echo "Process $$ sending signal ${EXIT_SIGNALS[$pid]} to $pid"
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
+done
+) &
+asynclaunchpid="$!"
+EXIT_SIGNALS[$asynclaunchpid]=15
+/usr/bin/echo 'Running: ''mongodb-healthcheck'
+
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://mongo:7.0.5' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+if [ $? -ne 0 ]; then
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
+fi
+set -e
+tries=1; while [ "$tries" -lt 10 ]; do
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+# shellcheck disable=SC2097,SC2098,SC1078
+/usr/bin/srun --job-name='mongodb-healthcheck' \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=10000M \
+  --gpus-per-task=0 \
+  --gpus=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
+}
+trap enrootClean EXIT INT TERM
+''set -e
+
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# shellcheck disable=SC2016,SC1078,SC1079
+/usr/bin/unshare --map-current-user --net --mount --map-user=0 --map-group=0 /bin/sh -c '"'"'
+set -e
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ net0
+
+
+/usr/bin/mkdir -p "$(pwd)/peer2"
+/usr/bin/cat << EOFwireguard > "$(pwd)/peer2/vnet0.conf"
+[Interface]
+Address = 10.0.0.4/24
+PrivateKey = $(cat "$STORAGE_PATH/vnet0_peer2_pk")
+
+[Peer]
+PublicKey = $(cat "$STORAGE_PATH/vnet0_pub")
+AllowedIPs = 10.0.0.0/24
+Endpoint = $(cat "$STORAGE_PATH/vnet0_endpoint"):$(cat "$STORAGE_PATH/vnet0_port")
+PersistentKeepalive = 20
+EOFwireguard
+/usr/bin/chmod 600 "$(pwd)/peer2/vnet0.conf"
+/usr/bin/wg-quick up "$(pwd)/peer2/vnet0.conf"
+
+
+'"'"''"'"'/usr/bin/cat <<'"'"'"'"'"'"'"'"'EOFenroot'"'"'"'"'"'"'"'"' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=n
+
+environ() {
+  # Keep all the environment from the host
+  env
+
+  cat "${ENROOT_ROOTFS}/etc/environment"
+
+  echo "STORAGE_PATH=/deepsquare"
+  echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+  echo "MONGODB_USERNAME='"'"'"'"'"'"'"'"'root'"'"'"'"'"'"'"'"'"
+  echo "MONGODB_PASSWORD='"'"'"'"'"'"'"'"'example'"'"'"'"'"'"'"'"'"
+}
+
+mounts() {
+  echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+}
+
+hooks() {
+  cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c '"'"'"'"'"'"'"'"'while ! mongosh mongodb://$MONGODB_USERNAME:$MONGODB_PASSWORD@10.0.0.3:27017/test --eval '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'db.runCommand({ping: 1})'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'; do
+    echo "Waiting for database connection..."
+    sleep 2
+done
+'"'"'"'"'"'"'"'"''"'"' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child net0 &
+slirp_pid=$!
+
+cleanup() {
+  kill -9 $child $slirp_pid || true
+}
+trap cleanup EXIT INT TERM
+
+wait $child
+'
+/usr/bin/echo 'Running: ''chat-ui'
+
+
+IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sqsh"
+export IMAGE_PATH
+/usr/bin/echo "Importing image..."
+set +e
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry-1.deepsquare.run#library/chat-ui:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+if [ $? -ne 0 ]; then
+  cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
+fi
+set -e
+tries=1; while [ "$tries" -lt 10 ]; do
+  if /usr/bin/file "$IMAGE_PATH" | /usr/bin/grep -q "Squashfs filesystem"; then
+    break
+  fi
+  /usr/bin/echo "Image is not complete. Wait a few seconds... ($tries/10)"
+  /usr/bin/sleep 10
+  tries=$((tries+1))
+done
+if [ "$tries" -ge 10 ]; then
+  /usr/bin/echo "Image import failure (corrupted image). Please try again."
+  exit 1
+fi
+/usr/bin/echo "Image successfully imported!"
+# shellcheck disable=SC2097,SC2098,SC1078
+/usr/bin/srun  \
+  --export=ALL"$(loadDeepsquareEnv)" \
+  --cpus-per-task=2 \
+  --mem-per-cpu=10000M \
+  --gpus-per-task=0 \
+  --gpus=0 \
+  --ntasks=1 \
+  --gpu-bind=none \
+  /bin/bash -c '/usr/bin/enroot create --name "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" -- "$IMAGE_PATH" >/dev/null 2>&1
+enrootClean() {
+  /usr/bin/enroot remove -f "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID"
+}
+trap enrootClean EXIT INT TERM
+''set -e
+
+nsenter_flags() {
+  pid="$1"
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  echo "${flags}"
+}
+
+wait_for_network_namespace() {
+  # Wait that the namespace is ready.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    flags=$(nsenter_flags "$1")
+    if echo "$flags" | grep -qvw -- -n; then
+      flags="$flags -n"
+    fi
+    # shellcheck disable=SC2086
+    if /usr/bin/nsenter ${flags} true >/dev/null 2>&1; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+# shellcheck disable=SC2016,SC1078,SC1079
+/usr/bin/unshare --map-current-user --net --mount --map-user=0 --map-group=0 /bin/sh -c '"'"'
+set -e
+
+nsenter_flags() {
+  pid=$1
+  flags="--target=${pid}"
+  userns="$(readlink "/proc/${pid}/ns/user")"
+  mntns="$(readlink "/proc/${pid}/ns/mnt")"
+  netns="$(readlink "/proc/${pid}/ns/net")"
+
+  self_userns="$(readlink /proc/self/ns/user)"
+  self_mntns="$(readlink /proc/self/ns/mnt)"
+  self_netns="$(readlink /proc/self/ns/net)"
+
+  if [ "${userns}" != "${self_userns}" ]; then
+    flags="$flags --preserve-credentials -U"
+  fi
+  if [ "${mntns}" != "${self_mntns}" ]; then
+    flags="$flags -m"
+  fi
+  if [ "${netns}" != "${self_netns}" ]; then
+    flags="$flags -n"
+  fi
+  /usr/bin/echo "${flags}"
+}
+
+wait_for_network_device() {
+  # Wait that the device appears.
+  COUNTER=0
+  while [ $COUNTER -lt 40 ]; do
+    if /usr/bin/nsenter $(nsenter_flags "$1") ip addr show "$2"; then
+      return 0
+    else
+      /usr/bin/sleep 0.5
+    fi
+    COUNTER=$(( COUNTER+1 ))
+  done
+  exit 1
+}
+
+wait_for_network_device $$ net0
+
+
+/usr/bin/dpsproxy --to.addr bore.deepsquare.run:2200 --local.addr localhost:3000 -r &
+/usr/bin/mkdir -p "$(pwd)/peer2"
+/usr/bin/cat << EOFwireguard > "$(pwd)/peer2/vnet1.conf"
+[Interface]
+Address = 10.0.0.4/24
+PrivateKey = $(cat "$STORAGE_PATH/vnet0_peer2_pk")
+
+[Peer]
+PublicKey = $(cat "$STORAGE_PATH/vnet0_pub")
+AllowedIPs = 10.0.0.0/24
+Endpoint = $(cat "$STORAGE_PATH/vnet0_endpoint"):$(cat "$STORAGE_PATH/vnet0_port")
+PersistentKeepalive = 20
+EOFwireguard
+/usr/bin/chmod 600 "$(pwd)/peer2/vnet1.conf"
+/usr/bin/wg-quick up "$(pwd)/peer2/vnet1.conf"
+
+
+'"'"''"'"'/usr/bin/cat <<'"'"'"'"'"'"'"'"'EOFenroot'"'"'"'"'"'"'"'"' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=n
+
+environ() {
+  # Keep all the environment from the host
+  env
+
+  cat "${ENROOT_ROOTFS}/etc/environment"
+
+  echo "STORAGE_PATH=/deepsquare"
+  echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+}
+
+mounts() {
+  echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+}
+
+hooks() {
+  cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c '"'"'"'"'"'"'"'"'set -e
+
+cat << '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'EOF'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"' > .env.local
+MONGODB_URL=mongodb://root:example@10.0.0.3:27017/test
+MODELS=`[
+  {
+    "name": "Mistral-7B-Instruct-v0.1",
+    "parameters": {
+      "temperature": 0.7,
+      "top_p": 0.95,
+      "repetition_penalty": 1.1,
+      "top_k": 40,
+      "truncate": 1000,
+      "max_new_tokens": 1024,
+      "stop": []
+    },
+    "endpoints": [{
+      "type" : "tgi",
+      "url": "http://10.0.0.2:8080"
+    }]
+  }
+]`
+EOF
+
+docker-entrypoint.sh /bin/bash -c /app/entrypoint.sh
+# Or run:
+# npm run build
+# npm run preview -- --host 0.0.0.0 --port 3000
+echo "Exited $?"
+'"'"'"'"'"'"'"'"''"'"' &
+child=$!
+
+wait_for_network_namespace $child
+
+/usr/bin/slirp4netns --configure --mtu=65520 --disable-host-loopback --cidr 169.254.254.0/24 $child net0 &
+slirp_pid=$!
+
+cleanup() {
+  kill -9 $child $slirp_pid || true
+}
+trap cleanup EXIT INT TERM
+
+wait $child
+'
+
+for pid in "${!EXIT_SIGNALS[@]}"; do
+  kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
+done
+
