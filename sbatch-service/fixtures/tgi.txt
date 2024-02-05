@@ -1034,4 +1034,3 @@ wait $child
 for pid in "${!EXIT_SIGNALS[@]}"; do
   kill -s "${EXIT_SIGNALS[$pid]}" "$pid" || true
 done
-
