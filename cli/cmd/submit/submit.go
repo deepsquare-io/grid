@@ -77,6 +77,7 @@ import (
 	"math/big"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"syscall"
@@ -205,8 +206,7 @@ var flags = []cli.Flag{
 	},
 	&cli.StringFlag{
 		Name:        "job-name",
-		Usage:       "The job name.",
-		Required:    true,
+		Usage:       "The job name. (If empty, defaults to the job file name.)",
 		Destination: &jobName,
 		Category:    "Submit Settings:",
 	},
@@ -290,6 +290,9 @@ var Command = cli.Command{
 			return errors.New("missing --credits or --credits-wei parameter")
 		}
 		jobPath := cCtx.Args().First()
+		if jobName == "" {
+			jobName = filepath.Base(strings.TrimSuffix(jobPath, filepath.Ext(jobPath)))
+		}
 		ctx := cCtx.Context
 		pk, err := utils.GetPrivateKey(ethHexPK, ethHexPKPath)
 		if err != nil {
