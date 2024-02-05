@@ -62,7 +62,7 @@ func (*imageFetcher) FetchContainerImage(
 		return image, nil
 	}
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	if registry == "" {
