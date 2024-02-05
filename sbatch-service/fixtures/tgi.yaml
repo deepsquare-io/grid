@@ -82,7 +82,8 @@ job:
     - name: mongodb-healthcheck
       run:
         container:
-          image: mongo:7.0.5
+          registry: registry-1.deepsquare.run
+          image: library/mongo:7.0.5
         network: slirp4netns
         mapGid: 0
         mapUid: 0
