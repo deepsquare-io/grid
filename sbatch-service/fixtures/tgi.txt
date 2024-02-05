@@ -389,7 +389,7 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://mongo:7.0.5' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry-1.deepsquare.run#library/mongo:7.0.5' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
   cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
@@ -575,7 +575,7 @@ mount --bind $DEEPSQUARE_TMP/mongo /data/db
 numactl --interleave=all mongod --bind_ip_all > $DEEPSQUARE_TMP/mongod.log &
 pid=$!
 sleep 5
-mongosh --eval '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'if (db.getUser("root") != null) db.createUser({ user: "root", pwd: "example", roles: [ { role: "readWrite", db: "test" } ] })'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"' || true
+mongosh --eval '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'db.createUser({ user: "root", pwd: "example", roles: [ { role: "readWrite", db: "test" } ] })'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"' || true
 wait $pid
 echo "Exited $?"
 '"'"'"'"'"'"'"'"''"'"' &

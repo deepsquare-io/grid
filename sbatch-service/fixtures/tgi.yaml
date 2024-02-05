@@ -54,7 +54,8 @@ job:
         steps:
           - run:
               container:
-                image: mongo:7.0.5
+                registry: registry-1.deepsquare.run
+                image: library/mongo:7.0.5
               command: |
                 set -ex
 
@@ -67,7 +68,7 @@ job:
                 numactl --interleave=all mongod --bind_ip_all > $DEEPSQUARE_TMP/mongod.log &
                 pid=$!
                 sleep 5
-                mongosh --eval 'if (db.getUser("root") != null) db.createUser({ user: "root", pwd: "example", roles: [ { role: "readWrite", db: "test" } ] })' || true
+                mongosh --eval 'db.createUser({ user: "root", pwd: "example", roles: [ { role: "readWrite", db: "test" } ] })' || true
                 wait $pid
                 echo "Exited $?"
               network: slirp4netns
