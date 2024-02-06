@@ -67,6 +67,6 @@ Note that, sometime, DeepSquare will ask MetaMask to [sign](https://en.wikipedia
 
 To gain a practical understanding of executing workloads on our platform, we recommend following our [Getting Started](/workflow/getting-started/introduction) guide. This guide provides a step-by-step tutorial on submitting your first job on the DeepSquare Grid, thereby familiarizing you with our tools and processes.
 
-If you have further inquiries or require assistance, our team is readily available on our [Discord server](https://discord.gg/rDaWwNfxfg) to provide support. As you delve deeper into the platform, don't hesitate to reach out to our community and experts who can help you navigate any complexities.
+If you have further inquiries or require assistance, our team is readily available on our [Discord server](https://discord.gg/KYWh28BkUE) to provide support. As you delve deeper into the platform, don't hesitate to reach out to our community and experts who can help you navigate any complexities.
 
 We look forward to supporting your computational work on the DeepSquare platform.

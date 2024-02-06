@@ -1,6 +1,6 @@
 # Joining as a Validator
 
-We appreciate your interest in becoming a validator for the DeepSquare blockchain! At the moment, we've filled all available validator spots. However, you can still prepare your node to join when slots become available. If you wish to express your interest in becoming a validator, please complete [this form](https://share-eu1.hsforms.com/1tczPxyxMSGOS6a8ojGX-gwev6gi) and join us on our [Discord server](http://discord.gg/RyEARZnsMZ) for updates and community interaction. Below is a guide on how you can set up for future opportunities:
+We appreciate your interest in becoming a validator for the DeepSquare blockchain! At the moment, we've filled all available validator spots. However, you can still prepare your node to join when slots become available. If you wish to express your interest in becoming a validator, please complete [this form](https://share-eu1.hsforms.com/1tczPxyxMSGOS6a8ojGX-gwev6gi) and join us on our [Discord server](https://discord.gg/KYWh28BkUE) for updates and community interaction. Below is a guide on how you can set up for future opportunities:
 
 ## Setting up for the Subnet
 

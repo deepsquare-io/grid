@@ -2,4 +2,4 @@
 
 The DeepSquare registry is not yet public.
 
-You can contact the DeepSquare Developpers to integrate one image on our [Discord](https://discord.gg/8XXDR4MAzy)
+You can contact the DeepSquare Developpers to integrate one image on our [Discord](https://discord.gg/KYWh28BkUE)
