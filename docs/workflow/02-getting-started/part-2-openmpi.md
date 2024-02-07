@@ -6,7 +6,7 @@ DeepSquare offers a High-Performance Computing (HPC) service platform. To fully 
 
 In this section, we'll introduce OpenMPI and its application within the DeepSquare environment. OpenMPI is designed for high performance, wide portability, scalability, and ease of use on systems ranging from small clusters to large supercomputers.
 
-We'll guide you through the process of adapting an existing application to use OpenMPI. Remember, we're here to assist. For any questions or support, please reach out to us on our [Discord server](https://discord.com/invite/zvFnqVHmJh).
+We'll guide you through the process of adapting an existing application to use OpenMPI. Remember, we're here to assist. For any questions or support, please reach out to us on our [Discord server](https://discord.gg/KYWh28BkUE).
 
 ## Adapting our "hello world" app to use OpenMPI
 
