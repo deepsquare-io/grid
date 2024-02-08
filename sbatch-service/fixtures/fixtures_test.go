@@ -22,9 +22,14 @@ import (
 
 	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
 	"github.com/deepsquare-io/grid/sbatch-service/renderer"
+	"github.com/deepsquare-io/grid/sbatch-service/utils"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
+
+func init() {
+	utils.MockRandomString("RANDOM_STRING")
+}
 
 var (
 	//go:embed tdp.yaml

@@ -18,6 +18,7 @@ package renderer_test
 import (
 	"fmt"
 
+	"github.com/deepsquare-io/grid/sbatch-service/utils"
 	"github.com/deepsquare-io/grid/sbatch-service/validate"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )
@@ -40,4 +41,5 @@ func (*mockImageFetcher) FetchContainerImage(
 func init() {
 	fmt.Println("mocked ImageFetcher")
 	validate.OverrideImageFetcher(&mockImageFetcher{})
+	utils.MockRandomString("[random_string]")
 }

@@ -74,7 +74,7 @@ declare -A EXIT_SIGNALS
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://bash:latest'
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry-1.deepsquare.run/library/bash:latest'
 /usr/bin/echo "Image successfully imported!"
 /usr/bin/srun --job-name='as 0' \
   --export=ALL"$(loadDeepsquareEnv)" \
@@ -109,7 +109,7 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://bash:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry-1.deepsquare.run#library/bash:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
   cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi
@@ -196,7 +196,7 @@ EOFenroot
 IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sif"
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
-/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://bash:latest'
+/usr/bin/apptainer --silent pull --disable-cache "$IMAGE_PATH" 'docker://registry-1.deepsquare.run/library/bash:latest'
 /usr/bin/echo "Image successfully imported!"
 /usr/bin/srun --job-name='as 0' \
   --export=ALL"$(loadDeepsquareEnv)" \
@@ -231,7 +231,7 @@ IMAGE_PATH="$STORAGE_PATH/$SLURM_JOB_ID-$(echo $RANDOM | md5sum | head -c 20).sq
 export IMAGE_PATH
 /usr/bin/echo "Importing image..."
 set +e
-/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://bash:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
+/usr/bin/enroot import -o "$IMAGE_PATH" -- 'docker://registry-1.deepsquare.run#library/bash:latest' &> "/tmp/enroot.import.$SLURM_JOB_ID.log"
 if [ $? -ne 0 ]; then
   cat "/tmp/enroot.import.$SLURM_JOB_ID.log"
 fi

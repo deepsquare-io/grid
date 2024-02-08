@@ -138,7 +138,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "test='"'"'value'"'"'"
 }
 
 mounts() {
@@ -153,6 +152,11 @@ mounts() {
 
 hooks() {
   cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+test="$(cat << '"'"'EOF[random_string]'"'"'
+value
+EOF[random_string]
+)"
+export test
 exec "$@"
 EOFrclocal
 }
@@ -227,7 +231,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "test='"'"'value'"'"'"
 }
 
 mounts() {
@@ -242,6 +245,11 @@ mounts() {
 
 hooks() {
   cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+test="$(cat << '"'"'EOF[random_string]'"'"'
+value
+EOF[random_string]
+)"
+export test
 exec "$@"
 EOFrclocal
 }
@@ -332,7 +340,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "test='"'"'value'"'"'"
 }
 
 mounts() {
@@ -347,6 +354,11 @@ mounts() {
 
 hooks() {
   cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+test="$(cat << '"'"'EOF[random_string]'"'"'
+value
+EOF[random_string]
+)"
+export test
 exec "$@"
 EOFrclocal
 }
@@ -421,7 +433,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "test='"'"'value'"'"'"
 }
 
 mounts() {
@@ -436,6 +447,11 @@ mounts() {
 
 hooks() {
   cat << '"'"'EOFrclocal'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+test="$(cat << '"'"'EOF[random_string]'"'"'
+value
+EOF[random_string]
+)"
+export test
 exec "$@"
 EOFrclocal
 }

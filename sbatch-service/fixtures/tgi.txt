@@ -763,8 +763,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "MONGODB_USERNAME='"'"'"'"'"'"'"'"'root'"'"'"'"'"'"'"'"'"
-  echo "MONGODB_PASSWORD='"'"'"'"'"'"'"'"'example'"'"'"'"'"'"'"'"'"
 }
 
 mounts() {
@@ -777,6 +775,16 @@ mounts() {
 
 hooks() {
   cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+MONGODB_USERNAME="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+root
+EOFRANDOM_STRING
+)"
+export MONGODB_USERNAME
+MONGODB_PASSWORD="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+example
+EOFRANDOM_STRING
+)"
+export MONGODB_PASSWORD
 exec "$@"
 EOFrclocal
 }
@@ -979,18 +987,8 @@ mounts() {
 
 hooks() {
   cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
-exec "$@"
-EOFrclocal
-}
-EOFenroot
-/usr/bin/enroot start \
-  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
-  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
-  /bin/sh -c '"'"'"'"'"'"'"'"'set -e
-
-cat << '"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'EOF'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"'"' > .env.local
-MONGODB_URL=mongodb://root:example@10.0.0.3:27017/test
-MODELS=`[
+MODELS="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+[
   {
     "name": "Mistral-7B-Instruct-v0.1",
     "parameters": {
@@ -1007,8 +1005,23 @@ MODELS=`[
       "url": "http://10.0.0.2:8080"
     }]
   }
-]`
-EOF
+]
+EOFRANDOM_STRING
+)"
+export MODELS
+MONGODB_URL="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+mongodb://root:example@10.0.0.3:27017/test
+EOFRANDOM_STRING
+)"
+export MONGODB_URL
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c '"'"'"'"'"'"'"'"'set -e
 
 docker-entrypoint.sh /bin/bash -c /app/entrypoint.sh
 # Or run:

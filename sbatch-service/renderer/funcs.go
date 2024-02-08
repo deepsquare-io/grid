@@ -24,6 +24,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/deepsquare-io/grid/sbatch-service/graph/model"
+	"github.com/deepsquare-io/grid/sbatch-service/utils"
 	"github.com/deepsquare-io/grid/sbatch-service/utils/base58"
 	"github.com/kballard/go-shellquote"
 )
@@ -173,6 +174,9 @@ func funcMap() template.FuncMap {
 			return "", err
 		}
 		return shellquote.Join(split...), nil
+	}
+	f["randomString"] = func(i int) string {
+		return utils.GenerateRandomString(i)
 	}
 	return f
 }

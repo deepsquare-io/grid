@@ -27,9 +27,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-{{- range $env := .Run.Env }}
-  echo "{{ $env.Key }}={{ $env.Value | squote }}"
-{{- end }}
 }
 
 mounts() {
@@ -48,6 +45,13 @@ mounts() {
 
 hooks() {
   cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+{{- range $env := .Run.Env }}{{- $v := randomString 8 }}
+{{ $env.Key }}="$(cat << 'EOF{{ $v }}'
+{{ $env.Value }}
+EOF{{ $v }}
+)"
+export {{ $env.Key }}
+{{- end }}
 {{- if and .Run.WorkDir (derefStr .Run.WorkDir) }}
 mkdir -p {{ derefStr .Run.WorkDir | squote }} && cd {{ derefStr .Run.WorkDir | squote }} || { echo "change dir to working directory failed"; exit 1; }
 {{- end }}

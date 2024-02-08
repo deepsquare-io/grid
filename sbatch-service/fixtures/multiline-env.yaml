@@ -1,0 +1,23 @@
+---
+job:
+  enableLogging: false
+  resources:
+    tasks: 1
+    cpusPerTask: 1
+    memPerCpu: 200
+    gpus: 0
+  steps:
+    - name: do-async
+      run:
+        container:
+          apptainer: true
+          registry: registry-1.deepsquare.run
+          image: library/bash:latest
+        env:
+          - key: TEST
+            value: |-
+              This is a
+              multiline
+              value
+        command: |-
+          echo "$TEST"

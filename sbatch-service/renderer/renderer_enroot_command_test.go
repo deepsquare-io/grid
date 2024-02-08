@@ -82,7 +82,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "test='value'"
 }
 
 mounts() {
@@ -97,6 +96,11 @@ mounts() {
 
 hooks() {
   cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+test="$(cat << 'EOF[random_string]'
+value
+EOF[random_string]
+)"
+export test
 exec "$@"
 EOFrclocal
 }
@@ -106,6 +110,71 @@ EOFenroot
   "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
   /bin/sh -c 'hostname'`,
 			title: "Positive test with enroot image",
+		},
+		{
+			input: func() model.StepRun {
+				s := cleanEnrootStepRun("hostname")
+				s.Env = append(s.Env, &model.EnvVar{
+					Key: "test2",
+					Value: `value1
+value2`,
+				})
+				return *s
+			}(),
+			expected: `/usr/bin/cat <<'EOFenroot' >"$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf"
+#ENROOT_REMAP_ROOT=n
+#ENROOT_ROOTFS_WRITABLE=y
+#ENROOT_MOUNT_HOME=n
+
+environ() {
+  # Keep all the environment from the host
+  env
+
+  cat "${ENROOT_ROOTFS}/etc/environment"
+
+  echo "STORAGE_PATH=/deepsquare"
+  echo "DEEPSQUARE_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_TMP=/deepsquare/tmp"
+  echo "DEEPSQUARE_SHARED_WORLD_TMP=/deepsquare/world-tmp"
+  echo "DEEPSQUARE_DISK_TMP=/deepsquare/disk/tmp"
+  echo "DEEPSQUARE_DISK_WORLD_TMP=/deepsquare/disk/world-tmp"
+  echo "DEEPSQUARE_INPUT=/deepsquare/input"
+  echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
+  echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
+}
+
+mounts() {
+  echo "$STORAGE_PATH /deepsquare none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_TMP /deepsquare/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_SHARED_WORLD_TMP /deepsquare/world-tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_TMP /deepsquare/disk/tmp none x-create=dir,bind,rw"
+  echo "$DEEPSQUARE_DISK_WORLD_TMP /deepsquare/disk/world-tmp none x-create=dir,bind,rw"
+  echo "/tmp/.X11-unix /tmp/.X11-unix none x-create=dir,bind,ro"
+  echo '/host /container none x-create=auto,bind,ro'
+}
+
+hooks() {
+  cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+test="$(cat << 'EOF[random_string]'
+value
+EOF[random_string]
+)"
+export test
+test2="$(cat << 'EOF[random_string]'
+value1
+value2
+EOF[random_string]
+)"
+export test2
+exec "$@"
+EOFrclocal
+}
+EOFenroot
+/usr/bin/enroot start \
+  --conf "$STORAGE_PATH/enroot-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID.conf" \
+  "container-$SLURM_JOB_ID.$SLURM_STEP_ID.$SLURM_PROCID" \
+  /bin/sh -c 'hostname'`,
+			title: "Positive test with multiline env",
 		},
 		{
 			input: func() model.StepRun {
@@ -133,7 +202,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "test='value'"
 }
 
 mounts() {
@@ -148,6 +216,11 @@ mounts() {
 
 hooks() {
   cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+test="$(cat << 'EOF[random_string]'
+value
+EOF[random_string]
+)"
+export test
 exec "$@"
 EOFrclocal
 }
@@ -184,7 +257,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "test='value'"
 }
 
 mounts() {
@@ -199,6 +271,11 @@ mounts() {
 
 hooks() {
   cat << 'EOFrclocal' > "${ENROOT_ROOTFS}/etc/rc.local"
+test="$(cat << 'EOF[random_string]'
+value
+EOF[random_string]
+)"
+export test
 mkdir -p '/dir' && cd '/dir' || { echo "change dir to working directory failed"; exit 1; }
 exec "$@"
 EOFrclocal

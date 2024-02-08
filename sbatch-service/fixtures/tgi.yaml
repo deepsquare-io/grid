@@ -110,30 +110,31 @@ job:
               # To update the image, just pull ghcr.io/huggingface/chat-ui:latest
               # and push it to registry-1.deepsquare.run/library/chat-ui:latest
               image: library/chat-ui:latest
+            env:
+              - key: MODELS
+                value: |-
+                  [
+                    {
+                      "name": "Mistral-7B-Instruct-v0.1",
+                      "parameters": {
+                        "temperature": 0.7,
+                        "top_p": 0.95,
+                        "repetition_penalty": 1.1,
+                        "top_k": 40,
+                        "truncate": 1000,
+                        "max_new_tokens": 1024,
+                        "stop": []
+                      },
+                      "endpoints": [{
+                        "type" : "tgi",
+                        "url": "http://10.0.0.2:8080"
+                      }]
+                    }
+                  ]
+              - key: MONGODB_URL
+                value: mongodb://root:example@10.0.0.3:27017/test
             command: |
               set -e
-
-              cat << 'EOF' > .env.local
-              MONGODB_URL=mongodb://root:example@10.0.0.3:27017/test
-              MODELS=`[
-                {
-                  "name": "Mistral-7B-Instruct-v0.1",
-                  "parameters": {
-                    "temperature": 0.7,
-                    "top_p": 0.95,
-                    "repetition_penalty": 1.1,
-                    "top_k": 40,
-                    "truncate": 1000,
-                    "max_new_tokens": 1024,
-                    "stop": []
-                  },
-                  "endpoints": [{
-                    "type" : "tgi",
-                    "url": "http://10.0.0.2:8080"
-                  }]
-                }
-              ]`
-              EOF
 
               docker-entrypoint.sh /bin/bash -c /app/entrypoint.sh
               # Or run:

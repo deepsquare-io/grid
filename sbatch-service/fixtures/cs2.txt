@@ -320,9 +320,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "STEAMUSER='"'"'"'"'"'"'"'"'<REDACTED>'"'"'"'"'"'"'"'"'"
-  echo "TERM='"'"'"'"'"'"'"'"'xterm'"'"'"'"'"'"'"'"'"
-  echo "STEAMPASSWORD='"'"'"'"'"'"'"'"'<REDACTED>'"'"'"'"'"'"'"'"'"
 }
 
 mounts() {
@@ -335,6 +332,21 @@ mounts() {
 
 hooks() {
   cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+STEAMUSER="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+<REDACTED>
+EOFRANDOM_STRING
+)"
+export STEAMUSER
+TERM="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+xterm
+EOFRANDOM_STRING
+)"
+export TERM
+STEAMPASSWORD="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+<REDACTED>
+EOFRANDOM_STRING
+)"
+export STEAMPASSWORD
 exec "$@"
 EOFrclocal
 }
@@ -534,12 +546,6 @@ environ() {
   echo "DEEPSQUARE_INPUT=/deepsquare/input"
   echo "DEEPSQUARE_OUTPUT=/deepsquare/output"
   echo "DEEPSQUARE_ENV=/deepsquare/$(basename $DEEPSQUARE_ENV)"
-  echo "STEAMUSER='"'"'"'"'"'"'"'"'<REDACTED>'"'"'"'"'"'"'"'"'"
-  echo "TERM='"'"'"'"'"'"'"'"'xterm'"'"'"'"'"'"'"'"'"
-  echo "CS2_PW='"'"'"'"'"'"'"'"'changeme'"'"'"'"'"'"'"'"'"
-  echo "CS2_RCONPW='"'"'"'"'"'"'"'"'changeme'"'"'"'"'"'"'"'"'"
-  echo "CS2_PORT='"'"'"'"'"'"'"'"'27015'"'"'"'"'"'"'"'"'"
-  echo "CS2_MAXPLAYERS='"'"'"'"'"'"'"'"'20'"'"'"'"'"'"'"'"'"
 }
 
 mounts() {
@@ -552,6 +558,36 @@ mounts() {
 
 hooks() {
   cat << '"'"'"'"'"'"'"'"'EOFrclocal'"'"'"'"'"'"'"'"' > "${ENROOT_ROOTFS}/etc/rc.local"
+STEAMUSER="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+<REDACTED>
+EOFRANDOM_STRING
+)"
+export STEAMUSER
+TERM="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+xterm
+EOFRANDOM_STRING
+)"
+export TERM
+CS2_PW="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+changeme
+EOFRANDOM_STRING
+)"
+export CS2_PW
+CS2_RCONPW="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+changeme
+EOFRANDOM_STRING
+)"
+export CS2_RCONPW
+CS2_PORT="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+27015
+EOFRANDOM_STRING
+)"
+export CS2_PORT
+CS2_MAXPLAYERS="$(cat << '"'"'"'"'"'"'"'"'EOFRANDOM_STRING'"'"'"'"'"'"'"'"'
+20
+EOFRANDOM_STRING
+)"
+export CS2_MAXPLAYERS
 exec "$@"
 EOFrclocal
 }
