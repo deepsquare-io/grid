@@ -13,7 +13,7 @@ require (
 	github.com/vektra/mockery/v2 v2.40.3
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.19.0
-	golang.org/x/net v0.20.0
+	golang.org/x/net v0.21.0
 	golang.org/x/sync v0.6.0
 	golang.org/x/tools v0.17.0
 	google.golang.org/grpc v1.61.0
