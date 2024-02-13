@@ -19,7 +19,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -30,32 +29,7 @@ import (
 )
 
 const DefaultHPLImage = "registry-1.deepsquare.run#library/hpc-benchmarks:23.5"
-
-// Problem sizes depend on the RAM. The greater it is, the more precise it is.
-//
-// At 80%, it is possible that Linux will swap the memory. A drop of performance will be seen.
-var benchmarkMemoryUsePercentage = []float64{
-	0.50, // 50% is a sure hit. We do this for healthchecking the HPL health.
-	0.60,
-	0.75,
-	0.80, // This the most unstable test, which may end in OOM.
-}
-
-// Block sizes depend on the performance of the processing unit.
-//
-// It must be tested randomly. Though, it is said that an A100 takes a 1024 in input.
-var benchmarkBlockSizes = []int{
-	64, 128, 224, 256, 384, 512, 640, 768, 896, 1024,
-}
-
-func intToString(a []int, sep string) string {
-	b := make([]string, len(a))
-	for i, v := range a {
-		b[i] = strconv.Itoa(v)
-	}
-
-	return strings.Join(b, sep)
-}
+const DefaultNB = 512
 
 func applyHPLOptions(opts []Option) *options {
 	o := &options{
@@ -64,6 +38,8 @@ func applyHPLOptions(opts []Option) *options {
 		secret:                  base64.StdEncoding.EncodeToString(secret.Get()),
 		supervisorPublicAddress: "localhost:3000",
 		additionalEnv:           make(map[string]string),
+		memoryPercent:           0.5,
+		blockSize:               DefaultNB,
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -72,31 +48,26 @@ func applyHPLOptions(opts []Option) *options {
 }
 
 type hplParams struct {
-	NProblemSize uint64
-	ProblemSize  string
-	NBlockSize   uint64
-	BlockSize    string
-	P            uint64
-	Q            uint64
+	ProblemSize uint64
+	BlockSize   uint64
+	P           uint64
+	Q           uint64
 }
 
-func GeneratePhase1HPLBenchmark(
+func GenerateHPLBenchmark(
 	opts ...Option,
 ) (*Benchmark, error) {
 	o := applyHPLOptions(opts)
-	o.phase = "phase1"
 	p, q, err := calculateProcessGrid(o.gpusPerNode, o.nodes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute p and q: %w", err)
 	}
-	nProblemSize, problemSize := calculateProblemSize(o.memPerNode, o.nodes)
+	problemSize := calculateProblemSize(o.memoryPercent, o.memPerNode, o.blockSize, o.nodes)
 	params := &hplParams{
-		P:            p,
-		Q:            q,
-		NProblemSize: nProblemSize,
-		ProblemSize:  problemSize,
-		NBlockSize:   uint64(len(benchmarkBlockSizes)),
-		BlockSize:    intToString(benchmarkBlockSizes, " "),
+		P:           p,
+		Q:           q,
+		ProblemSize: problemSize,
+		BlockSize:   o.blockSize,
 	}
 
 	return prepareHPLJobDefinition(params, o)
@@ -128,7 +99,6 @@ func prepareHPLJobDefinition(
 		BenchmarkParams         hplParams
 		Benchmark               Benchmark
 		SupervisorPublicAddress string
-		Phase                   string
 		Secret                  string
 		UCX                     bool
 		UCXAffinity             string
@@ -141,7 +111,6 @@ func prepareHPLJobDefinition(
 		BenchmarkParams:         *params,
 		Benchmark:               *benchmark,
 		SupervisorPublicAddress: o.supervisorPublicAddress,
-		Phase:                   o.phase,
 		Secret:                  o.secret,
 		UCX:                     o.ucx,
 		UCXAffinity:             o.ucxAffinity,
@@ -178,19 +147,16 @@ func calculateProcessGrid(
 	return totalGPUs, 1, nil // If no other valid P is found, default to 2
 }
 
-// calculateProblemSize computes the problem size from the ram available
+// calculateProblemSize computes the problem size from the ram available.
 func calculateProblemSize(
+	memoryPercent float64,
 	memPerNode uint64,
+	blockSize uint64,
 	nodes uint64,
-) (nProblemSize uint64, problemSize string) {
-	nProblemSize = uint64(len(benchmarkMemoryUsePercentage))
-	for _, values := range benchmarkMemoryUsePercentage {
-		problemSizeInt := int(
-			math.Sqrt(float64(memPerNode*nodes)/8)*values,
-		) * GBtoMB
-
-		problemSize += strconv.Itoa(problemSizeInt) + " "
-	}
-
-	return nProblemSize, problemSize
+) uint64 {
+	maxProblemSize := math.Sqrt(float64(memPerNode*nodes)/8) * memoryPercent * GBtoMB
+	roundedQuotient := math.Floor(maxProblemSize / float64(blockSize))
+	return uint64(
+		roundedQuotient,
+	) * blockSize // Optimal problem size is a multiple of the block size
 }

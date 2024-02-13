@@ -107,5 +107,5 @@ curl -fsSL -k \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: {{ .Secret }}" \
-  "https://{{ .SupervisorPublicAddress }}/benchmark/hpl/{{ .Phase }}?nodes={{ .Benchmark.MaxNodes }}&cpusPerNode={{ .Benchmark.CPUsPerNode }}&gpusPerNode={{ .Benchmark.GPUsPerNode }}&memPerNode={{ .MemPerNode }}"
+  "https://{{ .SupervisorPublicAddress }}/benchmark/hpl?nodes={{ .Benchmark.MaxNodes }}&cpusPerNode={{ .Benchmark.CPUsPerNode }}&gpusPerNode={{ .Benchmark.GPUsPerNode }}&memPerNode={{ .MemPerNode }}"
 {{ end -}}

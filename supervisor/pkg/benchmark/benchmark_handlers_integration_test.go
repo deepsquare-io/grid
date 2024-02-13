@@ -50,7 +50,7 @@ var (
 	iorFixture []byte
 )
 
-func TestPhase1Handler(t *testing.T) {
+func TestHPLHandler(t *testing.T) {
 	// Arrange
 	// Prepare fixture
 	file, err := os.CreateTemp("", "test-tmp")
@@ -61,7 +61,7 @@ func TestPhase1Handler(t *testing.T) {
 	defer os.Remove(file.Name())
 	fmt.Printf("created tmp fixture: %s", file.Name())
 
-	impl := benchmark.NewHPLPhase1Handler(
+	impl := benchmark.NewHPLHandler(
 		func(optimal *hpl.Result, err error) error {
 			require.NotEmpty(t, optimal)
 			require.NoError(t, err)
@@ -73,7 +73,7 @@ func TestPhase1Handler(t *testing.T) {
 	done := make(chan struct{}, 1)
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	http.HandleFunc("/benchmark/hpl/phase1", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/benchmark/hpl", func(w http.ResponseWriter, r *http.Request) {
 		impl(w, r)
 		out, err := httputil.DumpRequest(r, false)
 		require.NoError(t, err)
@@ -96,7 +96,7 @@ func TestPhase1Handler(t *testing.T) {
 		"--upload-file",
 		file.Name(),
 		fmt.Sprintf(
-			"http://localhost:%d/benchmark/hpl/phase1?nodes=1&cpusPerNode=16&gpusPerNode=2&memPerNode=100000",
+			"http://localhost:%d/benchmark/hpl?nodes=1&cpusPerNode=16&gpusPerNode=2&memPerNode=100000",
 			port,
 		),
 	)

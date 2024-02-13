@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateHPLPhase1JobDefinition(t *testing.T) {
+func TestGenerateHPLJobDefinition(t *testing.T) {
 	// Arrange
 	tests := []struct {
 		title    string
@@ -122,10 +122,10 @@ HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-4 # of problems sizes (N)
-63000 76000 95000 101000   Ns
-10   # of NBs
-64 128 224 256 384 512 640 768 896 1024    NBs
+1 # of problems sizes (N)
+62976 Ns
+1 # of NBs
+512 NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
 1            # of process grids (P x Q)
 2            Ps
@@ -157,7 +157,7 @@ curl -fsSL -k \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
-  "https://localhost:3000/benchmark/hpl/phase1?nodes=1&cpusPerNode=16&gpusPerNode=2&memPerNode=128460"
+  "https://localhost:3000/benchmark/hpl?nodes=1&cpusPerNode=16&gpusPerNode=2&memPerNode=128460"
 `,
 					base64.StdEncoding.EncodeToString(secret.Get()),
 					base64.StdEncoding.EncodeToString(secret.Get()),
@@ -253,10 +253,10 @@ HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-4 # of problems sizes (N)
-63000 76000 95000 101000   Ns
-10   # of NBs
-64 128 224 256 384 512 640 768 896 1024    NBs
+1 # of problems sizes (N)
+62976 Ns
+1 # of NBs
+512 NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
 1            # of process grids (P x Q)
 2            Ps
@@ -288,7 +288,7 @@ curl -fsSL -k \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
-  "https://localhost:3000/benchmark/hpl/phase1?nodes=1&cpusPerNode=16&gpusPerNode=4&memPerNode=128460"
+  "https://localhost:3000/benchmark/hpl?nodes=1&cpusPerNode=16&gpusPerNode=4&memPerNode=128460"
 `,
 					base64.StdEncoding.EncodeToString(secret.Get()),
 					base64.StdEncoding.EncodeToString(secret.Get()),
@@ -384,10 +384,10 @@ HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-4 # of problems sizes (N)
-89000 107000 134000 143000   Ns
-10   # of NBs
-64 128 224 256 384 512 640 768 896 1024    NBs
+1 # of problems sizes (N)
+89600 Ns
+1 # of NBs
+512 NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
 1            # of process grids (P x Q)
 2            Ps
@@ -419,7 +419,7 @@ curl -fsSL -k \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
-  "https://localhost:3000/benchmark/hpl/phase1?nodes=2&cpusPerNode=16&gpusPerNode=2&memPerNode=128460"
+  "https://localhost:3000/benchmark/hpl?nodes=2&cpusPerNode=16&gpusPerNode=2&memPerNode=128460"
 `,
 					base64.StdEncoding.EncodeToString(secret.Get()),
 					base64.StdEncoding.EncodeToString(secret.Get()),
@@ -519,10 +519,10 @@ HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-4 # of problems sizes (N)
-89000 107000 134000 143000   Ns
-10   # of NBs
-64 128 224 256 384 512 640 768 896 1024    NBs
+1 # of problems sizes (N)
+89600 Ns
+1 # of NBs
+512 NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
 1            # of process grids (P x Q)
 2            Ps
@@ -554,7 +554,7 @@ curl -fsSL -k \
   --upload-file \
   "$LOG_FILE" \
   -H "X-Secret: %s" \
-  "https://localhost:3000/benchmark/hpl/phase1?nodes=2&cpusPerNode=16&gpusPerNode=2&memPerNode=128460"
+  "https://localhost:3000/benchmark/hpl?nodes=2&cpusPerNode=16&gpusPerNode=2&memPerNode=128460"
 `,
 					base64.StdEncoding.EncodeToString(secret.Get()),
 					base64.StdEncoding.EncodeToString(secret.Get()),
@@ -566,7 +566,7 @@ curl -fsSL -k \
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
 			// Act
-			jobDefinition, err := GeneratePhase1HPLBenchmark(tt.opts...)
+			jobDefinition, err := GenerateHPLBenchmark(tt.opts...)
 
 			// Assert
 			assert.NoError(t, err)
@@ -621,12 +621,12 @@ func TestCalculateProcessGrid(t *testing.T) {
 
 func TestCalculateProblemSize(t *testing.T) {
 	// Arrange
-	expectedProblemSize := "63000 76000 95000 101000 "
+	expectedProblemSize := uint64(89600)
 	memPerNode := uint64(128460)
 
 	// Act
-	_, problemSizeStr := calculateProblemSize(memPerNode, 1)
+	problemSize := calculateProblemSize(0.5, memPerNode, 512, 2)
 
 	// Assert
-	require.Equal(t, expectedProblemSize, problemSizeStr)
+	require.Equal(t, expectedProblemSize, problemSize)
 }

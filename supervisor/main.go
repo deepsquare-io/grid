@@ -94,18 +94,20 @@ var (
 	memPricePerMin *big.Int
 	labels         []metaschedulerabi.Label
 
-	benchmarkHPLImage       string
-	benchmarkHPLSingleNode  bool
-	benchmarkSpeedTestImage string
-	benchmarkOSUImage       string
-	benchmarkIORImage       string
-	benchmarkIORSingleNode  bool
-	benchmarkDisable        bool
-	benchmarkRunAs          string
-	benchmarkUnresponsive   bool
-	benchmarkTimeLimit      time.Duration
-	benchmarkTrace          bool
-	benchmarkEnv            cli.StringSlice
+	benchmarkHPLImage         string
+	benchmarkHPLSingleNode    bool
+	benchmarkHPLBlockSize     uint64
+	benchmarkHPLMemoryPercent float64
+	benchmarkSpeedTestImage   string
+	benchmarkOSUImage         string
+	benchmarkIORImage         string
+	benchmarkIORSingleNode    bool
+	benchmarkDisable          bool
+	benchmarkRunAs            string
+	benchmarkUnresponsive     bool
+	benchmarkTimeLimit        time.Duration
+	benchmarkTrace            bool
+	benchmarkEnv              cli.StringSlice
 
 	benchmarkUCX          bool
 	benchmarkUCXAffinity  string
@@ -428,6 +430,22 @@ All the specifications returned by 'scontrol show partition' will be registered 
 		EnvVars:     []string{"BENCHMARK_HPL_SINGLE_NODE"},
 		Category:    "Benchmark:",
 	},
+	&cli.Uint64Flag{
+		Name:        "benchmark.hpl.block-size",
+		Usage:       "HPL block size. Size depends on the CPU/GPU processing power.",
+		Destination: &benchmarkHPLBlockSize,
+		Value:       benchmark.DefaultNB,
+		EnvVars:     []string{"BENCHMARK_HPL_BLOCK_SIZE"},
+		Category:    "Benchmark:",
+	},
+	&cli.Float64Flag{
+		Name:        "benchmark.hpl.memory-percent",
+		Usage:       "HPL Memory percent (between 0.0 and 1.0). Percentage of the total memory used for the benchmark. The smaller, the quicker. The larger, the more accurate.",
+		Destination: &benchmarkHPLMemoryPercent,
+		Value:       0.5,
+		EnvVars:     []string{"BENCHMARK_HPL_MEMORY_PERCENT"},
+		Category:    "Benchmark:",
+	},
 	&cli.BoolFlag{
 		Name:        "benchmark.include-unresponsive",
 		Usage:       "Force benchmark on unresponsive nodes (sinfo --responding --partition=<partition>).",
@@ -653,6 +671,8 @@ func Init(ctx context.Context) *Container {
 	hplOpts := append(
 		commonBenchmarkOpts,
 		benchmark.WithImage(benchmarkHPLImage),
+		benchmark.WithBlockSize(benchmarkHPLBlockSize),
+		benchmark.WithMemoryPercent(benchmarkHPLMemoryPercent),
 	)
 	server := server.New(
 		metaScheduler,
@@ -742,8 +762,8 @@ See the GNU General Public License for more details.`,
 			if err := container.benchmarkLauncher.Cancel(ctx, "speedtest"); err != nil {
 				logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
 			}
-			if err := container.benchmarkLauncher.Cancel(ctx, "hpl-phase1"); err != nil {
-				logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
+			if err := container.benchmarkLauncher.Cancel(ctx, "hpl"); err != nil {
+				logger.I.Warn("failed to cancel hpl benchmark", zap.Error(err))
 			}
 			if err := container.benchmarkLauncher.Cancel(ctx, "ior"); err != nil {
 				logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))
@@ -987,15 +1007,15 @@ func launchBenchmarks(
 	})
 
 	g.Go(func() error {
-		b, err := benchmark.GeneratePhase1HPLBenchmark(hplOpts...)
+		b, err := benchmark.GenerateHPLBenchmark(hplOpts...)
 		if err != nil {
-			logger.I.Error("failed to generate hpl phase 1 benchmark", zap.Error(err))
+			logger.I.Error("failed to generate hpl benchmark", zap.Error(err))
 			return err
 		}
 
-		if err := benchmarkLauncher.Launch(ctx, "hpl-phase1", b); err != nil {
+		if err := benchmarkLauncher.Launch(ctx, "hpl", b); err != nil {
 			logger.I.Error(
-				"hpl-phase1 benchmark failed or failed to be tracked",
+				"hpl benchmark failed or failed to be tracked",
 				zap.Error(err),
 			)
 			return err
@@ -1028,8 +1048,8 @@ func launchBenchmarks(
 		if err := benchmarkLauncher.Cancel(parent, "speedtest"); err != nil {
 			logger.I.Warn("failed to cancel speedtest benchmark", zap.Error(err))
 		}
-		if err := benchmarkLauncher.Cancel(parent, "hpl-phase1"); err != nil {
-			logger.I.Warn("failed to cancel hpl-phase1 benchmark", zap.Error(err))
+		if err := benchmarkLauncher.Cancel(parent, "hpl"); err != nil {
+			logger.I.Warn("failed to cancel hpl benchmark", zap.Error(err))
 		}
 		if err := benchmarkLauncher.Cancel(parent, "ior"); err != nil {
 			logger.I.Warn("failed to cancel ior benchmark", zap.Error(err))

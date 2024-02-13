@@ -164,23 +164,21 @@ func New(
 				}),
 			)
 		})
-		r.Route("/hpl", func(r chi.Router) {
-			r.Put(
-				"/phase1",
-				benchmark.NewHPLPhase1Handler(
-					func(optimal *hpl.Result, err error) error {
-						if err != nil {
-							benchmark.DefaultStore.SetFailure(err)
-							return err
-						}
+		r.Put(
+			"/hpl",
+			benchmark.NewHPLHandler(
+				func(optimal *hpl.Result, err error) error {
+					if err != nil {
+						benchmark.DefaultStore.SetFailure(err)
+						return err
+					}
 
-						benchmark.DefaultStore.SetGFLOPS(optimal.Gflops)
+					benchmark.DefaultStore.SetGFLOPS(optimal.Gflops)
 
-						return nil
-					},
-				),
-			)
-		})
+					return nil
+				},
+			),
+		)
 	})
 	g := grpc.NewServer(opts...)
 	supervisorv1alpha1.RegisterJobAPIServer(

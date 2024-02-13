@@ -56,7 +56,7 @@ func (suite *BenchmarkIntegrationTestSuite) BeforeTest(suiteName, testName strin
 	)
 }
 
-func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1SingleNode() {
+func (suite *BenchmarkIntegrationTestSuite) TestRunHPLSingleNode() {
 	ctx := context.Background()
 	cpusPerNode, err := suite.scheduler.FindCPUsPerNode(ctx)
 	suite.Require().NoError(err)
@@ -71,7 +71,7 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1SingleNode() {
 		benchmark.WithNoWait(),
 	)
 
-	b, err := benchmark.GeneratePhase1HPLBenchmark(
+	b, err := benchmark.GenerateHPLBenchmark(
 		benchmark.WithClusterSpecs(
 			1,
 			slices.Min(cpusPerNode),
@@ -87,7 +87,7 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1SingleNode() {
 	suite.Require().NoError(err)
 }
 
-func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1() {
+func (suite *BenchmarkIntegrationTestSuite) TestRunHPL() {
 	ctx := context.Background()
 	nodes, err := suite.scheduler.FindTotalNodes(ctx, scheduler.WithOnlyResponding())
 	suite.Require().NoError(err)
@@ -104,7 +104,7 @@ func (suite *BenchmarkIntegrationTestSuite) TestRunPhase1() {
 		benchmark.WithNoWait(),
 	)
 
-	b, err := benchmark.GeneratePhase1HPLBenchmark(
+	b, err := benchmark.GenerateHPLBenchmark(
 		benchmark.WithClusterSpecs(
 			nodes,
 			slices.Min(cpusPerNode),

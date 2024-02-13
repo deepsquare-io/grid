@@ -45,10 +45,12 @@ type options struct {
 	gpusPerNode uint64
 	memPerNode  uint64
 
-	phase                   string
 	image                   string
 	secret                  string
 	supervisorPublicAddress string
+
+	blockSize     uint64
+	memoryPercent float64
 
 	ucx          bool
 	ucxAffinity  string
@@ -61,6 +63,22 @@ type options struct {
 }
 
 type Option func(*options)
+
+func WithBlockSize(
+	nb uint64,
+) Option {
+	return func(o *options) {
+		o.blockSize = nb
+	}
+}
+
+func WithMemoryPercent(
+	memoryPercent float64,
+) Option {
+	return func(o *options) {
+		o.memoryPercent = memoryPercent
+	}
+}
 
 func WithClusterSpecs(
 	nodes uint64,

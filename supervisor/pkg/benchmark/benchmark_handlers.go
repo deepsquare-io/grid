@@ -132,7 +132,7 @@ func NewSpeedTestHandler(
 	}
 }
 
-func NewHPLPhase1Handler(
+func NewHPLHandler(
 	next func(optimal *hpl.Result, err error) error,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
