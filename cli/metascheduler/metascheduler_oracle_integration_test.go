@@ -30,7 +30,7 @@ import (
 type OracleTestSuite struct {
 	suite.Suite
 
-	impl job.MetaScheduledIdsFetcher
+	impl job.MetaScheduledIDsFetcher
 }
 
 func (suite *OracleTestSuite) BeforeTest(_, _ string) {

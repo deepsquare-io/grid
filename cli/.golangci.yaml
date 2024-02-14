@@ -7,7 +7,6 @@ linters:
     - godox
     - execinquery
     - nolintlint
-    - musttag # causes issues with imported libs
 
     # We should strive to enable these:
     # - wrapcheck

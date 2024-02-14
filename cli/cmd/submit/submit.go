@@ -225,7 +225,7 @@ var flags = []cli.Flag{
 	&cli.StringFlag{
 		Name:  "credits-wei",
 		Usage: "Allocated a number of credits. Unit is wei. Is a big int.",
-		Action: func(ctx *cli.Context, s string) error {
+		Action: func(_ *cli.Context, s string) error {
 			c, ok := new(big.Int).SetString(s, 10)
 			if !ok {
 				return errors.New("failed to parse credits")
@@ -238,7 +238,7 @@ var flags = []cli.Flag{
 	&cli.Float64Flag{
 		Name:  "credits",
 		Usage: "Allocated a number of credits. Unit is 1e18. Is a float and is not precise.",
-		Action: func(ctx *cli.Context, val float64) error {
+		Action: func(_ *cli.Context, val float64) error {
 			c := new(big.Float).SetFloat64(val)
 
 			coin := new(big.Float)

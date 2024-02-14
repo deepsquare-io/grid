@@ -227,7 +227,7 @@ func renderOutput(hexkey string, publicAddress string) string {
 		BorderRow(true).
 		BorderColumn(true).
 		BorderStyle(borderStyle).
-		StyleFunc(func(row, col int) lipgloss.Style {
+		StyleFunc(func(_, _ int) lipgloss.Style {
 			return cellStyle
 		}).
 		Rows(rows...).

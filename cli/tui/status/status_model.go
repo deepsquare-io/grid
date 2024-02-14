@@ -393,7 +393,7 @@ func Model(
 		Foreground(lipgloss.Color("229")).
 		Background(lipgloss.Color("57")).
 		Bold(false)
-	s.RenderCell = func(model table.Model, value string, rawValue string, position table.CellPosition) string {
+	s.RenderCell = func(_ table.Model, value string, rawValue string, position table.CellPosition) string {
 		// Job Status
 		if position.Column == 2 {
 			return style.JobStatusStyle(rawValue).Render(value)

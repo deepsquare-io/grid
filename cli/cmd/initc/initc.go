@@ -112,7 +112,7 @@ var Command = cli.Command{
 	Name:  "init",
 	Usage: "Bootstrap a job workflow file.",
 	Flags: flags,
-	Action: func(cCtx *cli.Context) error {
+	Action: func(_ *cli.Context) error {
 		_, err := utils.GetPrivateKey(ethHexPK, ethHexPKPath)
 		if err != nil {
 			return err

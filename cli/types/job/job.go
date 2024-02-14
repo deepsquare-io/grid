@@ -73,10 +73,10 @@ type Fetcher interface {
 	GetJobs(ctx context.Context) (LazyIterator, error)
 }
 
-// MetaScheduledIdsFetcher fetches meta-scheduled jobs ids.
+// MetaScheduledIDsFetcher fetches meta-scheduled jobs ids.
 //
 // This contacts directly the meta-scheduler without the need to fetch all the jobs.
-type MetaScheduledIdsFetcher interface {
+type MetaScheduledIDsFetcher interface {
 	GetMetaScheduledJobIDs(ctx context.Context) ([][32]byte, error)
 }
 

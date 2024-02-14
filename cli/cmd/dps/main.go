@@ -167,7 +167,7 @@ var flags = []cli.Flag{
 		Name:        "debug",
 		Usage:       "Debug logging",
 		Destination: &debug,
-		Action: func(ctx *cli.Context, b bool) error {
+		Action: func(_ *cli.Context, b bool) error {
 			if b {
 				internallog.EnableDebug()
 			}

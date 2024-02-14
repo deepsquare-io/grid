@@ -25,17 +25,17 @@ import (
 )
 
 type runningJobsByProviderFetcher struct {
-	job.MetaScheduledIdsFetcher
+	job.MetaScheduledIDsFetcher
 	job.Fetcher
 }
 
 // NewJobsByProviderFetcher instanciates a JobsByProviderFetcher.
 func NewJobsByProviderFetcher(
-	oracle job.MetaScheduledIdsFetcher,
+	oracle job.MetaScheduledIDsFetcher,
 	fetcher job.Fetcher,
 ) job.ByProviderFetcher {
 	return &runningJobsByProviderFetcher{
-		MetaScheduledIdsFetcher: oracle,
+		MetaScheduledIDsFetcher: oracle,
 		Fetcher:                 fetcher,
 	}
 }

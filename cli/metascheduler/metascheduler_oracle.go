@@ -38,7 +38,7 @@ type OracleOptions struct {
 }
 
 // NewOracle instanciates an Oracle.
-func NewOracle(url string, opts OracleOptions) job.MetaScheduledIdsFetcher {
+func NewOracle(url string, opts OracleOptions) job.MetaScheduledIDsFetcher {
 	if url == "" {
 		url = DefaultOracleURL
 	}
