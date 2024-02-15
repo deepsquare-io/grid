@@ -20,9 +20,11 @@ import (
 	"fmt"
 	"math/big"
 
+	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"go.uber.org/zap"
 )
 
 type allowanceManager struct {
@@ -39,10 +41,11 @@ func (c *allowanceManager) SetAllowance(ctx context.Context, amount *big.Int) er
 	if err != nil {
 		return fmt.Errorf("failed to approve credit: %w", err)
 	}
-	_, err = bind.WaitMined(ctx, c, tx)
+	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
 		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
 	}
+	internallog.I.Debug("metascheduled job", zap.Any("receipt", receipt))
 	return nil
 }
 

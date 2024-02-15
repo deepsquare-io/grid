@@ -22,11 +22,13 @@ import (
 	"strconv"
 	"strings"
 
+	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/deepsquare-io/grid/cli/types/provider"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"go.uber.org/zap"
 )
 
 type providerManager struct {
@@ -43,10 +45,11 @@ func (c *providerManager) ApproveProvider(ctx context.Context, provider common.A
 	if err != nil {
 		return fmt.Errorf("failed to approve provider: %w", err)
 	}
-	_, err = bind.WaitMined(ctx, c, tx)
+	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
 		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
 	}
+	internallog.I.Debug("approve provider", zap.Any("receipt", receipt))
 	return nil
 }
 
@@ -59,10 +62,11 @@ func (c *providerManager) RemoveProvider(ctx context.Context, provider common.Ad
 	if err != nil {
 		return fmt.Errorf("failed to remove provider: %w", err)
 	}
-	_, err = bind.WaitMined(ctx, c, tx)
+	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
 		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
 	}
+	internallog.I.Debug("removed provider", zap.Any("receipt", receipt))
 	return nil
 }
 

@@ -20,10 +20,12 @@ import (
 	"fmt"
 	"math/big"
 
+	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"go.uber.org/zap"
 )
 
 type creditManager struct {
@@ -51,8 +53,12 @@ func (c *creditManager) Transfer(ctx context.Context, to common.Address, amount 
 	if err != nil {
 		return WrapError(err)
 	}
-	_, err = bind.WaitMined(ctx, c, tx)
-	return WrapError(err)
+	receipt, err := bind.WaitMined(ctx, c, tx)
+	if err != nil {
+		return WrapError(err)
+	}
+	internallog.I.Debug("transfer", zap.Any("receipt", receipt))
+	return nil
 }
 func (c *creditManager) ReduceToBalance(
 	ctx context.Context,

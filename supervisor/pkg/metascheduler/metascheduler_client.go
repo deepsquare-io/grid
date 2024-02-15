@@ -183,7 +183,7 @@ func (c *Client) auth(ctx context.Context) (*bind.TransactOpts, error) {
 	}
 	auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(0)
-	auth.GasLimit = uint64(0)
+	auth.GasLimit = uint64(0x1312D00)
 	auth.GasPrice = gasPrice
 
 	return auth, nil
@@ -215,11 +215,11 @@ func (c *Client) Claim(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
-	_, err = bind.WaitMined(ctx, c, tx)
+	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
 		return WrapError(err)
 	}
-	logger.I.Debug("called ClaimNextJob", zap.String("tx", tx.Hash().String()))
+	logger.I.Debug("called ClaimNextJob", zap.Any("receipt", receipt))
 
 	return nil
 }
@@ -262,11 +262,11 @@ func (c *Client) Register(
 		return WrapError(err)
 	}
 	logger.I.Info("called register", zap.String("tx", tx.Hash().String()))
-	_, err = bind.WaitMined(ctx, c.DeployBackend, tx)
+	receipt, err := bind.WaitMined(ctx, c.DeployBackend, tx)
 	if err != nil {
 		return WrapError(err)
 	}
-	logger.I.Info("register mined", zap.String("tx", tx.Hash().String()))
+	logger.I.Info("register mined", zap.Any("receipt", receipt))
 	return nil
 }
 
@@ -304,14 +304,14 @@ func (c *Client) SetJobStatus(
 		zap.String("tx", tx.Hash().String()),
 		zap.Uint8("status", uint8(status)),
 	)
-	_, err = bind.WaitMined(ctx, c.DeployBackend, tx)
+	receipt, err := bind.WaitMined(ctx, c.DeployBackend, tx)
 	if err != nil {
 		logger.Error("failed to wait mined", zap.Error(err))
 		return WrapError(err)
 	}
 	logger.Debug(
 		"set job status",
-		zap.String("tx", tx.Hash().String()),
+		zap.Any("receipt", receipt),
 		zap.Uint8("status", uint8(status)),
 	)
 	return nil
@@ -459,11 +459,11 @@ func (c *Client) ClaimCancelling(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
-	_, err = bind.WaitMined(ctx, c, tx)
+	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
 		return WrapError(err)
 	}
-	logger.I.Debug("called ClaimNextCancellingJob", zap.String("tx", tx.Hash().String()))
+	logger.I.Debug("called ClaimNextCancellingJob", zap.Any("receipt", receipt))
 
 	return nil
 }
@@ -490,11 +490,11 @@ func (c *Client) ClaimTopUp(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
-	_, err = bind.WaitMined(ctx, c, tx)
+	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
 		return WrapError(err)
 	}
-	logger.I.Debug("called ClaimNextTopUpJob", zap.String("tx", tx.Hash().String()))
+	logger.I.Debug("called ClaimNextTopUpJob", zap.Any("receipt", receipt))
 
 	return nil
 }

@@ -52,7 +52,7 @@ func (c *RPCClientSet) authOpts(ctx context.Context) (*bind.TransactOpts, error)
 	}
 	auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(0)
-	auth.GasLimit = uint64(0)
+	auth.GasLimit = uint64(0x1312D00)
 	auth.GasPrice = gasPrice
 	auth.Context = ctx
 

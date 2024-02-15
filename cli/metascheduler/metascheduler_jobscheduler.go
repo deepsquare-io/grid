@@ -20,10 +20,12 @@ import (
 	"fmt"
 	"math/big"
 
+	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/sbatch"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/deepsquare-io/grid/cli/types/job"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"go.uber.org/zap"
 )
 
 type jobScheduler struct {
@@ -61,6 +63,7 @@ func (c *jobScheduler) requestNewJob(
 	}
 
 	// Fetch the event to get the job ID
+	internallog.I.Debug("requested job", zap.Any("receipt", receipt))
 	for _, log := range receipt.Logs {
 		if log.Topics[0].Hex() == newJobRequestEvent.ID.Hex() {
 			event, err := c.ParseNewJobRequestEvent(*log)
