@@ -18,7 +18,6 @@
 package metascheduler_test
 
 import (
-	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"math/big"
@@ -151,34 +150,6 @@ func (suite *ClientTestSuite) mockProviderManagerContractTransaction(
 	name string,
 	args ...interface{},
 ) {
-	// Mock code presence
-	suite.contractBackend.EXPECT().
-		PendingCodeAt(
-			mock.Anything,
-			providerManagerAddress,
-		).Return(
-		common.FromHex("0xdeadface"),
-		nil,
-	)
-
-	// Pack input
-	abi, err := metaschedulerabi.IProviderManagerMetaData.GetAbi()
-	suite.Require().NoError(err)
-	input, err := abi.Pack(name, args...)
-	suite.Require().NoError(err)
-
-	// Mock
-	suite.contractBackend.EXPECT().
-		EstimateGas(
-			mock.Anything,
-			mock.MatchedBy(func(call ethereum.CallMsg) bool {
-				return call.From == fromAddress && *call.To == providerManagerAddress &&
-					bytes.Equal(call.Data, input)
-			}),
-		).Return(
-		uint64(0),
-		nil,
-	)
 	suite.contractBackend.EXPECT().SendTransaction(mock.Anything, mock.Anything).Return(nil)
 }
 
@@ -221,34 +192,6 @@ func (suite *ClientTestSuite) mockJobRepositoryContractCall(
 }
 
 func (suite *ClientTestSuite) mockContractTransaction(name string, args ...interface{}) {
-	// Mock code presence
-	suite.contractBackend.EXPECT().
-		PendingCodeAt(
-			mock.Anything,
-			metaschedulerAddress,
-		).Return(
-		common.FromHex("0xdeadface"),
-		nil,
-	)
-
-	// Pack input
-	abi, err := metaschedulerabi.MetaSchedulerMetaData.GetAbi()
-	suite.Require().NoError(err)
-	input, err := abi.Pack(name, args...)
-	suite.Require().NoError(err)
-
-	// Mock
-	suite.contractBackend.EXPECT().
-		EstimateGas(
-			mock.Anything,
-			mock.MatchedBy(func(call ethereum.CallMsg) bool {
-				return call.From == fromAddress && *call.To == metaschedulerAddress &&
-					bytes.Equal(call.Data, input)
-			}),
-		).Return(
-		uint64(0),
-		nil,
-	)
 	suite.contractBackend.EXPECT().SendTransaction(mock.Anything, mock.Anything).Return(nil)
 }
 
