@@ -26,10 +26,10 @@ import (
 	errorsabi "github.com/deepsquare-io/grid/supervisor/generated/abi/errors"
 	"github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient/simulated"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -37,7 +37,7 @@ type ErrorTestSuite struct {
 	suite.Suite
 	contractAddress common.Address
 	contract        *errorsabi.ErrorContract
-	backend         *backends.SimulatedBackend
+	backend         *simulated.Backend
 }
 
 func (suite *ErrorTestSuite) BeforeTest(suiteName, testName string) {
@@ -58,15 +58,15 @@ func (suite *ErrorTestSuite) BeforeTest(suiteName, testName string) {
 		},
 	}
 	blockGasLimit := uint64(4712388)
-	backend := backends.NewSimulatedBackend(genesisAlloc, blockGasLimit)
+	backend := simulated.NewBackend(genesisAlloc, simulated.WithCallGasLimit(blockGasLimit))
 	suite.backend = backend
 
 	// Deploy contract
-	contractAddress, tx, contract, err := errorsabi.DeployErrorContract(auth, backend)
+	contractAddress, tx, contract, err := errorsabi.DeployErrorContract(auth, backend.Client())
 	suite.Require().NoError(err)
 	backend.Commit()
 
-	_, err = bind.WaitDeployed(context.Background(), backend, tx)
+	_, err = bind.WaitDeployed(context.Background(), backend.Client(), tx)
 	suite.Require().NoError(err)
 
 	suite.contractAddress = contractAddress
