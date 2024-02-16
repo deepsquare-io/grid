@@ -31,6 +31,7 @@ import (
 	"github.com/deepsquare-io/grid/supervisor/pkg/metascheduler"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -247,7 +248,11 @@ func (suite *ClientTestSuite) TestClaim() {
 	)
 	suite.mockContractTransaction("claimNextJob")
 	// Must wait
-	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
+	suite.deployBackend.EXPECT().
+		TransactionReceipt(mock.Anything, mock.Anything).
+		Return(&types.Receipt{
+			Status: 1,
+		}, nil)
 
 	// Act
 	err := suite.impl.Claim(context.Background())
@@ -299,7 +304,11 @@ func (suite *ClientTestSuite) TestRegister() {
 		labels,
 	)
 	// Must wait
-	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
+	suite.deployBackend.EXPECT().
+		TransactionReceipt(mock.Anything, mock.Anything).
+		Return(&types.Receipt{
+			Status: 1,
+		}, nil)
 
 	// Act
 	err := suite.impl.Register(context.Background(), hardware, prices, labels)
@@ -320,7 +329,11 @@ func (suite *ClientTestSuite) TestSetJobStatus() {
 		int64(0),
 	)
 	// Must wait
-	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
+	suite.deployBackend.EXPECT().
+		TransactionReceipt(mock.Anything, mock.Anything).
+		Return(&types.Receipt{
+			Status: 1,
+		}, nil)
 
 	// Act
 	err := suite.impl.SetJobStatus(
@@ -394,7 +407,11 @@ func (suite *ClientTestSuite) TestClaimCancelling() {
 	)
 	suite.mockContractTransaction("claimNextCancellingJob")
 	// Must wait
-	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
+	suite.deployBackend.EXPECT().
+		TransactionReceipt(mock.Anything, mock.Anything).
+		Return(&types.Receipt{
+			Status: 1,
+		}, nil)
 
 	// Act
 	err := suite.impl.ClaimCancelling(context.Background())
@@ -413,7 +430,11 @@ func (suite *ClientTestSuite) TestClaimTopUp() {
 	)
 	suite.mockContractTransaction("claimNextTopUpJob")
 	// Must wait
-	suite.deployBackend.EXPECT().TransactionReceipt(mock.Anything, mock.Anything).Return(nil, nil)
+	suite.deployBackend.EXPECT().
+		TransactionReceipt(mock.Anything, mock.Anything).
+		Return(&types.Receipt{
+			Status: 1,
+		}, nil)
 
 	// Act
 	err := suite.impl.ClaimTopUp(context.Background())
