@@ -211,7 +211,7 @@ func (c *Client) transact(
 	}
 
 	// Play fake transaction to find error reason
-	if _, err = c.rpc.EstimateGas(ctx, ethereum.CallMsg{
+	gas, err := c.rpc.EstimateGas(ctx, ethereum.CallMsg{
 		To:         tx.To(),
 		From:       auth.From,
 		Gas:        tx.Gas(),
@@ -219,9 +219,12 @@ func (c *Client) transact(
 		Value:      tx.Value(),
 		Data:       tx.Data(),
 		AccessList: tx.AccessList(),
-	}); err != nil {
+	})
+	if err != nil {
 		return nil, err
 	}
+	// Add margin to gas limit to avoid out of gas
+	auth.GasLimit = gas + gas/10
 
 	return exec(auth)
 }
