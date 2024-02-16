@@ -86,8 +86,6 @@ func (c *RPCClientSet) transact(
 		From:       auth.From,
 		Gas:        tx.Gas(),
 		GasPrice:   tx.GasPrice(),
-		GasFeeCap:  tx.GasFeeCap(),
-		GasTipCap:  tx.GasTipCap(),
 		Value:      tx.Value(),
 		Data:       tx.Data(),
 		AccessList: tx.AccessList(),
