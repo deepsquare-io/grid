@@ -151,6 +151,10 @@ func (suite *ClientTestSuite) mockProviderManagerContractTransaction(
 	name string,
 	args ...interface{},
 ) {
+	suite.contractBackend.EXPECT().
+		EstimateGas(mock.Anything, mock.Anything).
+		Return(uint64(1), nil).
+		Once()
 	suite.contractBackend.EXPECT().SendTransaction(mock.Anything, mock.Anything).Return(nil)
 }
 
@@ -193,6 +197,10 @@ func (suite *ClientTestSuite) mockJobRepositoryContractCall(
 }
 
 func (suite *ClientTestSuite) mockContractTransaction(name string, args ...interface{}) {
+	suite.contractBackend.EXPECT().
+		EstimateGas(mock.Anything, mock.Anything).
+		Return(uint64(1), nil).
+		Once()
 	suite.contractBackend.EXPECT().SendTransaction(mock.Anything, mock.Anything).Return(nil)
 }
 
