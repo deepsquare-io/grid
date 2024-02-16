@@ -70,7 +70,7 @@ Example:
 
 	// Example of watching job transition
 	transitions := make(chan types.JobTransition, 1)
-	sub, err := watcher.SubscribeEvents(ctx, types.FilterJobTransition(transitions))
+	sub, err := watcher.SubscribeEvents(ctx, event.FilterJobTransition(transitions))
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ Example:
 
 	// Example of watching job transition
 	transitions := make(chan types.JobTransition, 1)
-	sub, err := es.SubscribeEvents(ctx, types.FilterJobTransition(transitions))
+	sub, err := es.SubscribeEvents(ctx, event.FilterJobTransition(transitions))
 	if err != nil {
 		return err
 	}

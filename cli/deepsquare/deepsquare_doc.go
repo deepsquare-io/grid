@@ -156,7 +156,7 @@ To watch, do:
 	approvals := make(chan types.Approval, 1)
 		sub, err := m.watcher.SubscribeEvents(
 			ctx,
-			types.FilterApproval(approvals),
+			event.FilterApproval(approvals),
 		)
 		if err != nil {
 			// ...
@@ -192,7 +192,7 @@ To watch, do:
 	transfers := make(chan types.Transfer, 1)
 	sub, err := m.watcher.SubscribeEvents(
 		ctx,
-		types.FilterTransfer(transfers),
+		event.FilterTransfer(transfers),
 	)
 	if err != nil {
 		// ...
@@ -236,7 +236,7 @@ To watch the events, the watcher has a `SubscribeEvents` method in which you can
 	transfers := make(chan types.Transfer, 1)
 	sub, err := m.watcher.SubscribeEvents(
 		ctx,
-		types.FilterTransfer(transfers),
+		event.FilterTransfer(transfers),
 	)
 	if err != nil {
 		// ...

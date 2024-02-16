@@ -23,6 +23,7 @@ import (
 
 	"github.com/deepsquare-io/grid/cli/deepsquare"
 	"github.com/deepsquare-io/grid/cli/types"
+	"github.com/deepsquare-io/grid/cli/types/event"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -80,7 +81,7 @@ func watcherExample(ctx context.Context) {
 	// Test the watcher
 	ch := make(chan types.NewJobRequest, 1)
 	defer close(ch)
-	sub, err := watcher.SubscribeEvents(ctx, types.FilterNewJobRequest(ch))
+	sub, err := watcher.SubscribeEvents(ctx, event.FilterNewJobRequest(ch))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
