@@ -166,7 +166,11 @@ func (c *Client) GetProviderAddress() common.Address {
 	return c.fromAddress
 }
 
-func (c *Client) auth(ctx context.Context) (*bind.TransactOpts, error) {
+// transact executes a transaction with the given function.
+func (c *Client) transact(
+	ctx context.Context,
+	exec func(auth *bind.TransactOpts) (*types.Transaction, error),
+) (*types.Transaction, error) {
 	nonce, err := c.rpc.PendingNonceAt(ctx, c.fromAddress)
 	if err != nil {
 		return nil, err
@@ -185,8 +189,43 @@ func (c *Client) auth(ctx context.Context) (*bind.TransactOpts, error) {
 	auth.Value = big.NewInt(0)
 	auth.GasLimit = uint64(0x1312D00)
 	auth.GasPrice = gasPrice
+	auth.Context = ctx
 
-	return auth, nil
+	simulated := &bind.TransactOpts{
+		From:      auth.From,
+		Signer:    auth.Signer,
+		Nonce:     auth.Nonce,
+		Value:     auth.Value,
+		GasPrice:  auth.GasPrice,
+		GasFeeCap: auth.GasFeeCap,
+		GasTipCap: auth.GasTipCap,
+		GasLimit:  auth.GasLimit,
+		Context:   auth.Context,
+		NoSend:    true,
+	}
+
+	// Simuate the transaction
+	tx, err := exec(simulated)
+	if err != nil {
+		return nil, err
+	}
+
+	// Play fake transaction to find error reason
+	if _, err = c.rpc.EstimateGas(ctx, ethereum.CallMsg{
+		To:         tx.To(),
+		From:       auth.From,
+		Gas:        tx.Gas(),
+		GasPrice:   tx.GasPrice(),
+		GasFeeCap:  tx.GasFeeCap(),
+		GasTipCap:  tx.GasTipCap(),
+		Value:      tx.Value(),
+		Data:       tx.Data(),
+		AccessList: tx.AccessList(),
+	}); err != nil {
+		return nil, err
+	}
+
+	return exec(auth)
 }
 
 // Claim a job.
@@ -206,12 +245,9 @@ func (c *Client) Claim(ctx context.Context) error {
 		return nil
 	}
 
-	auth, err := c.auth(ctx)
-	if err != nil {
-		return err
-	}
-
-	tx, err := c.contractRPC.ClaimNextJob(auth)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.contractRPC.ClaimNextJob(auth)
+	})
 	if err != nil {
 		return WrapError(err)
 	}
@@ -247,17 +283,9 @@ func (c *Client) Register(
 		zap.Any("prices", prices),
 		zap.Any("labels", labels),
 	)
-	auth, err := c.auth(ctx)
-	if err != nil {
-		return err
-	}
-
-	tx, err := c.providerManager.Register(
-		auth,
-		hardware,
-		prices,
-		labels,
-	)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.providerManager.Register(auth, hardware, prices, labels)
+	})
 	if err != nil {
 		return WrapError(err)
 	}
@@ -279,23 +307,21 @@ func (c *Client) SetJobStatus(
 	opts ...SetJobStatusOption,
 ) error {
 	o := applySetJobStatusOptions(opts)
-	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
-	auth, err := c.auth(ctx)
-	if err != nil {
-		return err
-	}
 	var errMsg string
 	if o.err != nil {
 		errMsg = o.err.Error()
 	}
-	tx, err := c.contractRPC.ProviderSetJobStatus(
-		auth,
-		jobID,
-		uint8(status),
-		jobDurationMinute,
-		errMsg,
-		o.exitCode,
-	)
+	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.contractRPC.ProviderSetJobStatus(
+			auth,
+			jobID,
+			uint8(status),
+			jobDurationMinute,
+			errMsg,
+			o.exitCode,
+		)
+	})
 	if err != nil {
 		return WrapError(err)
 	}
@@ -324,14 +350,9 @@ func (c *Client) RefuseJob(
 ) error {
 	logger := logger.I.With(zap.String("jobID", common.Bytes2Hex(jobID[:])))
 	logger.Warn("calling refuse job")
-	auth, err := c.auth(ctx)
-	if err != nil {
-		return err
-	}
-	tx, err := c.contractRPC.RefuseJob(
-		auth,
-		jobID,
-	)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.contractRPC.RefuseJob(auth, jobID)
+	})
 	if err != nil {
 		return WrapError(err)
 	}
@@ -450,12 +471,9 @@ func (c *Client) ClaimCancelling(ctx context.Context) error {
 		return nil
 	}
 
-	auth, err := c.auth(ctx)
-	if err != nil {
-		return err
-	}
-
-	tx, err := c.contractRPC.ClaimNextCancellingJob(auth)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.contractRPC.ClaimNextCancellingJob(auth)
+	})
 	if err != nil {
 		return WrapError(err)
 	}
@@ -481,12 +499,9 @@ func (c *Client) ClaimTopUp(ctx context.Context) error {
 		return nil
 	}
 
-	auth, err := c.auth(ctx)
-	if err != nil {
-		return err
-	}
-
-	tx, err := c.contractRPC.ClaimNextTopUpJob(auth)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.contractRPC.ClaimNextTopUpJob(auth)
+	})
 	if err != nil {
 		return WrapError(err)
 	}

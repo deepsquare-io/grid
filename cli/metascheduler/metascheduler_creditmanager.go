@@ -17,7 +17,6 @@ package metascheduler
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
@@ -25,6 +24,7 @@ import (
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	coretypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
@@ -45,11 +45,9 @@ func (c *creditManager) BalanceOf(ctx context.Context, address common.Address) (
 }
 
 func (c *creditManager) Transfer(ctx context.Context, to common.Address, amount *big.Int) error {
-	opts, err := c.authOpts(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create auth options: %w", err)
-	}
-	tx, err := c.IERC20.Transfer(opts, to, amount)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*coretypes.Transaction, error) {
+		return c.IERC20.Transfer(auth, to, amount)
+	})
 	if err != nil {
 		return WrapError(err)
 	}

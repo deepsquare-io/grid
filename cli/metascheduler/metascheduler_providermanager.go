@@ -28,6 +28,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/types/provider"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	coretypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
@@ -37,13 +38,11 @@ type providerManager struct {
 }
 
 func (c *providerManager) ApproveProvider(ctx context.Context, provider common.Address) error {
-	opts, err := c.authOpts(ctx)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*coretypes.Transaction, error) {
+		return c.IProviderManager.Approve(auth, provider)
+	})
 	if err != nil {
-		return fmt.Errorf("failed get auth options: %w", err)
-	}
-	tx, err := c.IProviderManager.Approve(opts, provider)
-	if err != nil {
-		return fmt.Errorf("failed to approve provider: %w", err)
+		return WrapError(err)
 	}
 	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
@@ -54,13 +53,11 @@ func (c *providerManager) ApproveProvider(ctx context.Context, provider common.A
 }
 
 func (c *providerManager) RemoveProvider(ctx context.Context, provider common.Address) error {
-	opts, err := c.authOpts(ctx)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*coretypes.Transaction, error) {
+		return c.IProviderManager.Remove(auth, provider)
+	})
 	if err != nil {
-		return fmt.Errorf("failed get auth options: %w", err)
-	}
-	tx, err := c.IProviderManager.Remove(opts, provider)
-	if err != nil {
-		return fmt.Errorf("failed to remove provider: %w", err)
+		return WrapError(err)
 	}
 	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {

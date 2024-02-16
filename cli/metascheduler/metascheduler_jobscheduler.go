@@ -25,6 +25,7 @@ import (
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/deepsquare-io/grid/cli/types/job"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
@@ -41,17 +42,15 @@ func (c *jobScheduler) requestNewJob(
 	jobName [32]byte,
 	delegateSpendingAuthority bool,
 ) (id [32]byte, err error) {
-	opts, err := c.authOpts(ctx)
-	if err != nil {
-		return [32]byte{}, fmt.Errorf("failed to create auth options: %w", err)
-	}
-	tx, err := c.MetaScheduler.RequestNewJob(
-		opts,
-		definition,
-		lockedCredits,
-		jobName,
-		delegateSpendingAuthority,
-	)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.MetaScheduler.RequestNewJob(
+			auth,
+			definition,
+			lockedCredits,
+			jobName,
+			delegateSpendingAuthority,
+		)
+	})
 	if err != nil {
 		return [32]byte{}, WrapError(err)
 	}
@@ -61,7 +60,7 @@ func (c *jobScheduler) requestNewJob(
 	if err != nil {
 		return [32]byte{}, fmt.Errorf("failed to wait transaction to be mined: %w", err)
 	}
-	if CheckReceiptError(ctx, c, tx, receipt) != nil {
+	if err := CheckReceiptError(ctx, c, tx, receipt); err != nil {
 		return [32]byte{}, err
 	}
 
@@ -132,39 +131,30 @@ func (c *jobScheduler) SubmitJob(
 }
 
 func (c *jobScheduler) CancelJob(ctx context.Context, id [32]byte) error {
-	opts, err := c.authOpts(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create auth options: %w", err)
-	}
-	_, err = c.MetaScheduler.CancelJob(
-		opts,
-		id,
-	)
+	_, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.MetaScheduler.CancelJob(auth, id)
+	})
 	return WrapError(err)
 }
 
 func (c *jobScheduler) PanicJob(ctx context.Context, id [32]byte, reason string) error {
-	opts, err := c.authOpts(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create auth options: %w", err)
-	}
-	_, err = c.MetaScheduler.PanicJob(
-		opts,
-		id,
-		reason,
-	)
+	_, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.MetaScheduler.PanicJob(
+			auth,
+			id,
+			reason,
+		)
+	})
 	return WrapError(err)
 }
 
 func (c *jobScheduler) TopUpJob(ctx context.Context, id [32]byte, amount *big.Int) error {
-	opts, err := c.authOpts(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to create auth options: %w", err)
-	}
-	_, err = c.MetaScheduler.TopUpJob(
-		opts,
-		id,
-		amount,
-	)
+	_, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
+		return c.MetaScheduler.TopUpJob(
+			auth,
+			id,
+			amount,
+		)
+	})
 	return WrapError(err)
 }

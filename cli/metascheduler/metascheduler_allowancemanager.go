@@ -17,13 +17,13 @@ package metascheduler
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	coretypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
@@ -33,17 +33,15 @@ type allowanceManager struct {
 }
 
 func (c *allowanceManager) SetAllowance(ctx context.Context, amount *big.Int) error {
-	opts, err := c.authOpts(ctx)
+	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*coretypes.Transaction, error) {
+		return c.Approve(auth, c.MetaschedulerAddress, amount)
+	})
 	if err != nil {
-		return fmt.Errorf("failed get auth options: %w", err)
-	}
-	tx, err := c.Approve(opts, c.MetaschedulerAddress, amount)
-	if err != nil {
-		return fmt.Errorf("failed to approve credit: %w", err)
+		return WrapError(err)
 	}
 	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
-		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
+		return WrapError(err)
 	}
 	internallog.I.Debug("metascheduled job", zap.Any("receipt", receipt))
 	return CheckReceiptError(ctx, c, tx, receipt)

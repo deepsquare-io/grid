@@ -26,7 +26,9 @@ import (
 	"github.com/deepsquare-io/grid/cli/types/credit"
 	"github.com/deepsquare-io/grid/cli/types/job"
 	"github.com/deepsquare-io/grid/cli/types/provider"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 // RPCClientSet is a set of clients that interact with DeepSquare.
@@ -35,7 +37,10 @@ type RPCClientSet struct {
 }
 
 // authOpts generate transact options based on the network.
-func (c *RPCClientSet) authOpts(ctx context.Context) (*bind.TransactOpts, error) {
+func (c *RPCClientSet) transact(
+	ctx context.Context,
+	exec func(auth *bind.TransactOpts) (*types.Transaction, error),
+) (*types.Transaction, error) {
 	nonce, err := c.PendingNonceAt(ctx, c.from())
 	if err != nil {
 		return nil, err
@@ -56,7 +61,41 @@ func (c *RPCClientSet) authOpts(ctx context.Context) (*bind.TransactOpts, error)
 	auth.GasPrice = gasPrice
 	auth.Context = ctx
 
-	return auth, nil
+	simulated := &bind.TransactOpts{
+		From:      auth.From,
+		Signer:    auth.Signer,
+		Nonce:     auth.Nonce,
+		Value:     auth.Value,
+		GasPrice:  auth.GasPrice,
+		GasFeeCap: auth.GasFeeCap,
+		GasTipCap: auth.GasTipCap,
+		GasLimit:  auth.GasLimit,
+		Context:   auth.Context,
+		NoSend:    true,
+	}
+
+	// Simuate the transaction
+	tx, err := exec(simulated)
+	if err != nil {
+		return nil, err
+	}
+
+	// Play fake transaction to find error reason
+	if _, err = c.EstimateGas(ctx, ethereum.CallMsg{
+		To:         tx.To(),
+		From:       auth.From,
+		Gas:        tx.Gas(),
+		GasPrice:   tx.GasPrice(),
+		GasFeeCap:  tx.GasFeeCap(),
+		GasTipCap:  tx.GasTipCap(),
+		Value:      tx.Value(),
+		Data:       tx.Data(),
+		AccessList: tx.AccessList(),
+	}); err != nil {
+		return nil, err
+	}
+
+	return exec(auth)
 }
 
 // NewRPCClientSet creates an RPCClientSet.

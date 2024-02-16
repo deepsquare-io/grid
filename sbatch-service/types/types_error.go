@@ -24,7 +24,6 @@ import (
 	errorabi "github.com/deepsquare-io/grid/sbatch-service/abi/error"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -654,7 +653,7 @@ func ParseError(name string, inputs []interface{}) error {
 
 func CheckReceiptError(
 	ctx context.Context,
-	client bind.ContractCaller,
+	client ethereum.GasEstimator,
 	tx *types.Transaction,
 	receipt *types.Receipt,
 ) error {
@@ -681,7 +680,7 @@ func CheckReceiptError(
 	}
 
 	// Replay transaction to find error reason
-	_, err = client.CallContract(ctx, ethereum.CallMsg{
+	if _, err = client.EstimateGas(ctx, ethereum.CallMsg{
 		To:         tx.To(),
 		From:       from,
 		Gas:        tx.Gas(),
@@ -691,13 +690,12 @@ func CheckReceiptError(
 		Value:      tx.Value(),
 		Data:       tx.Data(),
 		AccessList: tx.AccessList(),
-	}, receipt.BlockNumber)
-	if err != nil {
+	}); err != nil {
 		return fmt.Errorf(
 			"tx failed, tx: %s, status: %d, error: %w",
 			receipt.TxHash,
 			receipt.Status,
-			err,
+			WrapError(err),
 		)
 	}
 
