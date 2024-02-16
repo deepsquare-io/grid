@@ -61,8 +61,8 @@ func (c *jobScheduler) requestNewJob(
 	if err != nil {
 		return [32]byte{}, fmt.Errorf("failed to wait transaction to be mined: %w", err)
 	}
-	if receipt.Status != 1 {
-		return [32]byte{}, fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
+	if CheckReceiptError(ctx, c, tx, receipt) != nil {
+		return [32]byte{}, err
 	}
 
 	// Fetch the event to get the job ID

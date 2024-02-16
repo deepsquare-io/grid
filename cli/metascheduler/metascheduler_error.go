@@ -16,13 +16,18 @@
 package metascheduler
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/big"
 
 	errorsabi "github.com/deepsquare-io/grid/cli/types/abi/errors"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
@@ -656,4 +661,56 @@ func ParseError(name string, inputs []interface{}) error {
 		return ParseNewJobRequestDisabled(inputs)
 	}
 	return nil
+}
+
+func CheckReceiptError(
+	ctx context.Context,
+	client bind.ContractCaller,
+	tx *types.Transaction,
+	receipt *types.Receipt,
+) error {
+	if receipt.Status == 1 {
+		return nil
+	}
+	// Try to find reason in the receipt
+	// Check gas
+	if receipt.GasUsed == tx.Gas() {
+		return vm.ErrOutOfGas
+	}
+
+	// Replay transaction (without mutation) to find the error
+	from, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
+	if err != nil {
+		from, err = types.Sender(types.HomesteadSigner{}, tx)
+		if err != nil {
+			return fmt.Errorf(
+				"tx failed (+unable to find 'from' address), tx: %s, status: %d",
+				receipt.TxHash,
+				receipt.Status,
+			)
+		}
+	}
+
+	// Replay transaction to find error reason
+	_, err = client.CallContract(ctx, ethereum.CallMsg{
+		To:         tx.To(),
+		From:       from,
+		Gas:        tx.Gas(),
+		GasPrice:   tx.GasPrice(),
+		GasFeeCap:  tx.GasFeeCap(),
+		GasTipCap:  tx.GasTipCap(),
+		Value:      tx.Value(),
+		Data:       tx.Data(),
+		AccessList: tx.AccessList(),
+	}, receipt.BlockNumber)
+	if err != nil {
+		return fmt.Errorf(
+			"tx failed, tx: %s, status: %d, error: %w",
+			receipt.TxHash,
+			receipt.Status,
+			err,
+		)
+	}
+
+	return fmt.Errorf("tx failed, tx: %s, status: %d", receipt.TxHash, receipt.Status)
 }

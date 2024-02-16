@@ -49,12 +49,8 @@ func (c *providerManager) ApproveProvider(ctx context.Context, provider common.A
 	if err != nil {
 		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
 	}
-	if receipt.Status != 1 {
-		internallog.I.Error("transaction failed", zap.Any("receipt", receipt))
-		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
-	}
 	internallog.I.Debug("approve provider", zap.Any("receipt", receipt))
-	return nil
+	return CheckReceiptError(ctx, c, tx, receipt)
 }
 
 func (c *providerManager) RemoveProvider(ctx context.Context, provider common.Address) error {
@@ -70,12 +66,8 @@ func (c *providerManager) RemoveProvider(ctx context.Context, provider common.Ad
 	if err != nil {
 		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
 	}
-	if receipt.Status != 1 {
-		internallog.I.Error("transaction failed", zap.Any("receipt", receipt))
-		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
-	}
 	internallog.I.Debug("removed provider", zap.Any("receipt", receipt))
-	return nil
+	return CheckReceiptError(ctx, c, tx, receipt)
 }
 
 func (c *providerManager) GetProvider(

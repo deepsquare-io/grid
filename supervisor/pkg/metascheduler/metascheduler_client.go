@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/ecdsa"
-	"fmt"
 	"math/big"
 
 	metaschedulerabi "github.com/deepsquare-io/grid/supervisor/generated/abi/metascheduler"
@@ -220,13 +219,9 @@ func (c *Client) Claim(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
-	if receipt.Status != 1 {
-		logger.I.Error("transaction failed", zap.Any("receipt", receipt))
-		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
-	}
 	logger.I.Debug("called ClaimNextJob", zap.Any("receipt", receipt))
 
-	return nil
+	return CheckReceiptError(ctx, c.rpc, tx, receipt)
 }
 
 func (c *Client) GetOldInfo(ctx context.Context) (*metaschedulerabi.Provider, error) {
@@ -271,12 +266,8 @@ func (c *Client) Register(
 	if err != nil {
 		return WrapError(err)
 	}
-	if receipt.Status != 1 {
-		logger.I.Error("transaction failed", zap.Any("receipt", receipt))
-		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
-	}
 	logger.I.Info("register mined", zap.Any("receipt", receipt))
-	return nil
+	return CheckReceiptError(ctx, c.rpc, tx, receipt)
 }
 
 // SetJobStatus reports the [State] state to the metascheduler.
@@ -318,16 +309,12 @@ func (c *Client) SetJobStatus(
 		logger.Error("failed to wait mined", zap.Error(err))
 		return WrapError(err)
 	}
-	if receipt.Status != 1 {
-		logger.Error("transaction failed", zap.Any("receipt", receipt))
-		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
-	}
 	logger.Debug(
 		"set job status",
 		zap.Any("receipt", receipt),
 		zap.Uint8("status", uint8(status)),
 	)
-	return nil
+	return CheckReceiptError(ctx, c.rpc, tx, receipt)
 }
 
 // RefuseJob rejects a job from the metascheduler.
@@ -476,13 +463,9 @@ func (c *Client) ClaimCancelling(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
-	if receipt.Status != 1 {
-		logger.I.Error("transaction failed", zap.Any("receipt", receipt))
-		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
-	}
 	logger.I.Debug("called ClaimNextCancellingJob", zap.Any("receipt", receipt))
 
-	return nil
+	return CheckReceiptError(ctx, c.rpc, tx, receipt)
 }
 
 // ClaimTopUp a top up call.
@@ -511,13 +494,9 @@ func (c *Client) ClaimTopUp(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
-	if receipt.Status != 1 {
-		logger.I.Error("transaction failed", zap.Any("receipt", receipt))
-		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
-	}
 	logger.I.Debug("called ClaimNextTopUpJob", zap.Any("receipt", receipt))
 
-	return nil
+	return CheckReceiptError(ctx, c.rpc, tx, receipt)
 }
 
 func (c *Client) GetJob(ctx context.Context, jobID [32]byte) (*Job, error) {

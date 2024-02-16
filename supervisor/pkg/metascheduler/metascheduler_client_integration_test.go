@@ -34,8 +34,9 @@ import (
 	"go.uber.org/zap"
 )
 
-type ClientTestSuite struct {
+type ClientIntegrationTestSuite struct {
 	suite.Suite
+	client        *ethclient.Client
 	impl          metascheduler.MetaScheduler
 	rpcURL        string
 	wsURL         string
@@ -44,7 +45,7 @@ type ClientTestSuite struct {
 	fromAddress   common.Address
 }
 
-func (suite *ClientTestSuite) BeforeTest(suiteName, testName string) {
+func (suite *ClientIntegrationTestSuite) BeforeTest(suiteName, testName string) {
 	ctx := context.Background()
 	rpcClient, err := rpc.DialOptions(
 		ctx,
@@ -55,6 +56,7 @@ func (suite *ClientTestSuite) BeforeTest(suiteName, testName string) {
 		logger.I.Fatal("ethclientRPC dial failed", zap.Error(err))
 	}
 	ethClientRPC := ethclient.NewClient(rpcClient)
+	suite.client = ethClientRPC
 	wsClient, err := rpc.DialOptions(
 		ctx,
 		suite.wsURL,
@@ -83,7 +85,7 @@ func (suite *ClientTestSuite) BeforeTest(suiteName, testName string) {
 	)
 }
 
-func (suite *ClientTestSuite) TestGetJobs() {
+func (suite *ClientIntegrationTestSuite) TestGetJobs() {
 	ctx := context.Background()
 	it, err := suite.impl.GetJobs(ctx)
 	suite.Require().NoError(err)
@@ -94,12 +96,12 @@ func (suite *ClientTestSuite) TestGetJobs() {
 	}
 }
 
-func TestClientTestSuite(t *testing.T) {
+func TestClientIntegrationTestSuite(t *testing.T) {
 	if err := godotenv.Load(".env.test"); err != nil {
 		// Skip test if not defined
 		logger.I.Error("Error loading .env.test file", zap.Error(err))
 	} else {
-		suite.Run(t, &ClientTestSuite{
+		suite.Run(t, &ClientIntegrationTestSuite{
 			smartContract: os.Getenv("METASCHEDULER_SMART_CONTRACT"),
 			ethHexPK:      os.Getenv("ETH_PRIVATE_KEY"),
 			rpcURL:        os.Getenv("METASCHEDULER_ENDPOINT_RPC"),
