@@ -57,6 +57,8 @@ func (c *RPCClientSet) transact(
 	}
 	auth.Nonce = big.NewInt(int64(nonce))
 	auth.Value = big.NewInt(0)
+	// TODO: remove hack
+	// Conflict with GoQuorum (Paris), Avax (Shanghai) and SKALED (Istanbul)
 	auth.GasLimit = uint64(0x1312D00)
 	auth.GasPrice = gasPrice
 	auth.Context = ctx
@@ -81,7 +83,7 @@ func (c *RPCClientSet) transact(
 	}
 
 	// Play fake transaction to find error reason
-	gas, err := c.EstimateGas(ctx, ethereum.CallMsg{
+	_, err = c.EstimateGas(ctx, ethereum.CallMsg{
 		To:         tx.To(),
 		From:       auth.From,
 		Gas:        tx.Gas(),
@@ -93,8 +95,6 @@ func (c *RPCClientSet) transact(
 	if err != nil {
 		return nil, err
 	}
-	// Add margin to gas limit to avoid out of gas
-	auth.GasLimit = gas + gas/10
 
 	return exec(auth)
 }
