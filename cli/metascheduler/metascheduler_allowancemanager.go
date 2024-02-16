@@ -45,6 +45,10 @@ func (c *allowanceManager) SetAllowance(ctx context.Context, amount *big.Int) er
 	if err != nil {
 		return fmt.Errorf("failed to wait for transaction to be mined: %w", err)
 	}
+	if receipt.Status != 1 {
+		internallog.I.Error("transaction failed", zap.Any("receipt", receipt))
+		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
+	}
 	internallog.I.Debug("metascheduled job", zap.Any("receipt", receipt))
 	return nil
 }

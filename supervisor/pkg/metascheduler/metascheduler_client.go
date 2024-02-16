@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/ecdsa"
+	"fmt"
 	"math/big"
 
 	metaschedulerabi "github.com/deepsquare-io/grid/supervisor/generated/abi/metascheduler"
@@ -219,6 +220,10 @@ func (c *Client) Claim(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
+	if receipt.Status != 1 {
+		logger.I.Error("transaction failed", zap.Any("receipt", receipt))
+		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
+	}
 	logger.I.Debug("called ClaimNextJob", zap.Any("receipt", receipt))
 
 	return nil
@@ -266,6 +271,10 @@ func (c *Client) Register(
 	if err != nil {
 		return WrapError(err)
 	}
+	if receipt.Status != 1 {
+		logger.I.Error("transaction failed", zap.Any("receipt", receipt))
+		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
+	}
 	logger.I.Info("register mined", zap.Any("receipt", receipt))
 	return nil
 }
@@ -308,6 +317,10 @@ func (c *Client) SetJobStatus(
 	if err != nil {
 		logger.Error("failed to wait mined", zap.Error(err))
 		return WrapError(err)
+	}
+	if receipt.Status != 1 {
+		logger.Error("transaction failed", zap.Any("receipt", receipt))
+		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
 	}
 	logger.Debug(
 		"set job status",
@@ -463,6 +476,10 @@ func (c *Client) ClaimCancelling(ctx context.Context) error {
 	if err != nil {
 		return WrapError(err)
 	}
+	if receipt.Status != 1 {
+		logger.I.Error("transaction failed", zap.Any("receipt", receipt))
+		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
+	}
 	logger.I.Debug("called ClaimNextCancellingJob", zap.Any("receipt", receipt))
 
 	return nil
@@ -493,6 +510,10 @@ func (c *Client) ClaimTopUp(ctx context.Context) error {
 	receipt, err := bind.WaitMined(ctx, c, tx)
 	if err != nil {
 		return WrapError(err)
+	}
+	if receipt.Status != 1 {
+		logger.I.Error("transaction failed", zap.Any("receipt", receipt))
+		return fmt.Errorf("transaction failed: %v", receipt.TxHash.String())
 	}
 	logger.I.Debug("called ClaimNextTopUpJob", zap.Any("receipt", receipt))
 
