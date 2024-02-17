@@ -7,7 +7,7 @@ toolchain go1.22.0
 require (
 	github.com/99designs/gqlgen v0.17.44
 	github.com/ethereum/go-ethereum v1.12.2
-	github.com/go-chi/chi/v5 v5.0.11
+	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
 	github.com/gorilla/websocket v1.5.1
 	github.com/prometheus/client_golang v1.18.0

@@ -7,7 +7,7 @@ toolchain go1.22.0
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/ethereum/go-ethereum v1.12.2
-	github.com/go-chi/chi/v5 v5.0.11
+	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.4
