@@ -106,6 +106,8 @@ type model struct {
 
 	err            error
 	isTransferring bool
+
+	context context.Context
 }
 
 func (m model) Init() tea.Cmd {
@@ -132,7 +134,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, emitExitMsg)
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
-			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.transfer(context.TODO())))
+			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.transfer(m.context)))
 		case key.Matches(msg, m.keyMap.NextInput):
 			m.nextInput()
 		case key.Matches(msg, m.keyMap.PrevInput):

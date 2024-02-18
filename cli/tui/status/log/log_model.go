@@ -76,6 +76,8 @@ type model struct {
 	status                   metascheduler.JobStatus
 
 	showTimestamp bool
+
+	context context.Context
 }
 
 func (m model) Init() tea.Cmd {
@@ -116,7 +118,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case transitionMsg:
 		if (m.allocatedProviderAddress != common.Address{} && !isRunningOrFinished(m.status)) {
-			jobs, err := m.client.GetJobsByProvider(context.Background(), m.allocatedProviderAddress)
+			jobs, err := m.client.GetJobsByProvider(m.context, m.allocatedProviderAddress)
 			if err != nil {
 				internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 			}
@@ -137,17 +139,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case metascheduler.JobStatusMetaScheduled,
 				metascheduler.JobStatusScheduled:
 				m.messages.WriteString(fmt.Sprintf("\n(Job is %s)", metascheduler.JobStatus(msg.To)))
-				job, err := m.client.GetJob(context.Background(), m.jobID)
+				job, err := m.client.GetJob(m.context, m.jobID)
 				if err != nil {
 					internallog.I.Fatal("failed to fetch job info", zap.Error(err))
 				}
 				m.allocatedProviderAddress = job.ProviderAddr
-				p, err := m.client.GetProvider(context.Background(), m.allocatedProviderAddress)
+				p, err := m.client.GetProvider(m.context, m.allocatedProviderAddress)
 				if err != nil {
 					internallog.I.Fatal("failed to get provider info", zap.Error(err))
 				}
 				m.provider = p
-				jobs, err := m.client.GetJobsByProvider(context.Background(), m.allocatedProviderAddress)
+				jobs, err := m.client.GetJobsByProvider(m.context, m.allocatedProviderAddress)
 				if err != nil {
 					internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 				}

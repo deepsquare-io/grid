@@ -63,6 +63,8 @@ type model struct {
 
 	// detailsModel is nullable
 	detailsModel tea.Model
+
+	context context.Context
 }
 
 func (m *model) initializeRows(ctx context.Context) []table.Row {
@@ -130,7 +132,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case initRowsMsg:
-		rows := m.initializeRows(context.TODO())
+		rows := m.initializeRows(m.context)
 		m.table.SetRows(rows)
 	case ShowProviderDetailsMsg:
 		m.detailsModel = details.Model(provider.Detail(msg))

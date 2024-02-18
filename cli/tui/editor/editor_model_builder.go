@@ -16,6 +16,7 @@
 package editor
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -66,7 +67,7 @@ func prepareFiles() (words string, jobSchemaPath string, jobPath string, err err
 }
 
 // Build the bubbletea Model for the text editor.
-func (b *ModelBuilder) Build() tea.Model {
+func (b *ModelBuilder) Build(ctx context.Context) tea.Model {
 	if b.Client == nil {
 		panic("Client is nil")
 	}
@@ -101,9 +102,10 @@ func (b *ModelBuilder) Build() tea.Model {
 	inputs[jobNameInput].SetValue(jobName)
 
 	return &model{
-		code:   code,
-		inputs: inputs,
-		errors: make([]error, inputsSize),
+		context: ctx,
+		code:    code,
+		inputs:  inputs,
+		errors:  make([]error, inputsSize),
 		keyMap: keyMap{
 			EditAgain: key.NewBinding(
 				key.WithKeys("ctrl+e"),

@@ -71,6 +71,8 @@ type model struct {
 	isCancelling bool
 
 	err error
+
+	context context.Context
 }
 
 var zero = big.NewInt(0)
@@ -270,7 +272,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			row[4] = elapsed.String()
 			provider, ok := m.cacheProvider[m.it.Current().JobId]
 			if !ok {
-				p, err := m.client.GetProvider(context.Background(), job.ProviderAddr)
+				p, err := m.client.GetProvider(m.context, job.ProviderAddr)
 				if err != nil {
 					m.err = err
 				} else {
@@ -325,12 +327,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keyMap.TableKeyMap.LineDown):
 			if m.table.Cursor() == len(m.table.Rows())-1 {
-				m.addMoreRows(context.TODO())
+				m.addMoreRows(m.context)
 			}
 
 		case key.Matches(msg, m.keyMap.CancelJob):
 			if len(m.table.SelectedRow()) > 0 {
-				cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.CancelJob(context.TODO(), rowToJobID(m.table.SelectedRow()))))
+				cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.CancelJob(m.context, rowToJobID(m.table.SelectedRow()))))
 			}
 		case key.Matches(msg, m.keyMap.OpenLogs):
 			if len(m.table.SelectedRow()) > 0 {
@@ -406,6 +408,7 @@ func Model(
 	help.ShowAll = true
 
 	return &model{
+		context:    ctx,
 		table:      t,
 		idToRow:    idToRow,
 		it:         it,

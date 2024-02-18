@@ -56,6 +56,7 @@ func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
 	help.ShowAll = true
 
 	return &model{
+		context:  ctx,
 		viewport: vp,
 		spinner:  s,
 		watchLogs: makeWatchLogsModel(

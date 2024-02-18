@@ -133,6 +133,8 @@ type model struct {
 
 	err         error
 	isToppingUp bool
+
+	context context.Context
 }
 
 func (m model) Init() tea.Cmd {
@@ -160,7 +162,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Fetch provider prices
 		if (m.job.ProviderAddr != common.Address{}) {
-			cmds = append(cmds, m.loadProvider(context.TODO(), m.job.ProviderAddr))
+			cmds = append(cmds, m.loadProvider(m.context, m.job.ProviderAddr))
 		}
 	case errorMsg:
 		m.err = msg
@@ -175,7 +177,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, m.emitExitMsg())
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
-			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.topup(context.TODO())))
+			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.topup(m.context)))
 		case key.Matches(msg, m.keyMap.NextInput):
 			m.nextInput()
 		case key.Matches(msg, m.keyMap.PrevInput):

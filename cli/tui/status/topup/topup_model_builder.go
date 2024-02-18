@@ -34,7 +34,7 @@ type ModelBuilder struct {
 }
 
 // Build the bubbletea Model for the topup page.
-func (b *ModelBuilder) Build(jobID [32]byte) tea.Model {
+func (b *ModelBuilder) Build(ctx context.Context, jobID [32]byte) tea.Model {
 	if b.Client == nil {
 		panic("Client is nil")
 	}
@@ -53,11 +53,12 @@ func (b *ModelBuilder) Build(jobID [32]byte) tea.Model {
 	inputs[amountInput].Validate = validator.AllowedNumberChar
 
 	return &model{
+		context:  ctx,
 		client:   b.Client,
 		help:     help,
 		inputs:   inputs,
 		jobID:    jobID,
-		watchJob: makeWatchJobModel(context.TODO(), jobID, b.Watcher, b.Client),
+		watchJob: makeWatchJobModel(ctx, jobID, b.Watcher, b.Client),
 		errors:   make([]error, inputsSize),
 		keyMap: keyMap{
 			Exit: key.NewBinding(

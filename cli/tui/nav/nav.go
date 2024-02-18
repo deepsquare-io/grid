@@ -74,6 +74,8 @@ type model struct {
 	client      deepsquare.Client
 	watcher     deepsquare.Watcher
 	userAddress common.Address
+
+	context context.Context
 }
 
 type balanceMsg *big.Int
@@ -138,7 +140,7 @@ func (m *model) tick() tea.Msg {
 func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		m.statusModel.Init(),
-		m.watchEvents(context.TODO()),
+		m.watchEvents(m.context),
 		m.tick,
 	)
 }
@@ -168,28 +170,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, pageCmd)
 	case status.SelectJobMsg:
 		// Render job logs
-		m.logModel = m.logModelBuilder.Build(context.TODO(), msg)
+		m.logModel = m.logModelBuilder.Build(m.context, msg)
 		cmds = append(cmds, m.logModel.Init())
 	case status.SubmitJobMsg:
-		m.editorModel = m.editorModelBuilder.Build()
+		m.editorModel = m.editorModelBuilder.Build(m.context)
 		cmds = append(
 			cmds,
 			m.editorModel.Init(),
 		)
 	case status.TransferCreditsMsg:
-		m.transferModel = m.transferModelBuilder.Build()
+		m.transferModel = m.transferModelBuilder.Build(m.context)
 		cmds = append(
 			cmds,
 			m.transferModel.Init(),
 		)
 	case status.ViewProvidersMsg:
-		m.providerModel = m.providerModelBuilder.Build()
+		m.providerModel = m.providerModelBuilder.Build(m.context)
 		cmds = append(
 			cmds,
 			m.providerModel.Init(),
 		)
 	case status.TopupJobMsg:
-		m.topupModel = m.topupModelBuilder.Build(msg)
+		m.topupModel = m.topupModelBuilder.Build(m.context, msg)
 		cmds = append(
 			cmds,
 			m.topupModel.Init(),

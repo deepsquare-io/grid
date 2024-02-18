@@ -16,6 +16,8 @@
 package transfer
 
 import (
+	"context"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -31,7 +33,7 @@ type ModelBuilder struct {
 }
 
 // Build the bubbletea model for the transfer page.
-func (b *ModelBuilder) Build() tea.Model {
+func (b *ModelBuilder) Build(ctx context.Context) tea.Model {
 	if b.Client == nil {
 		panic("Client is nil")
 	}
@@ -53,10 +55,11 @@ func (b *ModelBuilder) Build() tea.Model {
 	inputs[amountInput].Validate = validator.AllowedNumberChar
 
 	return &model{
-		client: b.Client,
-		help:   help,
-		inputs: inputs,
-		errors: make([]error, inputsSize),
+		context: ctx,
+		client:  b.Client,
+		help:    help,
+		inputs:  inputs,
+		errors:  make([]error, inputsSize),
 		keyMap: keyMap{
 			Exit: key.NewBinding(
 				key.WithKeys("esc", "ctrl+q"),

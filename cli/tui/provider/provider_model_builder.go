@@ -16,6 +16,7 @@
 package provider
 
 import (
+	"context"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -35,7 +36,7 @@ type ModelBuilder struct {
 }
 
 // Build the bubbletea Model for the provider page.
-func (b *ModelBuilder) Build() tea.Model {
+func (b *ModelBuilder) Build(ctx context.Context) tea.Model {
 	if b.Client == nil {
 		panic("Client is nil")
 	}
@@ -94,8 +95,9 @@ func (b *ModelBuilder) Build() tea.Model {
 	help.ShowAll = true
 
 	return &model{
-		table: t,
-		help:  help,
+		table:   t,
+		help:    help,
+		context: ctx,
 		keyMap: keyMap{
 			TableKeyMap: tableKeymap,
 			ShowProviderDetails: key.NewBinding(

@@ -100,6 +100,8 @@ type model struct {
 	client deepsquare.Client
 
 	isSubmitting bool
+
+	context context.Context
 }
 
 type editorDone struct {
@@ -196,7 +198,7 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 
 func (m model) Init() tea.Cmd {
 	return tea.Batch(
-		m.openEditor(context.TODO(), m.jobPath),
+		m.openEditor(m.context, m.jobPath),
 		m.watchFileChanges.Init(),
 		textinput.Blink,
 	)
@@ -237,11 +239,11 @@ switchmsg:
 		}
 		switch {
 		case key.Matches(msg, m.keyMap.EditAgain):
-			cmds = append(cmds, m.openEditor(context.TODO(), m.jobPath))
+			cmds = append(cmds, m.openEditor(m.context, m.jobPath))
 		case key.Matches(msg, m.keyMap.Exit):
 			cmds = append(cmds, m.emitExitMsg([32]byte{}))
 		case msg.String() == "enter" && m.focused == len(m.inputs)-1:
-			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.submitJob(context.TODO(), m.jobPath)))
+			cmds = append(cmds, tea.Sequence(emitClearErrorsMsg, m.submitJob(m.context, m.jobPath)))
 		case key.Matches(msg, m.keyMap.NextInput):
 			m.nextInput()
 		case key.Matches(msg, m.keyMap.PrevInput):

@@ -91,6 +91,8 @@ func (b *ModelBuilder) Build(ctx context.Context) tea.Model {
 		panic("watcher is nil")
 	}
 	return &model{
+		context: ctx,
+
 		logs:          make(chan ethtypes.Log, 100),
 		balanceChan:   make(chan *big.Int, 10),
 		balance:       new(big.Int),
