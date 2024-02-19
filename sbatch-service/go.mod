@@ -19,7 +19,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/lithammer/shortuuid/v4 v4.0.0
 	github.com/opencontainers/image-spec v1.1.0
-	github.com/redis/go-redis/v9 v9.4.0
+	github.com/redis/go-redis/v9 v9.5.0
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.27.1
