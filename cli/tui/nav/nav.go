@@ -71,8 +71,8 @@ type model struct {
 	providerModelBuilder provider.ModelBuilder
 	topupModelBuilder    topup.ModelBuilder
 
-	client      deepsquare.Client
-	watcher     deepsquare.Watcher
+	client      *deepsquare.Client
+	watcher     *deepsquare.Watcher
 	userAddress common.Address
 
 	context context.Context
@@ -97,11 +97,11 @@ func (m *model) watchEvents(
 		}
 		defer sub.Unsubscribe()
 
-		allowances, err := m.client.ReduceToAllowance(ctx, approvals)
+		allowances, err := m.client.AllowanceManager.ReduceToAllowance(ctx, approvals)
 		if err != nil {
 			internallog.I.Fatal("failed to watch allowances", zap.Error(err))
 		}
-		balances, err := m.client.ReduceToBalance(ctx, transfers)
+		balances, err := m.client.CreditManager.ReduceToBalance(ctx, transfers)
 		if err != nil {
 			internallog.I.Fatal("failed to watch balances", zap.Error(err))
 		}

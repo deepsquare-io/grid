@@ -32,8 +32,8 @@ type transitionMsg types.JobTransition
 func makeWatchTransitionModel(
 	ctx context.Context,
 	jobID [32]byte,
-	watcher deepsquare.Watcher,
-	client deepsquare.Client,
+	watcher *deepsquare.Watcher,
+	client *deepsquare.Client,
 ) channel.Model[transitionMsg] {
 	return channel.Model[transitionMsg]{
 		Channel: make(chan transitionMsg, 100),

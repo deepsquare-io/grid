@@ -32,7 +32,7 @@ import (
 
 // ModelBuilder contains the dependencies used to build the bubbletea Model for the provider page.
 type ModelBuilder struct {
-	Client deepsquare.Client
+	Client *deepsquare.Client
 }
 
 // Build the bubbletea Model for the provider page.
@@ -110,6 +110,6 @@ func (b *ModelBuilder) Build(ctx context.Context) tea.Model {
 			),
 		},
 		providers: make(map[string]provider.Detail),
-		client:    b.Client,
+		client:    b.Client.ProviderManager,
 	}
 }

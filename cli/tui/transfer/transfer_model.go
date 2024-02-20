@@ -78,7 +78,7 @@ func (m *model) transfer(ctx context.Context) tea.Cmd {
 				}
 				amount := ether.ToWei(in)
 
-				if err := m.client.Transfer(ctx, to, amount); err != nil {
+				if err := m.client.CreditManager.Transfer(ctx, to, amount); err != nil {
 					return errorMsg(err)
 				}
 				return emitExitMsg
@@ -96,7 +96,7 @@ func (m *model) transfer(ctx context.Context) tea.Cmd {
 type model struct {
 	help help.Model
 
-	client deepsquare.Client
+	client *deepsquare.Client
 
 	inputs  []textinput.Model
 	errors  []error

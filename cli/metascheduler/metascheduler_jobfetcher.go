@@ -25,12 +25,16 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
-type jobFetcher struct {
+var _ job.Fetcher = (*JobFetcher)(nil)
+
+// JobFetcher is a fetcher for jobs.
+type JobFetcher struct {
 	*RPCClientSet
 	*metaschedulerabi.IJobRepository
 }
 
-func (c *jobFetcher) GetJob(ctx context.Context, id [32]byte) (types.Job, error) {
+// GetJob returns a job by its ID.
+func (c *JobFetcher) GetJob(ctx context.Context, id [32]byte) (types.Job, error) {
 	job, err := c.Get(&bind.CallOpts{
 		Context: ctx,
 	}, id)
@@ -40,60 +44,25 @@ func (c *jobFetcher) GetJob(ctx context.Context, id [32]byte) (types.Job, error)
 	return &job, nil
 }
 
-type jobIterator struct {
-	job.Fetcher
-	array  [][32]byte
-	length int
-	index  int
-	job    types.Job
-	err    error
-}
-
-func (it *jobIterator) Next(
-	ctx context.Context,
-) (ok bool) {
-	if it.index+1 >= it.length {
+// Next returns the next job in the iterator.
+func (c *JobFetcher) Next(ctx context.Context, it job.LazyIterator) (ok bool) {
+	if it.Index()+1 >= it.Size() {
 		return false
 	}
-	job, err := it.GetJob(ctx, it.array[it.index+1])
+	job, err := c.GetJob(ctx, it.GetNextID())
 	if err != nil {
-		it.err = fmt.Errorf("failed to get job: %w", err)
+		it.SetError(fmt.Errorf("failed to get job: %w", err))
 		return false
 	}
 
-	it.index++
-	it.job = job
+	it.IncrementIndex()
+	it.SetJob(job)
 
 	return true
 }
 
-func (it *jobIterator) Prev(
-	ctx context.Context,
-) (ok bool) {
-	if it.index-1 < 0 {
-		return false
-	}
-	job, err := it.GetJob(ctx, it.array[it.index-1])
-	if err != nil {
-		it.err = fmt.Errorf("failed to get job: %w", err)
-		return false
-	}
-
-	it.index--
-	it.job = job
-
-	return true
-}
-
-func (it *jobIterator) Current() types.Job {
-	return it.job
-}
-
-func (it *jobIterator) Error() error {
-	return it.err
-}
-
-func (c *jobFetcher) GetJobs(ctx context.Context) (job.LazyIterator, error) {
+// GetJobs returns all jobs of the user.
+func (c *JobFetcher) GetJobs(ctx context.Context) (*job.Iterator, error) {
 	jobIDs, err := c.GetByCustomer(&bind.CallOpts{
 		Context: ctx,
 	}, c.from())
@@ -104,11 +73,5 @@ func (c *jobFetcher) GetJobs(ctx context.Context) (job.LazyIterator, error) {
 	for i, j := 0, len(jobIDs)-1; i < j; i, j = i+1, j-1 {
 		jobIDs[i], jobIDs[j] = jobIDs[j], jobIDs[i]
 	}
-	return &jobIterator{
-		Fetcher: c,
-		array:   jobIDs,
-		length:  len(jobIDs),
-		index:   -1,
-		job:     nil,
-	}, nil
+	return job.NewIterator(jobIDs), nil
 }

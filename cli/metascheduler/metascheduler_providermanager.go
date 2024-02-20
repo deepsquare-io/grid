@@ -32,12 +32,16 @@ import (
 	"go.uber.org/zap"
 )
 
-type providerManager struct {
+var _ provider.Manager = (*ProviderManager)(nil)
+
+// ProviderManager is a manager for providers.
+type ProviderManager struct {
 	*RPCClientSet
 	*metaschedulerabi.IProviderManager
 }
 
-func (c *providerManager) ApproveProvider(ctx context.Context, provider common.Address) error {
+// ApproveProvider approves a provider.
+func (c *ProviderManager) ApproveProvider(ctx context.Context, provider common.Address) error {
 	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*coretypes.Transaction, error) {
 		return c.IProviderManager.Approve(auth, provider)
 	})
@@ -52,7 +56,8 @@ func (c *providerManager) ApproveProvider(ctx context.Context, provider common.A
 	return CheckReceiptError(ctx, c, tx, receipt)
 }
 
-func (c *providerManager) RemoveProvider(ctx context.Context, provider common.Address) error {
+// RemoveProvider removes a provider.
+func (c *ProviderManager) RemoveProvider(ctx context.Context, provider common.Address) error {
 	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*coretypes.Transaction, error) {
 		return c.IProviderManager.Remove(auth, provider)
 	})
@@ -67,7 +72,8 @@ func (c *providerManager) RemoveProvider(ctx context.Context, provider common.Ad
 	return CheckReceiptError(ctx, c, tx, receipt)
 }
 
-func (c *providerManager) GetProvider(
+// GetProvider returns a provider.
+func (c *ProviderManager) GetProvider(
 	ctx context.Context,
 	address common.Address,
 	opts ...provider.GetProviderOption,
@@ -132,7 +138,8 @@ func (c *providerManager) GetProvider(
 	}, nil
 }
 
-func (c *providerManager) GetProviders(
+// GetProviders returns all providers.
+func (c *ProviderManager) GetProviders(
 	ctx context.Context,
 	opts ...provider.GetProviderOption,
 ) (providers []provider.Detail, err error) {

@@ -37,7 +37,7 @@ import (
 
 // ModelBuilder contains the dependencies used to build the bubbletea Model for the text editor.
 type ModelBuilder struct {
-	Client deepsquare.Client
+	Client *deepsquare.Client
 }
 
 func prepareFiles() (words string, jobSchemaPath string, jobPath string, err error) {

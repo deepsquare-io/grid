@@ -55,14 +55,23 @@ type Scheduler interface {
 //
 // When calling Next or Prev, a request will be sent to the data source.
 type LazyIterator interface {
-	// Fetches the next job.
-	Next(ctx context.Context) (ok bool)
-	// Fetches the previous job.
-	Prev(ctx context.Context) (ok bool)
 	// Get the current job.
 	Current() types.Job
 	// Get the current error.
 	Error() error
+	// Get the current index.
+	Index() int
+	// Get the current size.
+	Size() int
+
+	// Set the error.
+	SetError(err error)
+	// Increment the index.
+	IncrementIndex()
+	// Set the current job.
+	SetJob(job types.Job)
+	// Get the next index.
+	GetNextID() [32]byte
 }
 
 // Fetcher fetches jobs.
@@ -70,7 +79,10 @@ type Fetcher interface {
 	// Get a job.
 	GetJob(ctx context.Context, id [32]byte) (types.Job, error)
 	// Get a iterator of jobs. If there is no job, nil is returned.
-	GetJobs(ctx context.Context) (LazyIterator, error)
+	GetJobs(ctx context.Context) (*Iterator, error)
+
+	// Fetches the next job.
+	Next(ctx context.Context, it LazyIterator) (ok bool)
 }
 
 // MetaScheduledIDsFetcher fetches meta-scheduled jobs ids.
@@ -83,4 +95,63 @@ type MetaScheduledIDsFetcher interface {
 // ByProviderFetcher fetches the jobs meta-scheduled or running on the provider.
 type ByProviderFetcher interface {
 	GetJobsByProvider(ctx context.Context, providerAddress common.Address) ([]types.Job, error)
+}
+
+// Iterator is an iterator of jobs.
+type Iterator struct {
+	array  [][32]byte
+	length int
+	index  int
+	job    types.Job
+	err    error
+}
+
+// NewIterator creates a new iterator.
+func NewIterator(array [][32]byte) *Iterator {
+	return &Iterator{
+		array:  array,
+		length: len(array),
+		index:  1,
+		job:    nil,
+	}
+}
+
+// Next returns the next job.
+func (it *Iterator) GetNextID() [32]byte {
+	return it.array[it.index+1]
+}
+
+// IncrementIndex increments the index.
+func (it *Iterator) IncrementIndex() {
+	it.index++
+}
+
+// Index returns the current index.
+func (it *Iterator) Index() int {
+	return it.index
+}
+
+// SetError sets the error.
+func (it *Iterator) SetError(err error) {
+	it.err = err
+}
+
+// SetJob sets the current job.
+func (it *Iterator) SetJob(job types.Job) {
+	it.job = job
+}
+
+// Size returns the size of the array.
+func (it *Iterator) Size() int {
+	return it.length
+}
+
+// Current returns the current job.
+func (it *Iterator) Current() types.Job {
+	return it.job
+}
+
+// Error returns the current error.
+func (it *Iterator) Error() error {
+	return it.err
 }

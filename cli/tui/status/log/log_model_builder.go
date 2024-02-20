@@ -33,8 +33,8 @@ import (
 
 // ModelBuilder contains the dependencies to build the model for the log page.
 type ModelBuilder struct {
-	Client  deepsquare.Client
-	Watcher deepsquare.Watcher
+	Client  *deepsquare.Client
+	Watcher *deepsquare.Watcher
 }
 
 // Build the bubbletea model for the log page.

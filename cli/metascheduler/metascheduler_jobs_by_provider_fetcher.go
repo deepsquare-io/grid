@@ -24,7 +24,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type runningJobsByProviderFetcher struct {
+// RunningJobsByProviderFetcher is a fetcher for jobs by provider.
+type RunningJobsByProviderFetcher struct {
 	job.MetaScheduledIDsFetcher
 	job.Fetcher
 }
@@ -33,14 +34,15 @@ type runningJobsByProviderFetcher struct {
 func NewJobsByProviderFetcher(
 	oracle job.MetaScheduledIDsFetcher,
 	fetcher job.Fetcher,
-) job.ByProviderFetcher {
-	return &runningJobsByProviderFetcher{
+) *RunningJobsByProviderFetcher {
+	return &RunningJobsByProviderFetcher{
 		MetaScheduledIDsFetcher: oracle,
 		Fetcher:                 fetcher,
 	}
 }
 
-func (f *runningJobsByProviderFetcher) GetJobsByProvider(
+// GetJobsByProvider returns all jobs for a given provider.
+func (f *RunningJobsByProviderFetcher) GetJobsByProvider(
 	ctx context.Context,
 	providerAddress common.Address,
 ) ([]types.Job, error) {

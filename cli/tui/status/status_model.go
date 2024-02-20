@@ -62,7 +62,7 @@ type model struct {
 	it            job.LazyIterator
 	help          help.Model
 	watchJobs     channel.Model[transitionMsg]
-	client        deepsquare.Client
+	client        *deepsquare.Client
 	keyMap        keyMap
 	cacheProvider map[[32]byte]provider.Detail
 
@@ -181,15 +181,12 @@ func initializeRows(
 		log.I.Error("failed to get jobs", zap.Error(err))
 		return nil, nil, nil, nil, it
 	}
-	if it == nil {
-		return nil, nil, nil, nil, it
-	}
 	rows = make([]table.Row, 0, style.StandardHeight)
 	idToRow = make(map[[32]byte]table.Row)
 	idToJob = make(map[[32]byte]types.Job)
 	runningIDs = make(map[[32]byte]bool)
 	for i := 0; i < style.StandardHeight; i++ {
-		if !it.Next(ctx) {
+		if !fetcher.Next(ctx, it) {
 			if it.Error() != nil {
 				log.I.Error("failed to get next job, ignoring...", zap.Error(err))
 			}
@@ -217,7 +214,7 @@ func (m *model) addMoreRows(ctx context.Context) {
 	rows = append(rows, m.table.Rows()...)
 	var err error
 	for i := 0; i < style.StandardHeight; i++ {
-		if !m.it.Next(ctx) {
+		if !m.client.Next(ctx, m.it) {
 			if m.it.Error() != nil {
 				log.I.Error("failed to get next job, ignoring...", zap.Error(err))
 			}
@@ -272,7 +269,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			row[4] = elapsed.String()
 			provider, ok := m.cacheProvider[m.it.Current().JobId]
 			if !ok {
-				p, err := m.client.GetProvider(m.context, job.ProviderAddr)
+				p, err := m.client.ProviderManager.GetProvider(m.context, job.ProviderAddr)
 				if err != nil {
 					m.err = err
 				} else {
@@ -363,8 +360,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // Model builds the bubbletea model for the status page.
 func Model(
 	ctx context.Context,
-	client deepsquare.Client,
-	watcher deepsquare.Watcher,
+	client *deepsquare.Client,
+	watcher *deepsquare.Watcher,
 	userAddress common.Address,
 ) tea.Model {
 	if client == nil {

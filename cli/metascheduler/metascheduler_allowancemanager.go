@@ -22,17 +22,22 @@ import (
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/allowance"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	coretypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
-type allowanceManager struct {
+var _ allowance.Manager = (*AllowanceManager)(nil)
+
+// AllowanceManager is a manager for allowances.
+type AllowanceManager struct {
 	*RPCClientSet
 	*metaschedulerabi.IERC20
 }
 
-func (c *allowanceManager) SetAllowance(ctx context.Context, amount *big.Int) error {
+// SetAllowance sets the allowance for the metascheduler.
+func (c *AllowanceManager) SetAllowance(ctx context.Context, amount *big.Int) error {
 	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*coretypes.Transaction, error) {
 		return c.Approve(auth, c.MetaschedulerAddress, amount)
 	})
@@ -47,17 +52,20 @@ func (c *allowanceManager) SetAllowance(ctx context.Context, amount *big.Int) er
 	return CheckReceiptError(ctx, c, tx, receipt)
 }
 
-func (c *allowanceManager) ClearAllowance(ctx context.Context) error {
+// ClearAllowance clears the allowance for the metascheduler.
+func (c *AllowanceManager) ClearAllowance(ctx context.Context) error {
 	return c.SetAllowance(ctx, big.NewInt(0))
 }
 
-func (c *allowanceManager) GetAllowance(ctx context.Context) (*big.Int, error) {
+// GetAllowance gets the allowance for the metascheduler.
+func (c *AllowanceManager) GetAllowance(ctx context.Context) (*big.Int, error) {
 	return c.Allowance(&bind.CallOpts{
 		Context: ctx,
 	}, c.from(), c.MetaschedulerAddress)
 }
 
-func (c *allowanceManager) ReduceToAllowance(
+// ReduceToAllowance reduces the stream of allowance to the allowance.
+func (c *AllowanceManager) ReduceToAllowance(
 	ctx context.Context,
 	approvals <-chan types.Approval,
 ) (<-chan *big.Int, error) {

@@ -79,11 +79,11 @@ func (m *model) topup(ctx context.Context) tea.Cmd {
 				}
 				amount := ether.ToWei(in)
 
-				curr, err := m.client.GetAllowance(ctx)
+				curr, err := m.client.AllowanceManager.GetAllowance(ctx)
 				if err != nil {
 					return err
 				}
-				if err = m.client.SetAllowance(ctx, curr.Add(curr, amount)); err != nil {
+				if err = m.client.AllowanceManager.SetAllowance(ctx, curr.Add(curr, amount)); err != nil {
 					return err
 				}
 
@@ -106,7 +106,7 @@ type updateProviderMsg metaschedulerabi.Provider
 
 func (m *model) loadProvider(ctx context.Context, provider common.Address) tea.Cmd {
 	return func() tea.Msg {
-		p, err := m.client.GetProvider(ctx, provider)
+		p, err := m.client.ProviderManager.GetProvider(ctx, provider)
 		if err != nil {
 			return errorMsg(err)
 		}
@@ -117,7 +117,7 @@ func (m *model) loadProvider(ctx context.Context, provider common.Address) tea.C
 type model struct {
 	help help.Model
 
-	client deepsquare.Client
+	client *deepsquare.Client
 
 	jobID   [32]byte
 	inputs  []textinput.Model

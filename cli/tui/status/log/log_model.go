@@ -63,7 +63,7 @@ type model struct {
 	watchLogs   channel.Model[logMsg]
 	transitions channel.Model[transitionMsg]
 	title       string
-	client      deepsquare.Client
+	client      *deepsquare.Client
 
 	help   help.Model
 	keyMap keyMap
@@ -144,7 +144,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					internallog.I.Fatal("failed to fetch job info", zap.Error(err))
 				}
 				m.allocatedProviderAddress = job.ProviderAddr
-				p, err := m.client.GetProvider(m.context, m.allocatedProviderAddress)
+				p, err := m.client.ProviderManager.GetProvider(m.context, m.allocatedProviderAddress)
 				if err != nil {
 					internallog.I.Fatal("failed to get provider info", zap.Error(err))
 				}

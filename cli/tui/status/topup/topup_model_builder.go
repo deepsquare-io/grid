@@ -29,8 +29,8 @@ import (
 
 // ModelBuilder contains the dependencies used to build the bubbletea Model for the topup page.
 type ModelBuilder struct {
-	Client  deepsquare.Client
-	Watcher deepsquare.Watcher
+	Client  *deepsquare.Client
+	Watcher *deepsquare.Watcher
 }
 
 // Build the bubbletea Model for the topup page.

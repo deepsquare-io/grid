@@ -47,7 +47,7 @@ func clientExample(ctx context.Context) {
 	}
 
 	// Test the client by checking the balance
-	value, err := client.Balance(ctx)
+	value, err := client.CreditManager.Balance(ctx)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

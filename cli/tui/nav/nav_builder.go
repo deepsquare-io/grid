@@ -34,8 +34,8 @@ import (
 // ModelBuilder contains the dependencies used to build the bubbletea Model for the navigator.
 type ModelBuilder struct {
 	userAddress          common.Address
-	client               deepsquare.Client
-	watcher              deepsquare.Watcher
+	client               *deepsquare.Client
+	watcher              *deepsquare.Watcher
 	version              string
 	availableVersion     string
 	metaschedulerAddress string
@@ -53,13 +53,13 @@ func (b *ModelBuilder) WithUserAddress(userAddress common.Address) *ModelBuilder
 }
 
 // WithClient sets the DeepSquare Client.
-func (b *ModelBuilder) WithClient(client deepsquare.Client) *ModelBuilder {
+func (b *ModelBuilder) WithClient(client *deepsquare.Client) *ModelBuilder {
 	b.client = client
 	return b
 }
 
 // WithWatcher sets the DeepSquare Watcher.
-func (b *ModelBuilder) WithWatcher(watcher deepsquare.Watcher) *ModelBuilder {
+func (b *ModelBuilder) WithWatcher(watcher *deepsquare.Watcher) *ModelBuilder {
 	b.watcher = watcher
 	return b
 }

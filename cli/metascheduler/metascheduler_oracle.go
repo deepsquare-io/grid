@@ -24,10 +24,13 @@ import (
 	"github.com/deepsquare-io/grid/cli/types/job"
 )
 
+var _ job.MetaScheduledIDsFetcher = (*Oracle)(nil)
+
 // DefaultOracleURL is the default oracle URL.
 const DefaultOracleURL = "https://meta-scheduler.deepsquare.run"
 
-type oracle struct {
+// Oracle is a client for the meta-scheduler oracle.
+type Oracle struct {
 	url  string
 	opts OracleOptions
 }
@@ -38,20 +41,21 @@ type OracleOptions struct {
 }
 
 // NewOracle instanciates an Oracle.
-func NewOracle(url string, opts OracleOptions) job.MetaScheduledIDsFetcher {
+func NewOracle(url string, opts OracleOptions) *Oracle {
 	if url == "" {
 		url = DefaultOracleURL
 	}
 	if opts.Client == nil {
 		opts.Client = http.DefaultClient
 	}
-	return &oracle{
+	return &Oracle{
 		url:  url,
 		opts: opts,
 	}
 }
 
-func (o *oracle) GetMetaScheduledJobIDs(ctx context.Context) ([][32]byte, error) {
+// GetMetaScheduledJobIDs returns the IDs of all running jobs.
+func (o *Oracle) GetMetaScheduledJobIDs(ctx context.Context) ([][32]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", o.url, nil)
 	if err != nil {
 		return nil, err

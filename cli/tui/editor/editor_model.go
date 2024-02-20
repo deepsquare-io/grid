@@ -97,7 +97,7 @@ type model struct {
 	help   help.Model
 	keyMap keyMap
 
-	client deepsquare.Client
+	client *deepsquare.Client
 
 	isSubmitting bool
 
@@ -157,7 +157,7 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 					return errorMsg(err)
 				}
 				allocatedCreditsBigF := new(big.Float).SetFloat64(allocatedCreditsF)
-				curr, err := m.client.GetAllowance(ctx)
+				curr, err := m.client.AllowanceManager.GetAllowance(ctx)
 				if err != nil {
 					return errorMsg(err)
 				}
@@ -168,7 +168,7 @@ func (m *model) submitJob(ctx context.Context, jobPath string) tea.Cmd {
 
 				// Mutate
 				allocatedCreditsBigI := ether.ToWei(allocatedCreditsBigF)
-				if err = m.client.SetAllowance(ctx, curr.Add(curr, allocatedCreditsBigI)); err != nil {
+				if err = m.client.AllowanceManager.SetAllowance(ctx, curr.Add(curr, allocatedCreditsBigI)); err != nil {
 					return errorMsg(err)
 				}
 

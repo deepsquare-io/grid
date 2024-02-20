@@ -80,19 +80,19 @@ func (_c *Fetcher_GetJob_Call) RunAndReturn(run func(context.Context, [32]byte) 
 }
 
 // GetJobs provides a mock function with given fields: ctx
-func (_m *Fetcher) GetJobs(ctx context.Context) (job.LazyIterator, error) {
+func (_m *Fetcher) GetJobs(ctx context.Context) (*job.Iterator, error) {
 	ret := _m.Called(ctx)
 
-	var r0 job.LazyIterator
+	var r0 *job.Iterator
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (job.LazyIterator, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) (*job.Iterator, error)); ok {
 		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) job.LazyIterator); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) *job.Iterator); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(job.LazyIterator)
+			r0 = ret.Get(0).(*job.Iterator)
 		}
 	}
 
@@ -123,12 +123,55 @@ func (_c *Fetcher_GetJobs_Call) Run(run func(ctx context.Context)) *Fetcher_GetJ
 	return _c
 }
 
-func (_c *Fetcher_GetJobs_Call) Return(_a0 job.LazyIterator, _a1 error) *Fetcher_GetJobs_Call {
+func (_c *Fetcher_GetJobs_Call) Return(_a0 *job.Iterator, _a1 error) *Fetcher_GetJobs_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Fetcher_GetJobs_Call) RunAndReturn(run func(context.Context) (job.LazyIterator, error)) *Fetcher_GetJobs_Call {
+func (_c *Fetcher_GetJobs_Call) RunAndReturn(run func(context.Context) (*job.Iterator, error)) *Fetcher_GetJobs_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Next provides a mock function with given fields: ctx, it
+func (_m *Fetcher) Next(ctx context.Context, it job.LazyIterator) bool {
+	ret := _m.Called(ctx, it)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context, job.LazyIterator) bool); ok {
+		r0 = rf(ctx, it)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// Fetcher_Next_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Next'
+type Fetcher_Next_Call struct {
+	*mock.Call
+}
+
+// Next is a helper method to define mock.On call
+//   - ctx context.Context
+//   - it job.LazyIterator
+func (_e *Fetcher_Expecter) Next(ctx interface{}, it interface{}) *Fetcher_Next_Call {
+	return &Fetcher_Next_Call{Call: _e.mock.On("Next", ctx, it)}
+}
+
+func (_c *Fetcher_Next_Call) Run(run func(ctx context.Context, it job.LazyIterator)) *Fetcher_Next_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(job.LazyIterator))
+	})
+	return _c
+}
+
+func (_c *Fetcher_Next_Call) Return(ok bool) *Fetcher_Next_Call {
+	_c.Call.Return(ok)
+	return _c
+}
+
+func (_c *Fetcher_Next_Call) RunAndReturn(run func(context.Context, job.LazyIterator) bool) *Fetcher_Next_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -31,20 +31,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// The Service is used to interact with the sbatch hosting service.
-type Service interface {
-	// Submit a job in the batch service.
-	Submit(ctx context.Context, job *Job) (string, error)
-}
-
-type service struct {
+// Service is a client for the SBatchService.
+type Service struct {
 	*http.Client
 	endpoint string
 }
 
 // NewService creates a new Service.
-func NewService(client *http.Client, endpoint string) Service {
-	return &service{
+func NewService(client *http.Client, endpoint string) *Service {
+	return &Service{
 		Client:   client,
 		endpoint: endpoint,
 	}
@@ -60,7 +55,8 @@ type submitResponseData struct {
 	Submit string `json:"submit"`
 }
 
-func (s *service) Submit(ctx context.Context, job *Job) (string, error) {
+// Submit submits a job to the SBatchService.
+func (s *Service) Submit(ctx context.Context, job *Job) (string, error) {
 	r := graphql.Request{
 		Query: submitMutation,
 		Variables: map[string]interface{}{

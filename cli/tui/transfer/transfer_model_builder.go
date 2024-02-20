@@ -29,7 +29,7 @@ import (
 
 // ModelBuilder contains the dependencies to build the model for the transfer page.
 type ModelBuilder struct {
-	Client deepsquare.Client
+	Client *deepsquare.Client
 }
 
 // Build the bubbletea model for the transfer page.

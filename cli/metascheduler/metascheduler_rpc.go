@@ -22,10 +22,6 @@ import (
 
 	"github.com/deepsquare-io/grid/cli/sbatch"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
-	"github.com/deepsquare-io/grid/cli/types/allowance"
-	"github.com/deepsquare-io/grid/cli/types/credit"
-	"github.com/deepsquare-io/grid/cli/types/job"
-	"github.com/deepsquare-io/grid/cli/types/provider"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -106,23 +102,23 @@ func NewRPCClientSet(b Backend) *RPCClientSet {
 	}
 }
 
-// JobScheduler creates a [types.JobScheduler].
+// JobScheduler creates a [JobScheduler].
 func (c *RPCClientSet) JobScheduler(
-	sbatch sbatch.Service,
-) job.Scheduler {
+	sbatch *sbatch.Service,
+) *JobScheduler {
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
 	}
-	return &jobScheduler{
+	return &JobScheduler{
 		RPCClientSet:  c,
 		MetaScheduler: m,
 		Service:       sbatch,
 	}
 }
 
-// JobFetcher creates a [job.Fetcher].
-func (c *RPCClientSet) JobFetcher() job.Fetcher {
+// JobFetcher creates a [JobFetcher].
+func (c *RPCClientSet) JobFetcher() *JobFetcher {
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
@@ -136,14 +132,14 @@ func (c *RPCClientSet) JobFetcher() job.Fetcher {
 		panic(fmt.Errorf("failed to instanciate JobRepository: %w", err))
 	}
 
-	return &jobFetcher{
+	return &JobFetcher{
 		RPCClientSet:   c,
 		IJobRepository: jobs,
 	}
 }
 
-// CreditManager creates a [credit.Manager].
-func (c *RPCClientSet) CreditManager() credit.Manager {
+// CreditManager creates a [CreditManager].
+func (c *RPCClientSet) CreditManager() *CreditManager {
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
@@ -156,14 +152,14 @@ func (c *RPCClientSet) CreditManager() credit.Manager {
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate Credit: %w", err))
 	}
-	return &creditManager{
+	return &CreditManager{
 		RPCClientSet: c,
 		IERC20:       ierc20,
 	}
 }
 
-// AllowanceManager creates an [allowance.Manager].
-func (c *RPCClientSet) AllowanceManager() allowance.Manager {
+// AllowanceManager creates an [AllowanceManager].
+func (c *RPCClientSet) AllowanceManager() *AllowanceManager {
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
@@ -176,14 +172,14 @@ func (c *RPCClientSet) AllowanceManager() allowance.Manager {
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate CreditManager: %w", err))
 	}
-	return &allowanceManager{
+	return &AllowanceManager{
 		RPCClientSet: c,
 		IERC20:       ierc20,
 	}
 }
 
-// ProviderManager creates a [provider.Manager].
-func (c *RPCClientSet) ProviderManager() provider.Manager {
+// ProviderManager creates a [ProviderManager].
+func (c *RPCClientSet) ProviderManager() *ProviderManager {
 	m, err := metaschedulerabi.NewMetaScheduler(c.MetaschedulerAddress, c)
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
@@ -196,7 +192,7 @@ func (c *RPCClientSet) ProviderManager() provider.Manager {
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate CreditManager: %w", err))
 	}
-	return &providerManager{
+	return &ProviderManager{
 		RPCClientSet:     c,
 		IProviderManager: pm,
 	}

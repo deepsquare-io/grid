@@ -49,11 +49,11 @@ Example:
 	})
 
 	// Example of job submit
-	curr, err := client.GetAllowance(ctx)
+	curr, err := client.AllowanceManager.GetAllowance(ctx)
 	if err != nil {
 		// ...
 	}
-	err = client.SetAllowance(ctx, curr.Add(curr, lockedAmount))
+	err = client.AllowanceManager.SetAllowance(ctx, curr.Add(curr, lockedAmount))
 	if err != nil {
 		// ...
 	}

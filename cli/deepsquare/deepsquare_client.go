@@ -20,7 +20,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/tls"
 	"crypto/x509"
-	"math/big"
 	"net"
 	"net/http"
 	"net/url"
@@ -51,21 +50,6 @@ const (
 	DefaultSBatchEndpoint = "https://sbatch.deepsquare.run/graphql"
 	DefaultLoggerEndpoint = "https://grid-logger.deepsquare.run"
 )
-
-// Client implements all the services required to make unary calls to DeepSquare APIs.
-//
-// Users must call Close() at the end of the application to avoid pending connections.
-type Client interface {
-	types.Logger
-	job.Scheduler
-	job.Fetcher
-	job.ByProviderFetcher
-	credit.Manager
-	allowance.Manager
-	provider.Manager
-	// Close all connections.
-	Close() error
-}
 
 // ClientConfig is used to configure the Client's services.
 type ClientConfig struct {
@@ -122,7 +106,10 @@ func (c *ClientConfig) applyDefault() {
 	}
 }
 
-type client struct {
+// Client implements all the services required to make unary calls to DeepSquare APIs.
+//
+// Users must call Close() at the end of the application to avoid pending connections.
+type Client struct {
 	types.Logger
 	job.Scheduler
 	job.Fetcher
@@ -134,81 +121,8 @@ type client struct {
 	rpcClient        *rpc.Client
 }
 
-// GetProvider implements Client.
-func (c *client) GetProvider(
-	ctx context.Context,
-	address common.Address,
-	opts ...provider.GetProviderOption,
-) (provider provider.Detail, err error) {
-	return c.ProviderManager.GetProvider(ctx, address, opts...)
-}
-
-// GetProviders implements Client.
-func (c *client) GetProviders(
-	ctx context.Context,
-	opts ...provider.GetProviderOption,
-) (providers []provider.Detail, err error) {
-	return c.ProviderManager.GetProviders(ctx, opts...)
-}
-
-// Approve implements Client.
-func (c *client) ApproveProvider(ctx context.Context, provider common.Address) error {
-	return c.ProviderManager.ApproveProvider(ctx, provider)
-}
-
-// Balance implements Client.
-func (c *client) Balance(ctx context.Context) (*big.Int, error) {
-	return c.CreditManager.Balance(ctx)
-}
-
-// BalanceOf implements Client.
-func (c *client) BalanceOf(ctx context.Context, address common.Address) (*big.Int, error) {
-	return c.CreditManager.BalanceOf(ctx, address)
-}
-
-// ClearAllowance implements Client.
-func (c *client) ClearAllowance(ctx context.Context) error {
-	return c.AllowanceManager.ClearAllowance(ctx)
-}
-
-// GetAllowance implements Client.
-func (c *client) GetAllowance(ctx context.Context) (*big.Int, error) {
-	return c.AllowanceManager.GetAllowance(ctx)
-}
-
-// ReduceToAllowance implements Client.
-func (c *client) ReduceToAllowance(
-	ctx context.Context,
-	approvals <-chan types.Approval,
-) (<-chan *big.Int, error) {
-	return c.AllowanceManager.ReduceToAllowance(ctx, approvals)
-}
-
-// ReduceToBalance implements Client.
-func (c *client) ReduceToBalance(
-	ctx context.Context,
-	transfers <-chan types.Transfer,
-) (<-chan *big.Int, error) {
-	return c.CreditManager.ReduceToBalance(ctx, transfers)
-}
-
-// RemoveProvider implements Client.
-func (c *client) RemoveProvider(ctx context.Context, provider common.Address) error {
-	return c.ProviderManager.RemoveProvider(ctx, provider)
-}
-
-// SetAllowance implements Client.
-func (c *client) SetAllowance(ctx context.Context, amount *big.Int) error {
-	return c.AllowanceManager.SetAllowance(ctx, amount)
-}
-
-// Transfer implements Client.
-func (c *client) Transfer(ctx context.Context, to common.Address, amount *big.Int) error {
-	return c.CreditManager.Transfer(ctx, to, amount)
-}
-
 // NewClient creates a new Client for the given ClientConfig.
-func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
+func NewClient(ctx context.Context, c *ClientConfig) (*Client, error) {
 	c.applyDefault()
 	rpcClient, err := rpc.DialOptions(ctx, c.RPCEndpoint, rpc.WithHTTPClient(c.Client))
 	if err != nil {
@@ -263,7 +177,7 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 	})
 	fetcher := rpcClientSet.JobFetcher()
 	runningJobsByProviderFetcher := metascheduler.NewJobsByProviderFetcher(oracle, fetcher)
-	return &client{
+	return &Client{
 		Fetcher:           fetcher,
 		Scheduler:         jobScheduler,
 		ByProviderFetcher: runningJobsByProviderFetcher,
@@ -276,18 +190,10 @@ func NewClient(ctx context.Context, c *ClientConfig) (Client, error) {
 	}, nil
 }
 
-func (c *client) Close() error {
+// Close closes the underlying connections.
+func (c *Client) Close() error {
 	c.rpcClient.Close()
 	return c.loggerConn.Close()
-}
-
-// Watcher implements all the services required to make streaming calls to DeepSquare APIs.
-//
-// Users must call Close() at the end of the application to avoid pending connections.
-type Watcher interface {
-	event.Subscriber
-	// Close all connections.
-	Close() error
 }
 
 // WatcherConfig is used to configure the Watcher's services.
@@ -326,14 +232,17 @@ func (c *WatcherConfig) applyDefault() {
 	}
 }
 
-type watcher struct {
+// Watcher implements all the services required to make streaming calls to DeepSquare APIs.
+//
+// Users must call Close() at the end of the application to avoid pending connections.
+type Watcher struct {
 	event.Subscriber
 	rpcClient *rpc.Client
 	wsClient  *rpc.Client
 }
 
 // NewWatcher creates a new Watcher for the given WatcherConfig.
-func NewWatcher(ctx context.Context, c *WatcherConfig) (Watcher, error) {
+func NewWatcher(ctx context.Context, c *WatcherConfig) (*Watcher, error) {
 	c.applyDefault()
 	rpcClient, err := rpc.DialOptions(ctx, c.RPCEndpoint, rpc.WithHTTPClient(&c.Client))
 	if err != nil {
@@ -361,14 +270,15 @@ func NewWatcher(ctx context.Context, c *WatcherConfig) (Watcher, error) {
 		EthereumBackend:      ethClientWS,
 		UserPrivateKey:       c.UserPrivateKey,
 	}
-	return &watcher{
+	return &Watcher{
 		Subscriber: metascheduler.NewEventSubscriber(metaschedulerRPC, metaschedulerWS),
 		rpcClient:  rpcClient,
 		wsClient:   wsClient,
 	}, nil
 }
 
-func (c *watcher) Close() error {
+// Close closes the underlying connections.
+func (c *Watcher) Close() error {
 	c.rpcClient.Close()
 	c.wsClient.Close()
 	return nil

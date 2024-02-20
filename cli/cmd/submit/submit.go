@@ -383,11 +383,11 @@ var Command = cli.Command{
 		}
 
 		// Set allowance
-		curr, err := client.GetAllowance(ctx)
+		curr, err := client.AllowanceManager.GetAllowance(ctx)
 		if err != nil {
 			return err
 		}
-		if err = client.SetAllowance(ctx, curr.Add(curr, credits)); err != nil {
+		if err = client.AllowanceManager.SetAllowance(ctx, curr.Add(curr, credits)); err != nil {
 			return err
 		}
 
@@ -466,7 +466,7 @@ var Command = cli.Command{
 						if err != nil {
 							internallog.I.Warn("failed to fetch running jobs info", zap.Error(err))
 						}
-						p, err := client.GetProvider(ctx, allocatedProviderAddress)
+						p, err := client.ProviderManager.GetProvider(ctx, allocatedProviderAddress)
 						if err != nil {
 							internallog.I.Fatal("failed to get provider info", zap.Error(err))
 						}

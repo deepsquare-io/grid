@@ -38,7 +38,7 @@ var fixture []byte
 type ServiceTestSuite struct {
 	suite.Suite
 	server *httptest.Server
-	impl   sbatch.Service
+	impl   *sbatch.Service
 }
 
 func (suite *ServiceTestSuite) TestSubmit() {

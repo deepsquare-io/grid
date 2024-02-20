@@ -22,29 +22,36 @@ import (
 	internallog "github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
+	"github.com/deepsquare-io/grid/cli/types/credit"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	coretypes "github.com/ethereum/go-ethereum/core/types"
 	"go.uber.org/zap"
 )
 
-type creditManager struct {
+var _ credit.Manager = (*CreditManager)(nil)
+
+// CreditManager is a manager for credits.
+type CreditManager struct {
 	*RPCClientSet
 	*metaschedulerabi.IERC20
 }
 
-func (c *creditManager) Balance(ctx context.Context) (*big.Int, error) {
+// Balance returns the balance of the user.
+func (c *CreditManager) Balance(ctx context.Context) (*big.Int, error) {
 	return c.BalanceOf(ctx, c.from())
 }
 
-func (c *creditManager) BalanceOf(ctx context.Context, address common.Address) (*big.Int, error) {
+// BalanceOf returns the balance of the given address.
+func (c *CreditManager) BalanceOf(ctx context.Context, address common.Address) (*big.Int, error) {
 	balance, err := c.IERC20.BalanceOf(&bind.CallOpts{
 		Context: ctx,
 	}, address)
 	return balance, WrapError(err)
 }
 
-func (c *creditManager) Transfer(ctx context.Context, to common.Address, amount *big.Int) error {
+// Transfer transfers the given amount to the given address.
+func (c *CreditManager) Transfer(ctx context.Context, to common.Address, amount *big.Int) error {
 	tx, err := c.transact(ctx, func(auth *bind.TransactOpts) (*coretypes.Transaction, error) {
 		return c.IERC20.Transfer(auth, to, amount)
 	})
@@ -58,7 +65,9 @@ func (c *creditManager) Transfer(ctx context.Context, to common.Address, amount 
 	internallog.I.Debug("transfer", zap.Any("receipt", receipt))
 	return CheckReceiptError(ctx, c, tx, receipt)
 }
-func (c *creditManager) ReduceToBalance(
+
+// ReduceToBalance reduces the balance to the given value.
+func (c *CreditManager) ReduceToBalance(
 	ctx context.Context,
 	transfers <-chan types.Transfer,
 ) (<-chan *big.Int, error) {

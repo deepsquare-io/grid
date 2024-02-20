@@ -32,7 +32,10 @@ import (
 	"google.golang.org/grpc"
 )
 
-type gridlogger struct {
+var _ types.Logger = (*GridLogger)(nil)
+
+// GridLogger is a client for the Grid Logger.
+type GridLogger struct {
 	loggerv1alpha1.LoggerAPIClient
 	pk *ecdsa.PrivateKey
 }
@@ -45,7 +48,7 @@ func DialContext(
 	endpoint string,
 	privateKey *ecdsa.PrivateKey,
 	opts ...grpc.DialOption,
-) (l types.Logger, conn *grpc.ClientConn, err error) {
+) (l *GridLogger, conn *grpc.ClientConn, err error) {
 	conn, err = grpc.DialContext(ctx,
 		endpoint,
 		opts...,
@@ -53,18 +56,21 @@ func DialContext(
 	if err != nil {
 		return nil, conn, err
 	}
-	l = &gridlogger{
+	l = &GridLogger{
 		LoggerAPIClient: loggerv1alpha1.NewLoggerAPIClient(conn),
 		pk:              privateKey,
 	}
 	return l, conn, nil
 }
 
-func (l *gridlogger) from() common.Address {
+func (l *GridLogger) from() common.Address {
 	return crypto.PubkeyToAddress(l.pk.PublicKey)
 }
 
-func (l *gridlogger) WatchLogs(
+// WatchLogs returns a stream of logs for a given job.
+//
+//nolint:ireturn
+func (l *GridLogger) WatchLogs(
 	ctx context.Context,
 	jobID [32]byte,
 ) (types.LogStream, error) {

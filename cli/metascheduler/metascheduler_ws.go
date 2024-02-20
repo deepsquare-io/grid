@@ -27,7 +27,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
-type eventSubscriber struct {
+var _ event.Subscriber = (*EventSubscriber)(nil)
+
+// EventSubscriber is a subscriber for events.
+type EventSubscriber struct {
 	rpc Backend
 	ws  Backend
 
@@ -38,19 +41,22 @@ type eventSubscriber struct {
 func NewEventSubscriber(
 	rpc Backend,
 	ws Backend,
-) event.Subscriber {
+) *EventSubscriber {
 	m, err := metaschedulerabi.NewMetaScheduler(rpc.MetaschedulerAddress, rpc.EthereumBackend)
 	if err != nil {
 		panic(fmt.Errorf("failed to instanciate MetaScheduler: %w", err))
 	}
-	return &eventSubscriber{
+	return &EventSubscriber{
 		rpc:              rpc,
 		ws:               ws,
 		rpcMetascheduler: m,
 	}
 }
 
-func (c *eventSubscriber) SubscribeEvents(
+// SubscribeEvents subscribes to events.
+//
+//nolint:ireturn
+func (c *EventSubscriber) SubscribeEvents(
 	ctx context.Context,
 	opts ...event.SubscriptionOption,
 ) (ethereum.Subscription, error) {
@@ -137,7 +143,7 @@ func (c *eventSubscriber) SubscribeEvents(
 	return sub, nil
 }
 
-func (c *eventSubscriber) filter(
+func (c *EventSubscriber) filter(
 	logs <-chan ethtypes.Log,
 	o event.SubscriptionOptions,
 ) {

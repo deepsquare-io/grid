@@ -4,9 +4,9 @@ linters:
     - exportloopref
     - govet
     - tagliatelle
-    - godox
     - execinquery
     - nolintlint
+    - ireturn
 
     # We should strive to enable these:
     # - wrapcheck
@@ -22,6 +22,10 @@ issues:
   include:
     - EXC0012
     - EXC0015
+  exclude-rules:
+    - path: tui/
+      linters:
+        - ireturn
 
 run:
   skip-files:
@@ -31,11 +35,8 @@ linters-settings:
   staticcheck:
     checks: ['all']
   revive:
-    ignoreGeneratedHeader: false
     severity: error
     confidence: 0.7
-    errorCode: 1
-    warningCode: 1
     rules:
       - name: blank-imports
       - name: context-as-argument

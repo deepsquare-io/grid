@@ -51,11 +51,11 @@ func main() {
 	jobNameS := "test"
 	copy(jobName[:], jobNameS)
 	lockedAmount, _ := new(big.Int).SetString("100000000000000000000", 10)
-	curr, err := client.GetAllowance(ctx)
+	curr, err := client.AllowanceManager.GetAllowance(ctx)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	err = client.SetAllowance(ctx, curr.Add(curr, lockedAmount))
+	err = client.AllowanceManager.SetAllowance(ctx, curr.Add(curr, lockedAmount))
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

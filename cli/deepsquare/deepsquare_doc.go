@@ -65,11 +65,11 @@ To submit jobs, you need to set the allowance first to allow the meta-scheduler 
 	lockedCredits, _ := new(big.Int).SetString("100000000000000000000", 10)
 
 	// Set allowance
-	curr, err := client.GetAllowance(ctx)
+	curr, err := client.AllowanceManager.GetAllowance(ctx)
 	if err != nil {
 		return err
 	}
-	if err = client.SetAllowance(ctx, curr.Add(curr, lockedCredits)); err != nil {
+	if err = client.AllowanceManager.SetAllowance(ctx, curr.Add(curr, lockedCredits)); err != nil {
 		return err
 	}
 
@@ -77,7 +77,7 @@ You can set a high number to allow auto-topup:
 
 	// Set allowance
 	limit, _ := new(big.Int).SetString("10000000000000000000000000000000000000", 10)
-	if err = client.SetAllowance(ctx, curr.Add(curr, limit)); err != nil {
+	if err = client.AllowanceManager.SetAllowance(ctx, curr.Add(curr, limit)); err != nil {
 		return err
 	}
 
@@ -145,11 +145,11 @@ Panicking a job (only for admins):
 
 To get, do:
 
-	allowance, err := client.GetAllowance(ctx)
+	allowance, err := client.AllowanceManager.GetAllowance(ctx)
 
 To set, do:
 
-	err := client.SetAllowance(ctx, amount)
+	err := client.AllowanceManager.SetAllowance(ctx, amount)
 
 To watch, do:
 
@@ -163,7 +163,7 @@ To watch, do:
 		}
 		defer sub.Unsubscribe()
 
-		allowances, err := m.client.ReduceToAllowance(ctx, approvals)
+		allowances, err := m.client.AllowanceManager.ReduceToAllowance(ctx, approvals)
 
 		for {
 			select {
@@ -179,13 +179,13 @@ To watch, do:
 
 To get, do:
 
-	credits, err := client.Balance(ctx)
+	credits, err := client.CreditManager.Balance(ctx)
 	// Or
-	credits, err := client.BalanceOf(ctx, address)
+	credits, err := client.CreditManager.BalanceOf(ctx, address)
 
 To transfer, do:
 
-	err := client.Transfer(ctx, address, amount)
+	err := client.CreditManager.Transfer(ctx, address, amount)
 
 To watch, do:
 
@@ -199,7 +199,7 @@ To watch, do:
 	}
 	defer sub.Unsubscribe()
 
-	balances, err := m.client.ReduceToBalance(ctx, transfers)
+	balances, err := m.client.CreditManager.ReduceToBalance(ctx, transfers)
 
 	for {
 		select {
@@ -215,19 +215,19 @@ To watch, do:
 
 To get, do:
 
-	provider, err := client.GetProvider(ctx, providerAddress)
+	provider, err := client.ProviderManager.GetProvider(ctx, providerAddress)
 
 To list all providers, do:
 
-	providers, err := client.GetProviders(ctx, providerAddress)
+	providers, err := client.ProviderManager.GetProviders(ctx, providerAddress)
 
 To approve, do:
 
-	err := client.Approve(ctx, providerAddress)
+	err := client.ProviderManager.Approve(ctx, providerAddress)
 
 To remove, do:
 
-	err := client.Remove(ctx, providerAddress)
+	err := client.ProviderManager.Remove(ctx, providerAddress)
 
 # Watching events
 

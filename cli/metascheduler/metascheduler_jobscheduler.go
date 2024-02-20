@@ -29,13 +29,16 @@ import (
 	"go.uber.org/zap"
 )
 
-type jobScheduler struct {
+var _ job.Scheduler = (*JobScheduler)(nil)
+
+// JobScheduler is a scheduler for jobs.
+type JobScheduler struct {
 	*RPCClientSet
 	*metaschedulerabi.MetaScheduler
-	sbatch.Service
+	*sbatch.Service
 }
 
-func (c *jobScheduler) requestNewJob(
+func (c *JobScheduler) requestNewJob(
 	ctx context.Context,
 	definition metaschedulerabi.JobDefinition,
 	lockedCredits *big.Int,
@@ -78,7 +81,8 @@ func (c *jobScheduler) requestNewJob(
 	return [32]byte{}, ErrNewRequestJobNotFound
 }
 
-func (c *jobScheduler) SubmitJob(
+// SubmitJob submits a job to the scheduler.
+func (c *JobScheduler) SubmitJob(
 	ctx context.Context,
 	j *sbatch.Job,
 	lockedAmount *big.Int,
@@ -130,14 +134,16 @@ func (c *jobScheduler) SubmitJob(
 	return id, WrapError(err)
 }
 
-func (c *jobScheduler) CancelJob(ctx context.Context, id [32]byte) error {
+// CancelJob cancels the job with the given ID.
+func (c *JobScheduler) CancelJob(ctx context.Context, id [32]byte) error {
 	_, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
 		return c.MetaScheduler.CancelJob(auth, id)
 	})
 	return WrapError(err)
 }
 
-func (c *jobScheduler) PanicJob(ctx context.Context, id [32]byte, reason string) error {
+// PanicJob panics the job with the given reason.
+func (c *JobScheduler) PanicJob(ctx context.Context, id [32]byte, reason string) error {
 	_, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
 		return c.MetaScheduler.PanicJob(
 			auth,
@@ -148,7 +154,8 @@ func (c *jobScheduler) PanicJob(ctx context.Context, id [32]byte, reason string)
 	return WrapError(err)
 }
 
-func (c *jobScheduler) TopUpJob(ctx context.Context, id [32]byte, amount *big.Int) error {
+// TopUpJob tops up the job with the given amount.
+func (c *JobScheduler) TopUpJob(ctx context.Context, id [32]byte, amount *big.Int) error {
 	_, err := c.transact(ctx, func(auth *bind.TransactOpts) (*types.Transaction, error) {
 		return c.MetaScheduler.TopUpJob(
 			auth,
