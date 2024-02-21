@@ -104,6 +104,8 @@ func prepareFiles() (jerr error) {
 		return fmt.Errorf("fail to write %s: %w", jobPath, err)
 	}
 
+	fmt.Printf("Job file created at %s\n", jobPath)
+
 	return nil
 }
 

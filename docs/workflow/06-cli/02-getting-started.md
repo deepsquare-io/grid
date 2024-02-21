@@ -7,6 +7,10 @@ You can download static binaries in the [Releases tab of the Grid git repository
 To install it:
 
 ```shell
+## One Shot Method:
+curl https://raw.githubusercontent.com/deepsquare-io/grid/main/cli/get-dps | bash
+
+## Manual Method:
 # Create a local directory to store executable.
 mkdir -p ~/.local/bin
 # Move executable to install directory.
@@ -14,8 +18,6 @@ mv <path/to/dps> ~/.local/bin/dps
 # Add executation permission.
 chmod +x ~/.local/bin/dps
 ```
-
-**Or, in one shot: `curl https://raw.githubusercontent.com/deepsquare-io/grid/main/cli/get-dps | bash`.**
 
 For **Windows** users, open `cmd.exe` (don't use PowerShell) and execute:
 
@@ -44,13 +46,13 @@ Make sure that `$HOME/go/bin` (`%HOME%\go\bin` for Windows) is added to the `$PA
 
 ## Usage
 
-1. Prepare a `.env` file along the executable or load these environment variables:
+1. Edit the`.bashrc` (or `.zshrc`) file and load this environment variable:
 
    ```shell
-   METASCHEDULER_SMART_CONTRACT=<0x address>
+   export METASCHEDULER_SMART_CONTRACT=<0x address>
    ```
 
-   You can find the smart-contract address in the [Releases tab of the Grid git repository](https://github.com/deepsquare-io/grid/releases?q=smart-contracts&expanded=true).
+   You can find the smart-contract address (`MetaSchedulerAddr`) in the [Releases tab of the Grid git repository](https://github.com/deepsquare-io/grid/releases?q=smart-contracts&expanded=true).
 
 2. Create a directory at `~/.dps` and put your wallet private key at `~/.dps/key`:
 
