@@ -111,12 +111,12 @@ func NewIterator(array [][32]byte) *Iterator {
 	return &Iterator{
 		array:  array,
 		length: len(array),
-		index:  1,
+		index:  -1,
 		job:    nil,
 	}
 }
 
-// Next returns the next job.
+// GetNextID returns the next job.
 func (it *Iterator) GetNextID() [32]byte {
 	return it.array[it.index+1]
 }
