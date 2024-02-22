@@ -154,7 +154,7 @@ See the GNU General Public License for more details.`,
 				MaxConnectionAge:      60 * time.Minute, // If any connection is alive for more than given duration, send a GOAWAY.
 				MaxConnectionAgeGrace: 10 * time.Second, // Allow given duration for pending RPCs to complete before forcibly closing connections
 				Time:                  10 * time.Second, // Ping the client if it is idle for given duration to ensure the connection is still active.
-				Timeout:               5 * time.Second,  // Wait given duration for the ping ack before assuming the connection is dead.
+				Timeout:               20 * time.Second, // Wait given duration for the ping ack before assuming the connection is dead.
 			}),
 		}
 		if tls {
