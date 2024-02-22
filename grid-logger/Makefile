@@ -11,6 +11,18 @@ endif
 bins := grid-logger-reader-linux-amd64 grid-logger-writer-linux-amd64 grid-logger-writer-linux-arm64 grid-logger-writer-linux-mips64 grid-logger-writer-linux-mips64le grid-logger-writer-linux-ppc64 grid-logger-writer-linux-ppc64le grid-logger-writer-linux-riscv64 grid-logger-writer-linux-s390x  grid-logger-server-linux-amd64 grid-logger-server-linux-arm64 grid-logger-server-linux-mips64 grid-logger-server-linux-mips64le grid-logger-server-linux-ppc64 grid-logger-server-linux-ppc64le grid-logger-server-linux-riscv64 grid-logger-server-linux-s390x
 
 .PHONY: all
+bin: bin/grid-logger-reader bin/grid-logger-writer bin/grid-logger-server
+
+bin/grid-logger-reader:
+	CGO_ENABLED=0 go build -ldflags "-s -w" -tags reader -o "$@" ./reader/main.go
+
+bin/grid-logger-writer:
+	CGO_ENABLED=0 go build -ldflags "-s -w" -tags writer -o "$@" ./writer/main.go
+
+bin/grid-logger-server:
+	CGO_ENABLED=0 go build -ldflags "-s -w" -tags server -o "$@" ./server/main.go
+
+.PHONY: all
 all: $(addprefix bin/,$(bins))
 
 bin/grid-logger-reader-linux-amd64: $(GO_SRCS)

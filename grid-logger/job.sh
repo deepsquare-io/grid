@@ -2,7 +2,7 @@
 
 export JOB_NAME=name
 
-./bin/grid-logger-writer-linux-amd64 \
+./bin/grid-logger-writer \
   --server.tls=false \
   --server.endpoint=localhost:3001 \
   --pipe.path=$JOB_NAME \
@@ -18,14 +18,15 @@ sleep 1
 exec &>>"$JOB_NAME"
 
 zombie() {
-counter=0; while true; do
-  echo "$(counter): SPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM"
-  counter="$((counter + 1))"
+  counter=0
+  while true; do
+    echo "$(counter): SPAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM"
+    counter="$((counter + 1))"
 
-  if [ $counter -eq 1000 ]; then
-    break
-  fi
-done
+    if [ $counter -eq 1000 ]; then
+      break
+    fi
+  done
 }
 zombie
 echo "zombie created at $!"
@@ -38,7 +39,7 @@ echo "$(date): srun --container-image=test"
 echo >&2 "$(date): fake error"
 
 rm -f touchdown
-echo "$counter" > touchdown
+echo "$counter" >touchdown
 
 kill $LOGGER_PID
 
