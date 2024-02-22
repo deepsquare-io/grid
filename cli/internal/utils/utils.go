@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
@@ -152,11 +153,23 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 				keyb = []byte(hexutil.Encode(crypto.FromECDSA(key)))
 			} else {
 				fmt.Printf(
-					"You can fetch your private key from MetaMask by following this guide:\nhttps://support.metamask.io/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key .\n\n",
+					"\nYou can fetch your private key from MetaMask by following this guide:\nhttps://support.metamask.io/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key .\n\n",
 				)
 				input := textinput.New("Private Key:")
 				input.InitialValue = os.Getenv("ETH_PRIVATE_KEY")
 				input.Placeholder = "0x... (32 bytes/64 characters)"
+				input.Hidden = true
+				input.Validate = func(s string) error {
+					if len(s) < 64 {
+						return fmt.Errorf("at least %d more characters", 64-len(s))
+					}
+
+					return nil
+				}
+				input.Template += `
+					{{- if .ValidationError -}}
+						{{- print " " (Foreground "1" .ValidationError.Error) -}}
+					{{- end -}}`
 				v, err := input.RunPrompt()
 				if err != nil {
 					return nil, err
@@ -182,6 +195,7 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 			fmt.Println(
 				"You can fetch free credits by filling this form:\nhttps://share-eu1.hsforms.com/1PVlRXYdMSdy-iBH_PXx_0wev6gi",
 			)
+			time.Sleep(5 * time.Second)
 
 		} else if err != nil {
 			return nil, err
@@ -245,7 +259,7 @@ var cellStyle = lipgloss.NewStyle().PaddingRight(1).PaddingLeft(1).Bold(true)
 
 func renderOutput(hexkey string, publicAddress string) string {
 	rows := [][]string{
-		{"Private Key", hexkey},
+		{"Private Key", replaceWithDot(hexkey)},
 		{"Public Address", publicAddress},
 	}
 
@@ -260,4 +274,23 @@ func renderOutput(hexkey string, publicAddress string) string {
 		Rows(rows...).
 		Render() +
 		"\n"
+}
+
+func replaceWithDot(str string) string {
+	// Check if the length of the string is less than 4
+	if len(str) < 4 {
+		return str
+	}
+
+	// Split the string into two parts: before the fourth character and after the fourth character
+	beforeFourth := str[:3]
+	afterFourth := str[3:]
+
+	// Replace all characters in the afterFourth part with "●"
+	replaced := strings.Repeat("●", len(afterFourth))
+
+	// Concatenate the beforeFourth part with the replaced part
+	result := beforeFourth + replaced
+
+	return result
 }
