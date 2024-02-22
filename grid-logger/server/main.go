@@ -21,6 +21,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"time"
 
 	healthv1 "github.com/deepsquare-io/grid/grid-logger/gen/go/grpc/health/v1"
 	loggerv1alpha1 "github.com/deepsquare-io/grid/grid-logger/gen/go/logger/v1alpha1"
@@ -34,6 +35,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 )
 
 var (
@@ -146,7 +148,15 @@ See the GNU General Public License for more details.`,
 			return err
 		}
 
-		opts := []grpc.ServerOption{}
+		opts := []grpc.ServerOption{
+			grpc.KeepaliveParams(keepalive.ServerParameters{
+				MaxConnectionIdle:     60 * time.Minute, // If a client is idle for given duration, send a GOAWAY.
+				MaxConnectionAge:      60 * time.Minute, // If any connection is alive for more than given duration, send a GOAWAY.
+				MaxConnectionAgeGrace: 10 * time.Second, // Allow given duration for pending RPCs to complete before forcibly closing connections
+				Time:                  10 * time.Second, // Ping the client if it is idle for given duration to ensure the connection is still active.
+				Timeout:               5 * time.Second,  // Wait given duration for the ping ack before assuming the connection is dead.
+			}),
+		}
 		if tls {
 			creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 			if err != nil {
