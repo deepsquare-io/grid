@@ -8,7 +8,7 @@ ifeq ($(golint),)
 golint := $(shell go env GOPATH)/bin/golangci-lint
 endif
 
-bins := grid-logger-reader-linux-amd64 grid-logger-writer-linux-amd64 grid-logger-writer-linux-arm64 grid-logger-writer-linux-mips64 grid-logger-writer-linux-mips64le grid-logger-writer-linux-ppc64 grid-logger-writer-linux-ppc64le grid-logger-writer-linux-riscv64 grid-logger-writer-linux-s390x  grid-logger-server-linux-amd64 grid-logger-server-linux-arm64 grid-logger-server-linux-mips64 grid-logger-server-linux-mips64le grid-logger-server-linux-ppc64 grid-logger-server-linux-ppc64le grid-logger-server-linux-riscv64 grid-logger-server-linux-s390x
+bins := grid-logger-reader-linux-amd64 grid-logger-writer-linux-amd64 grid-logger-writer-linux-arm64 grid-logger-writer-linux-riscv64 grid-logger-server-linux-amd64 grid-logger-server-linux-arm64 grid-logger-server-linux-riscv64
 
 .PHONY: all
 bin: bin/grid-logger-reader bin/grid-logger-writer bin/grid-logger-server
@@ -34,23 +34,8 @@ bin/grid-logger-writer-linux-amd64: $(GO_SRCS)
 bin/grid-logger-writer-linux-arm64: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -tags writer -o "$@" ./writer/main.go
 
-bin/grid-logger-writer-linux-mips64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -ldflags "-s -w" -tags writer -o "$@" ./writer/main.go
-
-bin/grid-logger-writer-linux-mips64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -ldflags "-s -w" -tags writer -o "$@" ./writer/main.go
-
-bin/grid-logger-writer-linux-ppc64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64 go build -ldflags "-s -w" -tags writer -o "$@" ./writer/main.go
-
-bin/grid-logger-writer-linux-ppc64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -ldflags "-s -w" -tags writer -o "$@" ./writer/main.go
-
 bin/grid-logger-writer-linux-riscv64: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags "-s -w" -tags writer -o "$@" ./writer/main.go
-
-bin/grid-logger-writer-linux-s390x: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -ldflags "-s -w" -tags writer -o "$@" ./writer/main.go
 
 bin/grid-logger-server-linux-amd64: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -tags server -o "$@" ./server/main.go
@@ -58,23 +43,8 @@ bin/grid-logger-server-linux-amd64: $(GO_SRCS)
 bin/grid-logger-server-linux-arm64: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -tags server -o "$@" ./server/main.go
 
-bin/grid-logger-server-linux-mips64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -ldflags "-s -w" -tags server -o "$@" ./server/main.go
-
-bin/grid-logger-server-linux-mips64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -ldflags "-s -w" -tags server -o "$@" ./server/main.go
-
-bin/grid-logger-server-linux-ppc64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64 go build -ldflags "-s -w" -tags server -o "$@" ./server/main.go
-
-bin/grid-logger-server-linux-ppc64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -ldflags "-s -w" -tags server -o "$@" ./server/main.go
-
 bin/grid-logger-server-linux-riscv64: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags "-s -w" -tags server -o "$@" ./server/main.go
-
-bin/grid-logger-server-linux-s390x: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -ldflags "-s -w" -tags server -o "$@" ./server/main.go
 
 bin/checksums.txt: $(addprefix bin/,$(bins))
 	sha256sum -b $(addprefix bin/,$(bins)) | sed 's/bin\///' > $@

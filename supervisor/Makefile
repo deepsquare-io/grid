@@ -47,28 +47,13 @@ bin/supervisor-linux-amd64: $(GO_SRCS)
 bin/supervisor-linux-arm64: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./main.go
 
-bin/supervisor-linux-mips64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./main.go
-
-bin/supervisor-linux-mips64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./main.go
-
-bin/supervisor-linux-ppc64: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./main.go
-
-bin/supervisor-linux-ppc64le: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./main.go
-
 bin/supervisor-linux-riscv64: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./main.go
-
-bin/supervisor-linux-s390x: $(GO_SRCS)
-	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./main.go
 
 bin/supervisor-windows-amd64.exe: $(GO_SRCS)
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./main.go
 
-bins := supervisor-darwin-amd64 supervisor-darwin-arm64 supervisor-freebsd-arm64 supervisor-freebsd-arm64 supervisor-linux-amd64 supervisor-linux-arm64 supervisor-linux-mips64 supervisor-linux-mips64le supervisor-linux-ppc64 supervisor-linux-ppc64le supervisor-linux-riscv64 supervisor-linux-s390x supervisor-windows-amd64.exe
+bins := supervisor-darwin-amd64 supervisor-darwin-arm64 supervisor-freebsd-arm64 supervisor-freebsd-arm64 supervisor-linux-amd64 supervisor-linux-arm64 supervisor-linux-riscv64 supervisor-windows-amd64.exe
 
 .PHONY: build-all
 build-all: $(addprefix bin/,$(bins)) bin/checksums.md
