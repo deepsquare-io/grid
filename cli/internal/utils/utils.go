@@ -33,6 +33,7 @@ import (
 	"github.com/deepsquare-io/grid/cli/types"
 	metaschedulerabi "github.com/deepsquare-io/grid/cli/types/abi/metascheduler"
 	"github.com/erikgeiser/promptkit/confirmation"
+	"github.com/erikgeiser/promptkit/textinput"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"go.uber.org/zap"
@@ -130,41 +131,54 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 		finfo, err := os.Stat(orPath)
 		if errors.Is(err, fs.ErrNotExist) {
 			fmt.Println("Hey! It looks like you didn't set the private key of your wallet.")
-			fmt.Printf(
-				"You can fetch your MetaMask private key by following this guide:\nhttps://support.metamask.io/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key .\n\n",
-			)
-			fmt.Printf(
-				"After that, you can put the Hexadecimal-encoded private key at `%s`.\nAnd make sure the key has the right permissions (no world nor group permissions: chmod 600 %s)!\n\n",
-				orPath,
-				orPath,
-			)
 			input := confirmation.New(
-				fmt.Sprintf("Or, do you prefer to generate a private key at `%s`?", orPath),
+				fmt.Sprintf(
+					"Do you want to generate a private key at `%s`? (select No to input manually)",
+					orPath,
+				),
 				confirmation.No,
 			)
 			ok, prompterr := input.RunPrompt()
 			if prompterr != nil {
 				return nil, prompterr
 			}
-			if !ok {
-				return nil, err
+			var keyb []byte
+			var key *ecdsa.PrivateKey
+			if ok {
+				key, err = crypto.GenerateKey()
+				if err != nil {
+					return nil, err
+				}
+				keyb = []byte(hexutil.Encode(crypto.FromECDSA(key)))
+			} else {
+				fmt.Printf(
+					"You can fetch your private key from MetaMask by following this guide:\nhttps://support.metamask.io/hc/en-us/articles/360015289632-How-to-export-an-account-s-private-key .\n\n",
+				)
+				input := textinput.New("Private Key:")
+				input.InitialValue = os.Getenv("ETH_PRIVATE_KEY")
+				input.Placeholder = "0x... (32 bytes/64 characters)"
+				v, err := input.RunPrompt()
+				if err != nil {
+					return nil, err
+				}
+				keyb = []byte(v)
+				key, err = parseHexPk(v)
+				if err != nil {
+					return nil, err
+				}
 			}
-			key, err := crypto.GenerateKey()
-			if err != nil {
-				return nil, err
-			}
-			keyb := hexutil.Encode(crypto.FromECDSA(key))
+
 			if err := os.MkdirAll(filepath.Dir(orPath), 0700); err != nil {
 				panic(err)
 			}
-			if err := os.WriteFile(orPath, []byte(keyb), 0600); err != nil {
+			if err := os.WriteFile(orPath, keyb, 0600); err != nil {
 				return nil, err
 			}
 			finfo, err = os.Stat(orPath)
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(renderOutput(keyb, crypto.PubkeyToAddress(key.PublicKey).String()))
+			fmt.Println(renderOutput(string(keyb), crypto.PubkeyToAddress(key.PublicKey).String()))
 			fmt.Println(
 				"You can fetch free credits by filling this form:\nhttps://share-eu1.hsforms.com/1PVlRXYdMSdy-iBH_PXx_0wev6gi",
 			)
@@ -210,6 +224,19 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 		return pk, err
 	}
 	return pk, nil
+}
+
+func parseHexPk(hexPk string) (*ecdsa.PrivateKey, error) {
+	kb, err := hexutil.Decode(hexPk)
+	if errors.Is(err, hexutil.ErrMissingPrefix) {
+		kb, err = hex.DecodeString(hexPk)
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
+		return nil, err
+	}
+	return crypto.ToECDSA(kb)
 }
 
 var primaryColor = lipgloss.Color("#9202de")
