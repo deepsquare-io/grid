@@ -67,7 +67,7 @@ If your servers are equipped with a Baseboard Management Controller (BMC), Grend
 
 1. Create a private Git repository on your favorite Git hosting service and add a [**read-only** deploy key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys). You can name that repository "postscripts".
 
-**We will create a Kubernetes Secret with that key.**
+   **We will copy this key onto a disk.**
 
 2. Copy the content of [deepsquare-io/postscripts](https://github.com/deepsquare-io/postscripts):
 
@@ -210,30 +210,7 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
    kubectl apply -f argo/provisioning/
    ```
 
-2. Create a secret with the deploy key at `argo/provisioning/secrets/postscript-privatekey-secret.yaml.local` and fill it with:
-
-   ```yaml title="argo/provisioning/secrets/postscript-privatekey-secret.yaml.local"
-   apiVersion: v1
-   kind: Secret
-   metadata:
-     name: postscript-privatekey-secret
-     namespace: provisioning
-   type: Opaque
-   stringData:
-     key: |
-       -----BEGIN OPENSSH PRIVATE KEY-----
-       ...
-       -----END OPENSSH PRIVATE KEY-----
-   ```
-
-   Seal the secret and apply it:
-
-   ```shell title="user@local:/ClusterFactory"
-   cfctl kubeseal
-   kubectl apply -f argo/provisioning/secrets/postscript-privatekey-sealed-secret.yaml
-   ```
-
-3. Create a secret for the Grendel configuration at `argo/provisioning/secrets/grendel-secret.yaml.local` and fill it with:
+2. Create a secret for the Grendel configuration at `argo/provisioning/secrets/grendel-secret.yaml.local` and fill it with:
 
    ```yaml title="argo/provisioning/secrets/grendel-secret.yaml.local"
    apiVersion: v1
@@ -304,7 +281,7 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
    kubectl apply -f argo/provisioning/secrets/grendel-sealed-secret.yaml
    ```
 
-4. Fetch the MAC address of your node, create the values file at `helm/grendel/values-production.yaml` and fill it with:
+3. Fetch the MAC address of your node, create the values file at `helm/grendel/values-production.yaml` and fill it with:
 
    1. Fill the Grendel configuration:
 
@@ -340,12 +317,12 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
           set -ex
 
           # Fetch encrypted deploy key
-          curl --retry 5 -fsSL http://grendel.example.com/repo/key
-          chmod 600 /key
+          mkdir -p /secret
+          mount /dev/nvme0n1 /secret  # HERE!!!!: Change the device with the disk which will store the private key.
 
           # Cloning git repo containing postscripts.
           mkdir -p /configs
-          GIT_SSH_COMMAND='ssh -i /key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' git clone git@github.com:<your account>/postscripts.git /configs
+          GIT_SSH_COMMAND='ssh -i /secret/key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' git clone git@github.com:<your account>/postscripts.git /configs
           if [ -f /configs/post.sh ] && [ -x /configs/post.sh ]; then
             cd /configs || exit 1
             ./post.sh "$1"
@@ -354,9 +331,10 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
 
           # Security
           chmod -R g-rwx,o-rwx .
+          umount -f /secret
       ```
 
-   2. Add the persistence parameters. The persistence is used to host the kernel and inird:
+   2. Add the persistence parameters. The persistence is used to host the kernel and initrd:
 
       ```yaml title="helm/grendel/values-production.yaml"
       # ...
@@ -392,25 +370,7 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
             - 8.8.8.8
       ```
 
-   4. Mount the private key for GitOps-based postscripts:
-
-      ```yaml title="helm/grendel/values-production.yaml"
-      # ...
-      ## Extra volumes
-      volumes:
-        - name: postscript-privatekey
-          secret:
-            defaultMode: 384
-            secretName: postscript-privatekey-secret
-
-      ## Extra volume mounts
-      volumeMounts:
-        - name: postscript-privatekey
-          subPath: key.enc
-          mountPath: /var/lib/grendel/key.enc
-      ```
-
-   5. (Optional) Setup IPMI:
+   4. (Optional) Setup IPMI:
 
       ```yaml title="helm/grendel/values-production.yaml"
       # ...
@@ -435,7 +395,7 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
                 - ipmi.example.com
       ```
 
-5. Edit the ArgoCD Application to use our private fork:
+4. Edit the ArgoCD Application to use our private fork:
 
    ```yaml title="argo/provisioning/apps/grendel-app.yaml > spec > source"
    source:
@@ -456,7 +416,7 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
      namespace: provisioning
    ```
 
-6. Commit and push:
+5. Commit and push:
 
    ```shell title="user@local:/ClusterFactory"
    git add .
@@ -472,9 +432,14 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
 
    Check the [ArgoCD dashboard](https://argocd.internal) to see if everything went well.
 
-7. Reboot the compute nodes and check the serial console to see if everything went well.
+6. Reboot the compute nodes and check the serial console to see if everything went well.
 
-## Compute nodes configuration
+## Post-Boot configuration: Format Disks
+
+The postscripts will fail for two reasons:
+
+- The postscript will fail to clone the postscripts repository because it needs the private key.
+- The postscript won't be able to mount the disk because it's not formatted.
 
 The DeepSquare Grid needs a local disk/partition mounted at `/mnt/disk`. Format the disk/partition as ext4, xfs, zfs or btrfs4 and fetch its UUID. Assuming you want XFS, these are the command:
 
@@ -497,7 +462,25 @@ mkfs.xfs -f /dev/nvme0n1p1
 xfs_admin -U <uuid> /dev/nvme0n1p1
 ```
 
-You can the **re-enable the disk mount in the fs_mount postscript.** Don't forget to commit and push!
+You can the **re-enable the disk mount in the `fs_mount` postscript.** Don't forget to commit and push!
+
+## Post-Boot configuration: Add private key to disk
+
+Remember about the deploy key we've created on GitHub? We need to add it to the disk. Assuming `/dev/nvme0n1` is the disk storing the private key (see postscript about), add the private key to the disk:
+
+```shell "root@cn1:/root"
+mkdir -p /secret
+mount /dev/nvme0n1 /secret
+cat << 'EOF' > /secret/key
+-----BEGIN OPENSSH PRIVATE KEY-----
+<your private key>
+-----END OPENSSH PRIVATE KEY-----
+EOF
+chmod 600 /secret/key
+umount /secret
+```
+
+You can now reboot the compute nodes and check the `journalctl` to see if everything went well.
 
 ## Congratulations!
 
