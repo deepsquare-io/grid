@@ -52,6 +52,8 @@ Make sure that `$HOME/go/bin` (`%HOME%\go\bin` for Windows) is added to the `$PA
    export METASCHEDULER_SMART_CONTRACT=<0x address>
    ```
 
+   For **Windows** users, set User Environment Variable via the Control Panel. Again, see this [guide](https://www.java.com/en/download/help/path.html), but **instead of changing a path, add a new environment variable**.
+
    You can find the smart-contract address (`MetaSchedulerAddr`) in the [Releases tab of the Grid git repository](https://github.com/deepsquare-io/grid/releases?q=smart-contracts&expanded=true).
 
 2. Create a directory at `~/.dps` and put your wallet private key at `~/.dps/key`:
