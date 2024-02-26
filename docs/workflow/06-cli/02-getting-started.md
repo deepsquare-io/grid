@@ -74,7 +74,7 @@ Make sure that `$HOME/go/bin` (`%HOME%\go\bin` for Windows) is added to the `$PA
 
    :::note
 
-   **If you want to typing these steps manually, or want to generate a private key instead, you can run `dps init`.**
+   **If you want to avoid typing these steps manually, or want to generate a private key instead, you can run `dps init`.**
 
    :::
 
