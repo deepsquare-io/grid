@@ -316,7 +316,7 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
 
           set -ex
 
-          # Fetch encrypted deploy key
+          # Fetch deploy key
           mkdir -p /secret
           mount /dev/nvme0n1 /secret  # HERE!!!!: Change the device with the disk which will store the private key.
 
@@ -327,7 +327,6 @@ Since this is vendor-specific, please check your motherboard manufacturer manual
             cd /configs || exit 1
             ./post.sh "$1"
           fi
-          rm -f /key
 
           # Security
           chmod -R g-rwx,o-rwx .
