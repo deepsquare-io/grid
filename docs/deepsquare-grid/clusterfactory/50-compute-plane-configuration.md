@@ -468,7 +468,7 @@ You can the **re-enable the disk mount in the `fs_mount` postscript.** Don't for
 
 Remember about the deploy key we've created on GitHub? We need to add it to the disk. Assuming `/dev/nvme0n1` is the disk storing the private key (see postscript above), add the private key to the disk:
 
-```shell "root@cn1:/root"
+```shell title="root@cn1:/root"
 mkdir -p /secret
 mount /dev/nvme0n1 /secret
 cat << 'EOF' > /secret/key
