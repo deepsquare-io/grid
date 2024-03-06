@@ -27,6 +27,29 @@ Typical usage are:
 | `DEEPSQUARE_DISK_TMP`         | This is a volume **per node**. This volume is automatically **cleared based on the provider policy**.                                                                          | Infrastructure provider policy. | **Owner: read, write, execute.** | Output files per process, fallback if shared is too slow ... |
 | `DEEPSQUARE_DISK_WORLD_TMP`   | This is a volume **per node shared between users**. This volume is automatically **cleared based on the provider policy**.                                                     | Infrastructure provider policy. | **World: read, write, execute.** |                                                              |
 
+## Container mounts layout
+
+On containers, the volumes are mounted on predefined paths, which are:
+
+| Volumes                     | Lifecycle                       | Mount Path                 |
+| --------------------------- | ------------------------------- | -------------------------- |
+| STORAGE_PATH                | Job duration.                   | /deepsquare                |
+| DEEPSQUARE_TMP              | Infrastructure provider policy. | /deepsquare/tmp            |
+| DEEPSQUARE_SHARED_TMP       | Infrastructure provider policy. | /deepsquare/tmp            |
+| DEEPSQUARE_SHARED_WORLD_TMP | Infrastructure provider policy. | /deepsquare/world-tmp      |
+| DEEPSQUARE_DISK_TMP         | Infrastructure provider policy. | /deepsquare/disk/tmp       |
+| DEEPSQUARE_DISK_WORLD_TMP   | Infrastructure provider policy. | /deepsquare/disk/world-tmp |
+
+Use symlinks or mount bind to use these caches:
+
+```shell
+# Symlink
+ln -s <src> /path/to/symlink # Creates "symlink" file in the "/path/to" directory to redirect to "src".
+
+# Mount bind
+mount --bind <src> /path/to/volume # Volume is an existing directory and mount "superpose" the volume directory to redirect to "src".
+```
+
 ## About provider policies
 
 These volumes are considered as **caches** which are **free of charge**.
