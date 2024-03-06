@@ -35,7 +35,6 @@ import (
 
 	_ "embed"
 
-	"github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/internal/utils"
 	"github.com/deepsquare-io/grid/cli/internal/wordlists"
 	"github.com/urfave/cli/v2"
@@ -47,13 +46,11 @@ var (
 	//go:embed template.yaml
 	template []byte
 
-	//go:embed job.schema.json
-	schema []byte
-
 	ethHexPK     string
 	ethHexPKPath string
 )
 
+const jobSchemaPath = "https://raw.githubusercontent.com/deepsquare-io/grid/main/cli/job.schema.json"
 const templateFormat = "# yaml-language-server: $schema=%s\n%s"
 
 var flags = []cli.Flag{
@@ -82,23 +79,13 @@ var flags = []cli.Flag{
 }
 
 func prepareFiles() (jerr error) {
-	dir, err := os.UserCacheDir()
-	if err != nil {
-		log.I.Warn("couldn't fetch user cache dir, using tmp...")
-		dir = os.TempDir()
-	}
 	words := strings.Join(wordlists.GetRandomWords(3), "-")
-	jobSchemaPath := filepath.Join(dir, ".job.schema.json")
 	jobPath := filepath.Join(output, fmt.Sprintf("job.%s.yaml", words))
 
 	// Insert the yaml-language-server parameter
 	template = []byte(
 		fmt.Sprintf(templateFormat, jobSchemaPath, template),
 	)
-
-	if err := os.WriteFile(jobSchemaPath, schema, 0644); err != nil {
-		return fmt.Errorf("fail to write %s: %w", jobSchemaPath, err)
-	}
 
 	if err := os.WriteFile(jobPath, template, 0644); err != nil {
 		return fmt.Errorf("fail to write %s: %w", jobPath, err)

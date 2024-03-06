@@ -17,5 +17,4 @@ schema.properties = schema.definitions.Job.properties;
 
 const jsonSchemaString = JSON.stringify(schema, null, 2);
 
-fs.writeFileSync('./tui/editor/job.schema.json', jsonSchemaString);
-fs.writeFileSync('./cmd/initc/job.schema.json', jsonSchemaString);
+fs.writeFileSync('./job.schema.json', jsonSchemaString);

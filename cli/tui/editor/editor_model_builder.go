@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -28,26 +27,21 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/deepsquare-io/grid/cli/deepsquare"
-	"github.com/deepsquare-io/grid/cli/internal/log"
 	"github.com/deepsquare-io/grid/cli/internal/validator"
 	"github.com/deepsquare-io/grid/cli/internal/wordlists"
 	"github.com/deepsquare-io/grid/cli/tui/style"
 	"github.com/mistakenelf/teacup/code"
 )
 
+const jobSchemaPath = "https://raw.githubusercontent.com/deepsquare-io/grid/main/cli/job.schema.json"
+
 // ModelBuilder contains the dependencies used to build the bubbletea Model for the text editor.
 type ModelBuilder struct {
 	Client *deepsquare.Client
 }
 
-func prepareFiles() (words string, jobSchemaPath string, jobPath string, err error) {
-	dir, err := os.UserCacheDir()
-	if err != nil {
-		log.I.Warn("couldn't fetch user cache dir, using tmp...")
-		dir = os.TempDir()
-	}
+func prepareFiles() (words string, jobPath string, err error) {
 	words = strings.Join(wordlists.GetRandomWords(3), "-")
-	jobSchemaPath = filepath.Join(dir, ".job.schema.json")
 	jobPath = fmt.Sprintf("job.%s.yaml", words)
 
 	// Insert the yaml-language-server parameter
@@ -55,15 +49,11 @@ func prepareFiles() (words string, jobSchemaPath string, jobPath string, err err
 		fmt.Sprintf(templateFormat, jobSchemaPath, template),
 	)
 
-	if err := os.WriteFile(jobSchemaPath, schema, 0644); err != nil {
-		return "", "", "", fmt.Errorf("fail to write %s: %w", jobSchemaPath, err)
-	}
-
 	if err := os.WriteFile(jobPath, template, 0644); err != nil {
-		return "", "", "", fmt.Errorf("fail to write %s: %w", jobPath, err)
+		return "", "", fmt.Errorf("fail to write %s: %w", jobPath, err)
 	}
 
-	return words, jobSchemaPath, jobPath, nil
+	return words, jobPath, nil
 }
 
 // Build the bubbletea Model for the text editor.
@@ -95,7 +85,7 @@ func (b *ModelBuilder) Build(ctx context.Context) tea.Model {
 	inputs[jobNameInput].Width = 32
 	inputs[jobNameInput].Prompt = style.Foreground().Render("❱ ")
 
-	jobName, _, jobPath, err := prepareFiles()
+	jobName, jobPath, err := prepareFiles()
 	if err != nil {
 		panic(err.Error())
 	}

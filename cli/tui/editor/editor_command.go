@@ -27,9 +27,6 @@ import (
 //go:embed template.yaml
 var template []byte
 
-//go:embed job.schema.json
-var schema []byte
-
 var editors = map[string][]string{
 	"nano":          {},
 	"nano.exe":      {},
