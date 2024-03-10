@@ -200,6 +200,9 @@ func GetPrivateKey(ethHexPK, orPath string) (*ecdsa.PrivateKey, error) {
 		} else if err != nil {
 			return nil, err
 		}
+		if finfo.IsDir() {
+			return nil, fmt.Errorf("%s is a directory and should be a file", orPath)
+		}
 		// Check os is not windows
 		if os.PathSeparator != '\\' {
 			if !(finfo.Mode()&0700 > 0 && (finfo.Mode()&0070 == 0) && (finfo.Mode()&0007 == 0)) {

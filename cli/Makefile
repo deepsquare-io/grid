@@ -6,17 +6,26 @@ VERSION_CORE = $(shell echo $(TAG_NAME) | sed 's/cli\/\(.*\)/\1/')
 VERSION_CORE_DEV = $(shell echo $(TAG_NAME_DEV) | sed 's/cli\/\(.*\)/\1/')
 GIT_COMMIT = $(shell git rev-parse --short=7 HEAD)
 VERSION = $(or $(and $(TAG_NAME),$(VERSION_CORE)),$(and $(TAG_NAME_DEV),$(VERSION_CORE_DEV)-dev),$(GIT_COMMIT))
+E2E_TESTS := $(shell find e2e -type f -name '*.tape')
 
+golint := $(shell which golangci-lint)
 ifeq ($(golint),)
 golint := $(shell go env GOPATH)/bin/golangci-lint
 endif
 
+pkgsite := $(shell which pkgsite)
 ifeq ($(pkgsite),)
 pkgsite := $(shell go env GOPATH)/bin/pkgsite
 endif
 
+mockery := $(shell which mockery)
 ifeq ($(mockery),)
 mockery := $(shell go env GOPATH)/bin/mockery
+endif
+
+vhs := $(shell which vhs)
+ifeq ($(vhs),)
+vhs := $(shell go env GOPATH)/bin/vhs
 endif
 
 bin/dps: $(GO_SRCS)
@@ -75,6 +84,9 @@ $(golint):
 $(pkgsite):
 	go install golang.org/x/pkgsite/cmd/pkgsite@latest
 
+$(vhs):
+	go install github.com/charmbracelet/vhs@latest
+
 .PHONY: license
 license:
 	go run ./licensing.go
@@ -83,6 +95,15 @@ license:
 .PHONY: lint
 lint: $(golint)
 	$(golint) run ./...
+
+%.result: %.tape
+	@echo "Running e2e test for $<..."
+	mkdir -p e2e/tmp
+	cd e2e/tmp && PATH=$(shell pwd)/bin:$(PATH) $(vhs) ../../$<
+	echo "pass" > $@
+
+.PHONY: e2e
+e2e: bin/dps $(vhs) $(E2E_TESTS:.tape=.result)
 
 .PHONY: mocks
 mocks:
@@ -103,5 +124,5 @@ list:
 	@LC_ALL=C $(MAKE) -pRrq -f $(firstword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/(^|\n)# Files(\n|$$)/,/(^|\n)# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | grep -E -v -e '^[^[:alnum:]]' -e '^$@$$'
 
 .PHONY: doc
-doc:
+doc: $(pkgsite)
 	$(pkgsite) -open .

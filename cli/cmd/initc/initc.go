@@ -80,7 +80,13 @@ var flags = []cli.Flag{
 
 func prepareFiles() (jerr error) {
 	words := strings.Join(wordlists.GetRandomWords(3), "-")
-	jobPath := filepath.Join(output, fmt.Sprintf("job.%s.yaml", words))
+	var jobPath string
+	output = filepath.Clean(output)
+	if isDirectory(output) {
+		jobPath = filepath.Join(output, fmt.Sprintf("job.%s.yaml", words))
+	} else {
+		jobPath = output
+	}
 
 	// Insert the yaml-language-server parameter
 	template = []byte(
@@ -108,4 +114,13 @@ var Command = cli.Command{
 		}
 		return prepareFiles()
 	},
+}
+
+func isDirectory(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+
+	return fileInfo.IsDir()
 }
