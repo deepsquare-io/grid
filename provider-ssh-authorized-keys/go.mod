@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/urfave/cli/v2 v2.27.1
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.62.1
