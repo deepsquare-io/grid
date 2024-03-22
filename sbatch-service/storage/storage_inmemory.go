@@ -21,7 +21,9 @@ import (
 	"time"
 )
 
-type inmemoryStorage struct {
+var _ Storage = (*InMemoryStorage)(nil)
+
+type InMemoryStorage struct {
 	mu     sync.RWMutex
 	values map[string]data
 }
@@ -31,14 +33,14 @@ type data struct {
 	expiration time.Time
 }
 
-func NewInMemoryStorage() Storage {
-	return &inmemoryStorage{
+func NewInMemoryStorage() *InMemoryStorage {
+	return &InMemoryStorage{
 		values: make(map[string]data),
 	}
 }
 
-func (s *inmemoryStorage) Set(
-	ctx context.Context,
+func (s *InMemoryStorage) Set(
+	_ context.Context,
 	key string,
 	value string,
 	expiration time.Duration,
@@ -55,7 +57,7 @@ func (s *inmemoryStorage) Set(
 	return nil
 }
 
-func (s *inmemoryStorage) Get(ctx context.Context, key string) (string, error) {
+func (s *InMemoryStorage) Get(_ context.Context, key string) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

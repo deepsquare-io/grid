@@ -34,20 +34,31 @@ var (
 	errorsABI *abi.ABI
 )
 
+// PanicError is an native EVM error.
 type PanicError byte
 
 const (
-	PanicErrorAssertionError                     PanicError = 0x1
-	PanicErrorArithmeticUnderOrOverflow          PanicError = 0x11
-	PanicErrorDivisionByZero                     PanicError = 0x12
-	PanicErrorEnumConversionOutOfBounds          PanicError = 0x21
+	// PanicErrorAssertionError happens when `assert` fails.
+	PanicErrorAssertionError PanicError = 0x1
+	// PanicErrorArithmeticUnderOrOverflow happens when a number under or overflows.
+	PanicErrorArithmeticUnderOrOverflow PanicError = 0x11
+	// PanicErrorDivisionByZero happens when a number is divided by a zero denominator.
+	PanicErrorDivisionByZero PanicError = 0x12
+	// PanicErrorEnumConversionOutOfBounds happens when a number is out of bounds of an enum.
+	PanicErrorEnumConversionOutOfBounds PanicError = 0x21
+	// PanicErrorIncorrectlyEncodedStorageByteArray happens when byte array is badly encoded.
 	PanicErrorIncorrectlyEncodedStorageByteArray PanicError = 0x22
-	PanicErrorPopOnEmptyArray                    PanicError = 0x31
-	PanicErrorArrayAccessOutOfBounds             PanicError = 0x32
-	PanicErrorTooMuchMemoryAllocated             PanicError = 0x41
-	PanicErrorZeroInitializedVariable            PanicError = 0x51
+	// PanicErrorPopOnEmptyArray happens when calling pop on an empty array.
+	PanicErrorPopOnEmptyArray PanicError = 0x31
+	// PanicErrorArrayAccessOutOfBounds happens when calling an element from an index out of bounds of an array.
+	PanicErrorArrayAccessOutOfBounds PanicError = 0x32
+	// PanicErrorTooMuchMemoryAllocated happens when there is too much memory allocated for the EVM.
+	PanicErrorTooMuchMemoryAllocated PanicError = 0x41
+	// PanicErrorZeroInitializedVariable happens when a variable is not initialized and it is forbidden to use the zero value of that variable.
+	PanicErrorZeroInitializedVariable PanicError = 0x51
 )
 
+// IsPanicError checks if the byte of an error data is a panic error code.
 func IsPanicError(value byte) bool {
 	switch value {
 	case byte(PanicErrorAssertionError),
@@ -124,13 +135,13 @@ func ParseInvalidJob(inputs []interface{}) *InvalidJob {
 }
 
 func (e *InvalidJob) Error() string {
-	return "InvalidJob"
+	return "job not found or not valid"
 }
 
 type NoJob struct{}
 
 func (e *NoJob) Error() string {
-	return "NoJob"
+	return "no job"
 }
 
 func ParseNoJob(inputs []interface{}) error {
@@ -194,7 +205,7 @@ func ParseInvalidTotalCpus(inputs []interface{}) error {
 
 type NoProvider struct{}
 
-func ParseNoProvider(inputs []interface{}) *NoProvider {
+func ParseNoProvider(_ []interface{}) *NoProvider {
 	return &NoProvider{}
 }
 
@@ -204,7 +215,7 @@ func (e *NoProvider) Error() string {
 
 type WaitingApprovalOnly struct{}
 
-func ParseWaitingApprovalOnly(inputs []interface{}) *WaitingApprovalOnly {
+func ParseWaitingApprovalOnly(_ []interface{}) *WaitingApprovalOnly {
 	return &WaitingApprovalOnly{}
 }
 
@@ -214,7 +225,7 @@ func (e *WaitingApprovalOnly) Error() string {
 
 type Banned struct{}
 
-func ParseBanned(inputs []interface{}) *Banned {
+func ParseBanned(_ []interface{}) *Banned {
 	return &Banned{}
 }
 
@@ -224,7 +235,7 @@ func (e *Banned) Error() string {
 
 type AlreadyDone struct{}
 
-func ParseAlreadyDone(inputs []interface{}) *AlreadyDone {
+func ParseAlreadyDone(_ []interface{}) *AlreadyDone {
 	return &AlreadyDone{}
 }
 
@@ -238,7 +249,7 @@ type JobHotStatusOnly struct {
 
 func (e *JobHotStatusOnly) Error() string {
 	return fmt.Sprintf(
-		"JobHotStatusOnly{Current: %s}",
+		"only applies to pending, meta-scheduled, scheduled and running job (current state: %s)",
 		e.Current,
 	)
 }
@@ -295,7 +306,7 @@ type InsufficientFunds struct {
 
 func (e *InsufficientFunds) Error() string {
 	return fmt.Sprintf(
-		"InsufficientFunds{Available: %s, Required: %s}",
+		"insufficient funds (available: %s, required: %s)",
 		e.Available,
 		e.Required,
 	)
@@ -323,7 +334,7 @@ func ParseInvalidJobDefinition(
 }
 
 func (e *InvalidJobDefinition) Error() string {
-	return "InvalidJobDefinition"
+	return "invalid job definition"
 }
 
 type RunningScheduledStatusOnly struct {
@@ -332,7 +343,7 @@ type RunningScheduledStatusOnly struct {
 
 func (e *RunningScheduledStatusOnly) Error() string {
 	return fmt.Sprintf(
-		"RunningScheduledStatusOnly{Current: %s}",
+		"only applies to running and scheduled job (current state: %s)",
 		e.Current,
 	)
 }
@@ -354,7 +365,7 @@ type MetaScheduledScheduledStatusOnly struct {
 
 func (e *MetaScheduledScheduledStatusOnly) Error() string {
 	return fmt.Sprintf(
-		"MetaScheduledScheduledStatusOnly{Current: %s}",
+		"only applies to meta-scheduled and scheduled job (current state: %s)",
 		e.Current,
 	)
 }
@@ -376,7 +387,7 @@ type RunningColdStatusOnly struct {
 
 func (e *RunningColdStatusOnly) Error() string {
 	return fmt.Sprintf(
-		"RunningColdStatusOnly{Current: %s}",
+		"only applies to running or terminated job (current state: %s)",
 		e.Current,
 	)
 }

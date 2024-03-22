@@ -26,10 +26,10 @@ import (
 type mockImageFetcher struct{}
 
 func (*mockImageFetcher) FetchContainerImage(
-	username string,
-	password string,
-	registry string,
-	img string,
+	_ string,
+	_ string,
+	_ string,
+	_ string,
 ) (image ocispec.Image, err error) {
 	return ocispec.Image{
 		Config: ocispec.ImageConfig{

@@ -40,7 +40,7 @@ type ErrorTestSuite struct {
 	backend         *backends.SimulatedBackend
 }
 
-func (suite *ErrorTestSuite) BeforeTest(suiteName, testName string) {
+func (suite *ErrorTestSuite) BeforeTest(_, _ string) {
 	// Genesis Account
 	privateKey, err := crypto.GenerateKey()
 	suite.Require().NoError(err)
@@ -82,73 +82,73 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 	}{
 		{
 			name: "ParseDoubleEndedQueueEmpty",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowEmpty(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.DoubleEndedQueueEmpty{}
 			},
 		},
 		{
 			name: "ParseDoubleEndedQueueOutOfBounds",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowOutOfBounds(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.DoubleEndedQueueOutOfBounds{}
 			},
 		},
 		{
 			name: "ParseInvalidJob",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowInvalidJob(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.InvalidJob{}
 			},
 		},
 		{
 			name: "ParseNoJob",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowNoJob(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.NoJob{}
 			},
 		},
 		{
 			name: "ParseNoProvider",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowNoProvider(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.NoProvider{}
 			},
 		},
 		{
 			name: "ParseWaitingApprovalOnly",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowWaitingApprovalOnly(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.WaitingApprovalOnly{}
 			},
 		},
 		{
 			name: "ParseBanned",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowBanned(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.Banned{}
 			},
 		},
 		{
 			name: "ParseAlreadyDone",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowAlreadyDone(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.AlreadyDone{}
 			},
 		},
@@ -191,10 +191,10 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 		},
 		{
 			name: "ParseSameStatusError",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowSameStatusError(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.SameStatusError{}
 			},
 		},
@@ -220,10 +220,10 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 		},
 		{
 			name: "ParseInvalidJobDefinition",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowInvalidJobDefinition(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.InvalidJobDefinition{}
 			},
 		},
@@ -321,21 +321,21 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 		{
 			name:    "ParseCustomerMetaSchedulerProviderOnly",
 			arrange: []interface{}{},
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowCustomerMetaSchedulerProviderOnly(
 					&bind.CallOpts{},
 				)
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.CustomerMetaSchedulerProviderOnly{}
 			},
 		},
 		{
 			name: "ParseProviderNotJoined",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowProviderNotJoined(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.ProviderNotJoined{}
 			},
 		},
@@ -361,19 +361,19 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 		},
 		{
 			name: "ParseNoSpendingAuthority",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowNoSpendingAuthority(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.NoSpendingAuthority{}
 			},
 		},
 		{
 			name: "ParseNewJobRequestDisabled",
-			act: func(r []interface{}) error {
+			act: func(_ []interface{}) error {
 				return suite.contract.ThrowNewJobRequestDisabled(&bind.CallOpts{})
 			},
-			expected: func(r []interface{}) error {
+			expected: func(_ []interface{}) error {
 				return &types.NewJobRequestDisabled{}
 			},
 		},
@@ -404,7 +404,7 @@ func (suite *ErrorTestSuite) TestParseErrors() {
 	}
 }
 
-func (suite *ErrorTestSuite) AfterTest(suiteName, testName string) {
+func (suite *ErrorTestSuite) AfterTest(_, _ string) {
 	_ = suite.backend.Close()
 }
 

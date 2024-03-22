@@ -41,7 +41,7 @@ var (
 				Aliases:     []string{"f"},
 			},
 		},
-		Action: func(ctx *cli.Context) error {
+		Action: func(_ *cli.Context) error {
 			r := renderer.NewJobRenderer(
 				"logger.example.com:443",
 				"/usr/local/bin/grid-logger-writer",

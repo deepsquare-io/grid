@@ -22,31 +22,33 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type redisStorage struct {
-	*redis.Client
+var _ Storage = (*RedisStorage)(nil)
+
+type RedisStorage struct {
+	client *redis.Client
 }
 
-func NewRedisStorage(c *redis.Client) Storage {
+func NewRedisStorage(c *redis.Client) *RedisStorage {
 	if c == nil {
 		panic("redis client is nil")
 	}
-	return &redisStorage{
-		Client: c,
+	return &RedisStorage{
+		client: c,
 	}
 }
 
-func (s *redisStorage) Set(
+func (s *RedisStorage) Set(
 	ctx context.Context,
 	key string,
 	value string,
 	expiration time.Duration,
 ) error {
-	_, err := s.Client.Set(ctx, key, value, expiration).Result()
+	_, err := s.client.Set(ctx, key, value, expiration).Result()
 	return err
 }
 
-func (s *redisStorage) Get(ctx context.Context, key string) (string, error) {
-	resp, err := s.Client.Get(ctx, key).Result()
+func (s *RedisStorage) Get(ctx context.Context, key string) (string, error) {
+	resp, err := s.client.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return "", ErrNotFound

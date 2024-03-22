@@ -39,7 +39,7 @@ func NewAPI(auth *internalauth.Auth) *API {
 
 func (a *API) Challenge(
 	ctx context.Context,
-	req *sbatchapiv1alpha1.ChallengeRequest,
+	_ *sbatchapiv1alpha1.ChallengeRequest,
 ) (*sbatchapiv1alpha1.ChallengeResponse, error) {
 	return &sbatchapiv1alpha1.ChallengeResponse{
 		Challenge: a.auth.Challenge(ctx, "login"),

@@ -32,10 +32,10 @@ func (enc Encoder) Decode(s string) (uuid.UUID, error) {
 
 type FakeEncoder struct{}
 
-func (enc FakeEncoder) Encode(u uuid.UUID) string {
+func (enc FakeEncoder) Encode(_ uuid.UUID) string {
 	return "BhNwmz1fC9zVZ8im94bLbw"
 }
 
-func (enc FakeEncoder) Decode(s string) (uuid.UUID, error) {
+func (enc FakeEncoder) Decode(_ string) (uuid.UUID, error) {
 	return uuid.FromBytes(base58.Decode("BhNwmz1fC9zVZ8im94bLbw"))
 }

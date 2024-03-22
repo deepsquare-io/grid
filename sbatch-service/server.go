@@ -68,7 +68,7 @@ var (
 	metaschedulerEndpointRPC   string
 	metaschedulerSmartContract string
 
-	version string = "dev"
+	version = "dev"
 )
 
 var flags = []cli.Flag{
@@ -167,7 +167,7 @@ var flags = []cli.Flag{
 		Name:    "debug",
 		EnvVars: []string{"DEBUG"},
 		Value:   false,
-		Action: func(ctx *cli.Context, s bool) error {
+		Action: func(_ *cli.Context, s bool) error {
 			if s {
 				logger.EnableDebug()
 			}
@@ -255,7 +255,7 @@ See the GNU General Public License for more details.`,
 		}))
 		r.Handle("/", playground.ApolloSandboxHandler("GraphQL playground", "/graphql"))
 		r.Handle("/graphql", srv)
-		r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		r.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 			_, _ = w.Write([]byte("ok"))
 		})
 		if cCtx.Bool("debug") {

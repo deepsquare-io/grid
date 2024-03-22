@@ -20,6 +20,9 @@ func Ptr[T any](it T) *T {
 	return &it
 }
 
+// SafeDeref is a helper for safely dereferencing a pointer.
+//
+// nolint: ireturn
 func SafeDeref[T any](it *T) T {
 	if it == nil {
 		var t T

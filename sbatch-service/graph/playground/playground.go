@@ -70,7 +70,7 @@ func endpointHasScheme(endpoint string) bool {
 
 // ApolloSandboxHandler responsible for setting up the altair playground
 func ApolloSandboxHandler(title, endpoint string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		err := apolloSandboxPage.Execute(w, map[string]interface{}{
 			"title":              title,
 			"endpoint":           endpoint,

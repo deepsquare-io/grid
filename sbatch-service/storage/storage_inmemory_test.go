@@ -30,7 +30,7 @@ type InMemoryStorageSuite struct {
 	storage storage.Storage
 }
 
-func (suite *InMemoryStorageSuite) BeforeTest(suiteName, testName string) {
+func (suite *InMemoryStorageSuite) BeforeTest(_, _ string) {
 	suite.storage = storage.NewInMemoryStorage()
 }
 
