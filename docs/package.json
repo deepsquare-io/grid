@@ -35,7 +35,7 @@
     "@mdx-js/react": "3.0.1",
     "@mui/icons-material": "5.15.14",
     "@mui/joy": "5.0.0-beta.32",
-    "@tsconfig/docusaurus": "2.0.2",
+    "@tsconfig/docusaurus": "2.0.3",
     "@types/react": "18.2.72",
     "clsx": "2.1.0",
     "docusaurus-theme-search-typesense": "0.15.0",
