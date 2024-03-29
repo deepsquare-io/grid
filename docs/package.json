@@ -16,7 +16,7 @@
     "gen:graphql": "node generate-json-schema.mjs && graphql-markdown --no-toc --title='Workflow' ./schemas/job.schema.json > workflow/40-workflow-api-reference/02-job.track"
   },
   "devDependencies": {
-    "@algolia/client-search": "4.22.1",
+    "@algolia/client-search": "4.23.2",
     "@babel/eslint-parser": "7.24.1",
     "@babel/plugin-syntax-jsx": "7.24.1",
     "@babel/preset-react": "7.24.1",
