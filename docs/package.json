@@ -29,7 +29,7 @@
     "@docusaurus/tsconfig": "3.1.0",
     "@docusaurus/types": "3.1.0",
     "@emotion/react": "11.11.4",
-    "@emotion/styled": "11.11.0",
+    "@emotion/styled": "11.11.5",
     "@graphql-tools/graphql-file-loader": "8.0.1",
     "@graphql-tools/load": "8.0.2",
     "@mdx-js/react": "3.0.1",
