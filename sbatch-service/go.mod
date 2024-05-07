@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	github.com/99designs/gqlgen v0.17.45
+	github.com/99designs/gqlgen v0.17.46
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/btcsuite/btcutil v1.0.2
 	github.com/ethereum/go-ethereum v1.12.2
