@@ -11,7 +11,7 @@ services:
     ports:
       - "3000:3000"
   envoy:
-    image: registry-1.docker.io/envoyproxy/envoy:v1.29-latest
+    image: registry-1.docker.io/envoyproxy/envoy:v1.30-latest
     ports:
       - "9000:9000"
     volumes:
