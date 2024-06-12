@@ -17,7 +17,7 @@ require (
 	github.com/mistakenelf/teacup v0.4.1
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.27.2
-	github.com/vektah/gqlparser/v2 v2.5.11
+	github.com/vektah/gqlparser/v2 v2.5.14
 	go.uber.org/zap v1.27.0
 	golang.org/x/mod v0.17.0
 	golang.org/x/tools v0.21.0

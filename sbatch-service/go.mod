@@ -23,7 +23,7 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.27.2
-	github.com/vektah/gqlparser/v2 v2.5.11
+	github.com/vektah/gqlparser/v2 v2.5.14
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.25.0
 	golang.org/x/tools v0.21.0
